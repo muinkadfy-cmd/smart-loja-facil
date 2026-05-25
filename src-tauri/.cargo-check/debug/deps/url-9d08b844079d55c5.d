@@ -1,0 +1,11 @@
+C:\smart-loja-facil-offline\src-tauri\.cargo-check\debug\deps\url-9d08b844079d55c5.d: C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\lib.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\host.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\origin.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\parser.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\path_segments.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\slicing.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\quirks.rs
+
+C:\smart-loja-facil-offline\src-tauri\.cargo-check\debug\deps\liburl-9d08b844079d55c5.rmeta: C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\lib.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\host.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\origin.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\parser.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\path_segments.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\slicing.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\quirks.rs
+
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\lib.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\host.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\origin.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\parser.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\path_segments.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\slicing.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\url-2.5.8\src\quirks.rs:

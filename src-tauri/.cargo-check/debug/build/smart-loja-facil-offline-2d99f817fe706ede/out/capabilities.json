@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Permissões locais mínimas do Smart Loja Fácil Offline","local":true,"windows":["main"],"permissions":["core:default","core:window:allow-close","opener:default"]}}

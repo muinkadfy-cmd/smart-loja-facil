@@ -1,0 +1,9 @@
+C:\smart-loja-facil-offline\src-tauri\.cargo-check\debug\deps\tauri_runtime-ea19a5156a0ed05d.d: C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\lib.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\dpi.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\monitor.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\webview.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\window.rs
+
+C:\smart-loja-facil-offline\src-tauri\.cargo-check\debug\deps\libtauri_runtime-ea19a5156a0ed05d.rmeta: C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\lib.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\dpi.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\monitor.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\webview.rs C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\window.rs
+
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\lib.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\dpi.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\monitor.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\webview.rs:
+C:\Users\Juninho&Jaque\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tauri-runtime-2.11.2\src\window.rs:
