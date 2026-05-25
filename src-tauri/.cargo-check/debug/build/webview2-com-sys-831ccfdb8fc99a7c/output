@@ -1,2 +1,0 @@
-cargo:rustc-link-search=native=C:\smart-loja-facil-offline\src-tauri\.cargo-check\debug\build\webview2-com-sys-831ccfdb8fc99a7c\out\x64
-cargo:rustc-link-lib=advapi32
