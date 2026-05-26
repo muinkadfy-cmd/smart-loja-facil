@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { Modal } from './components/Modal';
 import { Shell } from './components/Shell';
 import { Welcome } from './pages/Welcome';
@@ -19,6 +18,21 @@ import { api } from './lib/api';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from './lib/preferences';
 import { playOperationSound } from './lib/sound';
 import type { AppStatus, PageKey, Settings } from './types';
+
+
+type TauriRuntimeMetadata = {
+  metadata?: {
+    currentWindow?: {
+      label?: string;
+    };
+  };
+};
+
+function hasTauriWindowMetadata(): boolean {
+  const internals = (window as Window & { __TAURI_INTERNALS__?: TauriRuntimeMetadata }).__TAURI_INTERNALS__;
+  return Boolean(internals?.metadata?.currentWindow?.label);
+}
+
 
 export default function App(): JSX.Element {
   const [entered, setEntered] = useState(false);
@@ -67,19 +81,31 @@ export default function App(): JSX.Element {
   }, [settings?.slow_mode]);
 
   useEffect(() => {
-    if (!entered) return undefined;
+    if (!entered || !hasTauriWindowMetadata()) return undefined;
+
+    let cancelled = false;
     let unlisten: (() => void) | undefined;
-    getCurrentWindow().onCloseRequested((event) => {
-      if (forceCloseRef.current) return;
-      event.preventDefault();
-      setPreferredBackupFolderState(getPreferredBackupFolder());
-      setCloseError(null);
-      setCloseBusy(false);
-      setClosePromptOpen(true);
-    }).then((dispose) => {
-      unlisten = dispose;
-    }).catch(() => undefined);
+
+    void import('@tauri-apps/api/window')
+      .then(({ getCurrentWindow }) => getCurrentWindow().onCloseRequested((event) => {
+        if (forceCloseRef.current) return;
+        event.preventDefault();
+        setPreferredBackupFolderState(getPreferredBackupFolder());
+        setCloseError(null);
+        setCloseBusy(false);
+        setClosePromptOpen(true);
+      }))
+      .then((dispose) => {
+        if (cancelled) {
+          dispose();
+          return;
+        }
+        unlisten = dispose;
+      })
+      .catch(() => undefined);
+
     return () => {
+      cancelled = true;
       if (unlisten) unlisten();
     };
   }, [entered]);
