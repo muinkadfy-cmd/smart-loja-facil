@@ -3,7 +3,16 @@ import path from 'node:path';
 
 const root = process.cwd();
 const scanDirs = ['src', 'src-tauri', 'scripts'];
-const ignoredDirFragments = ['src-tauri/target/', 'src-tauri/gen/', 'dist/'];
+const ignoredDirFragments = [
+  'src-tauri/target/',
+  'src-tauri/.cargo-check/',
+  'src-tauri/gen/',
+  'dist/',
+  'node_modules/',
+  'tools/QaWorkflow/bin/',
+  'tools/QaWorkflow/obj/',
+];
+const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html', '.md', '.rs', '.toml', '.svg', '.webmanifest']);
 const ignoredFiles = new Set([
   'scripts/lint.js',
   'scripts/release_check.js',
@@ -37,6 +46,7 @@ function scanDir(baseDir) {
         stack.push(full);
         continue;
       }
+      if (!textExtensions.has(path.extname(full).toLowerCase())) continue;
       const content = fs.readFileSync(full, 'utf8');
       for (const rule of rules) {
         if (rule.pattern.test(content)) fail(`${rule.label}: ${rel}`);

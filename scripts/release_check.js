@@ -45,7 +45,16 @@ const ignoredFiles = new Set([
   'scripts/release_check.js',
   'public/logo.svg',
 ]);
-const ignoredDirFragments = ['src-tauri/target/', 'src-tauri/gen/', 'src-tauri/icons/'];
+const ignoredDirFragments = [
+  'src-tauri/target/',
+  'src-tauri/.cargo-check/',
+  'src-tauri/gen/',
+  'src-tauri/icons/',
+  'tools/QaWorkflow/bin/',
+  'tools/QaWorkflow/obj/',
+  'dist/',
+  'node_modules/',
+];
 const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html', '.md', '.rs', '.toml', '.svg', '.webmanifest']);
 
 function fail(message) {
