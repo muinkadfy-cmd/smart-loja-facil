@@ -58,6 +58,18 @@ export function WebDiagnosticsPage(): JSX.Element {
         ))}
       </section>
 
+      <section className="mobile-readiness-card">
+        <span className="web-kicker">Prioridade mobile</span>
+        <h2>Celular sem tela espremida</h2>
+        <p>O shell foi ajustado para leitura em Android/iPhone, com menu rapido inferior, cards compactos, tabelas com rolagem segura e botoes tocaveis.</p>
+        <div className="mobile-readiness-grid">
+          <span>Menu inferior rolavel</span>
+          <span>Toque minimo seguro</span>
+          <span>Cards sem corte</span>
+          <span>Tabelas sem estourar</span>
+        </div>
+      </section>
+
       <div className="web-two-col">
         <WebAuthPanel />
         <section className="web-card">

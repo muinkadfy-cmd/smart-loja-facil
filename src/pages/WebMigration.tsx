@@ -59,6 +59,12 @@ export function WebMigrationPage({ activePage, onOpenDiagnostics }: WebMigration
             ))}
           </div>
         </section>
+        <section className="web-card mobile-safe-card">
+          <span className="web-kicker">Uso no celular</span>
+          <h2>Fluxo seguro por etapas</h2>
+          <p>Enquanto este modulo nao estiver no Supabase, o app mostra este bloqueio bonito no mobile para evitar tela branca, dado falso ou salvamento em cache local.</p>
+          <button type="button" className="secondary-btn" onClick={onOpenDiagnostics}>Ver status web</button>
+        </section>
         <WebAuthPanel compact />
       </div>
     </div>

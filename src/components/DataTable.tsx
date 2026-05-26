@@ -1,4 +1,5 @@
 import React from 'react';
+import { AppIcon } from './AppIcon';
 
 interface Column<T> { key: string; label: string; render: (row: T) => React.ReactNode; align?: 'left' | 'right' | 'center'; }
 interface DataTableProps<T> {
@@ -19,13 +20,19 @@ export function DataTable<T>({
   onRowClick,
 }: DataTableProps<T>): JSX.Element {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" role="region" aria-label="Tabela de dados" tabIndex={0}>
       <table className="data-table">
         <thead><tr>{columns.map((column) => <th key={column.key} scope="col" className={column.align ? `align-${column.align}` : undefined}>{column.label}</th>)}</tr></thead>
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="empty-cell">{empty}</td>
+              <td colSpan={columns.length} className="empty-cell">
+                <div className="empty-state-card">
+                  <span className="empty-state-icon"><AppIcon name="buscar" size={24} className="app-icon-chip" /></span>
+                  <strong>Nenhum registro encontrado</strong>
+                  <small>{empty}</small>
+                </div>
+              </td>
             </tr>
           ) : rows.map((row, index) => {
             const rowKey = getRowKey ? getRowKey(row, index) : index;

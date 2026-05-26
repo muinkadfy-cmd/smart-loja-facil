@@ -23,6 +23,8 @@ const pages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
   { key: 'diagnostics', label: 'Diagnostico Web', icon: 'bloqueio_seguro' },
 ];
 
+const mobileDockPages = pages.filter((page) => ['dashboard', 'products', 'customers', 'sales', 'cash', 'credits', 'diagnostics'].includes(page.key));
+
 interface ShellProps {
   activePage: PageKey;
   setActivePage: (page: PageKey) => void;
@@ -154,7 +156,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   }, [toast]);
 
   return (
-    <div className="classic-shell">
+    <div className={`classic-shell ${runtimeInfo.isWeb ? 'classic-shell-web' : 'classic-shell-local'}`}>
       <header className="window-titlebar">
         <div className="window-titlebar-left">
           <AppIcon name="app_logo_cadeado_carrinho" size={16} className="window-app-icon" />
@@ -221,6 +223,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                     pageAlert.level ? `nav-alert-${pageAlert.level}` : '',
                   ].filter(Boolean).join(' ')}
                   onClick={() => setActivePage(page.key)}
+                  aria-current={activePage === page.key ? 'page' : undefined}
                 >
                   <span className="nav-icon-box"><AppIcon name={page.icon} size={16} className="app-icon-nav" /></span>
                   <span className="nav-label">{page.label}</span>
@@ -341,6 +344,21 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
           </footer>
         </main>
       </div>
+
+      <nav className="mobile-tabbar" aria-label="Menu rapido mobile">
+        {mobileDockPages.map((page) => (
+          <button
+            type="button"
+            key={page.key}
+            className={activePage === page.key ? 'active' : ''}
+            onClick={() => setActivePage(page.key)}
+            aria-current={activePage === page.key ? 'page' : undefined}
+          >
+            <AppIcon name={page.icon} size={16} className="app-icon-chip" />
+            <span>{page.label.replace('Painel da Loja', 'Painel').replace('Vendas / PDV', 'PDV').replace('Diagnostico Web', 'Web')}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
