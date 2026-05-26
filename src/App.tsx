@@ -14,29 +14,58 @@ import { ReportsPage } from './pages/Reports';
 import { BackupPage } from './pages/Backup';
 import { SettingsPage } from './pages/Settings';
 import { AuditPage } from './pages/Audit';
+import { WebDiagnosticsPage } from './pages/WebDiagnostics';
+import { WebMigrationPage } from './pages/WebMigration';
 import { api } from './lib/api';
+import { getRuntimeInfo, hasTauriWindowMetadata } from './lib/runtime';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from './lib/preferences';
 import { playOperationSound } from './lib/sound';
 import type { AppStatus, PageKey, Settings } from './types';
 
 
-type TauriRuntimeMetadata = {
-  metadata?: {
-    currentWindow?: {
-      label?: string;
-    };
-  };
-};
 
-function hasTauriWindowMetadata(): boolean {
-  const internals = (window as Window & { __TAURI_INTERNALS__?: TauriRuntimeMetadata }).__TAURI_INTERNALS__;
-  return Boolean(internals?.metadata?.currentWindow?.label);
+function createWebSettings(): Settings {
+  const now = new Date().toISOString();
+  return {
+    store_name: 'Smart Loja Facil Web',
+    owner_name: 'Administrador',
+    phone: '',
+    whatsapp: '',
+    address: '',
+    receipt_message: 'Modo web em preparacao',
+    low_stock_limit: 3,
+    slow_mode: false,
+    admin_password_enabled: false,
+    receipt_width_mm: 80,
+    updated_at: now,
+  };
 }
 
+function createWebStatus(settings: Settings): AppStatus {
+  return {
+    db_path: 'Cloudflare/Web',
+    sqlite_ok: false,
+    offline_ready: false,
+    version: 'web-preview',
+    settings,
+    dashboard: {
+      today_sales_total: 0,
+      today_sales_count: 0,
+      customers_total: 0,
+      orders_open: 0,
+      credits_open_total: 0,
+      credits_active_customers: 0,
+      low_stock_count: 0,
+      payment_today: [],
+      recent_sales: [],
+    },
+  };
+}
 
 export default function App(): JSX.Element {
+  const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [entered, setEntered] = useState(false);
-  const [activePage, setActivePage] = useState<PageKey>('dashboard');
+  const [activePage, setActivePage] = useState<PageKey>(() => runtimeInfo.isWeb ? 'diagnostics' : 'dashboard');
   const [status, setStatus] = useState<AppStatus | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +82,13 @@ export default function App(): JSX.Element {
     setLoading(true);
     setError(null);
     try {
+      if (runtimeInfo.isWeb) {
+        const webSettings = createWebSettings();
+        setStatus(createWebStatus(webSettings));
+        setSettings(webSettings);
+        return;
+      }
+
       const payload = await api.boot();
       setStatus(payload);
       setSettings(payload.settings);
@@ -65,7 +101,7 @@ export default function App(): JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [runtimeInfo.isWeb]);
 
   useEffect(() => {
     if (entered) void boot();
@@ -81,7 +117,7 @@ export default function App(): JSX.Element {
   }, [settings?.slow_mode]);
 
   useEffect(() => {
-    if (!entered || !hasTauriWindowMetadata()) return undefined;
+    if (!entered || runtimeInfo.isWeb || !hasTauriWindowMetadata()) return undefined;
 
     let cancelled = false;
     let unlisten: (() => void) | undefined;
@@ -108,7 +144,7 @@ export default function App(): JSX.Element {
       cancelled = true;
       if (unlisten) unlisten();
     };
-  }, [entered]);
+  }, [entered, runtimeInfo.isWeb]);
 
   const requestAppExit = useCallback(() => {
     setClosePromptOpen(false);
@@ -159,6 +195,12 @@ export default function App(): JSX.Element {
 
   const page = useMemo(() => {
     const props = { refreshToken, onChanged: refresh };
+
+    if (runtimeInfo.isWeb) {
+      if (activePage === 'diagnostics' || activePage === 'audit') return <WebDiagnosticsPage />;
+      return <WebMigrationPage activePage={activePage} onOpenDiagnostics={() => setActivePage('diagnostics')} />;
+    }
+
     switch (activePage) {
       case 'dashboard':
         return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
@@ -184,10 +226,12 @@ export default function App(): JSX.Element {
         return <SettingsPage settings={settings} onSettingsSaved={setSettings} {...props} />;
       case 'audit':
         return <AuditPage {...props} />;
+      case 'diagnostics':
+        return <WebDiagnosticsPage />;
       default:
         return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
     }
-  }, [activePage, refreshToken, refresh, settings, status]);
+  }, [activePage, refreshToken, refresh, runtimeInfo.isWeb, settings, status]);
 
   if (!entered) {
     return <Welcome onEnter={() => setEntered(true)} />;
@@ -196,7 +240,7 @@ export default function App(): JSX.Element {
   return (
     <>
       <Shell activePage={activePage} setActivePage={setActivePage} status={status} settings={settings} onRefresh={refresh} refreshToken={refreshToken}>
-        {loading && <div className="notice">Carregando SQLite local...</div>}
+        {loading && <div className="notice">{runtimeInfo.isWeb ? 'Preparando modo web...' : 'Carregando SQLite local...'}</div>}
         {error && <div className="error-box">{error}</div>}
         {page}
       </Shell>

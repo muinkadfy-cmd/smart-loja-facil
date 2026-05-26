@@ -21,10 +21,22 @@ const required = [
 const forbiddenPatterns = [
   { pattern: /https?:\/\//i, label: 'URL externa direta' },
   { pattern: /cdn\.|unpkg|jsdelivr|googleapis|gstatic/i, label: 'CDN ou fonte online' },
-  { pattern: /supabase|cloudflare/i, label: 'Serviço online proibido' },
   { pattern: /indexedDB|indexeddb/i, label: 'IndexedDB como banco principal' },
   { pattern: /fetch\(['"]https?:/i, label: 'fetch externo' },
 ];
+
+const webModeAllowedFiles = new Set([
+  'src/App.tsx',
+  'src/components/Shell.tsx',
+  'src/components/WebAuthPanel.tsx',
+  'src/lib/env.ts',
+  'src/lib/runtime.ts',
+  'src/lib/supabaseClient.ts',
+  'src/pages/WebDiagnostics.tsx',
+  'src/pages/WebMigration.tsx',
+]);
+
+const onlineServicePattern = /supabase|cloudflare/i;
 
 const scanDirs = ['src', 'src-tauri', 'public', 'scripts'];
 const ignoredFiles = new Set([
@@ -88,6 +100,10 @@ for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
   for (const rule of forbiddenPatterns) {
     if (rule.pattern.test(content)) fail(`${rule.label} encontrado em ${rel}`);
+  }
+
+  if (!webModeAllowedFiles.has(rel) && onlineServicePattern.test(content)) {
+    fail(`Servico online fora da camada web segura encontrado em ${rel}`);
   }
 }
 

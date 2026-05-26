@@ -3,6 +3,7 @@ import { AppIcon } from './AppIcon';
 import { buildAppAlerts } from '../lib/alerts';
 import { api } from '../lib/api';
 import { playOperationSound } from '../lib/sound';
+import { getRuntimeInfo } from '../lib/runtime';
 import type { DelphiIconName } from '../lib/icons';
 import type { AppStatus, CreditSummary, PageKey, Product, Settings } from '../types';
 
@@ -19,6 +20,7 @@ const pages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
   { key: 'backup', label: 'Backup', icon: 'backup' },
   { key: 'settings', label: 'Configuracoes', icon: 'configuracoes' },
   { key: 'audit', label: 'Auditoria / Logs', icon: 'auditoria_logs' },
+  { key: 'diagnostics', label: 'Diagnostico Web', icon: 'bloqueio_seguro' },
 ];
 
 interface ShellProps {
@@ -50,12 +52,19 @@ function formatClassicDate(): string {
 }
 
 export function Shell({ activePage, setActivePage, status, settings, children, onRefresh, refreshToken }: ShellProps): JSX.Element {
+  const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [products, setProducts] = useState<Product[]>([]);
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [toast, setToast] = useState<{ title: string; detail: string; page: PageKey; level: 'danger' | 'warning' | 'info' } | null>(null);
   const prevAlertSignature = useRef('');
 
   useEffect(() => {
+    if (runtimeInfo.isWeb) {
+      setProducts([]);
+      setCredits([]);
+      return undefined;
+    }
+
     let alive = true;
     Promise.all([api.products(), api.credits()])
       .then(([nextProducts, nextCredits]) => {
@@ -65,7 +74,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       })
       .catch(() => undefined);
     return () => { alive = false; };
-  }, [refreshToken]);
+  }, [refreshToken, runtimeInfo.isWeb]);
 
   const alerts = useMemo(() => buildAppAlerts(status, products, credits), [credits, products, status]);
 
@@ -110,13 +119,15 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       backup: 'Proteja o banco local com copias e restauracao.',
       settings: 'Ajuste os dados da loja e preferencias.',
       audit: 'Consulte logs e historico operacional.',
+      diagnostics: 'Valide Cloudflare, Supabase e modo de execucao.',
     };
     return subtitles[activePage];
   }, [activePage]);
 
   const todayLabel = useMemo(() => formatClassicDate(), []);
-  const environmentLabel = status?.offline_ready ? 'Local (Offline)' : 'Verificando';
+  const environmentLabel = runtimeInfo.isWeb ? 'Web/Supabase' : status?.offline_ready ? 'Local (Offline)' : 'Verificando';
   const lastSyncLabel = settings?.updated_at ? new Date(settings.updated_at).toLocaleString('pt-BR') : 'Sem registro';
+  const storageLabel = runtimeInfo.storageLabel;
 
   useEffect(() => {
     const mainAlerts = alerts.filter((alert) => alert.level !== 'ok');
@@ -156,12 +167,10 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
         </div>
       </header>
 
-      <div className="window-menubar">
-        <button type="button">Arquivo</button>
-        <button type="button">Editar</button>
-        <button type="button">Exibir</button>
-        <button type="button">Ferramentas</button>
-        <button type="button">Ajuda</button>
+      <div className="workspace-strip">
+        <span>Ambiente: <strong>{runtimeInfo.platformLabel}</strong></span>
+        <span>Dados: <strong>{storageLabel}</strong></span>
+        <button type="button" onClick={() => setActivePage('diagnostics')}>Diagnostico</button>
       </div>
 
       <div className="window-toolbar">
@@ -184,8 +193,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
           </button>
         </div>
         <div className="window-toolbar-right">
-          <span className="toolbar-status-chip toolbar-status-offline"><AppIcon name="offline_local" size={16} className="app-icon-chip" />100% Offline</span>
-          <span className="toolbar-status-chip toolbar-status-sqlite"><AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />SQLite ativo</span>
+          <span className="toolbar-status-chip toolbar-status-offline"><AppIcon name="offline_local" size={16} className="app-icon-chip" />{runtimeInfo.isWeb ? 'Web seguro' : '100% Offline'}</span>
+          <span className="toolbar-status-chip toolbar-status-sqlite"><AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />{runtimeInfo.isWeb ? 'Supabase pronto' : 'SQLite ativo'}</span>
           <button type="button" className="toolbar-action-btn" onClick={onRefresh}><AppIcon name="atualizar" size={16} className="app-icon-chip" />Atualizar dados</button>
         </div>
       </div>
@@ -196,7 +205,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             <AppIcon name="sistema_local" size={48} className="app-icon-brand" />
             <div>
               <strong>SMART LOJA FACIL</strong>
-              <span>Sistema Local e Offline</span>
+              <span>{runtimeInfo.isWeb ? 'Web/PWA em migracao' : 'Sistema Local e Offline'}</span>
             </div>
           </div>
 
@@ -248,8 +257,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
 
           <div className="local-status classic-local-status">
             <strong>Sistema Local</strong>
-            <span className="ok-dot"><AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />SQLite {status?.sqlite_ok ? 'ativo' : 'aguardando'}</span>
-            <small>Ambiente: Local</small>
+            <span className="ok-dot"><AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />{storageLabel}</span>
+            <small>Ambiente: {runtimeInfo.platformLabel}</small>
             <small>Versao: {status?.version ?? '1.0.0'}</small>
           </div>
         </aside>
@@ -272,7 +281,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               <div className="classic-date-chip"><AppIcon name="calendario_data" size={16} className="app-icon-chip" />{todayLabel}</div>
               <div className="classic-offline-indicator">
                 <span className="classic-offline-dot"><AppIcon name="offline_local" size={16} className="app-icon-chip" /></span>
-                <strong>Offline</strong>
+                <strong>{runtimeInfo.isWeb ? 'Web' : 'Offline'}</strong>
               </div>
             </div>
           </div>
@@ -294,8 +303,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                 <p>{pageSubtitle}</p>
               </div>
               <div className="classic-page-header-status">
-                <span className={`topbar-chip ${status?.offline_ready ? 'ok' : 'warn'}`}>{environmentLabel}</span>
-                <span className={`topbar-chip ${status?.sqlite_ok ? 'ok' : 'warn'}`}>{status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponivel'}</span>
+                <span className={`topbar-chip ${runtimeInfo.isWeb || status?.offline_ready ? 'ok' : 'warn'}`}>{environmentLabel}</span>
+                <span className={`topbar-chip ${runtimeInfo.isWeb || status?.sqlite_ok ? 'ok' : 'warn'}`}>{runtimeInfo.isWeb ? 'Supabase web' : status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponivel'}</span>
               </div>
             </div>
 
@@ -323,7 +332,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             </div>
             <div className="status-item">
               <small className="status-label">ARQUIVO</small>
-              <strong className="status-value">{shortDbName(status?.db_path)}</strong>
+              <strong className="status-value">{runtimeInfo.isWeb ? storageLabel : shortDbName(status?.db_path)}</strong>
             </div>
             <div className="status-item">
               <small className="status-label">ULTIMA ATUALIZACAO</small>

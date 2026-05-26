@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { playOperationSound } from './sound';
+import { createWebModeError, isTauriRuntime } from './runtime';
 import type {
   AppStatus,
   AuditEvent,
@@ -17,19 +18,8 @@ import type {
   Settings,
 } from '../types';
 
-declare global {
-  interface Window { __TAURI_INTERNALS__?: { invoke?: unknown; metadata?: unknown } | unknown; }
-}
-
-function isTauriRuntime(): boolean {
-  const internals = window.__TAURI_INTERNALS__ as { invoke?: unknown; metadata?: unknown } | undefined;
-  return Boolean(internals && typeof internals.invoke === 'function');
-}
-
 function ensureTauri(): void {
-  if (!isTauriRuntime()) {
-    throw new Error('Esta publicação web abriu corretamente, mas esta base ainda usa SQLite local via Tauri. Para funcionar 100% no navegador/celular, o próximo lote precisa ligar as telas ao Supabase. No PC, abra pelo aplicativo Tauri.');
-  }
+  if (!isTauriRuntime()) throw createWebModeError();
 }
 
 

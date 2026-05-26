@@ -10,7 +10,8 @@ export type PageKey =
   | 'reports'
   | 'backup'
   | 'settings'
-  | 'audit';
+  | 'audit'
+  | 'diagnostics';
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'crediario';
 
