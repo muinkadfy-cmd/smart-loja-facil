@@ -8,21 +8,21 @@ const pageNames: Record<PageKey, string> = {
   products: 'Produtos',
   sales: 'Vendas / PDV',
   cash: 'Caixa',
-  credits: 'Crediario',
+  credits: 'Crediário',
   orders: 'Pedidos',
   receipts: 'Comprovantes',
-  reports: 'Relatorios',
+  reports: 'Relatórios',
   backup: 'Backup',
-  settings: 'Configuracoes',
+  settings: 'Configurações',
   audit: 'Auditoria / Logs',
-  diagnostics: 'Diagnostico Web',
+  diagnostics: 'Diagnóstico Web',
 };
 
 const migrationOrder: Array<{ title: string; detail: string; status: 'done' | 'active' | 'next' }> = [
-  { title: 'Runtime separado', detail: 'Web nao tenta abrir SQLite/Tauri direto.', status: 'done' },
-  { title: 'Login web', detail: 'Supabase Auth preparado com anon key publica.', status: 'active' },
-  { title: 'Clientes e Produtos', detail: 'Primeiros modulos a receber CRUD cloud com RLS.', status: 'next' },
-  { title: 'Vendas, Caixa e Crediario', detail: 'Entram depois com transacoes e protecao contra duplicidade.', status: 'next' },
+  { title: 'Runtime separado', detail: 'Web não tenta abrir SQLite/Tauri direto.', status: 'done' },
+  { title: 'Login, loja e papel', detail: 'Supabase Auth, loja ativa e papel carregados no navegador.', status: 'done' },
+  { title: 'Clientes, Produtos e Configurações', detail: 'Primeiros módulos ligados à camada Supabase web.', status: 'done' },
+  { title: 'Vendas, Caixa e Crediário', detail: 'Entram depois com transações e proteção contra duplicidade.', status: 'active' },
 ];
 
 interface WebMigrationPageProps {
@@ -36,20 +36,20 @@ export function WebMigrationPage({ activePage, onOpenDiagnostics }: WebMigration
   return (
     <div className="stack web-stack">
       <section className="web-hero-card web-hero-card-warning">
-        <span className="web-kicker">Modulo em migracao</span>
-        <h1>{moduleName} ainda usa SQLite no PC</h1>
-        <p>No Cloudflare, este modulo foi bloqueado de forma segura para nao salvar dados em cache ou mostrar informacao falsa. No aplicativo Tauri, ele continua funcionando com o banco local.</p>
+        <span className="web-kicker">Módulo em migração</span>
+        <h1>{moduleName} ainda aguarda migração segura</h1>
+        <p>No PWA, este modulo fica bloqueado ate entrar no Supabase com transacao, permissao e protecao contra duplicidade. Clientes, Produtos e Configurações ja foram liberados para a camada web.</p>
         <div className="web-hero-actions">
-          <button type="button" className="primary-btn" onClick={onOpenDiagnostics}>Abrir diagnostico web</button>
-          <span className="status-chip">PC/Tauri preservado</span>
-          <span className="status-chip">Cloud em preparacao</span>
+          <button type="button" className="primary-btn" onClick={onOpenDiagnostics}>Abrir diagnóstico web</button>
+          <span className="status-chip">PWA protegido</span>
+          <span className="status-chip">Supabase por etapas</span>
         </div>
       </section>
 
       <div className="web-two-col">
         <section className="web-card">
           <span className="web-kicker">Ordem correta</span>
-          <h2>Plano de migracao sem perda de dados</h2>
+          <h2>Plano de migração sem perda de dados</h2>
           <div className="web-timeline">
             {migrationOrder.map((item) => (
               <article key={item.title} className={`web-timeline-item web-timeline-${item.status}`}>
@@ -62,7 +62,7 @@ export function WebMigrationPage({ activePage, onOpenDiagnostics }: WebMigration
         <section className="web-card mobile-safe-card">
           <span className="web-kicker">Uso no celular</span>
           <h2>Fluxo seguro por etapas</h2>
-          <p>Enquanto este modulo nao estiver no Supabase, o app mostra este bloqueio bonito no mobile para evitar tela branca, dado falso ou salvamento em cache local.</p>
+          <p>Enquanto este módulo não estiver no Supabase, o app mostra este bloqueio no mobile para evitar tela branca, dado falso, venda duplicada ou salvamento inseguro.</p>
           <button type="button" className="secondary-btn" onClick={onOpenDiagnostics}>Ver status web</button>
         </section>
         <WebAuthPanel compact />
