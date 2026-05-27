@@ -11064,3 +11064,710 @@ body {
     padding: 12px;
   }
 }
+
+/* === MEGA LOTE 51: dark clean premium, login refinado e shell comercial ===
+   Objetivo: tirar excesso de glow, aumentar limpeza visual, compactar topo/sidebar,
+   preservar rolagem PWA v49/v50 e deixar web/mobile com aparência mais premium. */
+:root {
+  --bg: #030712;
+  --panel: #07101f;
+  --panel-2: #0a1424;
+  --line: rgba(126, 151, 196, 0.13);
+  --line-strong: rgba(126, 151, 196, 0.22);
+  --text: #f7faff;
+  --muted: #a9b8d4;
+  --blue: #2f75ff;
+  --green: #32d583;
+  --purple: #7657ff;
+  --yellow: #fbbf24;
+  --red: #fb7185;
+  --radius: 18px;
+  --shadow: 0 22px 62px rgba(0, 0, 0, 0.32);
+  --clean-surface: rgba(8, 16, 31, 0.94);
+  --clean-surface-2: rgba(10, 20, 38, 0.9);
+  --clean-border: rgba(128, 151, 198, 0.14);
+  --clean-border-strong: rgba(128, 151, 198, 0.24);
+  --clean-text-soft: rgba(226, 235, 255, 0.82);
+}
+
+body {
+  background:
+    radial-gradient(circle at 16% -8%, rgba(47, 117, 255, 0.13), transparent 30%),
+    radial-gradient(circle at 92% 2%, rgba(118, 87, 255, 0.10), transparent 26%),
+    linear-gradient(180deg, #030712 0%, #050916 44%, #030712 100%) !important;
+}
+
+/* Login/Landing: dark clean com menos brilho e mais foco no CTA */
+.login-landing.welcome-screen {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(47, 117, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 84% 12%, rgba(118, 87, 255, 0.10), transparent 24%),
+    linear-gradient(180deg, #020611 0%, #040815 56%, #02050c 100%) !important;
+}
+
+.login-shell-card {
+  border-color: rgba(132, 154, 205, 0.18) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.038), transparent 22%),
+    radial-gradient(circle at 74% 42%, rgba(47, 117, 255, 0.10), transparent 34%),
+    linear-gradient(180deg, rgba(7, 13, 27, 0.97), rgba(3, 7, 17, 0.985)) !important;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055) !important;
+}
+
+.login-shell-card::before {
+  opacity: 0.42 !important;
+  background:
+    linear-gradient(90deg, rgba(96, 165, 250, 0.055), transparent 28%, transparent 76%, rgba(124, 58, 237, 0.06)),
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,0.032), transparent 18%) !important;
+}
+
+.login-shell-card::after,
+.login-dots {
+  opacity: 0.18 !important;
+}
+
+.login-brand-mark,
+.neo-sidebar-brand-mark {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(70, 120, 255, 0.30), transparent 42%),
+    linear-gradient(145deg, rgba(18, 31, 68, 0.96), rgba(20, 18, 56, 0.96)) !important;
+  box-shadow: inset 0 0 0 1px rgba(105, 144, 255, 0.22), 0 14px 30px rgba(19, 37, 100, 0.24) !important;
+}
+
+.login-brand strong,
+.login-hero-copy h1,
+.neo-page-meta-title h1,
+.neo-section-head h2,
+.neo-greeting-copy strong {
+  text-shadow: none !important;
+}
+
+.login-nav button {
+  color: rgba(226, 235, 255, 0.76) !important;
+}
+
+.login-nav button:hover,
+.login-nav button:focus-visible {
+  color: #ffffff !important;
+}
+
+.login-status-pill {
+  border-color: rgba(50, 213, 131, 0.22) !important;
+  background: rgba(4, 16, 23, 0.72) !important;
+  color: #9cf5c3 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+.login-status-dot {
+  background: #32d583 !important;
+  box-shadow: 0 0 0 5px rgba(50, 213, 131, 0.10), 0 0 14px rgba(50, 213, 131, 0.32) !important;
+}
+
+.login-hero-copy h1 span {
+  background: linear-gradient(90deg, #2f75ff 0%, #5f7dff 52%, #8b5cf6 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+.login-hero-copy p,
+.login-brand small,
+.login-security-note,
+.login-feature-strip p {
+  color: rgba(218, 229, 255, 0.70) !important;
+}
+
+.login-top-enter,
+.login-main-enter,
+.primary-btn {
+  border-color: rgba(118, 152, 255, 0.34) !important;
+  background: linear-gradient(135deg, #1f6bff 0%, #3f54ff 52%, #6d32db 100%) !important;
+  box-shadow: 0 12px 26px rgba(38, 86, 220, 0.22), inset 0 1px 0 rgba(255,255,255,0.18) !important;
+}
+
+.login-top-enter:hover,
+.login-main-enter:hover,
+.primary-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.login-orbit {
+  border-color: rgba(67, 111, 255, 0.16) !important;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(27, 64, 145, 0.11), transparent 48%),
+    radial-gradient(circle at 50% 70%, rgba(102, 53, 255, 0.11), transparent 36%) !important;
+  box-shadow: inset 0 -34px 74px rgba(55, 44, 148, 0.12) !important;
+}
+
+.login-pos-base::before {
+  opacity: 0.52 !important;
+  filter: blur(10px) !important;
+}
+
+.login-monitor,
+.login-printer,
+.login-scanner,
+.login-keyboard {
+  box-shadow: 0 18px 38px rgba(0,0,0,0.38) !important;
+}
+
+.login-feature-strip {
+  border-color: rgba(132, 154, 205, 0.14) !important;
+  background: linear-gradient(180deg, rgba(8, 15, 28, 0.64), rgba(4, 9, 19, 0.74)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.028) !important;
+}
+
+.login-feature-strip article + article {
+  border-color: rgba(132, 154, 205, 0.12) !important;
+}
+
+.login-feature-icon {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 26px rgba(0,0,0,0.20) !important;
+}
+
+.login-feature-wifi,
+.login-feature-rocket {
+  background: radial-gradient(circle at 32% 24%, rgba(168, 85, 247, 0.32), transparent 36%), linear-gradient(145deg, #1c123f, #6531d4) !important;
+}
+
+.login-feature-db {
+  background: radial-gradient(circle at 32% 24%, rgba(59, 130, 246, 0.30), transparent 36%), linear-gradient(145deg, #081a42, #1b4ecd) !important;
+}
+
+/* Shell interno: visual fosco, limpo e mais comercial */
+.neo-shell {
+  background:
+    radial-gradient(circle at 12% -8%, rgba(47, 117, 255, 0.11), transparent 28%),
+    radial-gradient(circle at 94% 0%, rgba(118, 87, 255, 0.10), transparent 24%),
+    linear-gradient(180deg, #030713 0%, #050b19 52%, #030712 100%) !important;
+}
+
+.neo-windowbar {
+  background: rgba(3, 7, 17, 0.88) !important;
+  border-bottom-color: rgba(132, 154, 205, 0.10) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.neo-sidebar,
+.neo-greeting-surface,
+.neo-action-ribbon,
+.neo-page-shell,
+.neo-surface,
+.neo-trust-strip,
+.neo-header-status-row,
+.neo-kpi-card,
+.neo-context-card,
+.neo-quick-card,
+.neo-system-row,
+.mobile-data-card,
+.premium-table-filters,
+.premium-modal-card {
+  border-color: var(--clean-border) !important;
+  background:
+    linear-gradient(180deg, rgba(9, 17, 32, 0.94), rgba(5, 10, 21, 0.985)) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255,255,255,0.026) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.neo-sidebar {
+  border-radius: 24px !important;
+}
+
+.neo-nav-item,
+.neo-action-tile,
+.neo-header-chip,
+.neo-mini-chip,
+.neo-confirm-chip,
+.neo-version-block button,
+.secondary-btn,
+.ghost-btn,
+.table-filter-control,
+.neo-diagnostic-button,
+.web-module-card,
+.web-permission-grid span {
+  border-color: rgba(132, 154, 205, 0.12) !important;
+  background: rgba(255, 255, 255, 0.026) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.018) !important;
+}
+
+.neo-nav-item:hover,
+.neo-action-tile:hover,
+.secondary-btn:hover,
+.ghost-btn:hover,
+.neo-quick-card:hover,
+.neo-kpi-card:hover,
+.neo-context-card:hover,
+.neo-surface:hover,
+.neo-trust-strip:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(135, 162, 220, 0.22) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+}
+
+.neo-nav-item.active {
+  background: linear-gradient(90deg, rgba(36, 106, 255, 0.48), rgba(35, 69, 167, 0.38)) !important;
+  border-color: rgba(105, 145, 255, 0.34) !important;
+  box-shadow: inset 3px 0 0 rgba(73, 134, 255, 0.95), 0 12px 30px rgba(29, 78, 216, 0.18) !important;
+}
+
+.neo-shell-web .neo-nav-item.active {
+  background: linear-gradient(90deg, rgba(33, 136, 95, 0.44), rgba(35, 83, 178, 0.40)) !important;
+  border-color: rgba(74, 222, 128, 0.26) !important;
+  box-shadow: inset 3px 0 0 rgba(50, 213, 131, 0.90), 0 12px 28px rgba(6, 95, 70, 0.16) !important;
+}
+
+.neo-nav-item-icon,
+.neo-action-icon,
+.neo-page-meta-icon,
+.neo-kpi-icon,
+.neo-context-card-icon,
+.neo-quick-icon,
+.neo-trust-badge,
+.empty-state-icon,
+.premium-modal-icon {
+  background: linear-gradient(180deg, rgba(74, 108, 220, 0.16), rgba(38, 57, 124, 0.12)) !important;
+  border-color: rgba(132, 154, 205, 0.13) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 18px rgba(20, 36, 88, 0.15) !important;
+}
+
+.neo-kpi-card-sales {
+  background: linear-gradient(180deg, rgba(9, 28, 65, 0.88), rgba(6, 17, 39, 0.98)) !important;
+}
+
+.neo-kpi-card-ticket {
+  background: linear-gradient(180deg, rgba(46, 21, 82, 0.78), rgba(31, 16, 62, 0.96)) !important;
+}
+
+.neo-kpi-card::after {
+  opacity: 0.42 !important;
+  width: 118px !important;
+  height: 118px !important;
+  background: radial-gradient(circle, rgba(84, 112, 255, 0.16), transparent 72%) !important;
+}
+
+.neo-kpi-card span,
+.neo-context-card span,
+.neo-section-head p,
+.neo-page-meta p,
+.neo-context-card small,
+.neo-system-row span,
+.web-module-card small,
+.table-filter-summary,
+.mobile-data-field small {
+  color: rgba(190, 205, 238, 0.74) !important;
+}
+
+.neo-kpi-card strong,
+.neo-context-card strong,
+.neo-system-row strong,
+.mobile-data-field strong,
+.web-module-card strong,
+.metric-card strong,
+.neo-page-content .stat-card strong {
+  color: #f7faff !important;
+}
+
+.neo-kpi-card small,
+.neo-context-card mark.green,
+.neo-mini-chip.ok,
+.neo-confirm-chip,
+.neo-system-row strong,
+.web-permission-grid span.ok {
+  color: #94f7b7 !important;
+}
+
+.neo-header-chip-primary,
+.neo-shell-web .neo-header-chip-primary,
+.neo-shell-web .neo-page-meta-status .neo-mini-chip.ok {
+  border-color: rgba(50, 213, 131, 0.20) !important;
+  background: rgba(6, 78, 59, 0.18) !important;
+}
+
+.neo-mini-chip.warn,
+.web-permission-grid span.warn {
+  color: #f8d77a !important;
+  border-color: rgba(251, 191, 36, 0.22) !important;
+  background: rgba(113, 63, 18, 0.16) !important;
+}
+
+.neo-page-alert-warning,
+.neo-offline-banner {
+  border-color: rgba(251, 191, 36, 0.26) !important;
+  background: linear-gradient(135deg, rgba(113, 63, 18, 0.24), rgba(26, 19, 12, 0.84)) !important;
+  color: #fde9a8 !important;
+}
+
+.neo-page-alert-danger {
+  border-color: rgba(251, 113, 133, 0.28) !important;
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.22), rgba(28, 11, 19, 0.86)) !important;
+}
+
+/* Mais densidade sem apertar */
+.neo-sidebar-brand {
+  gap: 12px !important;
+}
+
+.neo-sidebar-brand-mark {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 18px !important;
+}
+
+.neo-sidebar-brand-copy strong {
+  font-size: 0.88rem !important;
+  letter-spacing: 0.075em !important;
+}
+
+.neo-sidebar-brand-copy small,
+.neo-version-block span,
+.neo-env-block small {
+  color: rgba(184, 199, 232, 0.68) !important;
+}
+
+.neo-nav {
+  gap: 6px !important;
+}
+
+.neo-nav-item {
+  min-height: 54px !important;
+  padding: 8px 11px !important;
+  border-radius: 16px !important;
+}
+
+.neo-nav-item-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+}
+
+.neo-nav-item-label {
+  font-size: 0.9rem !important;
+}
+
+.neo-greeting-surface,
+.neo-action-ribbon,
+.neo-header-status-row {
+  min-height: 78px !important;
+}
+
+.neo-greeting-surface {
+  padding: 13px 16px !important;
+  border-radius: 20px !important;
+}
+
+.neo-greeting-copy strong {
+  font-size: clamp(1.08rem, 1.34vw, 1.32rem) !important;
+}
+
+.neo-greeting-copy span {
+  color: rgba(205, 216, 246, 0.74) !important;
+  font-size: 0.86rem !important;
+}
+
+.neo-user-pill {
+  min-width: 60px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+}
+
+.neo-user-pill span {
+  width: 31px !important;
+  height: 31px !important;
+}
+
+.neo-action-ribbon {
+  padding: 8px !important;
+  border-radius: 20px !important;
+}
+
+.neo-action-tile {
+  min-height: 64px !important;
+  padding: 7px 6px !important;
+  gap: 5px !important;
+  border-radius: 15px !important;
+}
+
+.neo-action-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 11px !important;
+}
+
+.neo-action-tile span:last-child {
+  font-size: 0.72rem !important;
+}
+
+.neo-header-status-row {
+  padding: 8px !important;
+  gap: 7px !important;
+  border-radius: 20px !important;
+}
+
+.neo-header-chip {
+  min-height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 13px !important;
+  font-size: 0.76rem !important;
+}
+
+.neo-page-shell {
+  padding: 15px !important;
+}
+
+.neo-page-meta {
+  margin-bottom: 10px !important;
+}
+
+.neo-page-meta-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 13px !important;
+}
+
+.neo-page-meta-title h1 {
+  font-size: clamp(1.44rem, 1.68vw, 1.82rem) !important;
+}
+
+.neo-page-meta p {
+  margin-top: 4px !important;
+  font-size: 0.92rem !important;
+}
+
+.neo-mini-chip {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 0.78rem !important;
+}
+
+.neo-dashboard {
+  gap: 12px !important;
+}
+
+.neo-kpi-grid {
+  gap: 11px !important;
+}
+
+.neo-kpi-card {
+  min-height: 104px !important;
+  padding: 13px !important;
+  border-radius: 19px !important;
+}
+
+.neo-kpi-icon {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 15px !important;
+}
+
+.neo-kpi-card strong {
+  font-size: clamp(1.28rem, 1.7vw, 1.78rem) !important;
+}
+
+.neo-kpi-card small {
+  font-size: 0.84rem !important;
+}
+
+.neo-surface,
+.neo-trust-strip {
+  padding: 14px !important;
+  border-radius: 22px !important;
+}
+
+.neo-section-head {
+  margin-bottom: 10px !important;
+}
+
+.neo-section-head h2 {
+  font-size: 1.16rem !important;
+}
+
+.neo-context-grid {
+  gap: 10px !important;
+}
+
+.neo-context-card {
+  min-height: 100px !important;
+  padding: 13px !important;
+  border-radius: 18px !important;
+  grid-template-columns: 46px minmax(0, 1fr) auto !important;
+}
+
+.neo-context-card-icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.neo-context-card strong {
+  font-size: 1.02rem !important;
+}
+
+.neo-chip-row {
+  margin-top: 10px !important;
+  gap: 8px !important;
+}
+
+.neo-confirm-chip {
+  min-height: 40px !important;
+  border-radius: 14px !important;
+  font-size: 0.82rem !important;
+}
+
+.neo-mobile-dock {
+  background: rgba(5, 11, 24, 0.965) !important;
+  border-color: rgba(132, 154, 205, 0.18) !important;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255,255,255,0.035) !important;
+}
+
+.neo-mobile-dock button.active {
+  background: linear-gradient(180deg, rgba(47, 117, 255, 0.20), rgba(34, 72, 160, 0.18)) !important;
+  color: #ffffff !important;
+}
+
+.neo-shell-web .neo-mobile-dock button.active {
+  background: linear-gradient(180deg, rgba(50, 213, 131, 0.18), rgba(34, 72, 160, 0.14)) !important;
+}
+
+/* Scrollbars dark clean */
+.neo-page-shell::-webkit-scrollbar,
+.neo-sidebar::-webkit-scrollbar,
+.premium-modal-body::-webkit-scrollbar,
+.table-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.neo-page-shell::-webkit-scrollbar-track,
+.neo-sidebar::-webkit-scrollbar-track,
+.premium-modal-body::-webkit-scrollbar-track,
+.table-wrap::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+.neo-page-shell::-webkit-scrollbar-thumb,
+.neo-sidebar::-webkit-scrollbar-thumb,
+.premium-modal-body::-webkit-scrollbar-thumb,
+.table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(93, 118, 179, 0.62) !important;
+  border-radius: 999px !important;
+  border: 2px solid rgba(5, 11, 24, 0.95) !important;
+}
+
+/* Mobile: mais limpo, menos brilho, CTA claro e dock sem cobrir */
+@media (max-width: 1024px) {
+  .neo-shell {
+    background:
+      radial-gradient(circle at 50% -10%, rgba(47, 117, 255, 0.12), transparent 28%),
+      linear-gradient(180deg, #030713 0%, #050b18 52%, #030712 100%) !important;
+  }
+
+  .neo-sidebar {
+    border-radius: 0 22px 22px 0 !important;
+    box-shadow: 24px 0 70px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255,255,255,0.026) !important;
+  }
+
+  .neo-topbar-mobile-row {
+    background: rgba(5, 11, 24, 0.96) !important;
+    border-bottom-color: rgba(132, 154, 205, 0.12) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .login-shell-card {
+    background:
+      radial-gradient(circle at 50% -6%, rgba(47, 117, 255, 0.14), transparent 30%),
+      linear-gradient(180deg, #020611 0%, #040814 100%) !important;
+  }
+
+  .login-brand-mark {
+    width: clamp(76px, 21vw, 88px) !important;
+    height: clamp(76px, 21vw, 88px) !important;
+  }
+
+  .login-brand-mark-inner {
+    width: clamp(58px, 16vw, 68px) !important;
+    height: clamp(58px, 16vw, 68px) !important;
+  }
+
+  .login-mobile-title {
+    font-size: clamp(32px, 9.3vw, 40px) !important;
+  }
+
+  .login-status-pill {
+    min-height: 34px !important;
+    padding: 0 13px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .login-feature-strip article {
+    background: linear-gradient(180deg, rgba(9, 17, 32, 0.92), rgba(5, 10, 21, 0.98)) !important;
+    border-color: rgba(132, 154, 205, 0.13) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.026), 0 10px 22px rgba(0,0,0,0.14) !important;
+  }
+
+  .login-mobile-enter {
+    min-height: 56px !important;
+  }
+
+  .neo-page-shell {
+    padding: 11px !important;
+    border-radius: 20px !important;
+  }
+
+  .neo-greeting-surface {
+    padding: 12px !important;
+  }
+
+  .neo-action-ribbon {
+    padding: 7px !important;
+  }
+
+  .neo-action-tile {
+    flex-basis: 72px !important;
+    min-width: 72px !important;
+    min-height: 64px !important;
+  }
+
+  .neo-kpi-card {
+    min-height: 94px !important;
+    padding: 11px !important;
+  }
+
+  .neo-context-card {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    min-height: auto !important;
+    padding: 11px !important;
+  }
+
+  .neo-context-card mark {
+    grid-column: 2 !important;
+    justify-self: start !important;
+  }
+
+  .neo-mobile-dock {
+    width: calc(100vw - 20px) !important;
+    left: 10px !important;
+    right: 10px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-top-enter:hover,
+  .login-main-enter:hover,
+  .primary-btn:hover,
+  .neo-nav-item:hover,
+  .neo-action-tile:hover,
+  .secondary-btn:hover,
+  .ghost-btn:hover,
+  .neo-quick-card:hover,
+  .neo-kpi-card:hover,
+  .neo-context-card:hover,
+  .neo-surface:hover,
+  .neo-trust-strip:hover {
+    transform: none !important;
+  }
+}

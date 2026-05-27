@@ -1,5 +1,6 @@
 import React from 'react';
 import { AppIcon } from '../components/AppIcon';
+import { getRuntimeInfo } from '../lib/runtime';
 
 type WelcomeAction = (() => void) | undefined;
 
@@ -26,6 +27,16 @@ function isBusy(props: WelcomeProps): boolean {
 function WelcomeLayout(props: WelcomeProps): JSX.Element {
   const action = resolveAction(props);
   const busy = isBusy(props);
+  const runtimeInfo = getRuntimeInfo();
+  const isWeb = runtimeInfo.isWeb;
+  const statusLabel = isWeb ? 'PWA/Web seguro' : 'Offline local';
+  const heroLine = isWeb ? 'web e pronto' : 'local e pronto';
+  const heroText = isWeb
+    ? 'Acesse no navegador e no celular com dados sincronizados na nuvem segura.'
+    : 'O Smart Loja Fácil funciona completamente sem internet. Dados seguros no computador.';
+  const securityText = isWeb
+    ? 'Ambiente PWA/Web com login seguro e permissões por papel.'
+    : 'Ambiente 100% local. Seus dados não saem do seu computador.';
 
   const handleEnter = () => {
     if (props.disabled || busy || !action) return;
@@ -64,19 +75,19 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
           <section className="login-hero-copy">
             <span className="login-status-pill">
               <span className="login-status-dot" />
-              Offline local
+              {statusLabel}
             </span>
 
             <h2 className="login-mobile-title">Smart Loja Fácil</h2>
 
             <h1>
               Sistema rápido,
-              <span> local e pronto</span>
+              <span> {heroLine}</span>
               para abrir.
             </h1>
 
             <p>
-              O Smart Loja Fácil funciona completamente sem internet. Dados seguros no computador.
+              {heroText}
             </p>
 
             <button type="button" className="login-main-enter" onClick={handleEnter} disabled={props.disabled || busy || !action}>
@@ -86,7 +97,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
 
             <div className="login-security-note">
               <span aria-hidden="true">▣</span>
-              <small>Ambiente 100% local. Seus dados não saem do seu computador.</small>
+              <small>{securityText}</small>
             </div>
           </section>
 
@@ -167,7 +178,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
           </button>
           <div className="login-security-note login-mobile-security">
             <span aria-hidden="true">▣</span>
-            <small>Ambiente 100% local. Seus dados não saem do seu computador.</small>
+            <small>{securityText}</small>
           </div>
         </div>
       </section>

@@ -37,7 +37,7 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v50';
+export const WEB_APP_VERSION = 'pwa-supabase-v51';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
