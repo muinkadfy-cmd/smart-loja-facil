@@ -342,6 +342,23 @@ alter table public.stock_movements enable row level security;
 alter table public.audit_log enable row level security;
 alter table public.sync_conflicts enable row level security;
 
+
+create or replace function public.attach_store_owner_member()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.store_members (store_id, user_id, role)
+  values (new.id, new.owner_id, 'owner')
+  on conflict (store_id, user_id) do update set role = 'owner';
+  return new;
+end;
+$$;
+
+create trigger stores_attach_owner_member after insert on public.stores for each row execute function public.attach_store_owner_member();
+
 create policy "profiles_select_self" on public.profiles for select using (auth.uid() is not null and id = auth.uid());
 create policy "profiles_update_self" on public.profiles for update using (auth.uid() is not null and id = auth.uid()) with check (auth.uid() is not null and id = auth.uid());
 create policy "profiles_insert_self" on public.profiles for insert with check (auth.uid() is not null and id = auth.uid());
@@ -351,7 +368,7 @@ create policy "stores_insert_owner" on public.stores for insert with check (auth
 create policy "stores_update_admin" on public.stores for update using (public.has_store_role(id, array['owner','admin'])) with check (public.has_store_role(id, array['owner','admin']));
 
 create policy "members_select_same_store" on public.store_members for select using (user_id = auth.uid() or public.is_store_member(store_id));
-create policy "members_insert_admin" on public.store_members for insert with check (public.has_store_role(store_id, array['owner','admin']) or user_id = auth.uid());
+create policy "members_insert_admin" on public.store_members for insert with check (public.has_store_role(store_id, array['owner','admin']));
 create policy "members_update_owner" on public.store_members for update using (public.has_store_role(store_id, array['owner'])) with check (public.has_store_role(store_id, array['owner']));
 create policy "members_delete_owner" on public.store_members for delete using (public.has_store_role(store_id, array['owner']));
 

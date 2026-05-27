@@ -2,6 +2,7 @@ import React, { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'rea
 import { AppIcon } from '../components/AppIcon';
 import { DataTable } from '../components/DataTable';
 import { Modal } from '../components/Modal';
+import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { money } from '../lib/format';
@@ -393,27 +394,33 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
   return (
     <div className="stack classic-products-stack">
-      <div className="classic-inline-filters">
-        <label>
-          <span>Buscar</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por produto, codigo, categoria, cor ou tamanho" />
-        </label>
-        <label>
-          <span>Categoria:</span>
-          <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
-            {categoryOptions.map((option) => <option key={option} value={option}>{option === 'todas' ? 'Todas' : option}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>Status:</span>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-            <option value="todos">Todos</option>
-            <option value="ativo">Ativo</option>
-            <option value="inativo">Inativo</option>
-          </select>
-        </label>
-        <button type="button" className="classic-filter-btn"><AppIcon name="filtro" size={16} className="app-icon-button-inline" />Filtrar</button>
-      </div>
+      <TableFilters
+        query={query}
+        onQueryChange={setQuery}
+        queryPlaceholder="Buscar por produto, codigo, categoria, cor ou tamanho"
+        summary={`${filteredRows.length} de ${rows.length} produtos visiveis`}
+        selects={[
+          {
+            label: 'Categoria',
+            value: categoryFilter,
+            onChange: setCategoryFilter,
+            options: categoryOptions.map((option) => ({
+              value: option,
+              label: option === 'todas' ? 'Todas' : option,
+            })),
+          },
+          {
+            label: 'Status',
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: 'todos', label: 'Todos' },
+              { value: 'ativo', label: 'Ativo' },
+              { value: 'inativo', label: 'Inativo' },
+            ],
+          },
+        ]}
+      />
 
       <section className="stats-grid classic-stats-grid">
         <div className="stat-card tone-yellow"><div className="stat-icon"><AppIcon name="produtos" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Total de Produtos</span><strong>{summary.totalProducts}</strong><small>produtos cadastrados</small></div></div>

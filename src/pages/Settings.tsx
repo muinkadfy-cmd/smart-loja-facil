@@ -1,6 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import { AppIcon } from '../components/AppIcon';
 import { api } from '../lib/api';
+import { getRuntimeInfo } from '../lib/runtime';
 import type { Settings } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; settings: Settings | null; onSettingsSaved: (settings: Settings) => void; }
@@ -22,6 +23,7 @@ const fallback: Settings = {
 export function SettingsPage({ refreshToken, settings, onSettingsSaved, onChanged }: PageProps): JSX.Element {
   const [form, setForm] = useState<Settings>(settings ?? fallback);
   const [saved, setSaved] = useState(false);
+  const runtimeInfo = getRuntimeInfo();
 
   useEffect(() => {
     api.settings().then((payload) => setForm({ ...payload, receipt_width_mm: 105 })).catch(() => setForm({ ...(settings ?? fallback), receipt_width_mm: 105 }));
@@ -39,7 +41,7 @@ export function SettingsPage({ refreshToken, settings, onSettingsSaved, onChange
 
   return (
     <div className="stack">
-      <div className="page-title"><h1>Configuracoes</h1><p>Dados da loja, comprovante A6 10,5 x 14,8 cm, estoque baixo e modo PC lento.</p></div>
+      <div className="page-title"><h1>Configuracoes</h1><p>{runtimeInfo.isWeb ? 'Dados da loja sincronizados no Supabase para web/mobile.' : 'Dados da loja, comprovante A6 10,5 x 14,8 cm, estoque baixo e modo PC lento.'}</p></div>
       <section className="panel form-panel">
         <form className="form-grid" onSubmit={submit}>
           <label>Nome da loja<input value={form.store_name} onChange={(e) => setForm({ ...form, store_name: e.target.value })} /></label>
@@ -55,7 +57,7 @@ export function SettingsPage({ refreshToken, settings, onSettingsSaved, onChange
           <button className="primary-btn"><AppIcon name="configuracoes" size={16} className="app-icon-button-inline" />Salvar configuracoes</button>
         </form>
       </section>
-      {saved && <div className="notice">Configuracoes salvas no SQLite local.</div>}
+      {saved && <div className="notice">{runtimeInfo.isWeb ? 'Configuracoes salvas no Supabase.' : 'Configuracoes salvas no SQLite local.'}</div>}
     </div>
   );
 }

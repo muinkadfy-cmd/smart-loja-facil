@@ -1,6 +1,22 @@
 import { invoke } from '@tauri-apps/api/core';
 import { playOperationSound } from './sound';
 import { createWebModeError, isTauriRuntime } from './runtime';
+import {
+  openWebUrl,
+  unsupportedWebFileAction,
+  webAdjustStock,
+  webAppStatus,
+  webCustomers,
+  webDashboard,
+  webDashboardSalesSeries,
+  webInactivateCustomer,
+  webInactivateProduct,
+  webProducts,
+  webSaveCustomer,
+  webSaveProduct,
+  webSaveSettings,
+  webSettings,
+} from './webApi';
 import type {
   AppStatus,
   AuditEvent,
@@ -63,16 +79,16 @@ async function call<T>(command: string, args: Record<string, unknown> = {}): Pro
 }
 
 export const api = {
-  boot: () => call<AppStatus>('boot'),
-  dashboard: () => call<DashboardData>('get_dashboard'),
-  dashboardSalesSeries: (period: string) => call<DashboardSalesPoint[]>('get_dashboard_sales_series', { period }),
-  customers: () => call<Customer[]>('list_customers'),
-  saveCustomer: (customer: Partial<Customer>) => call<Customer>('upsert_customer', { customer }),
-  inactivateCustomer: (customerId: string) => call<Customer>('inactivate_customer', { customerId }),
-  products: () => call<Product[]>('list_products'),
-  saveProduct: (product: Partial<Product>) => call<Product>('upsert_product', { product }),
-  inactivateProduct: (productId: string) => call<Product>('inactivate_product', { productId }),
-  adjustStock: (productId: string, delta: number, reason: string) => call<Product>('adjust_stock', { productId, delta, reason }),
+  boot: () => (isTauriRuntime() ? call<AppStatus>('boot') : webAppStatus()),
+  dashboard: () => (isTauriRuntime() ? call<DashboardData>('get_dashboard') : webDashboard()),
+  dashboardSalesSeries: (period: string) => (isTauriRuntime() ? call<DashboardSalesPoint[]>('get_dashboard_sales_series', { period }) : webDashboardSalesSeries(period)),
+  customers: () => (isTauriRuntime() ? call<Customer[]>('list_customers') : webCustomers()),
+  saveCustomer: (customer: Partial<Customer>) => (isTauriRuntime() ? call<Customer>('upsert_customer', { customer }) : webSaveCustomer(customer)),
+  inactivateCustomer: (customerId: string) => (isTauriRuntime() ? call<Customer>('inactivate_customer', { customerId }) : webInactivateCustomer(customerId)),
+  products: () => (isTauriRuntime() ? call<Product[]>('list_products') : webProducts()),
+  saveProduct: (product: Partial<Product>) => (isTauriRuntime() ? call<Product>('upsert_product', { product }) : webSaveProduct(product)),
+  inactivateProduct: (productId: string) => (isTauriRuntime() ? call<Product>('inactivate_product', { productId }) : webInactivateProduct(productId)),
+  adjustStock: (productId: string, delta: number, reason: string) => (isTauriRuntime() ? call<Product>('adjust_stock', { productId, delta, reason }) : webAdjustStock(productId, delta, reason)),
   createSale: (payload: unknown) => call<SaleSummary>('create_sale', { payload }),
   sales: () => call<SaleSummary[]>('list_sales'),
   cancelSale: (saleId: string, reason: string) => call<SaleSummary>('cancel_sale', { saleId, reason }),
@@ -88,9 +104,9 @@ export const api = {
   cancelOrder: (orderId: string, reason: string) => call<OrderSummary>('cancel_order', { orderId, reason }),
   receipts: () => call<ReceiptSummary[]>('list_receipts'),
   exportHtmlPdf: (html: string, fileStem: string, openAfter = true, destinationDir?: string | null) => call<string>('export_html_pdf', { html, fileStem, openAfter, destinationDir }),
-  openExternalUrl: (url: string) => call<void>('open_external_url', { url }),
-  revealFile: (path: string) => call<void>('reveal_file', { path }),
-  saveProductImage: (imageData: string, fileStem: string, openAfter = true) => call<string>('save_product_image', { imageData, fileStem, openAfter }),
+  openExternalUrl: (url: string) => (isTauriRuntime() ? call<void>('open_external_url', { url }) : Promise.resolve(openWebUrl(url))),
+  revealFile: (path: string) => (isTauriRuntime() ? call<void>('reveal_file', { path }) : unsupportedWebFileAction()),
+  saveProductImage: (imageData: string, fileStem: string, openAfter = true) => (isTauriRuntime() ? call<string>('save_product_image', { imageData, fileStem, openAfter }) : unsupportedWebFileAction()),
   backups: () => call<BackupInfo[]>('list_backups'),
   createBackup: () => call<BackupInfo>('create_backup'),
   createBackupTo: (destinationDir: string) => call<BackupInfo>('create_backup_to', { destinationDir }),
@@ -102,7 +118,7 @@ export const api = {
   exitApp: () => call<void>('exit_app'),
   reportData: (report: string, from: string, to: string) => call<ReportData>('get_report_data', { report, from, to }),
   reportsCsv: (report: string, from: string, to: string) => call<string>('export_report_csv', { report, from, to }),
-  settings: () => call<Settings>('get_settings'),
-  saveSettings: (settings: Settings) => call<Settings>('save_settings', { settings }),
+  settings: () => (isTauriRuntime() ? call<Settings>('get_settings') : webSettings()),
+  saveSettings: (settings: Settings) => (isTauriRuntime() ? call<Settings>('save_settings', { settings }) : webSaveSettings(settings)),
   audit: () => call<AuditEvent[]>('list_audit'),
 };

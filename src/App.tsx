@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal } from './components/Modal';
 import { Shell } from './components/Shell';
+import { PwaUpdateNotice } from './components/PwaUpdateNotice';
 import { Welcome } from './pages/Welcome';
 import { Dashboard } from './pages/Dashboard';
 import { CustomersPage } from './pages/Customers';
@@ -23,49 +24,10 @@ import { playOperationSound } from './lib/sound';
 import type { AppStatus, PageKey, Settings } from './types';
 
 
-
-function createWebSettings(): Settings {
-  const now = new Date().toISOString();
-  return {
-    store_name: 'Smart Loja Facil Web',
-    owner_name: 'Administrador',
-    phone: '',
-    whatsapp: '',
-    address: '',
-    receipt_message: 'Modo web em preparacao',
-    low_stock_limit: 3,
-    slow_mode: false,
-    admin_password_enabled: false,
-    receipt_width_mm: 80,
-    updated_at: now,
-  };
-}
-
-function createWebStatus(settings: Settings): AppStatus {
-  return {
-    db_path: 'Cloudflare/Web',
-    sqlite_ok: false,
-    offline_ready: false,
-    version: 'web-preview',
-    settings,
-    dashboard: {
-      today_sales_total: 0,
-      today_sales_count: 0,
-      customers_total: 0,
-      orders_open: 0,
-      credits_open_total: 0,
-      credits_active_customers: 0,
-      low_stock_count: 0,
-      payment_today: [],
-      recent_sales: [],
-    },
-  };
-}
-
 export default function App(): JSX.Element {
   const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [entered, setEntered] = useState(false);
-  const [activePage, setActivePage] = useState<PageKey>(() => runtimeInfo.isWeb ? 'diagnostics' : 'dashboard');
+  const [activePage, setActivePage] = useState<PageKey>('dashboard');
   const [status, setStatus] = useState<AppStatus | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,17 +44,10 @@ export default function App(): JSX.Element {
     setLoading(true);
     setError(null);
     try {
-      if (runtimeInfo.isWeb) {
-        const webSettings = createWebSettings();
-        setStatus(createWebStatus(webSettings));
-        setSettings(webSettings);
-        return;
-      }
-
       const payload = await api.boot();
       setStatus(payload);
       setSettings(payload.settings);
-      if (!startupSoundPlayed.current) {
+      if (!runtimeInfo.isWeb && !startupSoundPlayed.current) {
         startupSoundPlayed.current = true;
         playOperationSound('success');
       }
@@ -106,6 +61,13 @@ export default function App(): JSX.Element {
   useEffect(() => {
     if (entered) void boot();
   }, [boot, entered]);
+
+  useEffect(() => {
+    if (!runtimeInfo.isWeb) return undefined;
+    const reloadWebSession = () => void boot();
+    window.addEventListener('smart-loja:web-session-changed', reloadWebSession);
+    return () => window.removeEventListener('smart-loja:web-session-changed', reloadWebSession);
+  }, [boot, runtimeInfo.isWeb]);
 
   const refresh = useCallback(() => {
     setRefreshToken((value) => value + 1);
@@ -198,6 +160,10 @@ export default function App(): JSX.Element {
 
     if (runtimeInfo.isWeb) {
       if (activePage === 'diagnostics' || activePage === 'audit') return <WebDiagnosticsPage />;
+      if (activePage === 'dashboard') return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
+      if (activePage === 'customers') return <CustomersPage {...props} />;
+      if (activePage === 'products') return <ProductsPage {...props} />;
+      if (activePage === 'settings') return <SettingsPage settings={settings} onSettingsSaved={setSettings} {...props} />;
       return <WebMigrationPage activePage={activePage} onOpenDiagnostics={() => setActivePage('diagnostics')} />;
     }
 
@@ -240,7 +206,8 @@ export default function App(): JSX.Element {
   return (
     <>
       <Shell activePage={activePage} setActivePage={setActivePage} status={status} settings={settings} onRefresh={refresh} refreshToken={refreshToken}>
-        {loading && <div className="notice">{runtimeInfo.isWeb ? 'Preparando modo web...' : 'Carregando SQLite local...'}</div>}
+        <PwaUpdateNotice />
+        {loading && <div className="notice">{runtimeInfo.isWeb ? 'Preparando loja online...' : 'Carregando SQLite local...'}</div>}
         {error && <div className="error-box">{error}</div>}
         {page}
       </Shell>

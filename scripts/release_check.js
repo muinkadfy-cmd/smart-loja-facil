@@ -29,11 +29,18 @@ const webModeAllowedFiles = new Set([
   'src/App.tsx',
   'src/components/Shell.tsx',
   'src/components/WebAuthPanel.tsx',
+  'src/components/PwaUpdateNotice.tsx',
+  'src/pages/Dashboard.tsx',
+  'src/pages/Settings.tsx',
+  'src/styles.css',
   'src/lib/env.ts',
   'src/lib/runtime.ts',
   'src/lib/supabaseClient.ts',
+  'src/lib/webApi.ts',
   'src/pages/WebDiagnostics.tsx',
   'src/pages/WebMigration.tsx',
+  'public/manifest.webmanifest',
+  'public/sw.js',
 ]);
 
 const onlineServicePattern = /supabase|cloudflare/i;
@@ -125,4 +132,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check passou. Estrutura offline/Tauri/SQLite validada em análise estática.');
+console.log('OK: release_check passou. Estrutura offline preservada e camada PWA/Supabase restrita a arquivos permitidos.');
