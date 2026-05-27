@@ -37,7 +37,7 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v49';
+export const WEB_APP_VERSION = 'pwa-supabase-v50';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -51,6 +51,46 @@ function stringValue(value: unknown, fallback = ''): string {
 function normalizeRole(value: unknown): WebStoreRole {
   if (value === 'owner' || value === 'admin' || value === 'operator' || value === 'viewer') return value;
   return 'viewer';
+}
+
+
+export interface WebRoleCapabilities {
+  canRead: boolean;
+  canOperate: boolean;
+  canManageStore: boolean;
+  canManageMembers: boolean;
+  writeLabel: string;
+}
+
+export function webRoleLabel(role: WebStoreRole | 'sem login'): string {
+  if (role === 'owner') return 'Dono';
+  if (role === 'admin') return 'Administrador';
+  if (role === 'operator') return 'Operador';
+  if (role === 'viewer') return 'Leitor';
+  return 'Sem login';
+}
+
+export function getWebRoleCapabilities(role: WebStoreRole | 'sem login'): WebRoleCapabilities {
+  if (role === 'owner') {
+    return { canRead: true, canOperate: true, canManageStore: true, canManageMembers: true, writeLabel: 'Acesso total da loja' };
+  }
+  if (role === 'admin') {
+    return { canRead: true, canOperate: true, canManageStore: true, canManageMembers: false, writeLabel: 'Administra a loja, mas não controla o dono' };
+  }
+  if (role === 'operator') {
+    return { canRead: true, canOperate: true, canManageStore: false, canManageMembers: false, writeLabel: 'Opera cadastros e vendas liberadas' };
+  }
+  if (role === 'viewer') {
+    return { canRead: true, canOperate: false, canManageStore: false, canManageMembers: false, writeLabel: 'Somente leitura' };
+  }
+  return { canRead: false, canOperate: false, canManageStore: false, canManageMembers: false, writeLabel: 'Entre para liberar permissões' };
+}
+
+function requireWebRole(context: WebStoreContext, allowedRoles: WebStoreRole[], action: string): void {
+  if (allowedRoles.includes(context.role)) return;
+  const currentRole = webRoleLabel(context.role).toLowerCase();
+  const allowed = allowedRoles.map((role) => webRoleLabel(role).toLowerCase()).join(', ');
+  throw new Error(`Seu papel atual (${currentRole}) não permite ${action}. Permitido para: ${allowed}.`);
 }
 
 function normalizePaymentMethod(value: unknown): PaymentMethod {
@@ -81,7 +121,7 @@ function mapStore(row: Record<string, unknown>): WebStoreRow {
     whatsapp: stringValue(row.whatsapp),
     address: stringValue(row.address),
     logo_url: stringValue(row.logo_url),
-    receipt_message: stringValue(row.receipt_message, 'Obrigado pela preferencia!'),
+    receipt_message: stringValue(row.receipt_message, 'Obrigado pela preferência!'),
     low_stock_limit: numberValue(row.low_stock_limit, 3),
     status: stringValue(row.status, 'active'),
     updated_at: toIso(row.updated_at),
@@ -137,7 +177,7 @@ function guestSettings(): Settings {
 
 function missingSupabaseError(): Error {
   const env = getPublicWebEnv();
-  const missing = env.missing.join(' e ') || 'variaveis publicas';
+  const missing = env.missing.join(' e ') || 'variáveis públicas';
   return new Error(`Modo web precisa de ${missing} no Cloudflare para sincronizar com Supabase.`);
 }
 
@@ -150,7 +190,7 @@ async function getClient() {
 async function getSignedUser() {
   const client = await getClient();
   const { data, error } = await client.auth.getSession();
-  if (error) throw new Error(`Nao foi possivel ler a sessao web: ${error.message}`);
+  if (error) throw new Error(`Não foi possível ler a sessão web: ${error.message}`);
   const user = data.session?.user;
   if (!user) throw new Error('Entre no modo web para usar dados sincronizados no celular.');
   return { client, user, email: user.email ?? 'usuário sem e-mail' };
@@ -188,14 +228,14 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
     .insert({
       name: 'Smart Loja Fácil Web',
       owner_id: userId,
-      receipt_message: 'Obrigado pela preferencia!',
+      receipt_message: 'Obrigado pela preferência!',
       low_stock_limit: 3,
       status: 'active',
     })
     .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel criar a loja web inicial: ${error.message}`);
+  if (error) throw new Error(`Não foi possível criar a loja web inicial: ${error.message}`);
 
   const store = mapStore(data as Record<string, unknown>);
   window.localStorage.setItem(ACTIVE_STORE_KEY, store.id);
@@ -408,6 +448,7 @@ export async function webSettings(): Promise<Settings> {
 
 export async function webSaveSettings(settings: Settings): Promise<Settings> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'alterar configurações da loja');
   const client = await getClient();
   const { data, error } = await client
     .from('stores')
@@ -416,14 +457,14 @@ export async function webSaveSettings(settings: Settings): Promise<Settings> {
       phone: settings.phone.trim(),
       whatsapp: settings.whatsapp.trim(),
       address: settings.address.trim(),
-      receipt_message: settings.receipt_message.trim() || 'Obrigado pela preferencia!',
+      receipt_message: settings.receipt_message.trim() || 'Obrigado pela preferência!',
       low_stock_limit: Math.max(0, Math.round(settings.low_stock_limit || 0)),
     })
     .eq('id', context.store.id)
     .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel salvar as configuracoes no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível salvar as configurações no Supabase: ${error.message}`);
   return mapSettings(mapStore(data as Record<string, unknown>), context.email);
 }
 
@@ -452,12 +493,13 @@ export async function webCustomers(): Promise<Customer[]> {
     .is('deleted_at', null)
     .order('name', { ascending: true });
 
-  if (error) throw new Error(`Nao foi possivel carregar clientes do Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível carregar clientes do Supabase: ${error.message}`);
   return (data ?? []).map((row: Record<string, unknown>) => mapCustomer(row));
 }
 
 export async function webSaveCustomer(customer: Partial<Customer>): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar clientes');
   const client = await getClient();
   const name = String(customer.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do cliente antes de salvar.');
@@ -482,12 +524,13 @@ export async function webSaveCustomer(customer: Partial<Customer>): Promise<Cust
     .select('id, name, phone, whatsapp, address, credit_limit, status, notes, created_at, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel salvar o cliente no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível salvar o cliente no Supabase: ${error.message}`);
   return mapCustomer(data as Record<string, unknown>);
 }
 
 export async function webInactivateCustomer(customerId: string): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar clientes');
   const client = await getClient();
   const { data, error } = await client
     .from('customers')
@@ -497,7 +540,7 @@ export async function webInactivateCustomer(customerId: string): Promise<Custome
     .select('id, name, phone, whatsapp, address, credit_limit, status, notes, created_at, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel inativar o cliente no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível inativar o cliente no Supabase: ${error.message}`);
   return mapCustomer(data as Record<string, unknown>);
 }
 
@@ -531,12 +574,13 @@ export async function webProducts(): Promise<Product[]> {
     .is('deleted_at', null)
     .order('name', { ascending: true });
 
-  if (error) throw new Error(`Nao foi possivel carregar produtos do Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível carregar produtos do Supabase: ${error.message}`);
   return (data ?? []).map((row: Record<string, unknown>) => mapProduct(row));
 }
 
 export async function webSaveProduct(product: Partial<Product>): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar produtos');
   const client = await getClient();
   const name = String(product.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do produto antes de salvar.');
@@ -566,12 +610,13 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel salvar o produto no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível salvar o produto no Supabase: ${error.message}`);
   return mapProduct(data as Record<string, unknown>);
 }
 
 export async function webInactivateProduct(productId: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar produtos');
   const client = await getClient();
   const { data, error } = await client
     .from('products')
@@ -581,12 +626,13 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
     .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel inativar o produto no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível inativar o produto no Supabase: ${error.message}`);
   return mapProduct(data as Record<string, unknown>);
 }
 
 export async function webAdjustStock(productId: string, delta: number, reason: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
   const client = await getClient();
   if (!reason.trim()) throw new Error('Informe o motivo do ajuste de estoque.');
 
@@ -597,9 +643,10 @@ export async function webAdjustStock(productId: string, delta: number, reason: s
     .eq('store_id', context.store.id)
     .single();
 
-  if (loadError) throw new Error(`Nao foi possivel ler o estoque atual: ${loadError.message}`);
+  if (loadError) throw new Error(`Não foi possível ler o estoque atual: ${loadError.message}`);
   const beforeStock = numberValue((current as Record<string, unknown>).stock);
   const afterStock = beforeStock + delta;
+  if (afterStock < 0) throw new Error('O ajuste não pode deixar o estoque negativo no Supabase.');
 
   const { data, error } = await client
     .from('products')
@@ -609,7 +656,7 @@ export async function webAdjustStock(productId: string, delta: number, reason: s
     .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
     .single();
 
-  if (error) throw new Error(`Nao foi possivel ajustar o estoque no Supabase: ${error.message}`);
+  if (error) throw new Error(`Não foi possível ajustar o estoque no Supabase: ${error.message}`);
 
   await client.from('stock_movements').insert({
     store_id: context.store.id,

@@ -58,7 +58,8 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
     if (rememberEmail) window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
     else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
     setPassword('');
-    setMessage('Login web validado. Os modulos comerciais serao ligados ao banco cloud nos proximos lotes.');
+    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
+    setMessage('Login confirmado. Clientes, produtos e configurações ja podem sincronizar no Supabase.');
   }
 
   async function signOut(): Promise<void> {
@@ -68,15 +69,16 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
     await client.auth.signOut();
     setBusy(false);
     setSession(null);
-    setMessage('Sessao web encerrada.');
+    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
+    setMessage('Sessão web encerrada.');
   }
 
   if (!env.isConfigured) {
     return (
       <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact' : ''}`}>
         <span className="web-kicker">Login web</span>
-        <h2>Supabase ainda nao configurado</h2>
-        <p>Adicione as variaveis publicas no Cloudflare para liberar autenticação no navegador.</p>
+        <h2>Conexão web ainda não configurada</h2>
+        <p>Adicione as variáveis públicas no Cloudflare para liberar login, celular e sincronização.</p>
         <div className="web-code-list">
           {env.missing.map((item) => <code key={item}>{item}</code>)}
         </div>
@@ -87,12 +89,12 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
   if (session) {
     return (
       <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact' : ''}`}>
-        <span className="web-kicker">Sessao web ativa</span>
+        <span className="web-kicker">Sessão web ativa</span>
         <h2>{session.email}</h2>
-        <p>Autenticacao carregada no navegador. A proxima etapa e ligar Clientes e Produtos ao banco cloud com RLS.</p>
+        <p>Login salvo com segurança pelo Supabase. Clientes, produtos e configurações usam a loja web ativa.</p>
         <div className="web-auth-session-grid">
           <span><strong>ID</strong><small>{session.userId}</small></span>
-          <span><strong>Expira</strong><small>{session.expiresAt ? new Date(session.expiresAt * 1000).toLocaleString('pt-BR') : 'sessao persistente'}</small></span>
+          <span><strong>Expira</strong><small>{session.expiresAt ? new Date(session.expiresAt * 1000).toLocaleString('pt-BR') : 'sessão persistente'}</small></span>
         </div>
         <button type="button" className="secondary-btn" onClick={signOut} disabled={busy}>Sair do modo web</button>
         {message && <small className="web-message">{message}</small>}
@@ -103,8 +105,8 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
   return (
     <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact' : ''}`}>
       <span className="web-kicker">Login web</span>
-      <h2>Entrar com Supabase</h2>
-      <p>Use um usuario criado no Supabase Auth. Este lote prepara a ponte web sem mexer no SQLite do PC.</p>
+      <h2>Entrar na loja online</h2>
+      <p>Use o usuário criado no Supabase. O e-mail pode ficar salvo neste aparelho e a sessão continua ativa com segurança.</p>
       <form className="web-auth-form" onSubmit={signIn}>
         <label>
           <span>E-mail</span>
@@ -118,7 +120,7 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
           <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
           <span>Salvar e-mail neste aparelho</span>
         </label>
-        <button type="submit" className="primary-btn" disabled={busy}>{busy ? 'Entrando...' : 'Entrar no modo web'}</button>
+        <button type="submit" className="primary-btn" disabled={busy}>{busy ? 'Entrando...' : 'Entrar e sincronizar'}</button>
       </form>
       {message && <small className="web-message">{message}</small>}
     </section>

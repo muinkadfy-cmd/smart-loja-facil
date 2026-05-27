@@ -4,6 +4,7 @@ import { buildAppAlerts } from '../lib/alerts';
 import { api } from '../lib/api';
 import { playOperationSound } from '../lib/sound';
 import { getRuntimeInfo } from '../lib/runtime';
+import { getWebStoreContext, webRoleLabel, type WebStoreRole } from '../lib/webApi';
 import type { DelphiIconName } from '../lib/icons';
 import type { AppStatus, CreditSummary, PageKey, Product, Settings } from '../types';
 
@@ -53,6 +54,12 @@ interface NavAlertMeta {
   level: 'danger' | 'warning' | 'info' | 'ok' | null;
 }
 
+interface WebIdentityState {
+  email: string;
+  role: WebStoreRole | 'sem login';
+  storeName: string;
+}
+
 function shortDbName(value: string | undefined): string {
   if (!value) return 'Banco local';
   return value.split(/[/\\]/).pop() || value;
@@ -94,13 +101,54 @@ function initialsFromSettings(settings: Settings | null): string {
   return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase();
 }
 
+
+function displayNameFromSettings(settings: Settings | null, fallbackEmail = ''): string {
+  const ownerName = settings?.owner_name?.trim();
+  if (ownerName && !ownerName.includes('@')) return ownerName;
+  const email = fallbackEmail || ownerName || '';
+  if (email.includes('@')) return email.split('@')[0] || 'Administrador';
+  return ownerName || 'Administrador';
+}
+
 export function Shell({ activePage, setActivePage, status, settings, children, onRefresh, refreshToken }: ShellProps): JSX.Element {
   const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [products, setProducts] = useState<Product[]>([]);
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [toast, setToast] = useState<{ title: string; detail: string; page: PageKey; level: 'danger' | 'warning' | 'info' } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  const [webIdentity, setWebIdentity] = useState<WebIdentityState>({ email: '', role: 'sem login', storeName: '' });
   const prevAlertSignature = useRef('');
+
+
+  useEffect(() => {
+    if (!runtimeInfo.isWeb) return undefined;
+    const syncNetworkState = () => setNetworkOnline(navigator.onLine);
+    window.addEventListener('online', syncNetworkState);
+    window.addEventListener('offline', syncNetworkState);
+    syncNetworkState();
+    return () => {
+      window.removeEventListener('online', syncNetworkState);
+      window.removeEventListener('offline', syncNetworkState);
+    };
+  }, [runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (!runtimeInfo.isWeb) return undefined;
+    let active = true;
+    void getWebStoreContext({ createIfMissing: false })
+      .then((context) => {
+        if (!active) return;
+        setWebIdentity({ email: context.email, role: context.role, storeName: context.store.name });
+      })
+      .catch(() => {
+        if (!active) return;
+        setWebIdentity({ email: '', role: 'sem login', storeName: '' });
+      });
+    return () => {
+      active = false;
+    };
+  }, [refreshToken, runtimeInfo.isWeb, status?.db_path]);
 
   useEffect(() => {
     if (runtimeInfo.isWeb) {
@@ -154,9 +202,15 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const activeAlerts = alerts.filter((alert) => alert.page === activePage && alert.level !== 'ok');
   const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length;
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
-  const environmentLabel = runtimeInfo.isWeb ? 'Online' : status?.offline_ready ? 'Local / Offline' : 'Verificando';
-  const storageLabel = runtimeInfo.storageLabel;
+  const environmentLabel = runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Sem internet') : status?.offline_ready ? 'Local / Offline' : 'Verificando';
   const avatarInitials = initialsFromSettings(settings);
+  const greetingName = displayNameFromSettings(settings, webIdentity.email);
+  const greetingDetail = runtimeInfo.isWeb
+    ? `${webRoleLabel(webIdentity.role)} · ${webIdentity.storeName || 'aguardando loja web'}`
+    : 'Bem-vindo(a) ao Smart Loja Fácil';
+  const cloudDataLabel = runtimeInfo.isWeb
+    ? status?.sqlite_ok && networkOnline ? 'Dados sincronizados' : networkOnline ? 'Login pendente' : 'Sem conexão'
+    : 'SQLite ativo';
 
   useEffect(() => {
     const mainAlerts = alerts.filter((alert) => alert.level !== 'ok');
@@ -193,7 +247,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
         </div>
         <div className="neo-windowbar-right">
           <span>{runtimeInfo.isWeb ? 'PWA/Web' : 'Aplicativo local'}</span>
-          <span>{runtimeInfo.isWeb ? 'Dados na nuvem' : shortDbName(status?.db_path)}</span>
+          <span>{runtimeInfo.isWeb ? (networkOnline ? 'Dados na nuvem' : 'Offline no aparelho') : shortDbName(status?.db_path)}</span>
         </div>
       </div>
 
@@ -237,7 +291,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             <div className="neo-env-block">
               <div>
                 <small>Ambiente</small>
-                <strong>{runtimeInfo.isWeb ? 'Online' : 'Local'}</strong>
+                <strong>{runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Offline') : 'Local'}</strong>
               </div>
               <span className="neo-status-dot" />
             </div>
@@ -274,8 +328,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             <div className="neo-header-grid">
               <section className="neo-greeting-surface">
                 <div className="neo-greeting-copy">
-                  <strong>Olá, Administrador 👋</strong>
-                  <span>Bem-vindo(a) ao Smart Loja Fácil</span>
+                  <strong>Olá, {greetingName} 👋</strong>
+                  <span>{greetingDetail}</span>
                 </div>
                 <div className="neo-user-pill">
                   <span>{avatarInitials}</span>
@@ -307,11 +361,11 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               <section className="neo-header-status-row">
                 <div className="neo-header-chip neo-header-chip-primary">
                   <AppIcon name="offline_local" size={16} className="app-icon-chip" />
-                  <span>{runtimeInfo.isWeb ? 'Conexão segura' : 'Modo local'}</span>
+                  <span>{runtimeInfo.isWeb ? (networkOnline ? 'Conexão segura' : 'Sem internet') : 'Modo local'}</span>
                 </div>
                 <div className="neo-header-chip">
                   <AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />
-                  <span>{runtimeInfo.isWeb ? 'Dados sincronizados' : 'SQLite ativo'}</span>
+                  <span>{cloudDataLabel}</span>
                 </div>
                 <div className="neo-header-chip">
                   <AppIcon name="calendario_data" size={16} className="app-icon-chip" />
@@ -338,10 +392,17 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                 <p>{pageSubtitle(activePage)}</p>
               </div>
               <div className="neo-page-meta-status">
-                <span className={`neo-mini-chip ${(runtimeInfo.isWeb || status?.offline_ready) ? 'ok' : 'warn'}`}>{environmentLabel}</span>
-                <span className={`neo-mini-chip ${(runtimeInfo.isWeb || status?.sqlite_ok) ? 'ok' : 'warn'}`}>{runtimeInfo.isWeb ? 'Dados na nuvem' : status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponível'}</span>
+                <span className={`neo-mini-chip ${(!runtimeInfo.isWeb || networkOnline) && (runtimeInfo.isWeb || status?.offline_ready) ? 'ok' : 'warn'}`}>{environmentLabel}</span>
+                <span className={`neo-mini-chip ${(runtimeInfo.isWeb ? status?.sqlite_ok : status?.sqlite_ok) ? 'ok' : 'warn'}`}>{runtimeInfo.isWeb ? cloudDataLabel : status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponível'}</span>
               </div>
             </div>
+
+            {runtimeInfo.isWeb && !networkOnline ? (
+              <div className="neo-page-alert neo-page-alert-warning neo-offline-banner">
+                <strong>Sem internet neste aparelho</strong>
+                <span>Você pode abrir telas em cache, mas salvar e sincronizar no Supabase depende da conexão voltar.</span>
+              </div>
+            ) : null}
 
             {activeAlerts.length > 0 ? (
               <div className={`neo-page-alert neo-page-alert-${activeAlerts[0].level}`}>
