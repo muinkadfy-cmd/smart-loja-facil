@@ -23,7 +23,8 @@ const migrationOrder: Array<{ title: string; detail: string; status: 'done' | 'a
   { title: 'Login, loja e papel', detail: 'Supabase Auth, loja ativa e papel carregados no navegador.', status: 'done' },
   { title: 'Clientes, Produtos e Configurações', detail: 'Primeiros módulos ligados à camada Supabase web.', status: 'done' },
   { title: 'Pedidos, Comprovantes e Relatórios', detail: 'Consulta, exportação web e pedidos sincronizados liberados com permissão.', status: 'done' },
-  { title: 'Vendas, Caixa e Crediário', detail: 'Entram depois com transações completas de venda, recebimento e fechamento.', status: 'active' },
+  { title: 'Vendas, Caixa e Crediário', detail: 'PDV, caixa, recebimentos, comprovantes e auditoria liberados por RPC transacional.', status: 'done' },
+  { title: 'Backup/Restauração web', detail: 'Próximo módulo crítico para exportar dados da loja sem depender de pasta local do Windows.', status: 'active' },
 ];
 
 
@@ -87,7 +88,7 @@ export function WebMigrationPage({ activePage, onOpenDiagnostics }: WebMigration
       <section className="web-hero-card web-hero-card-warning">
         <span className="web-kicker">Módulo em migração</span>
         <h1>{moduleName} ainda aguarda migração segura</h1>
-        <p>No PWA, este módulo fica bloqueado até entrar no Supabase com transação, permissão e proteção contra duplicidade. Clientes, Produtos, Pedidos, Comprovantes, Relatórios e Configurações já foram liberados para a camada web com proteção por papel.</p>
+        <p>No PWA, este módulo fica bloqueado até entrar no Supabase com transação, permissão e proteção contra duplicidade. Clientes, Produtos, Vendas/PDV, Caixa, Crediário, Pedidos, Comprovantes, Relatórios e Configurações já foram liberados para a camada web com proteção por papel.</p>
         <div className="web-hero-actions">
           <button type="button" className="primary-btn" onClick={onOpenDiagnostics}>Abrir diagnóstico web</button>
           <span className="status-chip">PWA protegido</span>

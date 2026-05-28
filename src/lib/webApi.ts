@@ -2,7 +2,11 @@ import { getPublicWebEnv } from './env';
 import { getSupabaseClient } from './supabaseClient';
 import type {
   AppStatus,
+  CashMovement,
+  CashSummary,
   Customer,
+  CreditInstallment,
+  CreditSummary,
   DashboardData,
   DashboardSalesPeriod,
   DashboardSalesPoint,
@@ -41,7 +45,7 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v52';
+export const WEB_APP_VERSION = 'pwa-supabase-v53';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -885,6 +889,359 @@ async function fallbackCompleteOrder(orderId: string, context: WebStoreContext):
   if (updateOrderError) throw new Error(`Pedido baixou estoque, mas não marcou como entregue: ${updateOrderError.message}`);
   await insertAudit(context.store.id, context.userId, 'orders', orderId, 'delivered', { source: 'web-fallback' });
   return mapOrder(updated as Record<string, unknown>);
+}
+
+
+function saleStatusFromCloud(value: unknown): string {
+  if (value === 'finalized') return 'finalizada';
+  if (value === 'canceled') return 'cancelada';
+  if (value === 'draft') return 'rascunho';
+  return stringValue(value, 'finalizada');
+}
+
+function saleStatusToCloud(value: string): 'finalized' | 'canceled' | 'draft' {
+  if (value === 'cancelada' || value === 'canceled') return 'canceled';
+  if (value === 'rascunho' || value === 'draft') return 'draft';
+  return 'finalized';
+}
+
+function mapSale(row: Record<string, unknown>): SaleSummary {
+  return {
+    id: stringValue(row.id),
+    number: numberValue(row.number),
+    customer_name: stringValue(row.customer_name, 'Balcão'),
+    payment_method: normalizePaymentMethod(row.payment_method),
+    total: numberValue(row.total),
+    status: saleStatusFromCloud(row.status),
+    created_at: toIso(row.created_at),
+  };
+}
+
+type WebSalePayloadItem = { product_id: string; qty: number; unit_price: number };
+type WebSalePayload = {
+  request_id: string;
+  customer_id: string | null;
+  payment_method: PaymentMethod;
+  discount: number;
+  installment_count: number;
+  first_due_date: string | null;
+  items: WebSalePayloadItem[];
+};
+
+function clientRequestId(prefix: string): string {
+  const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2, 12);
+  return `${prefix}-${Date.now()}-${random}`;
+}
+
+function parseSalePayload(payload: unknown): WebSalePayload {
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const method = normalizePaymentMethod(source.payment_method);
+  const items = Array.isArray(source.items) ? source.items : [];
+  const normalizedItems = items
+    .map((item) => {
+      const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      return {
+        product_id: stringValue(row.product_id),
+        qty: Math.max(0, numberValue(row.qty)),
+        unit_price: Math.max(0, numberValue(row.unit_price)),
+      };
+    })
+    .filter((item) => item.product_id && item.qty > 0);
+  if (normalizedItems.length === 0) throw new Error('Adicione pelo menos um item válido à venda.');
+  if (method === 'crediario' && !stringValue(source.customer_id)) throw new Error('Selecione um cliente cadastrado para vender no crediário.');
+  return {
+    request_id: stringValue(source.request_id) || clientRequestId('web-sale'),
+    customer_id: stringValue(source.customer_id) || null,
+    payment_method: method,
+    discount: Math.max(0, numberValue(source.discount)),
+    installment_count: Math.min(24, Math.max(1, Math.round(numberValue(source.installment_count, 1)))),
+    first_due_date: stringValue(source.first_due_date) || null,
+    items: normalizedItems,
+  };
+}
+
+export async function webSales(): Promise<SaleSummary[]> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data, error } = await client
+    .from('sales')
+    .select('id, number, customer_name, payment_method, total, status, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(120);
+  if (error) throw new Error(`Não foi possível carregar vendas do Supabase: ${error.message}`);
+  return (data ?? []).map((row: Record<string, unknown>) => mapSale(row));
+}
+
+export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'finalizar vendas');
+  const client = await getClient();
+  const salePayload = parseSalePayload(payload);
+  const rpcPayload = { ...salePayload, store_id: context.store.id };
+  const { data, error } = await client.rpc('web_create_sale', { sale_payload: rpcPayload });
+  if (error) throw new Error(`Não foi possível finalizar a venda no Supabase. Aplique a migration do Mega Lote 53 se ainda não aplicou. Detalhe: ${error.message}`);
+  const source = Array.isArray(data) ? data[0] : data;
+  if (!source || typeof source !== 'object') throw new Error('Venda finalizada, mas o Supabase não retornou os dados da venda.');
+  return mapSale(source as Record<string, unknown>);
+}
+
+export async function webCancelSale(saleId: string, reason: string): Promise<SaleSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'cancelar vendas');
+  const client = await getClient();
+  const cleanReason = reason.trim() || 'Cancelamento manual web';
+  const { data, error } = await client.rpc('web_cancel_sale', { target_sale_id: saleId, cancel_reason_text: cleanReason });
+  if (error) throw new Error(`Não foi possível cancelar a venda no Supabase: ${error.message}`);
+  const source = Array.isArray(data) ? data[0] : data;
+  if (!source || typeof source !== 'object') throw new Error('Venda cancelada, mas o Supabase não retornou os dados atualizados.');
+  return mapSale(source as Record<string, unknown>);
+}
+
+function cashStatusFromCloud(value: unknown): string {
+  if (value === 'open') return 'aberto';
+  if (value === 'closed') return 'fechado';
+  return stringValue(value, 'fechado');
+}
+
+function mapCashMovement(row: Record<string, unknown>): CashMovement {
+  return {
+    id: stringValue(row.id),
+    type: stringValue(row.type, 'entrada'),
+    method: stringValue(row.method, 'dinheiro'),
+    amount: numberValue(row.amount),
+    reason: stringValue(row.reason),
+    created_at: toIso(row.created_at),
+  };
+}
+
+function mapCashClosing(row: Record<string, unknown>) {
+  return {
+    id: stringValue(row.id),
+    opened_at: toIso(row.opened_at),
+    closed_at: stringValue(row.closed_at) || null,
+    opening_amount: numberValue(row.opening_amount),
+    closing_amount: row.closing_amount === null || row.closing_amount === undefined ? null : numberValue(row.closing_amount),
+    status: cashStatusFromCloud(row.status),
+    notes: stringValue(row.notes),
+  };
+}
+
+async function currentCashSessionId(storeId: string): Promise<string | null> {
+  const client = await getClient();
+  const { data } = await client
+    .from('cash_sessions')
+    .select('id')
+    .eq('store_id', storeId)
+    .eq('status', 'open')
+    .order('opened_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data ? stringValue((data as Record<string, unknown>).id) : null;
+}
+
+export async function webCashSummary(): Promise<CashSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const { data: openCash } = await client
+    .from('cash_sessions')
+    .select('id, opened_at, closed_at, opening_amount, closing_amount, status, notes')
+    .eq('store_id', context.store.id)
+    .eq('status', 'open')
+    .order('opened_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { data: movements, error } = await client
+    .from('cash_movements')
+    .select('id, type, method, amount, reason, created_at')
+    .eq('store_id', context.store.id)
+    .gte('created_at', today.toISOString())
+    .lt('created_at', tomorrow.toISOString())
+    .order('created_at', { ascending: false })
+    .limit(160);
+  if (error) throw new Error(`Não foi possível carregar caixa do Supabase: ${error.message}`);
+  const mappedMovements = (movements ?? []).map((row: Record<string, unknown>) => mapCashMovement(row));
+  const todayIn = mappedMovements.filter((row) => row.type === 'entrada').reduce((sum, row) => sum + row.amount, 0);
+  const todayOut = mappedMovements.filter((row) => row.type === 'saida').reduce((sum, row) => sum + row.amount, 0);
+  const cash = openCash ? mapCashClosing(openCash as Record<string, unknown>) : null;
+  const opening = cash?.opening_amount ?? 0;
+  return { open_cash: cash, today_in: todayIn, today_out: todayOut, expected_total: opening + todayIn - todayOut, movements: mappedMovements };
+}
+
+export async function webOpenCash(openingAmount: number, notes: string): Promise<CashSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'abrir caixa');
+  const client = await getClient();
+  if (openingAmount < 0) throw new Error('O valor inicial não pode ser negativo.');
+  const alreadyOpen = await currentCashSessionId(context.store.id);
+  if (alreadyOpen) throw new Error('Já existe um caixa aberto para esta loja.');
+  const { error } = await client.from('cash_sessions').insert({ store_id: context.store.id, opened_by: context.userId, opening_amount: openingAmount, notes: notes.trim(), status: 'open' });
+  if (error) throw new Error(`Não foi possível abrir caixa no Supabase: ${error.message}`);
+  await insertAudit(context.store.id, context.userId, 'cash', null as unknown as string, 'open', { opening_amount: openingAmount });
+  return webCashSummary();
+}
+
+export async function webCloseCash(closingAmount: number, notes: string): Promise<CashSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'fechar caixa');
+  const client = await getClient();
+  if (closingAmount < 0) throw new Error('O valor contado não pode ser negativo.');
+  const sessionId = await currentCashSessionId(context.store.id);
+  if (!sessionId) throw new Error('Nenhum caixa aberto para fechar.');
+  const { error } = await client
+    .from('cash_sessions')
+    .update({ closed_by: context.userId, closed_at: new Date().toISOString(), closing_amount: closingAmount, notes: notes.trim(), status: 'closed' })
+    .eq('id', sessionId)
+    .eq('store_id', context.store.id)
+    .eq('status', 'open');
+  if (error) throw new Error(`Não foi possível fechar caixa no Supabase: ${error.message}`);
+  await insertAudit(context.store.id, context.userId, 'cash', sessionId, 'close', { closing_amount: closingAmount });
+  return webCashSummary();
+}
+
+export async function webAddCashMovement(movementType: string, method: string, amount: number, reason: string): Promise<CashSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'lançar movimento de caixa');
+  const client = await getClient();
+  const cleanType = movementType === 'entrada' ? 'entrada' : 'saida';
+  const cleanReason = reason.trim();
+  if (amount <= 0) throw new Error('Informe um valor maior que zero para o movimento.');
+  if (!cleanReason) throw new Error('Informe o motivo do movimento manual.');
+  const sessionId = await currentCashSessionId(context.store.id);
+  const { error } = await client.from('cash_movements').insert({
+    store_id: context.store.id,
+    cash_session_id: sessionId,
+    client_request_id: clientRequestId('cash'),
+    type: cleanType,
+    method: method.trim() || 'dinheiro',
+    amount,
+    reason: cleanReason,
+    created_by: context.userId,
+  });
+  if (error) throw new Error(`Não foi possível lançar movimento no Supabase: ${error.message}`);
+  await insertAudit(context.store.id, context.userId, 'cash', null as unknown as string, 'manual_movement', { type: cleanType, amount, method, reason: cleanReason });
+  return webCashSummary();
+}
+
+function creditStatusFromCloud(value: unknown): string {
+  if (value === 'paid') return 'quitado';
+  if (value === 'canceled') return 'cancelado';
+  return 'aberto';
+}
+
+function installmentStatusFromCloud(value: unknown): string {
+  if (value === 'paid') return 'pago';
+  if (value === 'partial') return 'parcial';
+  if (value === 'canceled') return 'cancelada';
+  return 'aberto';
+}
+
+function mapInstallment(row: Record<string, unknown>): CreditInstallment {
+  return {
+    id: stringValue(row.id),
+    number: numberValue(row.number),
+    amount: numberValue(row.amount),
+    paid_amount: numberValue(row.paid_amount),
+    due_date: stringValue(row.due_date),
+    paid_at: stringValue(row.paid_at) || null,
+    status: installmentStatusFromCloud(row.status),
+    payment_method: stringValue(row.payment_method) || null,
+  };
+}
+
+function mapCredit(row: Record<string, unknown>, installments: CreditInstallment[], salesById: Map<string, number>, customersById: Map<string, { phone: string; whatsapp: string }>): CreditSummary {
+  const customerId = stringValue(row.customer_id);
+  const contact = customersById.get(customerId);
+  const saleId = stringValue(row.sale_id);
+  return {
+    id: stringValue(row.id),
+    customer_name: stringValue(row.customer_name, 'Cliente'),
+    customer_phone: contact?.phone ?? '',
+    customer_whatsapp: contact?.whatsapp ?? '',
+    sale_id: saleId,
+    sale_number: salesById.get(saleId) ?? 0,
+    total: numberValue(row.total),
+    balance: numberValue(row.balance),
+    status: creditStatusFromCloud(row.status),
+    created_at: toIso(row.created_at),
+    installments,
+  };
+}
+
+export async function webCredits(): Promise<CreditSummary[]> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data: creditRows, error } = await client
+    .from('credits')
+    .select('id, customer_id, customer_name, sale_id, total, balance, status, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(160);
+  if (error) throw new Error(`Não foi possível carregar crediário do Supabase: ${error.message}`);
+  const credits = creditRows ?? [];
+  const creditIds = credits.map((row: Record<string, unknown>) => stringValue(row.id)).filter(Boolean);
+  const saleIds = Array.from(new Set(credits.map((row: Record<string, unknown>) => stringValue(row.sale_id)).filter(Boolean)));
+  const customerIds = Array.from(new Set(credits.map((row: Record<string, unknown>) => stringValue(row.customer_id)).filter(Boolean)));
+  const installmentsByCreditId = new Map<string, CreditInstallment[]>();
+  const salesById = new Map<string, number>();
+  const customersById = new Map<string, { phone: string; whatsapp: string }>();
+  if (creditIds.length > 0) {
+    const { data: installmentRows } = await client.from('credit_installments').select('id, credit_id, number, amount, paid_amount, due_date, paid_at, status, payment_method').eq('store_id', context.store.id).in('credit_id', creditIds).order('number', { ascending: true });
+    for (const installment of installmentRows ?? []) {
+      const row = installment as Record<string, unknown>;
+      const creditId = stringValue(row.credit_id);
+      const list = installmentsByCreditId.get(creditId) ?? [];
+      list.push(mapInstallment(row));
+      installmentsByCreditId.set(creditId, list);
+    }
+  }
+  if (saleIds.length > 0) {
+    const { data: sales } = await client.from('sales').select('id, number').eq('store_id', context.store.id).in('id', saleIds);
+    for (const sale of sales ?? []) {
+      const row = sale as Record<string, unknown>;
+      salesById.set(stringValue(row.id), numberValue(row.number));
+    }
+  }
+  if (customerIds.length > 0) {
+    const { data: customers } = await client.from('customers').select('id, phone, whatsapp').eq('store_id', context.store.id).in('id', customerIds);
+    for (const customer of customers ?? []) {
+      const row = customer as Record<string, unknown>;
+      customersById.set(stringValue(row.id), { phone: stringValue(row.phone), whatsapp: stringValue(row.whatsapp) });
+    }
+  }
+  return credits.map((row: Record<string, unknown>) => mapCredit(row, installmentsByCreditId.get(stringValue(row.id)) ?? [], salesById, customersById));
+}
+
+export async function webReceiveInstallment(payload: unknown): Promise<CreditSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'receber crediário');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const installmentId = stringValue(source.installment_id);
+  const amount = Math.max(0, numberValue(source.amount));
+  const method = normalizePaymentMethod(source.method);
+  const requestId = stringValue(source.request_id) || clientRequestId('pay');
+  const redistribute = Boolean(source.settle_with_redistribution);
+  if (!creditId || !installmentId) throw new Error('Parcela inválida para recebimento.');
+  if (amount <= 0) throw new Error('Valor inválido para recebimento.');
+  const client = await getClient();
+  const { error } = await client.rpc('web_receive_credit_payment', {
+    target_credit_id: creditId,
+    target_installment_id: installmentId,
+    payment_amount: amount,
+    payment_method_text: method,
+    payment_request_id: requestId,
+    redistribute_remaining: redistribute,
+  });
+  if (error) throw new Error(`Não foi possível receber crediário no Supabase. Aplique a migration do Mega Lote 53 se ainda não aplicou. Detalhe: ${error.message}`);
+  const credits = await webCredits();
+  const credit = credits.find((item) => item.id === creditId);
+  if (!credit) throw new Error('Recebimento gravado, mas o crediário não foi encontrado na atualização.');
+  return credit;
 }
 
 export async function webOrders(): Promise<OrderSummary[]> {

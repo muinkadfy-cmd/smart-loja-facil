@@ -17,8 +17,8 @@ function todayInputValue(): string {
 function paymentMethodLabel(method: PaymentMethod): string {
   if (method === 'dinheiro') return 'Dinheiro';
   if (method === 'pix') return 'Pix';
-  if (method === 'cartao') return 'Cartao';
-  return 'Crediario';
+  if (method === 'cartao') return 'Cartão';
+  return 'Crediário';
 }
 
 function saleStatusLabel(status: string): string {
@@ -181,7 +181,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       return;
     }
     if (!latestReceipt) {
-      setError('Nenhum comprovante disponivel para impressao.');
+      setError('Nenhum comprovante disponível para impressão.');
       return;
     }
     setPrintingReceipt(true);
@@ -218,7 +218,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       setInstallmentCount(1);
       setFirstDueDate(todayInputValue());
       await reload();
-      setMessage('Venda gravada com sucesso. O comprovante ficou disponivel na aba de comprovantes.');
+      setMessage('Venda gravada com sucesso. O comprovante ficou disponível na aba de comprovantes.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -236,13 +236,13 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           <div className="classic-fieldset-title">Adicionar produto</div>
           <div className="classic-sales-add-row">
             <label>
-              <span>Codigo / SKU</span>
+              <span>Código / SKU</span>
               <input value={selectedProduct?.internal_code ?? ''} readOnly />
             </label>
             <label className="classic-sales-product-field">
-              <span>Descricao do produto</span>
+              <span>Descrição do produto</span>
               <select value={productId} onChange={(event) => setProductId(event.target.value)}>
-                <option value="">Digite o codigo, nome ou use o leitor de codigo de barras</option>
+                <option value="">Digite o código, nome ou use o leitor de código de barras</option>
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.name} | estoque {product.stock}
@@ -255,7 +255,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <input type="number" min="1" step="1" value={qty} onChange={(event) => setQty(Number(event.target.value) || 1)} />
             </label>
             <label>
-              <span>Preco unitario (R$)</span>
+              <span>Preço unitario (R$)</span>
               <input value={selectedProduct ? (selectedProduct.promo_price ?? selectedProduct.price).toFixed(2).replace('.', ',') : '0,00'} readOnly />
             </label>
             <button type="button" className="primary-btn classic-add-btn" onClick={addItem}>
@@ -279,8 +279,8 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                 setProductId(row.product_id);
               }}
               columns={[
-                { key: 'code', label: 'Codigo', render: (row) => row.internal_code || '-' },
-                { key: 'name', label: 'Descricao do produto', render: (row) => row.name },
+                { key: 'code', label: 'Código', render: (row) => row.internal_code || '-' },
+                { key: 'name', label: 'Descrição do produto', render: (row) => row.name },
                 { key: 'qty', label: 'Qtd.', align: 'right', render: (row) => row.qty.toFixed(3).replace('.', ',') },
                 { key: 'unit', label: 'Unitario (R$)', align: 'right', render: (row) => money(row.unit_price) },
                 { key: 'total', label: 'Total (R$)', align: 'right', render: (row) => money(row.unit_price * row.qty) },
@@ -313,13 +313,13 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             <label>
               <span>Selecionar cliente</span>
               <select ref={customerSelectRef} value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
-                <option value="">Consumidor Final / Balcao</option>
+                <option value="">Consumidor Final / Balcão</option>
                 {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
               </select>
             </label>
             <div className="classic-customer-grid">
               <label>
-                <span>Codigo</span>
+                <span>Código</span>
                 <input value={selectedCustomer?.id.slice(0, 6).toUpperCase() ?? '000000'} readOnly />
               </label>
               <label>
@@ -360,7 +360,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
                   <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} />
-                  <strong><AppIcon name="cartao_debito" size={16} className="app-icon-button-inline" />Cartao Debito / Credito</strong>
+                  <strong><AppIcon name="cartao_debito" size={16} className="app-icon-button-inline" />Cartão Debito / Credito</strong>
                 </div>
                 <span>Valor (R$)</span>
                 <input type="number" min="0" step="0.01" value={paymentMethod === 'cartao' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} />
@@ -382,7 +382,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
                   <input type="radio" checked={paymentMethod === 'crediario'} onChange={() => setPaymentMethod('crediario')} />
-                  <strong><AppIcon name="crediario" size={16} className="app-icon-button-inline" />Crediario</strong>
+                  <strong><AppIcon name="crediario" size={16} className="app-icon-button-inline" />Crediário</strong>
                 </div>
                 <span>Parcelas</span>
                 <input type="number" min="1" max="24" step="1" value={installmentCount} onChange={(event) => setInstallmentCount(Math.min(24, Math.max(1, Number(event.target.value) || 1)))} />
@@ -427,7 +427,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
 
       <section className="panel classic-panel">
         <div className="classic-panel-header">
-          <h2>Ultimas vendas registradas</h2>
+          <h2>Últimas vendas registradas</h2>
         </div>
         <DataTable<SaleSummary>
           rows={sales.slice(0, 8)}
@@ -435,7 +435,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           getRowKey={(row) => row.id}
           columns={[
             { key: 'number', label: 'Venda', render: (row) => `#${row.number}` },
-            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcao' },
+            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcão' },
             { key: 'method', label: 'Forma', render: (row) => paymentMethodLabel(row.payment_method) },
             { key: 'total', label: 'Total', align: 'right', render: (row) => money(row.total) },
             { key: 'status', label: 'Status', render: (row) => saleStatusLabel(row.status) },

@@ -11,14 +11,14 @@ interface PageProps { refreshToken: number; onChanged: () => void; }
 function movementMethodLabel(method: string): string {
   if (method === 'dinheiro') return 'Dinheiro';
   if (method === 'pix') return 'Pix';
-  if (method === 'cartao') return 'Cartao';
+  if (method === 'cartao') return 'Cartão';
   if (method === 'ajuste') return 'Ajuste';
   return method;
 }
 
 function movementTypeLabel(type: string): string {
   if (type === 'entrada') return 'Entrada';
-  if (type === 'saida') return 'Saida';
+  if (type === 'saida') return 'Saída';
   return type;
 }
 
@@ -101,7 +101,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     try {
       const payload = await api.closeCash(closingAmount, notes.trim());
       setSummary(payload);
-      setMessage('Caixa fechado com conferencia e auditoria.');
+      setMessage('Caixa fechado com conferência e auditoria.');
       setNotes('');
       onChanged();
     } catch (err) {
@@ -144,12 +144,12 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       <div className="page-title classic-legacy-title">
         <div>
           <h1>Caixa</h1>
-          <p>Abertura, conferencia, fechamento e movimentos do dia com SQLite local.</p>
+          <p>Abertura, conferência, fechamento e movimentos do dia com SQLite local ou nuvem web.</p>
         </div>
       </div>
       <section className="metric-grid cash-grid classic-cash-summary-grid">
         <article className="metric-card"><span>Entradas hoje</span><strong>{money(summary?.today_in ?? 0)}</strong><small>Vendas e crediario recebido</small></article>
-        <article className="metric-card"><span>Saidas hoje</span><strong>{money(summary?.today_out ?? 0)}</strong><small>Movimentos de retirada e ajuste</small></article>
+        <article className="metric-card"><span>Saídas hoje</span><strong>{money(summary?.today_out ?? 0)}</strong><small>Movimentos de retirada e ajuste</small></article>
         <article className="metric-card"><span>Saldo esperado</span><strong>{money(summary?.expected_total ?? 0)}</strong><small>Baseado no caixa aberto</small></article>
         <article className="metric-card"><span>Status</span><strong>{summary?.open_cash ? 'Aberto' : 'Fechado'}</strong><small>{summary?.open_cash ? `Aberto em ${dateTime(summary.open_cash.opened_at)}` : 'Abra para iniciar o controle'}</small></article>
       </section>
@@ -159,7 +159,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           <div className="panel-head"><h2>Abrir caixa</h2><span className="pill">Registro auditado</span></div>
           <form className="form-grid compact" onSubmit={open}>
             <label>Valor inicial<input type="number" min="0" step="0.01" value={openingAmount} onChange={(event) => setOpeningAmount(Number(event.target.value))} /></label>
-            <label className="span-2">Observacao<input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: abertura da manha" /></label>
+            <label className="span-2">Observação<input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: abertura da manhã" /></label>
             <button className="primary-btn" disabled={busy}>{busy ? 'Abrindo...' : 'Abrir caixa'}</button>
           </form>
         </section>
@@ -168,7 +168,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           <div className="panel-head"><h2>Fechar caixa</h2><span className="pill">Diferenca {money(difference)}</span></div>
           <form className="form-grid compact" onSubmit={close}>
             <label>Valor contado<input type="number" min="0" step="0.01" value={closingAmount} onChange={(event) => setClosingAmount(Number(event.target.value))} /></label>
-            <label className="span-2">Observacao<input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: conferido no fim do dia" /></label>
+            <label className="span-2">Observação<input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: conferido no fim do dia" /></label>
             <button className="primary-btn" disabled={busy}>{busy ? 'Fechando...' : 'Fechar caixa'}</button>
           </form>
         </section>
@@ -178,23 +178,23 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       {message && <div className="notice">{message}</div>}
 
       <section className="panel classic-panel form-panel classic-legacy-form-panel">
-        <div className="panel-head"><h2>Lancamento manual</h2><span className="pill">Entrada / saida</span></div>
+        <div className="panel-head"><h2>Lançamento manual</h2><span className="pill">Entrada / saída</span></div>
         <form className="form-grid compact" onSubmit={addMovement}>
-          <label>Tipo<select value={movementType} onChange={(event) => setMovementType(event.target.value as 'entrada' | 'saida')}><option value="entrada">Entrada</option><option value="saida">Saida</option></select></label>
-          <label>Forma<select value={movementMethod} onChange={(event) => setMovementMethod(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartao</option><option value="ajuste">Ajuste</option></select></label>
+          <label>Tipo<select value={movementType} onChange={(event) => setMovementType(event.target.value as 'entrada' | 'saida')}><option value="entrada">Entrada</option><option value="saida">Saída</option></select></label>
+          <label>Forma<select value={movementMethod} onChange={(event) => setMovementMethod(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartão</option><option value="ajuste">Ajuste</option></select></label>
           <label>Valor<input type="number" min="0.01" step="0.01" value={movementAmount} onChange={(event) => setMovementAmount(Number(event.target.value))} /></label>
           <label className="span-2">Motivo<input value={movementReason} onChange={(event) => setMovementReason(event.target.value)} placeholder="Ex.: sangria, troco, reforco de caixa" /></label>
-          <button className="secondary-btn" disabled={busy}>{busy ? 'Lancando...' : 'Lancar movimento'}</button>
+          <button className="secondary-btn" disabled={busy}>{busy ? 'Lançando...' : 'Lançar movimento'}</button>
         </form>
       </section>
 
       <section className="panel classic-panel classic-legacy-table-panel">
-        <div className="panel-head"><h2>Movimentos de hoje</h2><span className="pill">Nao apaga historico</span></div>
+        <div className="panel-head"><h2>Movimentos de hoje</h2><span className="pill">Não apaga histórico</span></div>
         <TableFilters
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por motivo, forma, tipo ou horario"
-          summary={`${filteredMovements.length} de ${(summary?.movements ?? []).length} movimentos visiveis`}
+          summary={`${filteredMovements.length} de ${(summary?.movements ?? []).length} movimentos visíveis`}
           selects={[
             {
               label: 'Tipo',
@@ -203,7 +203,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               options: [
                 { value: 'todos', label: 'Todos' },
                 { value: 'entrada', label: 'Entradas' },
-                { value: 'saida', label: 'Saidas' },
+                { value: 'saida', label: 'Saídas' },
               ],
             },
             {
