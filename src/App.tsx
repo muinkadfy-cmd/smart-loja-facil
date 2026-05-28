@@ -163,6 +163,9 @@ export default function App(): JSX.Element {
       if (activePage === 'dashboard') return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
       if (activePage === 'customers') return <CustomersPage {...props} />;
       if (activePage === 'products') return <ProductsPage {...props} />;
+      if (activePage === 'orders') return <OrdersPage {...props} />;
+      if (activePage === 'receipts') return <ReceiptsPage {...props} />;
+      if (activePage === 'reports') return <ReportsPage {...props} />;
       if (activePage === 'settings') return <SettingsPage settings={settings} onSettingsSaved={setSettings} {...props} />;
       return <WebMigrationPage activePage={activePage} onOpenDiagnostics={() => setActivePage('diagnostics')} />;
     }

@@ -4,12 +4,28 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { makeRequestId, money } from '../lib/format';
+import { getRuntimeInfo } from '../lib/runtime';
 import type { Customer, OrderSummary, Product } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
 interface OrderCartItem { product_id: string; name: string; qty: number; unit_price: number; }
 
+function orderStatusLabel(status: OrderSummary['status']): string {
+  if (status === 'aberto') return 'Aberto';
+  if (status === 'separado') return 'Separado';
+  if (status === 'entregue') return 'Entregue';
+  return 'Cancelado';
+}
+
+function orderStatusClass(status: OrderSummary['status']): string {
+  if (status === 'entregue') return 'pill pill-success';
+  if (status === 'separado') return 'pill pill-warning';
+  if (status === 'cancelado') return 'pill pill-danger';
+  return 'pill';
+}
+
 export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element {
+  const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -58,6 +74,12 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
   function addItem() {
     const product = products.find((row) => row.id === form.product_id);
     if (!product || form.qty <= 0) return;
+    const currentQty = cart.find((item) => item.product_id === product.id)?.qty ?? 0;
+    if (currentQty + form.qty > product.stock) {
+      setMessage('');
+      setError(`Estoque insuficiente para ${product.name}. Disponível: ${product.stock}.`);
+      return;
+    }
     setError('');
     setMessage('');
     setCart((current) => {
@@ -139,8 +161,8 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
     <div className="stack classic-legacy-page">
       <div className="page-title classic-legacy-title">
         <div>
-          <h1>Pedidos Locais</h1>
-          <p>Pedido local com múltiplos itens, separação, entrega e baixa segura de estoque apenas na entrega.</p>
+          <h1>{runtimeInfo.isWeb ? 'Pedidos Web' : 'Pedidos Locais'}</h1>
+          <p>{runtimeInfo.isWeb ? 'Pedidos sincronizados na nuvem com separação, entrega, cancelamento e baixa segura de estoque.' : 'Pedido local com múltiplos itens, separação, entrega e baixa segura de estoque apenas na entrega.'}</p>
         </div>
       </div>
       <section className="panel classic-panel form-panel classic-legacy-form-panel">
@@ -153,7 +175,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           </div>
         </div>
         <form className="form-grid compact" onSubmit={submit}>
-          <label>Cliente<select value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcao</option>{customers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Cliente<select value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcão</option>{customers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
           <label>Produto<select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })}><option value="">Selecione</option>{products.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
           <label>Quantidade<input type="number" min="1" step="1" value={form.qty} onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })} /></label>
           <button type="button" className="secondary-btn" onClick={addItem}>Adicionar item</button>
@@ -209,10 +231,10 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
             { key: 'number', label: 'Pedido', render: (row) => `#${row.number}` },
             { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcao' },
             { key: 'total', label: 'Total', align: 'right', render: (row) => money(row.total) },
-            { key: 'status', label: 'Status', render: (row) => <span className="pill">{row.status}</span> },
+            { key: 'status', label: 'Status', render: (row) => <span className={orderStatusClass(row.status)}>{orderStatusLabel(row.status)}</span> },
             {
               key: 'action',
-              label: 'Acao',
+              label: 'Ação',
               align: 'right',
               render: (row) => (
                 <div className="table-actions">

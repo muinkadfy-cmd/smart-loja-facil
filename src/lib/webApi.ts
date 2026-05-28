@@ -9,6 +9,10 @@ import type {
   PaymentMethod,
   PaymentSummary,
   Product,
+  OrderSummary,
+  ReceiptSummary,
+  ReportData,
+  ReportKind,
   SaleSummary,
   Settings,
 } from '../types';
@@ -37,7 +41,7 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v51';
+export const WEB_APP_VERSION = 'pwa-supabase-v52';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -670,6 +674,435 @@ export async function webAdjustStock(productId: string, delta: number, reason: s
   });
 
   return mapProduct(data as Record<string, unknown>);
+}
+
+
+function mapOrderStatusFromCloud(value: unknown): OrderSummary['status'] {
+  if (value === 'accepted') return 'separado';
+  if (value === 'delivered') return 'entregue';
+  if (value === 'canceled') return 'cancelado';
+  return 'aberto';
+}
+
+function mapOrderStatusToCloud(value: string): 'open' | 'accepted' | 'delivered' | 'canceled' {
+  if (value === 'separado' || value === 'accepted') return 'accepted';
+  if (value === 'entregue' || value === 'delivered') return 'delivered';
+  if (value === 'cancelado' || value === 'canceled') return 'canceled';
+  return 'open';
+}
+
+function mapOrder(row: Record<string, unknown>): OrderSummary {
+  return {
+    id: stringValue(row.id),
+    number: numberValue(row.number),
+    customer_name: stringValue(row.customer_name, 'Balcão'),
+    total: numberValue(row.total),
+    status: mapOrderStatusFromCloud(row.status),
+    created_at: toIso(row.created_at),
+  };
+}
+
+function receiptStatusFromCloud(value: unknown): string {
+  if (value === 'canceled') return 'cancelada';
+  if (value === 'generated') return 'finalizada';
+  return stringValue(value, 'finalizada');
+}
+
+function mapReceipt(row: Record<string, unknown>, salesById: Map<string, { customerName: string; customerId: string }>, whatsappByCustomerId: Map<string, string>): ReceiptSummary {
+  const saleId = stringValue(row.sale_id);
+  const sale = salesById.get(saleId);
+  return {
+    id: stringValue(row.id),
+    sale_id: saleId,
+    sale_number: numberValue(row.sale_number),
+    customer_name: sale?.customerName || 'Balcão',
+    customer_whatsapp: sale?.customerId ? (whatsappByCustomerId.get(sale.customerId) ?? '') : '',
+    receipt_type: stringValue(row.receipt_type, '80mm'),
+    total: numberValue(row.total),
+    status: receiptStatusFromCloud(row.status),
+    created_at: toIso(row.created_at),
+    content: stringValue(row.content_html),
+  };
+}
+
+function reportMoney(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function reportDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value || '-';
+  return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function reportDate(value: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value || '-';
+  return date.toLocaleDateString('pt-BR');
+}
+
+function dateRange(from: string, to: string): { fromIso: string; toIso: string } {
+  const safeFrom = /^\d{4}-\d{2}-\d{2}$/.test(from) ? from : new Date().toISOString().slice(0, 10);
+  const safeTo = /^\d{4}-\d{2}-\d{2}$/.test(to) ? to : safeFrom;
+  const fromDate = new Date(`${safeFrom}T00:00:00`);
+  const toDate = new Date(`${safeTo}T00:00:00`);
+  toDate.setDate(toDate.getDate() + 1);
+  return { fromIso: fromDate.toISOString(), toIso: toDate.toISOString() };
+}
+
+function downloadTextFile(fileName: string, content: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvEscape(value: string): string {
+  if (!/[;"\n\r]/.test(value)) return value;
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+type WebOrderPayloadItem = { product_id: string; qty: number };
+type WebOrderPayload = { request_id: string; customer_id: string | null; items: WebOrderPayloadItem[] };
+
+function parseOrderPayload(payload: unknown): WebOrderPayload {
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const requestId = stringValue(source.request_id) || `web-order-${Date.now()}-${crypto.randomUUID()}`;
+  const customerId = stringValue(source.customer_id) || null;
+  const items = Array.isArray(source.items) ? source.items : [];
+  const normalizedItems = items
+    .map((item) => {
+      const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      return { product_id: stringValue(row.product_id), qty: Math.max(0, numberValue(row.qty)) };
+    })
+    .filter((item) => item.product_id && item.qty > 0);
+  if (normalizedItems.length === 0) throw new Error('Adicione pelo menos um item válido ao pedido.');
+  return { request_id: requestId, customer_id: customerId, items: normalizedItems };
+}
+
+async function insertAudit(storeId: string, userId: string, entity: string, entityId: string, action: string, details: Record<string, unknown>): Promise<void> {
+  try {
+    const client = await getClient();
+    await client.from('audit_log').insert({ store_id: storeId, user_id: userId, entity, entity_id: entityId, action, details });
+  } catch {
+    // Auditoria não pode travar a operação principal no PWA quando a tabela/policy ainda não existir.
+  }
+}
+
+async function assertOrderStockAvailable(orderId: string, storeId: string): Promise<void> {
+  const client = await getClient();
+  const { data: items, error } = await client
+    .from('order_items')
+    .select('product_id, product_name, qty')
+    .eq('order_id', orderId)
+    .eq('store_id', storeId);
+  if (error) throw new Error(`Não foi possível validar os itens do pedido: ${error.message}`);
+  for (const item of items ?? []) {
+    const row = item as Record<string, unknown>;
+    const productId = stringValue(row.product_id);
+    const qty = numberValue(row.qty);
+    if (!productId) throw new Error(`O item ${stringValue(row.product_name, 'sem produto')} não tem produto vinculado para baixa.`);
+    const { data: product, error: productError } = await client
+      .from('products')
+      .select('name, stock, status')
+      .eq('id', productId)
+      .eq('store_id', storeId)
+      .single();
+    if (productError) throw new Error(`Não foi possível validar estoque do item ${stringValue(row.product_name)}: ${productError.message}`);
+    const productRow = product as Record<string, unknown>;
+    if (productRow.status !== 'active') throw new Error(`Produto ${stringValue(productRow.name)} está inativo.`);
+    if (numberValue(productRow.stock) < qty) throw new Error(`Estoque insuficiente para ${stringValue(productRow.name)}. Disponível: ${numberValue(productRow.stock)}.`);
+  }
+}
+
+async function fallbackCompleteOrder(orderId: string, context: WebStoreContext): Promise<OrderSummary> {
+  const client = await getClient();
+  const { data: orderData, error: orderError } = await client
+    .from('orders')
+    .select('id, number, customer_name, total, status, created_at')
+    .eq('id', orderId)
+    .eq('store_id', context.store.id)
+    .single();
+  if (orderError) throw new Error(`Não foi possível localizar o pedido: ${orderError.message}`);
+  const order = orderData as Record<string, unknown>;
+  const currentStatus = mapOrderStatusFromCloud(order.status);
+  if (currentStatus === 'cancelado') throw new Error('Pedido cancelado não pode ser entregue.');
+  if (currentStatus === 'entregue') return mapOrder(order);
+  const { data: items, error: itemsError } = await client
+    .from('order_items')
+    .select('product_id, product_name, qty')
+    .eq('order_id', orderId)
+    .eq('store_id', context.store.id);
+  if (itemsError) throw new Error(`Não foi possível carregar itens do pedido: ${itemsError.message}`);
+  for (const item of items ?? []) {
+    const row = item as Record<string, unknown>;
+    const productId = stringValue(row.product_id);
+    const qty = numberValue(row.qty);
+    if (!productId) throw new Error(`O item ${stringValue(row.product_name)} não tem produto vinculado para baixa.`);
+    const { data: productData, error: productError } = await client
+      .from('products')
+      .select('name, stock, status')
+      .eq('id', productId)
+      .eq('store_id', context.store.id)
+      .single();
+    if (productError) throw new Error(`Não foi possível validar estoque de ${stringValue(row.product_name)}: ${productError.message}`);
+    const product = productData as Record<string, unknown>;
+    const beforeStock = numberValue(product.stock);
+    const afterStock = beforeStock - qty;
+    if (product.status !== 'active') throw new Error(`Produto ${stringValue(product.name)} está inativo.`);
+    if (afterStock < 0) throw new Error(`Estoque insuficiente para ${stringValue(product.name)}. Disponível: ${beforeStock}.`);
+    const { error: updateError } = await client
+      .from('products')
+      .update({ stock: afterStock })
+      .eq('id', productId)
+      .eq('store_id', context.store.id);
+    if (updateError) throw new Error(`Não foi possível baixar estoque de ${stringValue(product.name)}: ${updateError.message}`);
+    await client.from('stock_movements').insert({
+      store_id: context.store.id,
+      product_id: productId,
+      type: 'saida_pedido_web',
+      qty,
+      before_stock: beforeStock,
+      after_stock: afterStock,
+      reason: `Entrega do pedido #${numberValue(order.number)}`,
+      reference_id: orderId,
+      created_by: context.userId,
+    });
+  }
+  const { data: updated, error: updateOrderError } = await client
+    .from('orders')
+    .update({ status: 'delivered' })
+    .eq('id', orderId)
+    .eq('store_id', context.store.id)
+    .select('id, number, customer_name, total, status, created_at')
+    .single();
+  if (updateOrderError) throw new Error(`Pedido baixou estoque, mas não marcou como entregue: ${updateOrderError.message}`);
+  await insertAudit(context.store.id, context.userId, 'orders', orderId, 'delivered', { source: 'web-fallback' });
+  return mapOrder(updated as Record<string, unknown>);
+}
+
+export async function webOrders(): Promise<OrderSummary[]> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data, error } = await client
+    .from('orders')
+    .select('id, number, customer_name, total, status, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw new Error(`Não foi possível carregar pedidos do Supabase: ${error.message}`);
+  return (data ?? []).map((row: Record<string, unknown>) => mapOrder(row));
+}
+
+export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'criar pedidos');
+  const client = await getClient();
+  const orderPayload = parseOrderPayload(payload);
+  const existing = await client
+    .from('orders')
+    .select('id, number, customer_name, total, status, created_at')
+    .eq('store_id', context.store.id)
+    .eq('client_request_id', orderPayload.request_id)
+    .maybeSingle();
+  if (existing.data) return mapOrder(existing.data as Record<string, unknown>);
+  const productIds = Array.from(new Set(orderPayload.items.map((item) => item.product_id)));
+  const { data: productRows, error: productsError } = await client
+    .from('products')
+    .select('id, name, price, promo_price, stock, status')
+    .eq('store_id', context.store.id)
+    .in('id', productIds);
+  if (productsError) throw new Error(`Não foi possível validar produtos do pedido: ${productsError.message}`);
+  const productsById = new Map((productRows ?? []).map((product: Record<string, unknown>) => [stringValue(product.id), product]));
+  const orderItems = orderPayload.items.map((item) => {
+    const product = productsById.get(item.product_id);
+    if (!product) throw new Error('Um dos produtos do pedido não existe mais no Supabase.');
+    if (product.status !== 'active') throw new Error(`Produto ${stringValue(product.name)} está inativo.`);
+    if (numberValue(product.stock) < item.qty) throw new Error(`Estoque insuficiente para ${stringValue(product.name)}. Disponível: ${numberValue(product.stock)}.`);
+    const unitPrice = product.promo_price === null || product.promo_price === undefined ? numberValue(product.price) : numberValue(product.promo_price);
+    return { product_id: item.product_id, product_name: stringValue(product.name), qty: item.qty, unit_price: unitPrice, total: item.qty * unitPrice };
+  });
+  let customerName = 'Balcão';
+  if (orderPayload.customer_id) {
+    const { data: customer, error: customerError } = await client
+      .from('customers')
+      .select('name')
+      .eq('id', orderPayload.customer_id)
+      .eq('store_id', context.store.id)
+      .maybeSingle();
+    if (customerError) throw new Error(`Não foi possível validar o cliente do pedido: ${customerError.message}`);
+    customerName = customer ? stringValue((customer as Record<string, unknown>).name, 'Balcão') : 'Balcão';
+  }
+  const total = orderItems.reduce((sum, item) => sum + item.total, 0);
+  const { data: insertedOrder, error: orderError } = await client
+    .from('orders')
+    .insert({ store_id: context.store.id, client_request_id: orderPayload.request_id, customer_id: orderPayload.customer_id, customer_name: customerName, total, status: 'open', created_by: context.userId })
+    .select('id, number, customer_name, total, status, created_at')
+    .single();
+  if (orderError) throw new Error(`Não foi possível criar o pedido no Supabase: ${orderError.message}`);
+  const order = insertedOrder as Record<string, unknown>;
+  const { error: itemsError } = await client.from('order_items').insert(orderItems.map((item) => ({ store_id: context.store.id, order_id: stringValue(order.id), product_id: item.product_id, product_name: item.product_name, qty: item.qty, unit_price: item.unit_price, total: item.total })));
+  if (itemsError) throw new Error(`Pedido criado, mas os itens não foram salvos: ${itemsError.message}`);
+  await insertAudit(context.store.id, context.userId, 'orders', stringValue(order.id), 'created', { total, items: orderItems.length });
+  return mapOrder(order);
+}
+
+export async function webSetOrderStatus(orderId: string, status: string): Promise<OrderSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'alterar status de pedidos');
+  const client = await getClient();
+  const nextStatus = mapOrderStatusToCloud(status);
+  if (nextStatus === 'delivered') {
+    const rpcResult = await client.rpc('web_complete_order', { target_order_id: orderId });
+    if (!rpcResult.error && rpcResult.data) {
+      const source = Array.isArray(rpcResult.data) ? rpcResult.data[0] : rpcResult.data;
+      await insertAudit(context.store.id, context.userId, 'orders', orderId, 'delivered', { source: 'rpc' });
+      return mapOrder(source as Record<string, unknown>);
+    }
+    return fallbackCompleteOrder(orderId, context);
+  }
+  if (nextStatus === 'accepted') await assertOrderStockAvailable(orderId, context.store.id);
+  const { data, error } = await client
+    .from('orders')
+    .update({ status: nextStatus })
+    .eq('id', orderId)
+    .eq('store_id', context.store.id)
+    .neq('status', 'delivered')
+    .neq('status', 'canceled')
+    .select('id, number, customer_name, total, status, created_at')
+    .single();
+  if (error) throw new Error(`Não foi possível atualizar o pedido no Supabase: ${error.message}`);
+  await insertAudit(context.store.id, context.userId, 'orders', orderId, `status_${nextStatus}`, {});
+  return mapOrder(data as Record<string, unknown>);
+}
+
+export async function webCancelOrder(orderId: string, reason: string): Promise<OrderSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin', 'operator'], 'cancelar pedidos');
+  const client = await getClient();
+  const { data, error } = await client
+    .from('orders')
+    .update({ status: 'canceled' })
+    .eq('id', orderId)
+    .eq('store_id', context.store.id)
+    .neq('status', 'delivered')
+    .neq('status', 'canceled')
+    .select('id, number, customer_name, total, status, created_at')
+    .single();
+  if (error) throw new Error(`Não foi possível cancelar o pedido no Supabase: ${error.message}`);
+  await insertAudit(context.store.id, context.userId, 'orders', orderId, 'canceled', { reason });
+  return mapOrder(data as Record<string, unknown>);
+}
+
+export async function webReceipts(): Promise<ReceiptSummary[]> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data: receipts, error } = await client
+    .from('receipts')
+    .select('id, sale_id, sale_number, receipt_type, total, content_html, status, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) throw new Error(`Não foi possível carregar comprovantes do Supabase: ${error.message}`);
+  const saleIds = Array.from(new Set((receipts ?? []).map((row: Record<string, unknown>) => stringValue(row.sale_id)).filter(Boolean)));
+  const salesById = new Map<string, { customerName: string; customerId: string }>();
+  const whatsappByCustomerId = new Map<string, string>();
+  if (saleIds.length > 0) {
+    const { data: sales } = await client.from('sales').select('id, customer_name, customer_id').eq('store_id', context.store.id).in('id', saleIds);
+    for (const sale of sales ?? []) {
+      const row = sale as Record<string, unknown>;
+      salesById.set(stringValue(row.id), { customerName: stringValue(row.customer_name, 'Balcão'), customerId: stringValue(row.customer_id) });
+    }
+    const customerIds = Array.from(new Set(Array.from(salesById.values()).map((item) => item.customerId).filter(Boolean)));
+    if (customerIds.length > 0) {
+      const { data: customers } = await client.from('customers').select('id, whatsapp').eq('store_id', context.store.id).in('id', customerIds);
+      for (const customer of customers ?? []) {
+        const row = customer as Record<string, unknown>;
+        whatsappByCustomerId.set(stringValue(row.id), stringValue(row.whatsapp));
+      }
+    }
+  }
+  return (receipts ?? []).map((row: Record<string, unknown>) => mapReceipt(row, salesById, whatsappByCustomerId));
+}
+
+export function webExportHtmlPdf(html: string, fileStem: string): Promise<string> {
+  const printable = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${fileStem}</title><style>body{margin:0;background:#fff;color:#111;font-family:Arial,sans-serif}.print-shell{max-width:860px;margin:0 auto;padding:18px}@media print{.no-print{display:none}body{background:#fff}.print-shell{padding:0}}</style></head><body><div class="print-shell">${html}</div><script>setTimeout(function(){window.focus();window.print();},250);<\/script></body></html>`;
+  const popup = window.open('', '_blank', 'noopener,noreferrer');
+  if (popup) {
+    popup.document.open();
+    popup.document.write(printable);
+    popup.document.close();
+    return Promise.resolve(`Prévia de impressão aberta no navegador para ${fileStem}.`);
+  }
+  downloadTextFile(`${fileStem}.html`, printable, 'text/html;charset=utf-8');
+  return Promise.resolve(`Navegador bloqueou a janela; baixei ${fileStem}.html para impressão.`);
+}
+
+function buildReportSkeleton(report: ReportKind, from: string, to: string): ReportData {
+  const generatedAt = new Date().toISOString();
+  const periodText = from === to ? reportDate(from) : `${reportDate(from)} até ${reportDate(to)}`;
+  if (report === 'caixa') return { report, title: 'Caixa por período', description: `Movimentos de caixa entre ${periodText}.`, empty_message: 'Nenhum movimento de caixa encontrado no período.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'data', label: 'Data' }, { key: 'tipo', label: 'Tipo' }, { key: 'forma', label: 'Forma' }, { key: 'motivo', label: 'Motivo' }, { key: 'valor', label: 'Valor', align: 'right' }], rows: [] };
+  if (report === 'crediario') return { report, title: 'Crediário em aberto', description: 'Clientes com saldo pendente no Supabase.', empty_message: 'Nenhum crediário em aberto encontrado.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'cliente', label: 'Cliente' }, { key: 'venda', label: 'Venda' }, { key: 'total', label: 'Total', align: 'right' }, { key: 'saldo', label: 'Saldo', align: 'right' }, { key: 'data', label: 'Data' }], rows: [] };
+  if (report === 'estoque_baixo') return { report, title: 'Estoque baixo', description: 'Produtos ativos abaixo do limite configurado da loja.', empty_message: 'Nenhum produto abaixo do limite.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'produto', label: 'Produto' }, { key: 'categoria', label: 'Categoria' }, { key: 'estoque', label: 'Estoque', align: 'right' }, { key: 'preco', label: 'Preço', align: 'right' }, { key: 'status', label: 'Status' }], rows: [] };
+  return { report, title: 'Vendas por período', description: `Vendas registradas entre ${periodText}.`, empty_message: 'Nenhuma venda encontrada no período.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'data', label: 'Data' }, { key: 'venda', label: 'Venda' }, { key: 'cliente', label: 'Cliente' }, { key: 'forma', label: 'Forma' }, { key: 'status', label: 'Status' }, { key: 'total', label: 'Total', align: 'right' }], rows: [] };
+}
+
+export async function webReportData(reportValue: string, from: string, to: string): Promise<ReportData> {
+  const report: ReportKind = reportValue === 'caixa' || reportValue === 'crediario' || reportValue === 'estoque_baixo' ? reportValue : 'vendas';
+  if (from > to) throw new Error('A data inicial não pode ser maior que a data final.');
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const model = buildReportSkeleton(report, from, to);
+  const range = dateRange(from, to);
+  if (report === 'vendas') {
+    const { data, error } = await client.from('sales').select('number, customer_name, payment_method, total, status, created_at').eq('store_id', context.store.id).gte('created_at', range.fromIso).lt('created_at', range.toIso).order('created_at', { ascending: false });
+    if (error) throw new Error(`Não foi possível gerar relatório de vendas: ${error.message}`);
+    const rows = (data ?? []).map((sale: Record<string, unknown>) => ({ data: reportDateTime(toIso(sale.created_at)), venda: `#${numberValue(sale.number)}`, cliente: stringValue(sale.customer_name, 'Balcão'), forma: stringValue(sale.payment_method, '-'), status: stringValue(sale.status, '-'), total: reportMoney(numberValue(sale.total)) }));
+    const validSales = (data ?? []).filter((sale: Record<string, unknown>) => sale.status !== 'canceled');
+    const total = validSales.reduce((sum, sale: Record<string, unknown>) => sum + numberValue(sale.total), 0);
+    model.rows = rows; model.total_rows = rows.length; model.summary = [{ label: 'Total vendido', value: reportMoney(total), detail: 'Soma sem vendas canceladas.', tone: 'green' }, { label: 'Vendas', value: String(validSales.length), detail: 'Quantidade finalizada no período.', tone: 'blue' }, { label: 'Ticket médio', value: reportMoney(validSales.length ? total / validSales.length : 0), detail: 'Média por venda válida.', tone: 'purple' }];
+    return model;
+  }
+  if (report === 'caixa') {
+    const { data, error } = await client.from('cash_movements').select('type, method, amount, reason, created_at').eq('store_id', context.store.id).gte('created_at', range.fromIso).lt('created_at', range.toIso).order('created_at', { ascending: false });
+    if (error) throw new Error(`Não foi possível gerar relatório de caixa: ${error.message}`);
+    const rows = (data ?? []).map((movement: Record<string, unknown>) => ({ data: reportDateTime(toIso(movement.created_at)), tipo: stringValue(movement.type, '-'), forma: stringValue(movement.method, '-'), motivo: stringValue(movement.reason, '-'), valor: reportMoney(numberValue(movement.amount)) }));
+    const entrada = (data ?? []).filter((row: Record<string, unknown>) => row.type === 'entrada').reduce((sum, row: Record<string, unknown>) => sum + numberValue(row.amount), 0);
+    const saida = (data ?? []).filter((row: Record<string, unknown>) => row.type === 'saida').reduce((sum, row: Record<string, unknown>) => sum + numberValue(row.amount), 0);
+    model.rows = rows; model.total_rows = rows.length; model.summary = [{ label: 'Entradas', value: reportMoney(entrada), detail: 'Total de entradas no período.', tone: 'green' }, { label: 'Saídas', value: reportMoney(saida), detail: 'Total de saídas no período.', tone: 'orange' }, { label: 'Saldo', value: reportMoney(entrada - saida), detail: 'Resultado simples do período.', tone: 'blue' }];
+    return model;
+  }
+  if (report === 'crediario') {
+    const { data, error } = await client.from('credits').select('customer_name, sale_id, total, balance, status, created_at').eq('store_id', context.store.id).eq('status', 'open').order('created_at', { ascending: false });
+    if (error) throw new Error(`Não foi possível gerar relatório de crediário: ${error.message}`);
+    const rows = (data ?? []).map((credit: Record<string, unknown>) => ({ cliente: stringValue(credit.customer_name, 'Cliente'), venda: stringValue(credit.sale_id).slice(0, 8) || '-', total: reportMoney(numberValue(credit.total)), saldo: reportMoney(numberValue(credit.balance)), data: reportDateTime(toIso(credit.created_at)) }));
+    const balance = (data ?? []).reduce((sum, credit: Record<string, unknown>) => sum + numberValue(credit.balance), 0);
+    const customers = new Set((data ?? []).map((credit: Record<string, unknown>) => stringValue(credit.customer_name)).filter(Boolean));
+    model.rows = rows; model.total_rows = rows.length; model.summary = [{ label: 'Saldo em aberto', value: reportMoney(balance), detail: 'Valor pendente a receber.', tone: 'pink' }, { label: 'Clientes', value: String(customers.size), detail: 'Clientes com pendência.', tone: 'blue' }, { label: 'Registros', value: String(rows.length), detail: 'Crediários abertos.', tone: 'purple' }];
+    return model;
+  }
+  const { data, error } = await client.from('products').select('name, category, stock, price, status').eq('store_id', context.store.id).eq('status', 'active').lte('stock', context.store.low_stock_limit).order('stock', { ascending: true });
+  if (error) throw new Error(`Não foi possível gerar relatório de estoque baixo: ${error.message}`);
+  const rows = (data ?? []).map((product: Record<string, unknown>) => ({ produto: stringValue(product.name, 'Produto'), categoria: stringValue(product.category, '-'), estoque: numberValue(product.stock).toLocaleString('pt-BR'), preco: reportMoney(numberValue(product.price)), status: 'Ativo' }));
+  const zeroStock = (data ?? []).filter((product: Record<string, unknown>) => numberValue(product.stock) <= 0).length;
+  model.rows = rows; model.total_rows = rows.length; model.summary = [{ label: 'Abaixo do limite', value: String(rows.length), detail: `Limite atual: ${context.store.low_stock_limit}.`, tone: 'orange' }, { label: 'Zerados', value: String(zeroStock), detail: 'Produtos sem estoque.', tone: 'pink' }, { label: 'Ação', value: rows.length ? 'Repor' : 'OK', detail: rows.length ? 'Revise compras e entrada de estoque.' : 'Estoque saudável.', tone: rows.length ? 'orange' : 'green' }];
+  return model;
+}
+
+export async function webReportsCsv(report: string, from: string, to: string): Promise<string> {
+  const data = await webReportData(report, from, to);
+  const header = data.columns.map((column) => csvEscape(column.label)).join(';');
+  const lines = data.rows.map((row) => data.columns.map((column) => csvEscape(row[column.key] ?? '')).join(';'));
+  const csv = ['\ufeff' + header, ...lines].join('\n');
+  const fileName = `relatorio-${data.report}-${from}-a-${to}.csv`;
+  downloadTextFile(fileName, csv, 'text/csv;charset=utf-8');
+  return `download:${fileName}`;
 }
 
 export function openWebUrl(url: string): void {
