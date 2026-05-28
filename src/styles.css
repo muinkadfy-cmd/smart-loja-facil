@@ -11791,3 +11791,53 @@ body {
   background: rgba(18, 29, 58, 0.72);
   color: var(--text-muted);
 }
+
+
+/* Mega Lote 55 - identidade visual real: logo, favicon e ícone de taskbar */
+.neo-windowbar-logo,
+.neo-brand-logo-img,
+.neo-mobile-brand-logo,
+.login-brand-icon {
+  display: block;
+  object-fit: cover;
+  border-radius: 22%;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 30px rgba(31, 96, 255, 0.18);
+}
+
+.neo-windowbar-logo {
+  width: 18px;
+  height: 18px;
+}
+
+.neo-brand-logo-img {
+  width: 54px;
+  height: 54px;
+}
+
+.neo-mobile-brand-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.login-brand-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.neo-sidebar-brand-mark,
+.login-brand-mark-inner {
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .neo-brand-logo-img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .login-brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+}

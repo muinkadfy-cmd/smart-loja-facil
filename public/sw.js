@@ -1,13 +1,20 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v54';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v55';
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/logo.svg',
+  '/favicon.ico',
+  '/apple-touch-icon.png',
   '/manifest.webmanifest',
+  '/icons/favicon-16.png',
+  '/icons/favicon-32.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/maskable-192.png',
   '/icons/maskable-512.png',
+  '/icons/icon-192-maskable.png',
+  '/icons/icon-512-maskable.png',
+  '/brand/smart-loja-icon.png',
+  '/brand/smart-loja-logo.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -65,7 +72,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname === '/favicon.ico' || url.pathname === '/apple-touch-icon.png' || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(cacheFirst(event.request));
     return;
   }
