@@ -2,6 +2,7 @@ import { getPublicWebEnv } from './env';
 import { getSupabaseClient } from './supabaseClient';
 import type {
   AppStatus,
+  BackupInfo,
   CashMovement,
   CashSummary,
   Customer,
@@ -45,7 +46,7 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v53';
+export const WEB_APP_VERSION = 'pwa-supabase-v54';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -772,6 +773,234 @@ function csvEscape(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
 }
 
+
+const WEB_BACKUP_HISTORY_KEY = 'smart-loja:web-backup-history-v1';
+
+const WEB_BACKUP_TABLES = [
+  'customers',
+  'products',
+  'sales',
+  'sale_items',
+  'cash_sessions',
+  'credits',
+  'credit_installments',
+  'payments',
+  'cash_movements',
+  'orders',
+  'order_items',
+  'receipts',
+  'stock_movements',
+  'audit_log',
+] as const;
+
+type WebBackupTableName = typeof WEB_BACKUP_TABLES[number];
+type JsonRecord = Record<string, unknown>;
+
+type WebBackupSnapshot = {
+  kind: 'smart-loja-facil-web-backup';
+  version: 1;
+  app_version: string;
+  created_at: string;
+  store: JsonRecord;
+  user: { id: string; email: string; role: WebStoreRole };
+  counts: Record<string, number>;
+  tables: Record<string, JsonRecord[]>;
+};
+
+function readWebBackupHistory(): BackupInfo[] {
+  try {
+    const raw = window.localStorage.getItem(WEB_BACKUP_HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((row) => {
+        const source = row && typeof row === 'object' ? row as JsonRecord : {};
+        return {
+          id: stringValue(source.id),
+          file_name: stringValue(source.file_name),
+          file_path: stringValue(source.file_path),
+          size_bytes: numberValue(source.size_bytes),
+          integrity_ok: Boolean(source.integrity_ok),
+          created_at: toIso(source.created_at),
+        };
+      })
+      .filter((row) => row.id && row.file_name)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  } catch {
+    return [];
+  }
+}
+
+function saveWebBackupHistory(history: BackupInfo[]): void {
+  window.localStorage.setItem(WEB_BACKUP_HISTORY_KEY, JSON.stringify(history.slice(0, 20)));
+}
+
+function safeFileStamp(value: string): string {
+  return value.replace(/[^0-9a-zA-Z_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'backup';
+}
+
+function getSnapshotTables(snapshot: WebBackupSnapshot): Partial<Record<WebBackupTableName, JsonRecord[]>> {
+  const tables: Partial<Record<WebBackupTableName, JsonRecord[]>> = {};
+  for (const table of WEB_BACKUP_TABLES) {
+    const rows = snapshot.tables[table];
+    tables[table] = Array.isArray(rows) ? rows : [];
+  }
+  return tables;
+}
+
+function normalizeSnapshotRow(row: JsonRecord, storeId: string): JsonRecord {
+  const copy: JsonRecord = { ...row, store_id: storeId };
+  return copy;
+}
+
+async function fetchStoreRows(table: WebBackupTableName, storeId: string): Promise<JsonRecord[]> {
+  const client = await getClient();
+  const { data, error } = await client
+    .from(table)
+    .select('*')
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(`Não foi possível incluir ${table} no backup web: ${error.message}`);
+  return (data ?? []) as JsonRecord[];
+}
+
+async function upsertRows(table: WebBackupTableName, rows: JsonRecord[], storeId: string): Promise<number> {
+  if (rows.length === 0) return 0;
+  const client = await getClient();
+  const normalized = rows.map((row) => normalizeSnapshotRow(row, storeId));
+  const chunkSize = 100;
+  let imported = 0;
+  for (let index = 0; index < normalized.length; index += chunkSize) {
+    const chunk = normalized.slice(index, index + chunkSize);
+    const { error } = await client.from(table).upsert(chunk, { onConflict: 'id' });
+    if (error) throw new Error(`Falha ao restaurar ${table}: ${error.message}`);
+    imported += chunk.length;
+  }
+  return imported;
+}
+
+export async function webBackups(): Promise<BackupInfo[]> {
+  return readWebBackupHistory();
+}
+
+export async function webCreateBackup(): Promise<BackupInfo> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'gerar backup web da loja');
+  const client = await getClient();
+  const { data: storeData, error: storeError } = await client
+    .from('stores')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, created_at, updated_at')
+    .eq('id', context.store.id)
+    .single();
+  if (storeError) throw new Error(`Não foi possível incluir a loja no backup web: ${storeError.message}`);
+
+  const tables: Record<string, JsonRecord[]> = {};
+  const counts: Record<string, number> = {};
+  for (const table of WEB_BACKUP_TABLES) {
+    const rows = await fetchStoreRows(table, context.store.id);
+    tables[table] = rows;
+    counts[table] = rows.length;
+  }
+
+  const createdAt = new Date().toISOString();
+  const snapshot: WebBackupSnapshot = {
+    kind: 'smart-loja-facil-web-backup',
+    version: 1,
+    app_version: WEB_APP_VERSION,
+    created_at: createdAt,
+    store: storeData as JsonRecord,
+    user: { id: context.userId, email: context.email, role: context.role },
+    counts,
+    tables,
+  };
+  const content = JSON.stringify(snapshot, null, 2);
+  const fileName = `backup-smart-loja-web-${safeFileStamp(context.store.name)}-${createdAt.slice(0, 19).replace(/[:T]/g, '-')}.json`;
+  downloadTextFile(fileName, content, 'application/json;charset=utf-8');
+  const info: BackupInfo = {
+    id: `web-${createdAt}-${context.store.id}`,
+    file_name: fileName,
+    file_path: 'download:' + fileName,
+    size_bytes: new Blob([content]).size,
+    integrity_ok: true,
+    created_at: createdAt,
+  };
+  const history = [info, ...readWebBackupHistory().filter((row) => row.file_name !== fileName)];
+  saveWebBackupHistory(history);
+  await insertAudit(context.store.id, context.userId, 'stores', context.store.id, 'web_backup_exported', { file_name: fileName, counts });
+  return info;
+}
+
+export async function webRestoreBackupContent(fileContent: string, confirmation: string): Promise<AppStatus> {
+  if (confirmation !== 'RESTAURAR') throw new Error('Confirmação inválida. Digite RESTAURAR para importar o backup web.');
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'restaurar backup web da loja');
+
+  let snapshot: WebBackupSnapshot;
+  try {
+    snapshot = JSON.parse(fileContent) as WebBackupSnapshot;
+  } catch {
+    throw new Error('Arquivo inválido. Selecione um backup JSON exportado pelo Smart Loja Fácil Web.');
+  }
+
+  if (snapshot.kind !== 'smart-loja-facil-web-backup' || snapshot.version !== 1 || !snapshot.tables || !snapshot.store) {
+    throw new Error('Backup web não reconhecido ou incompatível com esta versão.');
+  }
+
+  const snapshotStoreId = stringValue(snapshot.store.id);
+  if (snapshotStoreId && snapshotStoreId !== context.store.id) {
+    const allowed = window.confirm('Este backup foi criado em outra loja web. Importar assim mesmo para a loja atual? A importação não apaga dados existentes.');
+    if (!allowed) throw new Error('Importação cancelada para evitar misturar lojas diferentes.');
+  }
+
+  await webCreateBackup();
+
+  const client = await getClient();
+  const storePatch = snapshot.store;
+  const { error: storeError } = await client
+    .from('stores')
+    .update({
+      name: stringValue(storePatch.name, context.store.name),
+      phone: stringValue(storePatch.phone),
+      whatsapp: stringValue(storePatch.whatsapp),
+      address: stringValue(storePatch.address),
+      logo_url: stringValue(storePatch.logo_url),
+      receipt_message: stringValue(storePatch.receipt_message, context.store.receipt_message),
+      low_stock_limit: numberValue(storePatch.low_stock_limit, context.store.low_stock_limit),
+      status: stringValue(storePatch.status, context.store.status),
+    })
+    .eq('id', context.store.id);
+  if (storeError) throw new Error(`Não foi possível restaurar configurações da loja: ${storeError.message}`);
+
+  const importOrder: WebBackupTableName[] = [
+    'customers',
+    'products',
+    'sales',
+    'sale_items',
+    'cash_sessions',
+    'credits',
+    'credit_installments',
+    'payments',
+    'cash_movements',
+    'orders',
+    'order_items',
+    'receipts',
+    'stock_movements',
+  ];
+  const snapshotTables = getSnapshotTables(snapshot);
+  const imported: Record<string, number> = {};
+  for (const table of importOrder) {
+    imported[table] = await upsertRows(table, snapshotTables[table] ?? [], context.store.id);
+  }
+
+  await insertAudit(context.store.id, context.userId, 'stores', context.store.id, 'web_backup_imported', {
+    source_created_at: snapshot.created_at,
+    source_app_version: snapshot.app_version,
+    imported,
+  });
+  return webAppStatus();
+}
+
 type WebOrderPayloadItem = { product_id: string; qty: number };
 type WebOrderPayload = { request_id: string; customer_id: string | null; items: WebOrderPayloadItem[] };
 
@@ -1388,14 +1617,20 @@ export async function webReceipts(): Promise<ReceiptSummary[]> {
   return (receipts ?? []).map((row: Record<string, unknown>) => mapReceipt(row, salesById, whatsappByCustomerId));
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 export function webExportHtmlPdf(html: string, fileStem: string): Promise<string> {
-  const printable = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${fileStem}</title><style>body{margin:0;background:#fff;color:#111;font-family:Arial,sans-serif}.print-shell{max-width:860px;margin:0 auto;padding:18px}@media print{.no-print{display:none}body{background:#fff}.print-shell{padding:0}}</style></head><body><div class="print-shell">${html}</div><script>setTimeout(function(){window.focus();window.print();},250);<\/script></body></html>`;
+  const title = escapeHtml(fileStem);
+  const printedAt = new Date().toLocaleString('pt-BR');
+  const printable = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#eef2f8;color:#111827;font-family:Inter,Arial,sans-serif}.print-toolbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 16px;background:#0b1020;color:#f8fafc;box-shadow:0 14px 34px rgba(15,23,42,.18)}.print-toolbar strong{font-size:14px}.print-toolbar small{display:block;color:#aeb8cf;margin-top:2px}.print-toolbar button{border:0;border-radius:999px;padding:10px 14px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer}.print-shell{width:min(860px,100%);margin:22px auto;padding:18px}.receipt-paper{background:#fff;border:1px solid #d9e2f2;border-radius:18px;box-shadow:0 22px 58px rgba(15,23,42,.16);padding:18px;overflow:auto}.receipt-paper section{margin-inline:auto}.print-footer{margin:14px auto 0;width:min(860px,100%);padding:0 18px 18px;color:#64748b;font-size:12px;text-align:center}@page{margin:8mm}@media print{body{background:#fff}.no-print,.print-toolbar,.print-footer{display:none!important}.print-shell{width:100%;margin:0;padding:0}.receipt-paper{border:0;border-radius:0;box-shadow:none;padding:0;overflow:visible}}</style></head><body><div class="print-toolbar no-print"><div><strong>Prévia do comprovante</strong><small>Gerado em ${printedAt}</small></div><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></div><main class="print-shell"><div class="receipt-paper">${html}</div></main><div class="print-footer no-print">Se a impressão não abrir automaticamente, use o botão acima ou Ctrl+P.</div><script>setTimeout(function(){window.focus();window.print();},350);<\/script></body></html>`;
   const popup = window.open('', '_blank', 'noopener,noreferrer');
   if (popup) {
     popup.document.open();
     popup.document.write(printable);
     popup.document.close();
-    return Promise.resolve(`Prévia de impressão aberta no navegador para ${fileStem}.`);
+    return Promise.resolve(`Prévia premium de impressão aberta no navegador para ${fileStem}.`);
   }
   downloadTextFile(`${fileStem}.html`, printable, 'text/html;charset=utf-8');
   return Promise.resolve(`Navegador bloqueou a janela; baixei ${fileStem}.html para impressão.`);
