@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { WebAuthPanel } from '../components/WebAuthPanel';
 import { getPublicWebEnv } from '../lib/env';
 import { getRuntimeInfo } from '../lib/runtime';
-import { getWebRoleCapabilities, getWebStoreContext, WEB_APP_VERSION, webRoleLabel, type WebStoreRole } from '../lib/webApi';
+import { getWebRoleCapabilities, getWebStoreContext, WEB_APP_VERSION, webRemoteSyncHealth, webRoleLabel, webSyncQueueSnapshot, type WebStoreRole } from '../lib/webApi';
 
 interface HealthItem {
   label: string;
@@ -29,6 +29,10 @@ export function WebDiagnosticsPage(): JSX.Element {
     detail: 'Login Supabase ainda não carregado neste aparelho.',
   });
   const [copyMessage, setCopyMessage] = useState('');
+  const [syncQueue, setSyncQueue] = useState(() => webSyncQueueSnapshot());
+  const [remoteHealth, setRemoteHealth] = useState<Record<string, unknown> | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => (typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied'));
+  const [sessionRefresh, setSessionRefresh] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -55,13 +59,41 @@ export function WebDiagnosticsPage(): JSX.Element {
     return () => {
       active = false;
     };
-  }, [env.isConfigured, runtime.isTauri]);
+  }, [env.isConfigured, runtime.isTauri, sessionRefresh]);
+
+  useEffect(() => {
+    const reloadSession = () => setSessionRefresh((value) => value + 1);
+    window.addEventListener('smart-loja:web-session-changed', reloadSession);
+    return () => window.removeEventListener('smart-loja:web-session-changed', reloadSession);
+  }, []);
+
+  useEffect(() => {
+    const updateSyncSnapshot = () => setSyncQueue(webSyncQueueSnapshot());
+    window.addEventListener('smart-loja:web-sync-queue-changed', updateSyncSnapshot);
+    window.addEventListener('smart-loja:web-remote-change', updateSyncSnapshot);
+    updateSyncSnapshot();
+    return () => {
+      window.removeEventListener('smart-loja:web-sync-queue-changed', updateSyncSnapshot);
+      window.removeEventListener('smart-loja:web-remote-change', updateSyncSnapshot);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void webRemoteSyncHealth().then((health) => {
+      if (active) setRemoteHealth(health);
+    });
+    return () => {
+      active = false;
+    };
+  }, [context.storeName, context.role, syncQueue.last_success_at, syncQueue.pending]);
 
   const capabilities = getWebRoleCapabilities(context.role);
   const onlineLabel = typeof navigator === 'undefined' || navigator.onLine ? 'Online' : 'Sem internet';
   const swLabel = typeof navigator !== 'undefined' && 'serviceWorker' in navigator
     ? navigator.serviceWorker.controller ? 'Controlando cache' : 'Registrável'
     : 'Indisponível';
+  const notificationLabel = notificationPermission === 'granted' ? 'Ativadas' : notificationPermission === 'default' ? 'Aguardando autorização' : 'Bloqueadas';
 
   const diagnosticText = [
     `Versão: ${WEB_APP_VERSION}`,
@@ -73,8 +105,15 @@ export function WebDiagnosticsPage(): JSX.Element {
     `Permissão: ${capabilities.writeLabel}`,
     `Supabase URL: ${env.hasSupabaseUrl ? 'ok' : 'faltando'}`,
     `Supabase anon key: ${env.hasSupabaseAnonKey ? 'ok' : 'faltando'}`,
+    `Origem Supabase: ${env.source === 'vite-env' ? 'Cloudflare/Vite env' : 'fallback publico v71'}`,
     `Rede: ${onlineLabel}`,
     `Service worker: ${swLabel}`,
+    `Notificações: ${notificationLabel}`,
+    `Fila de sync: ${syncQueue.pending} pendente(s)`,
+    `Realtime: ${syncQueue.realtime_status}`,
+    `Último sync reenviado: ${syncQueue.last_success_at || 'sem registro'}`,
+    `Último erro de sync: ${syncQueue.last_error || 'sem erro local'}`,
+    `Health remoto: ${remoteHealth ? JSON.stringify(remoteHealth) : 'indisponível ou migration v70 pendente'}`,
   ].join('\n');
 
   async function copyDiagnostic(): Promise<void> {
@@ -83,6 +122,15 @@ export function WebDiagnosticsPage(): JSX.Element {
       setCopyMessage('Diagnóstico copiado para enviar no suporte.');
     } catch {
       setCopyMessage('Não foi possível copiar automaticamente. Selecione os dados na tela.');
+    }
+  }
+
+  async function enableNotifications(): Promise<void> {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    const nextPermission = await Notification.requestPermission();
+    setNotificationPermission(nextPermission);
+    if (nextPermission === 'granted') {
+      new Notification('Smart Loja Fácil', { body: 'Avisos ativados para sincronização pendente, erro de envio e internet offline.' });
     }
   }
 
@@ -124,16 +172,46 @@ export function WebDiagnosticsPage(): JSX.Element {
       detail: 'Cache versionado com limpeza de versões antigas.',
     },
     {
+      label: 'Notificações leigas',
+      value: notificationLabel,
+      tone: notificationPermission === 'granted' ? 'ok' : notificationPermission === 'default' ? 'info' : 'warn',
+      detail: notificationPermission === 'granted' ? 'O navegador pode avisar sobre pendência, erro de sync e internet offline.' : notificationPermission === 'default' ? 'Toque em Ativar avisos para receber alertas simples sobre sincronização.' : 'O navegador bloqueou avisos. Libere nas configurações do site se quiser notificações.',
+    },
+    {
+      label: 'Fila de sincronização',
+      value: syncQueue.pending > 0 ? `${syncQueue.pending} pendente(s)` : 'Sem pendência',
+      tone: syncQueue.pending > 0 ? 'warn' : 'ok',
+      detail: syncQueue.pending > 0 ? `Primeiro item: ${syncQueue.oldest_at || 'sem data'}. Último erro: ${syncQueue.last_error || 'aguardando envio'}.` : 'Nada ficou preso localmente neste aparelho.',
+    },
+    {
+      label: 'Realtime web/mobile',
+      value: syncQueue.realtime_status,
+      tone: syncQueue.realtime_status.includes('conectado') ? 'ok' : 'info',
+      detail: 'Quando outro dispositivo salva no Supabase, esta sessão recebe aviso e atualiza os dados.',
+    },
+    {
+      label: 'Último reenvio',
+      value: syncQueue.last_success_at || 'Sem registro',
+      tone: syncQueue.last_success_at ? 'ok' : 'info',
+      detail: 'Mostra quando a fila local conseguiu reenviar algo para o Supabase.',
+    },
+    {
+      label: 'Health remoto SQL',
+      value: remoteHealth ? 'RPC v70 OK' : 'Pendente',
+      tone: remoteHealth ? 'ok' : 'warn',
+      detail: remoteHealth ? `Conflitos abertos: ${String(remoteHealth.sync_conflicts_open ?? 0)} · outbox: ${String(remoteHealth.sync_outbox_pending ?? 0)}.` : 'Aplique a migration 202605300001_supabase_sync_hardening_v70.sql no Supabase.',
+    },
+    {
       label: 'URL Supabase',
       value: env.hasSupabaseUrl ? 'Configurada' : 'Faltando',
       tone: env.hasSupabaseUrl ? 'ok' : 'warn',
-      detail: env.hasSupabaseUrl ? 'Variável pública encontrada.' : 'Adicione VITE_SUPABASE_URL no Cloudflare.',
+      detail: env.hasSupabaseUrl ? (env.source === 'vite-env' ? 'Variável pública encontrada no build.' : 'URL pública embutida como fallback seguro.') : 'Adicione VITE_SUPABASE_URL no Cloudflare.',
     },
     {
       label: 'Anon Key',
       value: env.hasSupabaseAnonKey ? 'Configurada' : 'Faltando',
       tone: env.hasSupabaseAnonKey ? 'ok' : 'warn',
-      detail: env.hasSupabaseAnonKey ? 'Chave pública carregada.' : 'Adicione VITE_SUPABASE_ANON_KEY no Cloudflare.',
+      detail: env.hasSupabaseAnonKey ? (env.source === 'vite-env' ? 'Chave pública carregada no build.' : 'Anon public key embutida como fallback seguro.') : 'Adicione VITE_SUPABASE_ANON_KEY no Cloudflare.',
     },
     {
       label: 'Versão/cache',
@@ -144,13 +222,14 @@ export function WebDiagnosticsPage(): JSX.Element {
   ];
 
   return (
-    <div className="stack web-stack">
+    <div className="stack web-stack webdiagnostics-light-v65 webdiagnostics-safe-v66">
       <section className="web-hero-card">
         <span className="web-kicker">Diagnóstico de produção</span>
         <h1>PWA web/mobile com Supabase como foco principal</h1>
         <p>Esta tela valida login, loja ativa, papel do usuário, cache e conexão. Os detalhes técnicos ficam aqui para o dashboard continuar limpo para usuário leigo.</p>
         <div className="web-diagnostics-actions">
-          <button type="button" className="primary-btn" onClick={copyDiagnostic}>Copiar diagnóstico</button>
+          <button type="button" className="primary-btn web-copy-diagnostic-btn" onClick={copyDiagnostic}>Copiar diagnóstico</button>
+          {notificationPermission === 'default' ? <button type="button" className="secondary-btn web-copy-diagnostic-btn" onClick={enableNotifications}>Ativar avisos</button> : null}
           {copyMessage ? <span className="web-message">{copyMessage}</span> : null}
         </div>
       </section>
@@ -167,13 +246,15 @@ export function WebDiagnosticsPage(): JSX.Element {
 
       <section className="mobile-readiness-card">
         <span className="web-kicker">Pronto para celular</span>
-        <h2>Instalação PWA, cache novo e área segura</h2>
-        <p>O app agora tem manifest melhorado, ícones PNG/maskable, service worker com cache versionado e aviso de atualização para evitar arquivo antigo no celular.</p>
+        <h2>PWA atualizado, cache novo e área segura</h2>
+        <p>O app agora tem manifest melhorado, cache versionado, aviso de atualização, fila local de sincronização e realtime para refletir alterações feitas em outro dispositivo.</p>
         <div className="mobile-readiness-grid">
           <span>Ícones 192/512</span>
           <span>Cache versionado</span>
+          <span>Fila de sync</span>
+          <span>Realtime ativo</span>
           <span>Aviso de nova versão</span>
-          <span>Safe-area mobile</span>
+          <span>Safe-area ativa</span>
         </div>
       </section>
 
@@ -193,8 +274,8 @@ export function WebDiagnosticsPage(): JSX.Element {
             <li>Frontend usa somente URL e anon key públicas.</li>
             <li>Service role e VAPID private key ficam fora do app.</li>
             <li>Loja ativa e papel do usuário são lidos pelo Supabase.</li>
-            <li>Clientes, produtos e configurações já passam pela camada web.</li>
-            <li>Vendas, caixa e crediário continuam bloqueados até migração transacional.</li>
+            <li>Clientes, produtos, configurações, vendas, caixa, pedidos, crediário e comprovantes passam pela camada web/Supabase.</li>
+            <li>Operações financeiras críticas usam RPC ou validação reforçada para evitar duplicidade.</li>
           </ul>
         </section>
       </div>

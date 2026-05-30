@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './components/Modal';
 import { Shell } from './components/Shell';
 import { PwaUpdateNotice } from './components/PwaUpdateNotice';
+import { WebAuthPanel } from './components/WebAuthPanel';
 import { Welcome } from './pages/Welcome';
 import { Dashboard } from './pages/Dashboard';
 import { CustomersPage } from './pages/Customers';
@@ -18,10 +19,46 @@ import { AuditPage } from './pages/Audit';
 import { WebDiagnosticsPage } from './pages/WebDiagnostics';
 import { WebMigrationPage } from './pages/WebMigration';
 import { api } from './lib/api';
+import { webFlushQueuedSync } from './lib/webApi';
+import { subscribeWebStoreRealtime } from './lib/webSync';
 import { getRuntimeInfo, hasTauriWindowMetadata } from './lib/runtime';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from './lib/preferences';
 import { playOperationSound } from './lib/sound';
 import type { AppStatus, PageKey, Settings } from './types';
+
+const webPageLabels: Record<PageKey, string> = {
+  dashboard: 'Início',
+  products: 'Produtos',
+  customers: 'Clientes',
+  orders: 'Pedidos',
+  sales: 'Vendas / PDV',
+  cash: 'Caixa',
+  credits: 'Crediário',
+  receipts: 'Comprovantes',
+  reports: 'Relatórios',
+  backup: 'Backup',
+  settings: 'Configurações',
+  audit: 'Logs / Diagnóstico',
+  diagnostics: 'Diagnóstico Web',
+};
+
+function WebLoginRequiredGate({ pageLabel }: { pageLabel: string }): JSX.Element {
+  return (
+    <div className="stack web-login-required-v73">
+      <section className="web-login-required-card">
+        <span className="web-kicker">Login obrigatório para salvar na nuvem</span>
+        <h1>{pageLabel} precisa de login Supabase</h1>
+        <p>Para cadastrar, editar, excluir, vender, receber ou sincronizar entre computador e celular, entre com e-mail e senha da loja. Sem login, o sistema fica somente leitura para proteger os dados.</p>
+        <div className="web-login-required-steps">
+          <span>1. Informe e-mail e senha.</span>
+          <span>2. Toque em Entrar e sincronizar.</span>
+          <span>3. Volte para {pageLabel} e salve novamente.</span>
+        </div>
+      </section>
+      <WebAuthPanel />
+    </div>
+  );
+}
 
 
 export default function App(): JSX.Element {
@@ -68,6 +105,40 @@ export default function App(): JSX.Element {
     window.addEventListener('smart-loja:web-session-changed', reloadWebSession);
     return () => window.removeEventListener('smart-loja:web-session-changed', reloadWebSession);
   }, [boot, runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (!entered || !runtimeInfo.isWeb) return undefined;
+    let busy = false;
+    const flushAndReload = () => {
+      if (busy) return;
+      busy = true;
+      void webFlushQueuedSync()
+        .then((report) => {
+          if (report.sent > 0) {
+            setRefreshToken((value) => value + 1);
+            void boot();
+          }
+        })
+        .finally(() => {
+          busy = false;
+        });
+    };
+    window.addEventListener('online', flushAndReload);
+    window.addEventListener('smart-loja:web-sync-queue-changed', flushAndReload);
+    flushAndReload();
+    return () => {
+      window.removeEventListener('online', flushAndReload);
+      window.removeEventListener('smart-loja:web-sync-queue-changed', flushAndReload);
+    };
+  }, [boot, entered, runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (!entered || !runtimeInfo.isWeb || !status?.sqlite_ok) return undefined;
+    return subscribeWebStoreRealtime(() => {
+      setRefreshToken((value) => value + 1);
+      void boot();
+    });
+  }, [boot, entered, runtimeInfo.isWeb, status?.sqlite_ok, status?.db_path]);
 
   const refresh = useCallback(() => {
     setRefreshToken((value) => value + 1);
@@ -160,6 +231,9 @@ export default function App(): JSX.Element {
 
     if (runtimeInfo.isWeb) {
       if (activePage === 'diagnostics' || activePage === 'audit') return <WebDiagnosticsPage />;
+      if (activePage !== 'dashboard' && status && !status.sqlite_ok) {
+        return <WebLoginRequiredGate pageLabel={webPageLabels[activePage] ?? 'Esta tela'} />;
+      }
       if (activePage === 'dashboard') return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
       if (activePage === 'customers') return <CustomersPage {...props} />;
       if (activePage === 'products') return <ProductsPage {...props} />;

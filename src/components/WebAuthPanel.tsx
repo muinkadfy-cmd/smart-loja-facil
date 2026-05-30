@@ -59,7 +59,40 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
     else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
     setPassword('');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
-    setMessage('Login confirmado. Clientes, produtos e configurações ja podem sincronizar no Supabase.');
+    setMessage('Login confirmado. Clientes, produtos e configurações já podem sincronizar no Supabase.');
+  }
+
+  async function signUp(): Promise<void> {
+    setMessage(null);
+    const client = getSupabaseClient();
+    if (!client) {
+      setMessage('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no Cloudflare para criar login web.');
+      return;
+    }
+    if (!email.trim() || !password) {
+      setMessage('Informe e-mail e senha antes de criar a conta da loja.');
+      return;
+    }
+    if (password.length < 6) {
+      setMessage('Use uma senha com pelo menos 6 caracteres.');
+      return;
+    }
+    setBusy(true);
+    const { data, error } = await client.auth.signUp({ email: email.trim(), password });
+    setBusy(false);
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+    if (rememberEmail) window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+    else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    setPassword('');
+    if (data.session) {
+      window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
+      setMessage('Conta criada e login ativo. A primeira loja será criada automaticamente como dono.');
+      return;
+    }
+    setMessage('Conta criada. Se o Supabase pedir confirmação, confirme o e-mail e depois toque em Entrar e sincronizar.');
   }
 
   async function signOut(): Promise<void> {
@@ -120,7 +153,10 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
           <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
           <span>Salvar e-mail neste aparelho</span>
         </label>
-        <button type="submit" className="primary-btn" disabled={busy}>{busy ? 'Entrando...' : 'Entrar e sincronizar'}</button>
+        <div className="web-auth-actions">
+          <button type="submit" className="primary-btn" disabled={busy}>{busy ? 'Entrando...' : 'Entrar e sincronizar'}</button>
+          <button type="button" className="secondary-btn" onClick={signUp} disabled={busy}>{busy ? 'Aguarde...' : 'Criar primeira conta da loja'}</button>
+        </div>
       </form>
       {message && <small className="web-message">{message}</small>}
     </section>

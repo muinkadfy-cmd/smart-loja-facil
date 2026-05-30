@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon } from './AppIcon';
 import { buildAppAlerts } from '../lib/alerts';
 import { api } from '../lib/api';
 import { playOperationSound } from '../lib/sound';
 import { getRuntimeInfo } from '../lib/runtime';
-import { getWebStoreContext, webRoleLabel, type WebStoreRole } from '../lib/webApi';
+import { getWebStoreContext, webRoleLabel, webSyncQueueSnapshot, type WebStoreRole } from '../lib/webApi';
 import type { DelphiIconName } from '../lib/icons';
 import type { AppStatus, CreditSummary, PageKey, Product, Settings } from '../types';
 
@@ -117,8 +117,11 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const [toast, setToast] = useState<{ title: string; detail: string; page: PageKey; level: 'danger' | 'warning' | 'info' } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  const [syncQueue, setSyncQueue] = useState(() => webSyncQueueSnapshot());
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() => (typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied'));
   const [webIdentity, setWebIdentity] = useState<WebIdentityState>({ email: '', role: 'sem login', storeName: '' });
   const prevAlertSignature = useRef('');
+  const prevSyncNoticeSignature = useRef('');
 
 
   useEffect(() => {
@@ -132,6 +135,32 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       window.removeEventListener('offline', syncNetworkState);
     };
   }, [runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (!runtimeInfo.isWeb) return undefined;
+    const updateSyncSnapshot = () => setSyncQueue(webSyncQueueSnapshot());
+    const updateOnVisible = () => {
+      if (document.visibilityState === 'visible') updateSyncSnapshot();
+    };
+    window.addEventListener('smart-loja:web-sync-queue-changed', updateSyncSnapshot);
+    window.addEventListener('smart-loja:web-remote-change', updateSyncSnapshot);
+    window.addEventListener('online', updateSyncSnapshot);
+    window.addEventListener('offline', updateSyncSnapshot);
+    document.addEventListener('visibilitychange', updateOnVisible);
+    updateSyncSnapshot();
+    return () => {
+      window.removeEventListener('smart-loja:web-sync-queue-changed', updateSyncSnapshot);
+      window.removeEventListener('smart-loja:web-remote-change', updateSyncSnapshot);
+      window.removeEventListener('online', updateSyncSnapshot);
+      window.removeEventListener('offline', updateSyncSnapshot);
+      document.removeEventListener('visibilitychange', updateOnVisible);
+    };
+  }, [runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    setNotificationPermission(Notification.permission);
+  }, []);
 
   useEffect(() => {
     if (!runtimeInfo.isWeb) return undefined;
@@ -200,8 +229,55 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   }, [alerts]);
 
   const activeAlerts = alerts.filter((alert) => alert.page === activePage && alert.level !== 'ok');
-  const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length;
+  const syncAlert = useMemo(() => {
+    if (!runtimeInfo.isWeb) return null;
+    const hasLogin = Boolean(webIdentity.email);
+    if (!networkOnline) {
+      return {
+        level: 'warning' as const,
+        title: syncQueue.pending > 0 ? `Sem internet · ${syncQueue.pending} alteração(ões) guardada(s)` : 'Sem internet neste aparelho',
+        detail: syncQueue.pending > 0
+          ? 'Nada foi perdido: ficou salvo neste aparelho e será enviado para a nuvem quando a conexão voltar.'
+          : 'Você consegue consultar telas em cache. Para salvar na nuvem, espere a internet voltar.',
+      };
+    }
+    if (syncQueue.pending > 0 && syncQueue.last_error) {
+      return {
+        level: 'danger' as const,
+        title: `${syncQueue.pending} sincronização(ões) com erro`,
+        detail: `A alteração está salva neste aparelho, mas ainda não subiu para a nuvem. Último erro: ${syncQueue.last_error}`,
+      };
+    }
+    if (syncQueue.pending > 0) {
+      return {
+        level: 'warning' as const,
+        title: `${syncQueue.pending} alteração(ões) aguardando sincronização`,
+        detail: 'O app vai reenviar automaticamente. Mantenha a internet ligada e toque em Atualizar dados para forçar agora.',
+      };
+    }
+    if (!hasLogin) {
+      return {
+        level: 'info' as const,
+        title: 'Login pendente para sincronizar',
+        detail: 'Entre com e-mail e senha para liberar cadastros, produtos, vendas, caixa, crediário e sincronização entre computador e celular.',
+      };
+    }
+    if (!status?.sqlite_ok) {
+      return {
+        level: 'info' as const,
+        title: 'Aguardando confirmação da loja',
+        detail: 'O app abriu, mas ainda está conferindo loja, permissões e Supabase antes de liberar a sincronização completa.',
+      };
+    }
+    return null;
+  }, [networkOnline, runtimeInfo.isWeb, status?.sqlite_ok, syncQueue.last_error, syncQueue.pending, webIdentity.email]);
+
+  const syncIssueCount = runtimeInfo.isWeb
+    ? Number(!networkOnline) + Number(syncQueue.pending > 0) + Number(Boolean(syncQueue.last_error && syncQueue.pending > 0)) + Number(!webIdentity.email)
+    : 0;
+  const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length + syncIssueCount;
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
+  const activePageTitle = activePage === 'dashboard' ? 'Resumo rápido' : activePageMeta.label;
   const environmentLabel = runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Sem internet') : status?.offline_ready ? 'Local / Offline' : 'Verificando';
   const avatarInitials = initialsFromSettings(settings);
   const greetingName = displayNameFromSettings(settings, webIdentity.email);
@@ -209,8 +285,17 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     ? `${webRoleLabel(webIdentity.role)} · ${webIdentity.storeName || 'aguardando loja web'}`
     : 'Bem-vindo(a) ao Smart Loja Fácil';
   const cloudDataLabel = runtimeInfo.isWeb
-    ? status?.sqlite_ok && networkOnline ? 'Dados sincronizados' : networkOnline ? 'Login pendente' : 'Sem conexão'
+    ? syncQueue.pending > 0 ? `${syncQueue.pending} pendente(s)` : status?.sqlite_ok && networkOnline ? 'Dados sincronizados' : networkOnline ? 'Login pendente' : 'Sem conexão'
     : 'SQLite ativo';
+
+  const requestSyncNotifications = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    const nextPermission = await Notification.requestPermission();
+    setNotificationPermission(nextPermission);
+    if (nextPermission === 'granted') {
+      new Notification('Avisos do Smart Loja Fácil ativados', { body: 'Vou avisar quando houver sincronização pendente, erro de envio ou internet offline.' });
+    }
+  }, []);
 
   useEffect(() => {
     const mainAlerts = alerts.filter((alert) => alert.level !== 'ok');
@@ -231,6 +316,21 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   }, [alerts]);
 
   useEffect(() => {
+    if (!runtimeInfo.isWeb || !syncAlert) return;
+    const signature = `${syncAlert.level}:${syncAlert.title}:${syncAlert.detail}`;
+    if (signature === prevSyncNoticeSignature.current) return;
+    prevSyncNoticeSignature.current = signature;
+    const toastLevel = syncAlert.level === 'danger' ? 'danger' : syncAlert.level === 'warning' ? 'warning' : 'info';
+    setToast({ title: syncAlert.title, detail: syncAlert.detail, page: 'diagnostics', level: toastLevel });
+    if (syncAlert.level === 'danger' || syncAlert.level === 'warning') {
+      playOperationSound(syncAlert.level === 'danger' ? 'error' : 'warning');
+    }
+    if (notificationPermission === 'granted') {
+      new Notification('Smart Loja Fácil', { body: `${syncAlert.title} — ${syncAlert.detail}` });
+    }
+  }, [notificationPermission, runtimeInfo.isWeb, syncAlert]);
+
+  useEffect(() => {
     if (!toast) return undefined;
     const timer = window.setTimeout(() => setToast(null), 5200);
     return () => window.clearTimeout(timer);
@@ -242,7 +342,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     <div className={`neo-shell ${runtimeInfo.isWeb ? 'neo-shell-web' : 'neo-shell-local'} ${sidebarOpen ? 'neo-nav-open' : ''}`}>
       <div className="neo-windowbar">
         <div className="neo-windowbar-brand">
-          <AppIcon name="app_logo_cadeado_carrinho" size={16} className="neo-windowbar-icon" />
+          <img src="/brand/smart-loja-icon.png" alt="" className="neo-windowbar-logo" />
           <strong>Smart Loja Fácil</strong>
         </div>
         <div className="neo-windowbar-right">
@@ -257,7 +357,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
         <aside className={`neo-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="neo-sidebar-brand">
             <div className="neo-sidebar-brand-mark">
-              <AppIcon name="app_logo_cadeado_carrinho" size={48} className="neo-brand-icon" />
+              <img src="/brand/smart-loja-icon.png" alt="" className="neo-brand-logo-img" />
             </div>
             <div className="neo-sidebar-brand-copy">
               <strong>SMART LOJA FÁCIL</strong>
@@ -311,7 +411,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                 <span />
               </button>
               <div className="neo-mobile-branding">
-                <AppIcon name="app_logo_cadeado_carrinho" size={24} className="neo-mobile-brand-icon" />
+                <img src="/brand/smart-loja-icon.png" alt="" className="neo-mobile-brand-logo" />
                 <div>
                   <strong>Smart Loja Fácil</strong>
                   <small>Store Manager</small>
@@ -328,8 +428,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             <div className="neo-header-grid">
               <section className="neo-greeting-surface">
                 <div className="neo-greeting-copy">
-                  <strong>Olá, {greetingName} 👋</strong>
-                  <span>{greetingDetail}</span>
+                  <strong>{runtimeInfo.isWeb && !webIdentity.email ? 'Aguardando login' : `Olá, ${greetingName}`}</strong>
+                  <span>{runtimeInfo.isWeb && !webIdentity.email ? 'Entre para sincronizar a loja web' : greetingDetail}</span>
                 </div>
                 <div className="neo-user-pill">
                   <span>{avatarInitials}</span>
@@ -363,7 +463,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   <AppIcon name="offline_local" size={16} className="app-icon-chip" />
                   <span>{runtimeInfo.isWeb ? (networkOnline ? 'Conexão segura' : 'Sem internet') : 'Modo local'}</span>
                 </div>
-                <div className="neo-header-chip">
+                <div className={`neo-header-chip ${runtimeInfo.isWeb && syncQueue.pending > 0 ? 'neo-header-chip-warning' : ''}`}>
                   <AppIcon name="sqlite_ativo" size={16} className="app-icon-chip" />
                   <span>{cloudDataLabel}</span>
                 </div>
@@ -382,12 +482,12 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             </button>
           ) : null}
 
-          <section className="neo-page-shell">
+          <section className="neo-page-shell mobile-scroll-real-v69">
             <div className="neo-page-meta">
               <div>
                 <div className="neo-page-meta-title">
                   <span className="neo-page-meta-icon"><AppIcon name={activePageMeta.icon} size={24} className="app-icon-page" /></span>
-                  <h1>{activePageMeta.label}</h1>
+                  <h1>{activePageTitle}</h1>
                 </div>
                 <p>{pageSubtitle(activePage)}</p>
               </div>
@@ -397,10 +497,19 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </div>
             </div>
 
-            {runtimeInfo.isWeb && !networkOnline ? (
-              <div className="neo-page-alert neo-page-alert-warning neo-offline-banner">
-                <strong>Sem internet neste aparelho</strong>
-                <span>Você pode abrir telas em cache, mas salvar e sincronizar no Supabase depende da conexão voltar.</span>
+            {syncAlert ? (
+              <div className={`neo-sync-alert neo-sync-alert-${syncAlert.level}`} role="status" aria-live="polite">
+                <div className="neo-sync-alert-dot" aria-hidden="true" />
+                <div className="neo-sync-alert-copy">
+                  <strong>{syncAlert.title}</strong>
+                  <span>{syncAlert.detail}</span>
+                  {syncQueue.last_success_at && syncQueue.pending === 0 ? <small>Último envio para a nuvem: {new Date(syncQueue.last_success_at).toLocaleString('pt-BR')}</small> : null}
+                </div>
+                <div className="neo-sync-alert-actions">
+                  <button type="button" onClick={onRefresh}>Atualizar dados</button>
+                  <button type="button" onClick={() => setActivePage('diagnostics')}>{runtimeInfo.isWeb && !webIdentity.email ? 'Entrar agora' : 'Ver diagnóstico'}</button>
+                  {notificationPermission === 'default' ? <button type="button" onClick={requestSyncNotifications}>Ativar avisos</button> : null}
+                </div>
               </div>
             ) : null}
 
@@ -411,7 +520,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </div>
             ) : null}
 
-            <div className="neo-page-content">{children}</div>
+            <div className="neo-page-content mobile-scroll-safe-v69">{children}</div>
           </section>
         </main>
       </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v55';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v73-login-obrigatorio-sync';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -37,6 +37,15 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+
+  if (event.data?.type === 'CLEAR_OLD_CACHES') {
+    event.waitUntil(
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+        .then(() => self.clients.claim())
+    );
+  }
 });
 
 async function cacheFirst(request) {

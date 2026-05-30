@@ -1,5 +1,15 @@
 import { getPublicWebEnv } from './env';
 import { getSupabaseClient } from './supabaseClient';
+import {
+  enqueueWebSyncTask,
+  getWebSyncQueueSnapshot,
+  isWebNetworkOnline,
+  markWebSyncSuccess,
+  markWebSyncTaskError,
+  readWebSyncQueue,
+  removeWebSyncTask,
+  type WebSyncMutationType,
+} from './webSync';
 import type {
   AppStatus,
   BackupInfo,
@@ -34,6 +44,9 @@ interface WebStoreRow {
   logo_url: string;
   receipt_message: string;
   low_stock_limit: number;
+  slow_mode: boolean;
+  admin_password_enabled: boolean;
+  receipt_width_mm: number;
   status: string;
   updated_at: string;
 }
@@ -46,7 +59,8 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-export const WEB_APP_VERSION = 'pwa-supabase-v55';
+const WEB_CONTEXT_CACHE_KEY = 'smart-loja:web-context-cache-v70';
+export const WEB_APP_VERSION = 'pwa-supabase-v73-login-obrigatorio-sync';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -60,6 +74,52 @@ function stringValue(value: unknown, fallback = ''): string {
 function normalizeRole(value: unknown): WebStoreRole {
   if (value === 'owner' || value === 'admin' || value === 'operator' || value === 'viewer') return value;
   return 'viewer';
+}
+
+function booleanValue(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value;
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return fallback;
+}
+
+interface CachedWebStoreContext {
+  userId: string;
+  email: string;
+  role: WebStoreRole;
+  store: WebStoreRow;
+  cached_at: string;
+}
+
+function cacheWebStoreContext(context: WebStoreContext): void {
+  try {
+    const cached: CachedWebStoreContext = { ...context, cached_at: new Date().toISOString() };
+    window.localStorage.setItem(WEB_CONTEXT_CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // Cache local de contexto não pode travar login/sincronização.
+  }
+}
+
+function readCachedWebStoreContext(userId: string, email: string): WebStoreContext | null {
+  try {
+    const raw = window.localStorage.getItem(WEB_CONTEXT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<CachedWebStoreContext>;
+    if (parsed.userId !== userId || !parsed.store?.id || !parsed.role) return null;
+    return { userId, email: email || parsed.email || '', role: normalizeRole(parsed.role), store: mapStore(parsed.store as unknown as Record<string, unknown>) };
+  } catch {
+    return null;
+  }
+}
+
+function ensureOnlineOrQueue(type: WebSyncMutationType, payload: Record<string, unknown>, action: string): void {
+  if (isWebNetworkOnline()) return;
+  enqueueWebSyncTask(type, payload, 'Aparelho sem internet no momento do salvamento.');
+  throw new Error(`Sem internet: ${action} ficou guardado na fila de sincronização. Quando a conexão voltar, abra o app e toque em Atualizar dados ou Diagnóstico Web.`);
+}
+
+function mutationPayload(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? value as Record<string, unknown> : { value };
 }
 
 
@@ -132,6 +192,9 @@ function mapStore(row: Record<string, unknown>): WebStoreRow {
     logo_url: stringValue(row.logo_url),
     receipt_message: stringValue(row.receipt_message, 'Obrigado pela preferência!'),
     low_stock_limit: numberValue(row.low_stock_limit, 3),
+    slow_mode: booleanValue(row.slow_mode, false),
+    admin_password_enabled: booleanValue(row.admin_password_enabled, false),
+    receipt_width_mm: numberValue(row.receipt_width_mm, 80),
     status: stringValue(row.status, 'active'),
     updated_at: toIso(row.updated_at),
   };
@@ -146,9 +209,9 @@ function mapSettings(store: WebStoreRow, email = ''): Settings {
     address: store.address,
     receipt_message: store.receipt_message,
     low_stock_limit: store.low_stock_limit,
-    slow_mode: false,
-    admin_password_enabled: false,
-    receipt_width_mm: 80,
+    slow_mode: store.slow_mode,
+    admin_password_enabled: store.admin_password_enabled,
+    receipt_width_mm: store.receipt_width_mm,
     updated_at: store.updated_at,
   };
 }
@@ -184,6 +247,8 @@ function guestSettings(): Settings {
   };
 }
 
+export const WEB_LOGIN_REQUIRED_MESSAGE = 'Para cadastrar cliente, produto, venda, caixa ou crediário na nuvem, entre com e-mail e senha em Diagnóstico Web. Sem login, o app fica somente leitura para proteger os dados da loja.';
+
 function missingSupabaseError(): Error {
   const env = getPublicWebEnv();
   const missing = env.missing.join(' e ') || 'variáveis públicas';
@@ -201,7 +266,7 @@ async function getSignedUser() {
   const { data, error } = await client.auth.getSession();
   if (error) throw new Error(`Não foi possível ler a sessão web: ${error.message}`);
   const user = data.session?.user;
-  if (!user) throw new Error('Entre no modo web para usar dados sincronizados no celular.');
+  if (!user) throw new Error(WEB_LOGIN_REQUIRED_MESSAGE);
   return { client, user, email: user.email ?? 'usuário sem e-mail' };
 }
 
@@ -216,10 +281,10 @@ async function loadMembershipStores(userId: string): Promise<Array<{ role: WebSt
   const client = await getClient();
   const { data, error } = await client
     .from('store_members')
-    .select('store_id, role, stores(id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at)')
+    .select('store_id, role, stores(id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at)')
     .eq('user_id', userId);
 
-  if (error) return [];
+  if (error) throw new Error(`Não foi possível carregar lojas vinculadas ao usuário: ${error.message}`);
 
   return (data ?? [])
     .map((row: Record<string, unknown>) => {
@@ -241,7 +306,7 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
       low_stock_limit: 3,
       status: 'active',
     })
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at')
     .single();
 
   if (error) throw new Error(`Não foi possível criar a loja web inicial: ${error.message}`);
@@ -254,23 +319,36 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
 
 export async function getWebStoreContext(options: { createIfMissing?: boolean } = {}): Promise<WebStoreContext> {
   const { user, email } = await getSignedUser();
-  const memberships = await loadMembershipStores(user.id);
+  const cached = readCachedWebStoreContext(user.id, email);
+  let memberships: Array<{ role: WebStoreRole; store: WebStoreRow }> = [];
+
+  try {
+    memberships = await loadMembershipStores(user.id);
+  } catch (error) {
+    if (!isWebNetworkOnline() && cached) return cached;
+    throw error;
+  }
 
   if (memberships.length === 0) {
+    if (!isWebNetworkOnline() && cached) return cached;
     if (options.createIfMissing === false) throw new Error('Nenhuma loja web vinculada a este usuário.');
-    return createFirstStore(user.id, email);
+    const created = await createFirstStore(user.id, email);
+    cacheWebStoreContext(created);
+    return created;
   }
 
   const preferredStoreId = window.localStorage.getItem(ACTIVE_STORE_KEY);
   const active = memberships.find((item) => item.store.id === preferredStoreId) ?? memberships[0];
   window.localStorage.setItem(ACTIVE_STORE_KEY, active.store.id);
 
-  return {
+  const context = {
     userId: user.id,
     email,
     role: active.role,
     store: active.store,
   };
+  cacheWebStoreContext(context);
+  return context;
 }
 
 type SupabaseQueryBuilder = {
@@ -458,6 +536,7 @@ export async function webSettings(): Promise<Settings> {
 export async function webSaveSettings(settings: Settings): Promise<Settings> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'alterar configurações da loja');
+  ensureOnlineOrQueue('settings.save', { settings }, 'as configurações da loja');
   const client = await getClient();
   const { data, error } = await client
     .from('stores')
@@ -468,9 +547,12 @@ export async function webSaveSettings(settings: Settings): Promise<Settings> {
       address: settings.address.trim(),
       receipt_message: settings.receipt_message.trim() || 'Obrigado pela preferência!',
       low_stock_limit: Math.max(0, Math.round(settings.low_stock_limit || 0)),
+      slow_mode: Boolean(settings.slow_mode),
+      admin_password_enabled: Boolean(settings.admin_password_enabled),
+      receipt_width_mm: Math.max(58, Math.round(settings.receipt_width_mm || 80)),
     })
     .eq('id', context.store.id)
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at')
     .single();
 
   if (error) throw new Error(`Não foi possível salvar as configurações no Supabase: ${error.message}`);
@@ -509,6 +591,7 @@ export async function webCustomers(): Promise<Customer[]> {
 export async function webSaveCustomer(customer: Partial<Customer>): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar clientes');
+  ensureOnlineOrQueue('customers.save', { customer: mutationPayload(customer) }, 'o cliente');
   const client = await getClient();
   const name = String(customer.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do cliente antes de salvar.');
@@ -540,6 +623,7 @@ export async function webSaveCustomer(customer: Partial<Customer>): Promise<Cust
 export async function webInactivateCustomer(customerId: string): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar clientes');
+  ensureOnlineOrQueue('customers.inactivate', { customerId }, 'a inativação do cliente');
   const client = await getClient();
   const { data, error } = await client
     .from('customers')
@@ -590,6 +674,7 @@ export async function webProducts(): Promise<Product[]> {
 export async function webSaveProduct(product: Partial<Product>): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar produtos');
+  ensureOnlineOrQueue('products.save', { product: mutationPayload(product) }, 'o produto');
   const client = await getClient();
   const name = String(product.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do produto antes de salvar.');
@@ -626,6 +711,7 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
 export async function webInactivateProduct(productId: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar produtos');
+  ensureOnlineOrQueue('products.inactivate', { productId }, 'a inativação do produto');
   const client = await getClient();
   const { data, error } = await client
     .from('products')
@@ -642,6 +728,7 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
 export async function webAdjustStock(productId: string, delta: number, reason: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
+  ensureOnlineOrQueue('products.adjustStock', { productId, delta, reason }, 'o ajuste de estoque');
   const client = await getClient();
   if (!reason.trim()) throw new Error('Informe o motivo do ajuste de estoque.');
 
@@ -881,7 +968,27 @@ async function upsertRows(table: WebBackupTableName, rows: JsonRecord[], storeId
 }
 
 export async function webBackups(): Promise<BackupInfo[]> {
-  return readWebBackupHistory();
+  try {
+    const context = await getWebStoreContext({ createIfMissing: false });
+    const client = await getClient();
+    const { data, error } = await client
+      .from('backups_log')
+      .select('id, file_name, file_path, size_bytes, integrity_ok, created_at')
+      .eq('store_id', context.store.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data ?? []).map((row: Record<string, unknown>) => ({
+      id: stringValue(row.id),
+      file_name: stringValue(row.file_name),
+      file_path: stringValue(row.file_path),
+      size_bytes: numberValue(row.size_bytes),
+      integrity_ok: Boolean(row.integrity_ok),
+      created_at: toIso(row.created_at),
+    }));
+  } catch {
+    return readWebBackupHistory();
+  }
 }
 
 export async function webCreateBackup(): Promise<BackupInfo> {
@@ -890,7 +997,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
   const client = await getClient();
   const { data: storeData, error: storeError } = await client
     .from('stores')
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, created_at, updated_at')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, created_at, updated_at')
     .eq('id', context.store.id)
     .single();
   if (storeError) throw new Error(`Não foi possível incluir a loja no backup web: ${storeError.message}`);
@@ -927,6 +1034,16 @@ export async function webCreateBackup(): Promise<BackupInfo> {
   };
   const history = [info, ...readWebBackupHistory().filter((row) => row.file_name !== fileName)];
   saveWebBackupHistory(history);
+  await client.from('backups_log').insert({
+    store_id: context.store.id,
+    user_id: context.userId,
+    file_name: fileName,
+    file_path: 'download:' + fileName,
+    size_bytes: info.size_bytes,
+    integrity_ok: true,
+    source: 'web',
+    metadata: { app_version: WEB_APP_VERSION, counts },
+  });
   await insertAudit(context.store.id, context.userId, 'stores', context.store.id, 'web_backup_exported', { file_name: fileName, counts });
   return info;
 }
@@ -1205,6 +1322,7 @@ export async function webSales(): Promise<SaleSummary[]> {
 export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'finalizar vendas');
+  ensureOnlineOrQueue('sales.create', { payload: mutationPayload(payload) }, 'a venda');
   const client = await getClient();
   const salePayload = parseSalePayload(payload);
   const rpcPayload = { ...salePayload, store_id: context.store.id };
@@ -1218,6 +1336,7 @@ export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
 export async function webCancelSale(saleId: string, reason: string): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'cancelar vendas');
+  ensureOnlineOrQueue('sales.cancel', { saleId, reason }, 'o cancelamento da venda');
   const client = await getClient();
   const cleanReason = reason.trim() || 'Cancelamento manual web';
   const { data, error } = await client.rpc('web_cancel_sale', { target_sale_id: saleId, cancel_reason_text: cleanReason });
@@ -1304,6 +1423,7 @@ export async function webCashSummary(): Promise<CashSummary> {
 export async function webOpenCash(openingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'abrir caixa');
+  ensureOnlineOrQueue('cash.open', { openingAmount, notes }, 'a abertura do caixa');
   const client = await getClient();
   if (openingAmount < 0) throw new Error('O valor inicial não pode ser negativo.');
   const alreadyOpen = await currentCashSessionId(context.store.id);
@@ -1317,6 +1437,7 @@ export async function webOpenCash(openingAmount: number, notes: string): Promise
 export async function webCloseCash(closingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'fechar caixa');
+  ensureOnlineOrQueue('cash.close', { closingAmount, notes }, 'o fechamento do caixa');
   const client = await getClient();
   if (closingAmount < 0) throw new Error('O valor contado não pode ser negativo.');
   const sessionId = await currentCashSessionId(context.store.id);
@@ -1335,6 +1456,7 @@ export async function webCloseCash(closingAmount: number, notes: string): Promis
 export async function webAddCashMovement(movementType: string, method: string, amount: number, reason: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'lançar movimento de caixa');
+  ensureOnlineOrQueue('cash.movement', { movementType, method, amount, reason }, 'o movimento do caixa');
   const client = await getClient();
   const cleanType = movementType === 'entrada' ? 'entrada' : 'saida';
   const cleanReason = reason.trim();
@@ -1448,6 +1570,7 @@ export async function webCredits(): Promise<CreditSummary[]> {
 export async function webReceiveInstallment(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'receber crediário');
+  ensureOnlineOrQueue('credits.receiveInstallment', { payload: mutationPayload(payload) }, 'o recebimento do crediário');
   const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
   const creditId = stringValue(source.credit_id);
   const installmentId = stringValue(source.installment_id);
@@ -1489,6 +1612,7 @@ export async function webOrders(): Promise<OrderSummary[]> {
 export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'criar pedidos');
+  ensureOnlineOrQueue('orders.create', { payload: mutationPayload(payload) }, 'o pedido');
   const client = await getClient();
   const orderPayload = parseOrderPayload(payload);
   const existing = await client
@@ -1542,6 +1666,7 @@ export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
 export async function webSetOrderStatus(orderId: string, status: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'alterar status de pedidos');
+  ensureOnlineOrQueue('orders.status', { orderId, status }, 'a alteração do pedido');
   const client = await getClient();
   const nextStatus = mapOrderStatusToCloud(status);
   if (nextStatus === 'delivered') {
@@ -1571,6 +1696,7 @@ export async function webSetOrderStatus(orderId: string, status: string): Promis
 export async function webCancelOrder(orderId: string, reason: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'cancelar pedidos');
+  ensureOnlineOrQueue('orders.cancel', { orderId, reason }, 'o cancelamento do pedido');
   const client = await getClient();
   const { data, error } = await client
     .from('orders')
@@ -1621,19 +1747,29 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-export function webExportHtmlPdf(html: string, fileStem: string): Promise<string> {
+type ReceiptPrintFormat = '58mm' | '80mm' | 'a4';
+
+function normalizeReceiptPrintFormat(value: string): ReceiptPrintFormat {
+  if (value === '58mm' || value === 'a4') return value;
+  return '80mm';
+}
+
+export function webExportHtmlPdf(html: string, fileStem: string, printFormat = '80mm'): Promise<string> {
   const title = escapeHtml(fileStem);
+  const format = normalizeReceiptPrintFormat(printFormat);
   const printedAt = new Date().toLocaleString('pt-BR');
-  const printable = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#eef2f8;color:#111827;font-family:Inter,Arial,sans-serif}.print-toolbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 16px;background:#0b1020;color:#f8fafc;box-shadow:0 14px 34px rgba(15,23,42,.18)}.print-toolbar strong{font-size:14px}.print-toolbar small{display:block;color:#aeb8cf;margin-top:2px}.print-toolbar button{border:0;border-radius:999px;padding:10px 14px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer}.print-shell{width:min(860px,100%);margin:22px auto;padding:18px}.receipt-paper{background:#fff;border:1px solid #d9e2f2;border-radius:18px;box-shadow:0 22px 58px rgba(15,23,42,.16);padding:18px;overflow:auto}.receipt-paper section{margin-inline:auto}.print-footer{margin:14px auto 0;width:min(860px,100%);padding:0 18px 18px;color:#64748b;font-size:12px;text-align:center}@page{margin:8mm}@media print{body{background:#fff}.no-print,.print-toolbar,.print-footer{display:none!important}.print-shell{width:100%;margin:0;padding:0}.receipt-paper{border:0;border-radius:0;box-shadow:none;padding:0;overflow:visible}}</style></head><body><div class="print-toolbar no-print"><div><strong>Prévia do comprovante</strong><small>Gerado em ${printedAt}</small></div><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></div><main class="print-shell"><div class="receipt-paper">${html}</div></main><div class="print-footer no-print">Se a impressão não abrir automaticamente, use o botão acima ou Ctrl+P.</div><script>setTimeout(function(){window.focus();window.print();},350);<\/script></body></html>`;
+  const formatLabel = format === 'a4' ? 'A4' : format;
+  const pageRule = format === '58mm' ? '@page{size:58mm auto;margin:3mm}' : format === 'a4' ? '@page{size:A4;margin:10mm}' : '@page{size:80mm auto;margin:4mm}';
+  const printable = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#eef2f8;color:#111827;font-family:Inter,Arial,sans-serif}.print-toolbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 16px;background:#0b1020;color:#f8fafc;box-shadow:0 14px 34px rgba(15,23,42,.18)}.print-toolbar strong{font-size:14px}.print-toolbar small{display:block;color:#aeb8cf;margin-top:2px}.print-toolbar-actions{display:flex;gap:8px;align-items:center}.print-toolbar button{border:0;border-radius:999px;padding:10px 14px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2563eb,#7c3aed);cursor:pointer}.print-format{border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:9px 12px;color:#dbeafe;background:rgba(255,255,255,.07);font-weight:800}.print-shell{width:min(920px,100%);margin:22px auto;padding:18px}.receipt-paper{background:#fff;border:1px solid #d9e2f2;border-radius:18px;box-shadow:0 22px 58px rgba(15,23,42,.16);padding:18px;overflow:auto}.receipt-paper.format-58mm{width:58mm;padding:3mm;border-radius:10px}.receipt-paper.format-80mm{width:80mm;padding:4mm;border-radius:12px}.receipt-paper.format-a4{width:210mm;max-width:100%;min-height:297mm;padding:12mm}.receipt-paper section{margin-inline:auto}.slf-receipt{width:100%;max-width:100%;font-family:Inter,Arial,sans-serif;color:#111827}.slf-receipt *{box-sizing:border-box}.slf-receipt-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-bottom:1px solid #dbe3ef;padding-bottom:10px;margin-bottom:10px}.slf-receipt-brand{display:flex;gap:9px;align-items:center}.slf-receipt-logo{width:34px;height:34px;border-radius:10px;object-fit:contain;background:#172554;padding:5px}.slf-receipt-title{font-size:16px;font-weight:900;line-height:1.05}.slf-receipt-sub{font-size:10px;color:#64748b;margin-top:2px}.slf-receipt-badge{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;white-space:nowrap}.slf-receipt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}.slf-receipt-info{border:1px solid #e2e8f0;border-radius:10px;padding:7px;background:#f8fafc}.slf-receipt-info span{display:block;color:#64748b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.slf-receipt-info strong{display:block;color:#0f172a;font-size:12px;margin-top:3px}.slf-receipt-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}.slf-receipt-table th{background:#f1f5f9;color:#334155;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.03em;padding:6px;border:1px solid #e2e8f0}.slf-receipt-table td{padding:6px;border:1px solid #e2e8f0;vertical-align:top}.slf-receipt-table .num{text-align:right;white-space:nowrap}.slf-receipt-total{display:grid;gap:5px;margin-top:10px}.slf-receipt-total-row{display:flex;justify-content:space-between;gap:12px;font-size:12px}.slf-receipt-total-row.final{border-radius:12px;background:#0f172a;color:#fff;padding:10px 12px;font-size:16px;font-weight:900}.slf-receipt-note{margin-top:10px;border:1px dashed #cbd5e1;border-radius:12px;padding:8px;color:#334155;font-size:10px;line-height:1.45}.slf-receipt-footer{margin-top:10px;text-align:center;color:#64748b;font-size:9px}.format-58mm .slf-receipt-head{display:block;text-align:center}.format-58mm .slf-receipt-brand{justify-content:center}.format-58mm .slf-receipt-badge{display:inline-flex;margin-top:6px}.format-58mm .slf-receipt-grid{grid-template-columns:1fr}.format-58mm .slf-receipt-table{font-size:9px}.format-58mm .slf-receipt-table th,.format-58mm .slf-receipt-table td{padding:4px}.format-58mm .slf-receipt-total-row.final{font-size:14px}.print-footer{margin:14px auto 0;width:min(920px,100%);padding:0 18px 18px;color:#64748b;font-size:12px;text-align:center}${pageRule}@media print{body{background:#fff}.no-print,.print-toolbar,.print-footer{display:none!important}.print-shell{width:100%;margin:0;padding:0}.receipt-paper{border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;overflow:visible!important}.receipt-paper.format-58mm{width:58mm}.receipt-paper.format-80mm{width:80mm}.receipt-paper.format-a4{width:100%;min-height:auto;padding:0!important}}</style></head><body><div class="print-toolbar no-print"><div><strong>Prévia do comprovante</strong><small>Gerado em ${printedAt}</small></div><div class="print-toolbar-actions"><span class="print-format">${formatLabel}</span><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></div></div><main class="print-shell"><div class="receipt-paper format-${format}">${html}</div></main><div class="print-footer no-print">Se a impressão não abrir automaticamente, use o botão acima ou Ctrl+P. No celular, escolha Salvar como PDF.</div><script>setTimeout(function(){window.focus();window.print();},350);<\/script></body></html>`;
   const popup = window.open('', '_blank', 'noopener,noreferrer');
   if (popup) {
     popup.document.open();
     popup.document.write(printable);
     popup.document.close();
-    return Promise.resolve(`Prévia premium de impressão aberta no navegador para ${fileStem}.`);
+    return Promise.resolve(`Prévia premium ${formatLabel} aberta no navegador para ${fileStem}.`);
   }
-  downloadTextFile(`${fileStem}.html`, printable, 'text/html;charset=utf-8');
-  return Promise.resolve(`Navegador bloqueou a janela; baixei ${fileStem}.html para impressão.`);
+  downloadTextFile(`${fileStem}-${format}.html`, printable, 'text/html;charset=utf-8');
+  return Promise.resolve(`Navegador bloqueou a janela; baixei ${fileStem}-${format}.html para impressão.`);
 }
 
 function buildReportSkeleton(report: ReportKind, from: string, to: string): ReportData {
@@ -1695,6 +1831,70 @@ export async function webReportsCsv(report: string, from: string, to: string): P
   const fileName = `relatorio-${data.report}-${from}-a-${to}.csv`;
   downloadTextFile(fileName, csv, 'text/csv;charset=utf-8');
   return `download:${fileName}`;
+}
+
+export interface WebSyncFlushReport {
+  pending_before: number;
+  sent: number;
+  failed: number;
+  pending_after: number;
+}
+
+async function replayWebSyncTask(taskType: WebSyncMutationType, payload: Record<string, unknown>): Promise<void> {
+  if (taskType === 'settings.save') await webSaveSettings(payload.settings as Settings);
+  else if (taskType === 'customers.save') await webSaveCustomer(payload.customer as Partial<Customer>);
+  else if (taskType === 'customers.inactivate') await webInactivateCustomer(stringValue(payload.customerId));
+  else if (taskType === 'products.save') await webSaveProduct(payload.product as Partial<Product>);
+  else if (taskType === 'products.inactivate') await webInactivateProduct(stringValue(payload.productId));
+  else if (taskType === 'products.adjustStock') await webAdjustStock(stringValue(payload.productId), numberValue(payload.delta), stringValue(payload.reason));
+  else if (taskType === 'sales.create') await webCreateSale(payload.payload);
+  else if (taskType === 'sales.cancel') await webCancelSale(stringValue(payload.saleId), stringValue(payload.reason));
+  else if (taskType === 'cash.open') await webOpenCash(numberValue(payload.openingAmount), stringValue(payload.notes));
+  else if (taskType === 'cash.close') await webCloseCash(numberValue(payload.closingAmount), stringValue(payload.notes));
+  else if (taskType === 'cash.movement') await webAddCashMovement(stringValue(payload.movementType), stringValue(payload.method), numberValue(payload.amount), stringValue(payload.reason));
+  else if (taskType === 'credits.receiveInstallment') await webReceiveInstallment(payload.payload);
+  else if (taskType === 'orders.create') await webCreateOrder(payload.payload);
+  else if (taskType === 'orders.status') await webSetOrderStatus(stringValue(payload.orderId), stringValue(payload.status));
+  else if (taskType === 'orders.cancel') await webCancelOrder(stringValue(payload.orderId), stringValue(payload.reason));
+}
+
+export async function webFlushQueuedSync(): Promise<WebSyncFlushReport> {
+  const queue = readWebSyncQueue();
+  const report: WebSyncFlushReport = { pending_before: queue.length, sent: 0, failed: 0, pending_after: queue.length };
+  if (!isWebNetworkOnline() || queue.length === 0) return report;
+
+  for (const task of queue) {
+    try {
+      await replayWebSyncTask(task.type, task.payload);
+      removeWebSyncTask(task.id);
+      report.sent += 1;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      markWebSyncTaskError(task.id, message);
+      report.failed += 1;
+      if (!isWebNetworkOnline()) break;
+    }
+  }
+
+  if (report.sent > 0) markWebSyncSuccess();
+  report.pending_after = readWebSyncQueue().length;
+  return report;
+}
+
+export function webSyncQueueSnapshot() {
+  return getWebSyncQueueSnapshot();
+}
+
+export async function webRemoteSyncHealth(): Promise<Record<string, unknown> | null> {
+  try {
+    const context = await getWebStoreContext({ createIfMissing: false });
+    const client = await getClient();
+    const { data, error } = await client.rpc('web_sync_health', { target_store_id: context.store.id });
+    if (error) return null;
+    return data && typeof data === 'object' ? data as Record<string, unknown> : null;
+  } catch {
+    return null;
+  }
 }
 
 export function openWebUrl(url: string): void {
