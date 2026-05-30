@@ -60,7 +60,7 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_CONTEXT_CACHE_KEY = 'smart-loja:web-context-cache-v70';
-export const WEB_APP_VERSION = 'pwa-supabase-v73-login-obrigatorio-sync';
+export const WEB_APP_VERSION = 'pwa-supabase-v74-login-clean-supabase';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);

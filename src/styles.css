@@ -19256,3 +19256,401 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+/* Mega Lote 74 - tela de login Supabase clean, responsiva e leiga */
+.web-login-required-v74 {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.web-login-required-v74 .web-login-required-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(14, 86, 177, 0.18);
+  background:
+    radial-gradient(circle at 88% 10%, rgba(37, 99, 235, 0.11), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 62%, #f2f7ff 100%);
+}
+
+.web-login-required-v74 .web-login-required-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 22px 0 auto;
+  width: 180px;
+  height: 6px;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(90deg, #0e56b1, #38bdf8);
+  opacity: .22;
+}
+
+.web-auth-clean-v74 {
+  padding: clamp(14px, 2.4vw, 22px) !important;
+  border: 1px solid rgba(14, 86, 177, 0.18) !important;
+  border-radius: 26px !important;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(59, 130, 246, 0.10), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+  color: #0f172a !important;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10) !important;
+}
+
+.web-auth-clean-shell {
+  display: grid;
+  grid-template-columns: minmax(260px, .86fr) minmax(300px, 1.14fr);
+  gap: clamp(14px, 2.4vw, 24px);
+  align-items: stretch;
+}
+
+.web-auth-hero-side,
+.web-auth-form-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.web-auth-hero-side {
+  padding: clamp(18px, 3vw, 30px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(14, 86, 177, 0.14), transparent 34%),
+    linear-gradient(160deg, #ffffff 0%, #eef6ff 100%);
+}
+
+.web-auth-safe-badge {
+  width: fit-content;
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.26);
+  border-radius: 999px;
+  color: #047857;
+  background: #ecfdf5;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.web-auth-safe-badge::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, .12);
+}
+
+.web-auth-clean-v74 h2 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: clamp(1.55rem, 3.1vw, 2.35rem);
+  line-height: 1.02;
+  letter-spacing: -.055em;
+}
+
+.web-auth-clean-v74 p,
+.web-auth-clean-v74 small {
+  margin: 0;
+  color: #5b6678 !important;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.web-auth-benefits {
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.web-auth-benefits li {
+  min-height: 42px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(14, 86, 177, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .78);
+  color: #0f3f72;
+  font-weight: 900;
+}
+
+.web-auth-benefits li span {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #047857;
+  background: #dcfce7;
+  font-size: 13px;
+}
+
+.web-auth-form-card {
+  padding: clamp(16px, 2.7vw, 26px);
+  display: grid;
+  gap: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+.web-auth-form-title,
+.web-auth-session-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.web-auth-icon-bubble {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(14, 86, 177, 0.18);
+  border-radius: 18px;
+  color: #0e56b1;
+  background: linear-gradient(180deg, #eef6ff, #dcecff);
+  box-shadow: 0 14px 30px rgba(14, 86, 177, .10);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.web-auth-form-title strong {
+  display: block;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.web-auth-field {
+  display: grid;
+  gap: 7px;
+}
+
+.web-auth-field > span,
+.web-auth-form-card > strong {
+  color: #334155 !important;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: .02em;
+}
+
+.web-auth-clean-v74 input[type='email'],
+.web-auth-clean-v74 input[type='text'],
+.web-auth-clean-v74 input[type='password'] {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 15px;
+  color: #0f172a !important;
+  border: 1px solid rgba(14, 86, 177, 0.18) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .05) !important;
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.web-auth-clean-v74 input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 700;
+}
+
+.web-auth-clean-v74 input:focus {
+  border-color: rgba(37, 99, 235, .58) !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12), 0 10px 24px rgba(15, 23, 42, .06) !important;
+}
+
+.web-auth-password-wrap {
+  position: relative;
+  display: grid;
+}
+
+.web-auth-password-wrap input {
+  padding-right: 104px !important;
+}
+
+.web-auth-password-wrap button {
+  position: absolute;
+  right: 8px;
+  top: 7px;
+  min-width: 84px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(14, 86, 177, .16);
+  border-radius: 12px;
+  color: #0e56b1;
+  background: #eef6ff;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.web-auth-remember-row {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgba(14, 86, 177, .12);
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.web-auth-remember-row span {
+  color: #334155 !important;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.web-auth-clean-v74 input[type='checkbox'] {
+  width: 20px !important;
+  height: 20px !important;
+  accent-color: #0e56b1;
+}
+
+.web-auth-clean-v74 .web-auth-actions {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 10px;
+}
+
+.web-auth-clean-v74 .web-auth-actions .primary-btn,
+.web-auth-clean-v74 .web-auth-actions .secondary-btn,
+.web-auth-full-button {
+  min-height: 52px;
+  border-radius: 16px !important;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.web-auth-clean-v74 .web-auth-actions .primary-btn {
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, .36) !important;
+  background: linear-gradient(135deg, #0e56b1, #2563eb) !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, .20) !important;
+}
+
+.web-auth-clean-v74 .web-auth-actions .secondary-btn,
+.web-auth-full-button {
+  color: #0e56b1 !important;
+  border: 1px solid rgba(14, 86, 177, .18) !important;
+  background: #eef6ff !important;
+  box-shadow: none !important;
+}
+
+.web-auth-help-text {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.web-auth-clean-v74 .web-message {
+  color: #0f3f72 !important;
+  border: 1px solid rgba(37, 99, 235, .18);
+  background: #eff6ff;
+  font-weight: 800;
+}
+
+.web-auth-clean-v74 .web-message-ok-v74 {
+  color: #047857 !important;
+  border-color: rgba(34, 197, 94, .20);
+  background: #ecfdf5;
+}
+
+.web-auth-session-v74 {
+  gap: 16px;
+}
+
+.web-auth-session-v74 .web-auth-session-head h2 {
+  font-size: clamp(1.05rem, 2.1vw, 1.6rem);
+  word-break: break-word;
+}
+
+.web-auth-session-v74 .web-auth-session-grid span {
+  border-color: rgba(14, 86, 177, .14);
+  background: #f8fbff;
+}
+
+.web-auth-session-v74 .web-auth-session-grid strong {
+  color: #0f172a;
+}
+
+.web-auth-session-v74 .web-auth-session-grid small {
+  color: #64748b !important;
+}
+
+.web-auth-config-v74 .web-code-list code {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: rgba(245, 158, 11, .30);
+}
+
+.web-auth-panel-compact.web-auth-clean-v74 .web-auth-clean-shell {
+  grid-template-columns: 1fr;
+}
+
+.web-auth-panel-compact.web-auth-clean-v74 .web-auth-hero-side {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .web-auth-clean-shell {
+    grid-template-columns: 1fr;
+  }
+  .web-auth-hero-side {
+    padding: 18px;
+  }
+  .web-auth-clean-v74 {
+    border-radius: 22px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .web-login-required-v74 {
+    gap: 12px;
+  }
+  .web-login-required-v74 .web-login-required-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .web-auth-clean-v74 {
+    padding: 10px !important;
+    border-radius: 20px !important;
+  }
+  .web-auth-hero-side,
+  .web-auth-form-card {
+    border-radius: 18px;
+  }
+  .web-auth-clean-v74 .web-auth-actions {
+    grid-template-columns: 1fr;
+  }
+  .web-auth-clean-v74 .web-auth-actions .primary-btn,
+  .web-auth-clean-v74 .web-auth-actions .secondary-btn,
+  .web-auth-full-button {
+    width: 100%;
+  }
+  .web-auth-form-title,
+  .web-auth-session-head {
+    align-items: flex-start;
+  }
+  .web-auth-icon-bubble {
+    width: 48px;
+    height: 48px;
+    flex-basis: 48px;
+    border-radius: 16px;
+  }
+  .web-auth-password-wrap input {
+    padding-right: 94px !important;
+  }
+  .web-auth-password-wrap button {
+    min-width: 76px;
+    font-size: 12px;
+  }
+}

@@ -44,11 +44,11 @@ const webPageLabels: Record<PageKey, string> = {
 
 function WebLoginRequiredGate({ pageLabel }: { pageLabel: string }): JSX.Element {
   return (
-    <div className="stack web-login-required-v73">
+    <div className="stack web-login-required-v73 web-login-required-v74">
       <section className="web-login-required-card">
         <span className="web-kicker">Login obrigatório para salvar na nuvem</span>
-        <h1>{pageLabel} precisa de login Supabase</h1>
-        <p>Para cadastrar, editar, excluir, vender, receber ou sincronizar entre computador e celular, entre com e-mail e senha da loja. Sem login, o sistema fica somente leitura para proteger os dados.</p>
+        <h1>Entre para usar {pageLabel}</h1>
+        <p>Para cadastrar, editar, excluir, vender, receber ou sincronizar entre computador e celular, faça login com e-mail e senha da loja. Sem login, mantemos a tela em modo seguro para evitar dados soltos.</p>
         <div className="web-login-required-steps">
           <span>1. Informe e-mail e senha.</span>
           <span>2. Toque em Entrar e sincronizar.</span>
