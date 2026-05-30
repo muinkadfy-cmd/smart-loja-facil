@@ -6,9 +6,19 @@ const REMEMBER_EMAIL_KEY = 'smart-loja:web-auth-email';
 
 interface WebAuthPanelProps {
   compact?: boolean;
+  onAuthenticated?: () => void;
+  loginTitle?: string;
+  loginSubtitle?: string;
+  showHelp?: boolean;
 }
 
-export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Element {
+export function WebAuthPanel({
+  compact = false,
+  onAuthenticated,
+  loginTitle = 'Login da loja',
+  loginSubtitle = 'Entre com sua conta Supabase',
+  showHelp = true,
+}: WebAuthPanelProps): JSX.Element {
   const env = useMemo(() => getPublicWebEnv(), []);
   const [session, setSession] = useState<WebSessionSummary | null>(null);
   const [email, setEmail] = useState(() => window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? '');
@@ -61,6 +71,7 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
     setPassword('');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
     setMessage('Login confirmado. A loja já pode sincronizar clientes, produtos, vendas e crediário.');
+    onAuthenticated?.();
   }
 
   async function signUp(): Promise<void> {
@@ -91,6 +102,7 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
     if (data.session) {
       window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
       setMessage('Conta criada e login ativo. A primeira loja será preparada como dona do sistema.');
+      onAuthenticated?.();
       return;
     }
     setMessage('Conta criada. Se o Supabase pedir confirmação, confirme o e-mail e depois toque em Entrar.');
@@ -143,7 +155,12 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
           <span><strong>ID do usuário</strong><small>{session.userId}</small></span>
           <span><strong>Sessão</strong><small>{session.expiresAt ? `expira em ${new Date(session.expiresAt * 1000).toLocaleString('pt-BR')}` : 'persistente'}</small></span>
         </div>
-        <button type="button" className="secondary-btn web-auth-full-button" onClick={signOut} disabled={busy}>Sair do modo web</button>
+        <div className="web-auth-session-actions-v75">
+          {onAuthenticated && (
+            <button type="button" className="primary-btn web-auth-full-button" onClick={onAuthenticated} disabled={busy}>Abrir sistema</button>
+          )}
+          <button type="button" className="secondary-btn web-auth-full-button" onClick={signOut} disabled={busy}>Sair do modo web</button>
+        </div>
         {message && <small className="web-message web-message-ok-v74">{message}</small>}
       </section>
     );
@@ -167,8 +184,8 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
           <div className="web-auth-form-title">
             <span className="web-auth-icon-bubble">🔐</span>
             <div>
-              <strong>Login da loja</strong>
-              <small>Entre com sua conta Supabase</small>
+              <strong>{loginTitle}</strong>
+              <small>{loginSubtitle}</small>
             </div>
           </div>
 
@@ -211,7 +228,7 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
             <button type="button" className="secondary-btn" onClick={signUp} disabled={busy}>{busy ? 'Aguarde...' : 'Criar conta'}</button>
           </div>
 
-          <small className="web-auth-help-text">Não salvamos senha no navegador. A sessão fica protegida pelo Supabase.</small>
+          {showHelp && <small className="web-auth-help-text">Não salvamos senha no navegador. A sessão fica protegida pelo Supabase.</small>}
           {message && <small className="web-message">{message}</small>}
         </form>
       </div>

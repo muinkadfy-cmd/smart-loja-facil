@@ -19654,3 +19654,231 @@ body,
     font-size: 12px;
   }
 }
+
+/* Mega Lote 75 — login inicial Supabase limpo, direto e sem poluição */
+.login-clean-v75.welcome-screen,
+.classic-login-landing.login-clean-v75 {
+  padding: clamp(12px, 3vh, 28px) 14px !important;
+  align-items: start !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(14, 86, 177, .08), transparent 30%),
+    linear-gradient(180deg, #f8f7f1 0%, #f2efe7 100%) !important;
+}
+
+.login-clean-v75 .classic-login-card,
+.login-clean-v75.login-landing .login-shell-card {
+  width: min(980px, 100%) !important;
+  min-height: 0 !important;
+}
+
+.login-clean-v75 .classic-login-topbar,
+.login-clean-v75 .login-topbar {
+  min-height: 56px !important;
+}
+
+.login-clean-v75 .classic-login-status-strip {
+  min-height: 38px !important;
+  margin: 8px 14px 0 !important;
+  padding: 7px 10px !important;
+}
+
+.login-clean-v75 .classic-login-main-grid,
+.login-clean-v75 .login-main-grid {
+  grid-template-columns: minmax(300px, .88fr) minmax(360px, 1fr) !important;
+  gap: clamp(18px, 3vw, 28px) !important;
+  align-items: center !important;
+  min-height: 0 !important;
+  padding: clamp(18px, 3vw, 30px) !important;
+}
+
+.login-clean-v75 .classic-login-hero-copy,
+.login-clean-v75 .login-hero-copy {
+  min-height: 0 !important;
+  align-self: center !important;
+}
+
+.login-clean-v75 .classic-login-hero-copy h1,
+.login-clean-v75 .login-hero-copy h1 {
+  max-width: 390px !important;
+  margin: 12px 0 10px !important;
+  font-size: clamp(2rem, 4.1vw, 3.05rem) !important;
+}
+
+.login-clean-v75 .classic-login-hero-copy p,
+.login-clean-v75 .login-hero-copy p {
+  max-width: 410px !important;
+  font-size: clamp(.98rem, 1.35vw, 1.08rem) !important;
+  line-height: 1.48 !important;
+}
+
+.login-clean-v75 .login-security-note-v75 {
+  max-width: 430px !important;
+  margin-top: 16px !important;
+  padding: 10px 12px !important;
+  border: 1px solid #d7e5f8 !important;
+  border-radius: 12px !important;
+  background: #f8fbff !important;
+}
+
+.login-clean-v75 .login-security-note-v75 small {
+  color: #31445e !important;
+  font-weight: 750 !important;
+  line-height: 1.4 !important;
+}
+
+.login-clean-v75 .login-initial-auth-stage-v75 {
+  min-height: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  align-self: stretch !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-clean-v74 {
+  height: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-clean-shell {
+  height: 100% !important;
+  display: block !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-form-card {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: clamp(18px, 2.8vw, 26px) !important;
+  display: grid !important;
+  align-content: center !important;
+  gap: 13px !important;
+  border: 1px solid #c8d7ec !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .08) !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-form-title {
+  padding-bottom: 2px !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-icon-bubble {
+  width: 48px !important;
+  height: 48px !important;
+  flex-basis: 48px !important;
+  border-radius: 15px !important;
+  font-size: 20px !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-form-title strong {
+  font-size: clamp(1.25rem, 2.2vw, 1.55rem) !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-form-title small {
+  color: #64748b !important;
+  font-size: .84rem !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-field > span,
+.login-initial-auth-stage-v75 .web-auth-form-card > strong {
+  font-size: 12px !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-clean-v74 input[type='email'],
+.login-initial-auth-stage-v75 .web-auth-clean-v74 input[type='text'],
+.login-initial-auth-stage-v75 .web-auth-clean-v74 input[type='password'] {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-remember-row {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  background: #f8fbff !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-clean-v74 .web-auth-actions {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+.login-initial-auth-stage-v75 .web-auth-clean-v74 .web-auth-actions .primary-btn,
+.login-initial-auth-stage-v75 .web-auth-clean-v74 .web-auth-actions .secondary-btn {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+}
+
+.web-auth-session-actions-v75 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.web-auth-session-actions-v75 .primary-btn.web-auth-full-button {
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, .36) !important;
+  background: linear-gradient(135deg, #0e56b1, #2563eb) !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, .20) !important;
+}
+
+@media (max-width: 900px) {
+  .login-clean-v75 .classic-login-main-grid,
+  .login-clean-v75 .login-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .login-clean-v75 .classic-login-hero-copy h1,
+  .login-clean-v75 .login-hero-copy h1,
+  .login-clean-v75 .classic-login-hero-copy p,
+  .login-clean-v75 .login-hero-copy p,
+  .login-clean-v75 .login-security-note-v75 {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-clean-v75.welcome-screen,
+  .classic-login-landing.login-clean-v75 {
+    padding: 8px !important;
+  }
+
+  .login-clean-v75 .classic-login-status-strip {
+    align-items: flex-start !important;
+  }
+
+  .login-clean-v75 .classic-login-status-strip span:not(.classic-status-badge) {
+    display: none !important;
+  }
+
+  .login-clean-v75 .classic-login-main-grid,
+  .login-clean-v75 .login-main-grid {
+    margin: 8px !important;
+    padding: 12px !important;
+    gap: 14px !important;
+  }
+
+  .login-clean-v75 .classic-login-hero-copy h1,
+  .login-clean-v75 .login-hero-copy h1 {
+    font-size: clamp(1.78rem, 9vw, 2.35rem) !important;
+  }
+
+  .login-clean-v75 .classic-login-hero-copy p,
+  .login-clean-v75 .login-hero-copy p {
+    font-size: .98rem !important;
+  }
+
+  .login-initial-auth-stage-v75 .web-auth-form-card {
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .login-initial-auth-stage-v75 .web-auth-clean-v74 .web-auth-actions,
+  .web-auth-session-actions-v75 {
+    grid-template-columns: 1fr !important;
+  }
+}
