@@ -19,7 +19,7 @@ import { AuditPage } from './pages/Audit';
 import { WebDiagnosticsPage } from './pages/WebDiagnostics';
 import { WebMigrationPage } from './pages/WebMigration';
 import { api } from './lib/api';
-import { webFlushQueuedSync } from './lib/webApi';
+import { getWebAuthSnapshot, webFlushQueuedSync, type WebAuthSnapshot } from './lib/webApi';
 import { subscribeWebStoreRealtime } from './lib/webSync';
 import { getRuntimeInfo, hasTauriWindowMetadata } from './lib/runtime';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from './lib/preferences';
@@ -74,6 +74,7 @@ export default function App(): JSX.Element {
   const [closeBusy, setCloseBusy] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [preferredBackupFolder, setPreferredBackupFolderState] = useState<string | null>(getPreferredBackupFolder());
+  const [webAuth, setWebAuth] = useState<WebAuthSnapshot | null>(null);
   const startupSoundPlayed = useRef(false);
   const forceCloseRef = useRef(false);
 
@@ -95,16 +96,32 @@ export default function App(): JSX.Element {
     }
   }, [runtimeInfo.isWeb]);
 
+  const refreshWebAuth = useCallback(async (createIfMissing = false) => {
+    if (!runtimeInfo.isWeb) return;
+    try {
+      const snapshot = await getWebAuthSnapshot({ createIfMissing });
+      setWebAuth(snapshot);
+    } catch {
+      setWebAuth(null);
+    }
+  }, [runtimeInfo.isWeb]);
+
   useEffect(() => {
-    if (entered) void boot();
-  }, [boot, entered]);
+    if (entered) {
+      void boot();
+      void refreshWebAuth(true);
+    }
+  }, [boot, entered, refreshWebAuth]);
 
   useEffect(() => {
     if (!runtimeInfo.isWeb) return undefined;
-    const reloadWebSession = () => void boot();
+    const reloadWebSession = () => {
+      void boot();
+      void refreshWebAuth(true);
+    };
     window.addEventListener('smart-loja:web-session-changed', reloadWebSession);
     return () => window.removeEventListener('smart-loja:web-session-changed', reloadWebSession);
-  }, [boot, runtimeInfo.isWeb]);
+  }, [boot, refreshWebAuth, runtimeInfo.isWeb]);
 
   useEffect(() => {
     if (!entered || !runtimeInfo.isWeb) return undefined;
@@ -133,17 +150,19 @@ export default function App(): JSX.Element {
   }, [boot, entered, runtimeInfo.isWeb]);
 
   useEffect(() => {
-    if (!entered || !runtimeInfo.isWeb || !status?.sqlite_ok) return undefined;
+    if (!entered || !runtimeInfo.isWeb || !webAuth?.hasSession || !webAuth.storeId) return undefined;
     return subscribeWebStoreRealtime(() => {
       setRefreshToken((value) => value + 1);
       void boot();
+      void refreshWebAuth(false);
     });
-  }, [boot, entered, runtimeInfo.isWeb, status?.sqlite_ok, status?.db_path]);
+  }, [boot, entered, refreshWebAuth, runtimeInfo.isWeb, webAuth?.hasSession, webAuth?.storeId]);
 
   const refresh = useCallback(() => {
     setRefreshToken((value) => value + 1);
     void boot();
-  }, [boot]);
+    void refreshWebAuth(false);
+  }, [boot, refreshWebAuth]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('slow-mode', Boolean(settings?.slow_mode));
@@ -231,7 +250,9 @@ export default function App(): JSX.Element {
 
     if (runtimeInfo.isWeb) {
       if (activePage === 'diagnostics' || activePage === 'audit') return <WebDiagnosticsPage />;
-      if (activePage !== 'dashboard' && status && !status.sqlite_ok) {
+      const needsLogin = webAuth?.isConfigured !== false && webAuth?.hasSession === false;
+      const missingSupabaseConfig = webAuth?.isConfigured === false || status?.db_path === 'Supabase não configurado';
+      if (activePage !== 'dashboard' && (needsLogin || missingSupabaseConfig)) {
         return <WebLoginRequiredGate pageLabel={webPageLabels[activePage] ?? 'Esta tela'} />;
       }
       if (activePage === 'dashboard') return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
@@ -278,7 +299,7 @@ export default function App(): JSX.Element {
       default:
         return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
     }
-  }, [activePage, refreshToken, refresh, runtimeInfo.isWeb, settings, status]);
+  }, [activePage, refreshToken, refresh, runtimeInfo.isWeb, settings, status, webAuth]);
 
   if (!entered) {
     return <Welcome onEnter={() => setEntered(true)} />;

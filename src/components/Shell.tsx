@@ -4,7 +4,7 @@ import { buildAppAlerts } from '../lib/alerts';
 import { api } from '../lib/api';
 import { playOperationSound } from '../lib/sound';
 import { getRuntimeInfo } from '../lib/runtime';
-import { getWebStoreContext, webRoleLabel, webSyncQueueSnapshot, type WebStoreRole } from '../lib/webApi';
+import { getWebAuthSnapshot, webRoleLabel, webSyncQueueSnapshot, type WebStoreRole } from '../lib/webApi';
 import type { DelphiIconName } from '../lib/icons';
 import type { AppStatus, CreditSummary, PageKey, Product, Settings } from '../types';
 
@@ -165,10 +165,14 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   useEffect(() => {
     if (!runtimeInfo.isWeb) return undefined;
     let active = true;
-    void getWebStoreContext({ createIfMissing: false })
-      .then((context) => {
+    void getWebAuthSnapshot({ createIfMissing: false })
+      .then((snapshot) => {
         if (!active) return;
-        setWebIdentity({ email: context.email, role: context.role, storeName: context.store.name });
+        setWebIdentity({
+          email: snapshot.email,
+          role: snapshot.role,
+          storeName: snapshot.storeName || (snapshot.hasSession ? 'loja pendente' : ''),
+        });
       })
       .catch(() => {
         if (!active) return;
@@ -262,18 +266,18 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
         detail: 'Entre com e-mail e senha para liberar cadastros, produtos, vendas, caixa, crediário e sincronização entre computador e celular.',
       };
     }
-    if (!status?.sqlite_ok) {
+    if (hasLogin && !webIdentity.storeName) {
       return {
         level: 'info' as const,
-        title: 'Aguardando confirmação da loja',
-        detail: 'O app abriu, mas ainda está conferindo loja, permissões e Supabase antes de liberar a sincronização completa.',
+        title: 'Loja ainda não vinculada',
+        detail: 'Seu login está ativo. Toque em Atualizar dados para criar ou localizar a loja web e liberar a sincronização completa.',
       };
     }
     return null;
-  }, [networkOnline, runtimeInfo.isWeb, status?.sqlite_ok, syncQueue.last_error, syncQueue.pending, webIdentity.email]);
+  }, [networkOnline, runtimeInfo.isWeb, syncQueue.last_error, syncQueue.pending, webIdentity.email, webIdentity.storeName]);
 
   const syncIssueCount = runtimeInfo.isWeb
-    ? Number(!networkOnline) + Number(syncQueue.pending > 0) + Number(Boolean(syncQueue.last_error && syncQueue.pending > 0)) + Number(!webIdentity.email)
+    ? Number(!networkOnline) + Number(syncQueue.pending > 0) + Number(Boolean(syncQueue.last_error && syncQueue.pending > 0)) + Number(!webIdentity.email) + Number(Boolean(webIdentity.email && !webIdentity.storeName))
     : 0;
   const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length + syncIssueCount;
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
@@ -285,7 +289,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     ? `${webRoleLabel(webIdentity.role)} · ${webIdentity.storeName || 'aguardando loja web'}`
     : 'Bem-vindo(a) ao Smart Loja Fácil';
   const cloudDataLabel = runtimeInfo.isWeb
-    ? syncQueue.pending > 0 ? `${syncQueue.pending} pendente(s)` : status?.sqlite_ok && networkOnline ? 'Dados sincronizados' : networkOnline ? 'Login pendente' : 'Sem conexão'
+    ? syncQueue.pending > 0 ? `${syncQueue.pending} pendente(s)` : webIdentity.email && webIdentity.storeName && networkOnline ? 'Dados sincronizados' : webIdentity.email && networkOnline ? 'Loja pendente' : networkOnline ? 'Login pendente' : 'Sem conexão'
     : 'SQLite ativo';
 
   const requestSyncNotifications = useCallback(async () => {
@@ -493,7 +497,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </div>
               <div className="neo-page-meta-status">
                 <span className={`neo-mini-chip ${(!runtimeInfo.isWeb || networkOnline) && (runtimeInfo.isWeb || status?.offline_ready) ? 'ok' : 'warn'}`}>{environmentLabel}</span>
-                <span className={`neo-mini-chip ${(runtimeInfo.isWeb ? status?.sqlite_ok : status?.sqlite_ok) ? 'ok' : 'warn'}`}>{runtimeInfo.isWeb ? cloudDataLabel : status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponível'}</span>
+                <span className={`neo-mini-chip ${(runtimeInfo.isWeb ? Boolean(webIdentity.email && webIdentity.storeName) : status?.sqlite_ok) ? 'ok' : 'warn'}`}>{runtimeInfo.isWeb ? cloudDataLabel : status?.sqlite_ok ? 'SQLite ativo' : 'SQLite indisponível'}</span>
               </div>
             </div>
 

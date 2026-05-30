@@ -60,7 +60,7 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_CONTEXT_CACHE_KEY = 'smart-loja:web-context-cache-v70';
-export const WEB_APP_VERSION = 'pwa-supabase-v75-login-inicial-clean';
+export const WEB_APP_VERSION = 'pwa-supabase-v76-web-auth-unlock';
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -253,6 +253,117 @@ function missingSupabaseError(): Error {
   const env = getPublicWebEnv();
   const missing = env.missing.join(' e ') || 'variáveis públicas';
   return new Error(`Modo web precisa de ${missing} no Cloudflare para sincronizar com Supabase.`);
+}
+
+
+export interface WebAuthSnapshot {
+  isConfigured: boolean;
+  hasSession: boolean;
+  userId: string;
+  email: string;
+  role: WebStoreRole | 'sem login';
+  storeId: string;
+  storeName: string;
+  canRead: boolean;
+  canOperate: boolean;
+  message: string;
+}
+
+export async function getWebAuthSnapshot(options: { createIfMissing?: boolean } = {}): Promise<WebAuthSnapshot> {
+  const env = getPublicWebEnv();
+  if (!env.isConfigured) {
+    return {
+      isConfigured: false,
+      hasSession: false,
+      userId: '',
+      email: '',
+      role: 'sem login',
+      storeId: '',
+      storeName: '',
+      canRead: false,
+      canOperate: false,
+      message: `Configure ${env.missing.join(' e ') || 'as variáveis públicas'} para conectar ao Supabase.`,
+    };
+  }
+
+  const client = getSupabaseClient();
+  if (!client) {
+    return {
+      isConfigured: false,
+      hasSession: false,
+      userId: '',
+      email: '',
+      role: 'sem login',
+      storeId: '',
+      storeName: '',
+      canRead: false,
+      canOperate: false,
+      message: 'Cliente Supabase não iniciou neste navegador.',
+    };
+  }
+
+  const { data, error } = await client.auth.getSession();
+  if (error) {
+    return {
+      isConfigured: true,
+      hasSession: false,
+      userId: '',
+      email: '',
+      role: 'sem login',
+      storeId: '',
+      storeName: '',
+      canRead: false,
+      canOperate: false,
+      message: `Não foi possível ler o login: ${error.message}`,
+    };
+  }
+
+  const user = data.session?.user;
+  if (!user) {
+    return {
+      isConfigured: true,
+      hasSession: false,
+      userId: '',
+      email: '',
+      role: 'sem login',
+      storeId: '',
+      storeName: '',
+      canRead: false,
+      canOperate: false,
+      message: 'Entre com e-mail e senha para liberar a loja web.',
+    };
+  }
+
+  const email = user.email ?? 'usuário sem e-mail';
+  try {
+    const context = await getWebStoreContext({ createIfMissing: options.createIfMissing ?? false });
+    const caps = getWebRoleCapabilities(context.role);
+    return {
+      isConfigured: true,
+      hasSession: true,
+      userId: context.userId,
+      email: context.email,
+      role: context.role,
+      storeId: context.store.id,
+      storeName: context.store.name,
+      canRead: caps.canRead,
+      canOperate: caps.canOperate,
+      message: caps.writeLabel,
+    };
+  } catch (contextError) {
+    return {
+      isConfigured: true,
+      hasSession: true,
+      userId: user.id,
+      email,
+      role: 'sem login',
+      storeId: '',
+      storeName: '',
+      canRead: false,
+      canOperate: false,
+      message: contextError instanceof Error ? contextError.message : 'Login ativo, mas a loja ainda não foi vinculada.',
+    };
+  }
 }
 
 async function getClient() {
