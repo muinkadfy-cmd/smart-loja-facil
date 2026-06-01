@@ -1,0 +1,541 @@
+/* Mega Lote 75 - checklist comercial, RLS real e performance mobile segura */
+.production-check-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(34, 197, 94, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(9, 18, 31, 0.95), rgba(4, 9, 18, 0.96));
+  border-radius: 28px;
+  padding: clamp(18px, 3vw, 28px);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+  display: grid;
+  gap: 18px;
+}
+
+.production-check-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+}
+
+.production-check-head h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(24px, 3vw, 36px);
+  letter-spacing: -0.045em;
+}
+
+.production-check-head p {
+  max-width: 820px;
+  margin: 0;
+  color: #b8c5d8;
+  line-height: 1.62;
+}
+
+.production-check-score {
+  min-width: 132px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  background: rgba(6, 78, 59, 0.22);
+  text-align: center;
+}
+
+.production-check-score strong {
+  display: block;
+  font-size: 30px;
+  line-height: 1;
+  color: #dcfce7;
+}
+
+.production-check-score span {
+  display: block;
+  margin-top: 6px;
+  color: #bbf7d0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.production-progress {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.production-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e, #60a5fa);
+  transition: width 180ms ease;
+}
+
+.production-check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.production-check-row {
+  width: 100%;
+  min-height: 154px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(8, 15, 28, 0.78);
+  color: #e5eefb;
+  text-align: left;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.production-check-row:hover,
+.production-check-row:focus-visible {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(15, 23, 42, 0.92);
+  outline: none;
+}
+
+.production-check-row.done {
+  border-color: rgba(34, 197, 94, 0.38);
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.32), rgba(9, 15, 28, 0.92));
+}
+
+.production-check-status {
+  width: max-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  background: rgba(113, 63, 18, 0.24);
+  color: #fde68a;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.production-check-row.done .production-check-status {
+  border-color: rgba(34, 197, 94, 0.34);
+  background: rgba(22, 101, 52, 0.32);
+  color: #bbf7d0;
+}
+
+.production-check-row strong {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.production-check-row small,
+.production-check-row em {
+  color: #aebed3;
+  line-height: 1.45;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.production-check-row em {
+  color: #dbeafe;
+  padding-top: 2px;
+}
+
+.production-check-actions {
+  align-items: center;
+}
+
+@supports (content-visibility: auto) {
+  .web-card,
+  .web-health-card,
+  .production-check-row,
+  .panel,
+  .stat-card,
+  .data-table-card,
+  .mobile-readiness-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 280px;
+  }
+}
+
+@media (max-width: 760px) {
+  .production-check-card {
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .production-check-head {
+    display: grid;
+  }
+
+  .production-check-score {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+
+  .production-check-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .production-check-row {
+    min-height: 0;
+    padding: 14px;
+  }
+}
+
+/* Lote 76 — diagnóstico visual do design system/mobile sem alterar cálculos ou dados */
+.design-readiness-card {
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 24px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(34, 197, 94, 0.10), transparent 32%),
+    linear-gradient(180deg, rgba(8, 19, 34, 0.94), rgba(5, 12, 24, 0.98));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
+  content-visibility: auto;
+  contain-intrinsic-size: 420px;
+}
+
+.design-readiness-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.design-readiness-head h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(22px, 3.8vw, 32px);
+  letter-spacing: -0.04em;
+}
+
+.design-readiness-head p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.design-readiness-score {
+  min-width: 132px;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 20px;
+  padding: 14px;
+  text-align: center;
+  background: rgba(2, 6, 23, 0.46);
+}
+
+.design-readiness-score strong {
+  display: block;
+  color: #dbeafe;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.design-readiness-score span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.design-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.design-readiness-item {
+  min-width: 0;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.58);
+  display: grid;
+  gap: 7px;
+}
+
+.design-readiness-item span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.design-readiness-item strong {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.design-readiness-item small {
+  color: #b7c6dd;
+  line-height: 1.45;
+}
+
+.design-readiness-ok {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(180deg, rgba(20, 83, 45, 0.18), rgba(15, 23, 42, 0.60));
+}
+
+.design-readiness-warn {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: linear-gradient(180deg, rgba(113, 63, 18, 0.20), rgba(15, 23, 42, 0.60));
+}
+
+.design-readiness-info {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: linear-gradient(180deg, rgba(30, 64, 175, 0.16), rgba(15, 23, 42, 0.60));
+}
+
+.design-readiness-probe {
+  min-height: 44px;
+}
+
+@media (max-width: 860px) {
+  .design-readiness-head {
+    display: grid;
+  }
+
+  .design-readiness-score {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .design-readiness-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .design-readiness-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .design-readiness-item {
+    border-radius: 16px;
+    padding: 12px;
+  }
+}
+/* Lote 77 — módulo visual isolado: checklist por tela, inventário CSS e reforços mobile seguros */
+:root {
+  --lote77-css-module: active;
+  --touch-target-min: 44px;
+  --mobile-bottom-safe-gap: max(18px, env(safe-area-inset-bottom));
+  --commercial-card-border: rgba(148, 163, 184, 0.18);
+  --commercial-card-bg: rgba(8, 15, 28, 0.82);
+}
+
+.css-inventory-card,
+.module-visual-card {
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 24px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(96, 165, 250, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(8, 19, 34, 0.94), rgba(5, 12, 24, 0.98));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.22);
+  content-visibility: auto;
+  contain-intrinsic-size: 440px;
+}
+
+.css-inventory-head,
+.module-visual-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.css-inventory-head h2,
+.module-visual-head h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(22px, 3.8vw, 32px);
+  letter-spacing: -0.04em;
+}
+
+.css-inventory-head p,
+.module-visual-head p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.css-inventory-score,
+.module-visual-score {
+  min-width: 132px;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 20px;
+  padding: 14px;
+  text-align: center;
+  background: rgba(2, 6, 23, 0.46);
+}
+
+.css-inventory-score strong,
+.module-visual-score strong {
+  display: block;
+  color: #dbeafe;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.css-inventory-score span,
+.module-visual-score span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.css-inventory-grid,
+.module-visual-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.css-inventory-item,
+.module-visual-row {
+  min-width: 0;
+  border: 1px solid var(--commercial-card-border);
+  border-radius: 18px;
+  padding: 14px;
+  background: var(--commercial-card-bg);
+  display: grid;
+  gap: 7px;
+  text-align: left;
+}
+
+.module-visual-row {
+  width: 100%;
+  min-height: 142px;
+  color: #e5eefb;
+  cursor: pointer;
+}
+
+.module-visual-row:hover,
+.module-visual-row:focus-visible {
+  border-color: rgba(96, 165, 250, 0.42);
+  background: rgba(15, 23, 42, 0.94);
+  outline: none;
+}
+
+.module-visual-row.done {
+  border-color: rgba(34, 197, 94, 0.38);
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.32), rgba(9, 15, 28, 0.92));
+}
+
+.css-inventory-item span,
+.module-visual-row span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.css-inventory-item strong,
+.module-visual-row strong {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.css-inventory-item small,
+.module-visual-row small,
+.module-visual-row em {
+  color: #b7c6dd;
+  line-height: 1.45;
+  font-size: 13px;
+  font-style: normal;
+}
+
+.module-visual-row em {
+  color: #dbeafe;
+}
+
+.css-inventory-ok,
+.module-visual-ok {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: linear-gradient(180deg, rgba(20, 83, 45, 0.18), rgba(15, 23, 42, 0.60));
+}
+
+.css-inventory-warn,
+.module-visual-warn {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: linear-gradient(180deg, rgba(113, 63, 18, 0.20), rgba(15, 23, 42, 0.60));
+}
+
+.css-inventory-info,
+.module-visual-info {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: linear-gradient(180deg, rgba(30, 64, 175, 0.16), rgba(15, 23, 42, 0.60));
+}
+
+.lote77-touch-guard :where(button, .primary-btn, .secondary-btn, .ghost-btn, input, select, textarea) {
+  scroll-margin-bottom: calc(96px + var(--mobile-bottom-safe-gap));
+}
+
+@media (max-width: 760px) {
+  .css-inventory-card,
+  .module-visual-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .css-inventory-head,
+  .module-visual-head {
+    display: grid;
+  }
+
+  .css-inventory-score,
+  .module-visual-score {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .css-inventory-grid,
+  .module-visual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .module-visual-row {
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .web-stack,
+  .page-shell,
+  .neo-page-shell {
+    padding-bottom: calc(112px + var(--mobile-bottom-safe-gap));
+  }
+}
+
+@media (max-width: 420px) {
+  .css-inventory-item,
+  .module-visual-row {
+    border-radius: 16px;
+    padding: 12px;
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "generatedAt": "2026-05-31T23:39:23.099Z",
+  "files": [
+    {
+      "file": "src/styles.css",
+      "bytes": 497859,
+      "selectors": 3391,
+      "important": 4378,
+      "media": 107,
+      "duplicateDeclarations": 296,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/master-ui.css",
+      "bytes": 138365,
+      "selectors": 737,
+      "important": 2284,
+      "media": 13,
+      "duplicateDeclarations": 35,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote77-design-system.css",
+      "bytes": 11221,
+      "selectors": 74,
+      "important": 0,
+      "media": 5,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote78-css-cleanup.css",
+      "bytes": 642,
+      "selectors": 4,
+      "important": 0,
+      "media": 1,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote79-neo-family.css",
+      "bytes": 3026,
+      "selectors": 28,
+      "important": 0,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote80-neo-shell-sidebar.css",
+      "bytes": 3666,
+      "selectors": 28,
+      "important": 0,
+      "media": 1,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote81-neo-important-reduction.css",
+      "bytes": 3245,
+      "selectors": 26,
+      "important": 0,
+      "media": 1,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote82-login-premium.css",
+      "bytes": 10510,
+      "selectors": 52,
+      "important": 159,
+      "media": 3,
+      "duplicateDeclarations": 4,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote83-dashboard-premium.css",
+      "bytes": 14592,
+      "selectors": 93,
+      "important": 227,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote84-mobile-dashboard-refine.css",
+      "bytes": 9518,
+      "selectors": 57,
+      "important": 155,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote85-sales-pdv-premium.css",
+      "bytes": 14629,
+      "selectors": 80,
+      "important": 222,
+      "media": 3,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote86-orders-premium.css",
+      "bytes": 9874,
+      "selectors": 56,
+      "important": 161,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote87-products-premium.css",
+      "bytes": 16300,
+      "selectors": 92,
+      "important": 257,
+      "media": 3,
+      "duplicateDeclarations": 1,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote88-product-photos-storage.css",
+      "bytes": 1228,
+      "selectors": 6,
+      "important": 21,
+      "media": 1,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote89-customers-premium.css",
+      "bytes": 10048,
+      "selectors": 53,
+      "important": 160,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote90-cash-premium.css",
+      "bytes": 11264,
+      "selectors": 64,
+      "important": 185,
+      "media": 3,
+      "duplicateDeclarations": 1,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote91-credits-premium.css",
+      "bytes": 10814,
+      "selectors": 61,
+      "important": 167,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote92-reports-premium.css",
+      "bytes": 11728,
+      "selectors": 65,
+      "important": 199,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    },
+    {
+      "file": "src/styles/lote93-backup-settings-premium.css",
+      "bytes": 10885,
+      "selectors": 54,
+      "important": 159,
+      "media": 2,
+      "duplicateDeclarations": 0,
+      "emptyRules": 0
+    }
+  ],
+  "totals": {
+    "bytes": 789414,
+    "important": 8734,
+    "selectors": 5021,
+    "media": 157,
+    "duplicateDeclarations": 337,
+    "emptyRules": 0
+  },
+  "duplicatedSelectors": [
+    [
+      ".neo-page-shell",
+      41
+    ],
+    [
+      ".neo-header-status-row",
+      36
+    ],
+    [
+      ":root",
+      34
+    ],
+    [
+      ".neo-action-ribbon",
+      31
+    ],
+    [
+      ".neo-action-tile",
+      29
+    ],
+    [
+      ".neo-header-grid",
+      28
+    ],
+    [
+      ".neo-topbar",
+      25
+    ],
+    [
+      ".neo-sidebar",
+      24
+    ],
+    [
+      ".neo-main",
+      22
+    ],
+    [
+      ".neo-shell",
+      21
+    ],
+    [
+      ".neo-page-meta",
+      21
+    ],
+    [
+      ".neo-mobile-dock",
+      21
+    ],
+    [
+      ".login-shell-card",
+      18
+    ],
+    [
+      ".neo-layout",
+      18
+    ],
+    [
+      ".neo-kpi-card",
+      18
+    ],
+    [
+      ".neo-nav-item",
+      17
+    ]
+  ]
+}

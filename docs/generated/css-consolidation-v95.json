@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-05-31T23:56:35.258Z",
+  "report": [
+    {
+      "file": "src/styles.css",
+      "safeImportantRemoved": 44,
+      "duplicateDeclarationsRemoved": 0,
+      "emptyRulesRemoved": 0,
+      "beforeBytes": 497859,
+      "afterBytes": 482557,
+      "bytesDelta": -15302,
+      "beforeImportant": 4378,
+      "afterImportant": 4334,
+      "importantDelta": -44
+    },
+    {
+      "file": "src/master-ui.css",
+      "safeImportantRemoved": 17,
+      "duplicateDeclarationsRemoved": 0,
+      "emptyRulesRemoved": 0,
+      "beforeBytes": 138365,
+      "afterBytes": 133097,
+      "bytesDelta": -5268,
+      "beforeImportant": 2284,
+      "afterImportant": 2267,
+      "importantDelta": -17
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+:root {
+  --lote81-neo-important-reduction: active;
+  --lote81-page-bottom-safe: calc(104px + env(safe-area-inset-bottom, 0px));
+  --lote81-sidebar-scroll-width: thin;
+  --lote81-shell-inline-safe: min(100%, 100vw);
+}
+
+.lote81-neo-important-reduction .neo-shell,
+.lote81-neo-important-reduction .neo-main,
+.lote81-neo-important-reduction .neo-page-shell,
+.lote81-neo-important-reduction .neo-sidebar {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: var(--lote81-shell-inline-safe);
+}
+
+.lote81-neo-important-reduction .neo-page-shell,
+.lote81-neo-important-reduction .neo-sidebar {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+
+.lote81-neo-important-reduction .neo-page-shell {
+  overflow-x: clip;
+}
+
+.lote81-neo-important-reduction .neo-sidebar {
+  scrollbar-width: var(--lote81-sidebar-scroll-width);
+}
+
+.lote81-neo-important-reduction .neo-page-shell :where(.table-wrap, .responsive-table, table, .card, .panel, .neo-action-ribbon) {
+  max-width: 100%;
+}
+
+.lote81-important-card,
+.lote81-important-item {
+  border: 1px solid rgba(63, 43, 18, .1);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,247,243,.96));
+  box-shadow: 0 16px 34px rgba(63, 43, 18, .08);
+}
+
+.lote81-important-card {
+  display: grid;
+  gap: 14px;
+  padding: clamp(16px, 2.4vw, 22px);
+  border-radius: 24px;
+}
+
+.lote81-important-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.lote81-important-head h2 {
+  margin: 4px 0 6px;
+  color: #24160d;
+  font-size: clamp(1.12rem, 2.5vw, 1.48rem);
+  line-height: 1.12;
+}
+
+.lote81-important-head p {
+  margin: 0;
+  color: #6f6258;
+  font-weight: 680;
+}
+
+.lote81-important-score {
+  min-width: 86px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(63, 43, 18, .1);
+  background: #fffaf5;
+}
+
+.lote81-important-score strong {
+  color: #24160d;
+  font-size: 1.3rem;
+}
+
+.lote81-important-score span {
+  color: #786b61;
+  font-size: .75rem;
+  font-weight: 850;
+}
+
+.lote81-important-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.lote81-important-item {
+  display: grid;
+  gap: 5px;
+  min-height: 104px;
+  padding: 13px;
+  border-radius: 18px;
+}
+
+.lote81-important-item span {
+  color: #8a786d;
+  font-size: .72rem;
+  font-weight: 950;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.lote81-important-item strong {
+  color: #20130b;
+  font-size: .98rem;
+  line-height: 1.16;
+}
+
+.lote81-important-item small {
+  color: #695c53;
+  line-height: 1.35;
+  font-weight: 650;
+}
+
+.lote81-important-ok {
+  border-color: rgba(7, 147, 62, .2);
+}
+
+.lote81-important-warn {
+  border-color: rgba(203, 124, 118, .34);
+  background: linear-gradient(180deg, rgba(255,251,249,.98), rgba(255,242,239,.94));
+}
+
+.lote81-important-info {
+  border-color: rgba(155, 159, 184, .34);
+}
+
+@media (max-width: 900px) {
+  .lote81-neo-important-reduction .neo-page-shell {
+    padding-bottom: var(--lote81-page-bottom-safe);
+  }
+
+  .lote81-important-head {
+    display: grid;
+  }
+
+  .lote81-important-score {
+    justify-self: start;
+  }
+
+  .lote81-important-grid {
+    grid-template-columns: 1fr;
+  }
+}

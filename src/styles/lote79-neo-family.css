@@ -1,0 +1,168 @@
+:root {
+  --lote79-neo-family: active;
+  --neo-shell-readable-max: min(100%, 1480px);
+  --neo-shell-safe-gap: clamp(10px, 2vw, 18px);
+  --neo-mobile-safe-pad: max(14px, env(safe-area-inset-bottom));
+  --neo-touch-target-safe: 44px;
+}
+
+.neo-shell {
+  isolation: isolate;
+}
+
+.neo-page-shell,
+.neo-header-grid,
+.neo-action-ribbon,
+.neo-topbar,
+.neo-sidebar,
+.neo-mobile-dock {
+  overflow-wrap: anywhere;
+}
+
+.neo-page-shell,
+.neo-header-grid,
+.neo-action-ribbon {
+  max-width: var(--neo-shell-readable-max);
+}
+
+.neo-action-ribbon {
+  scrollbar-width: thin;
+}
+
+.neo-mobile-dock button,
+.neo-topbar button,
+.neo-sidebar button,
+.neo-action-tile {
+  min-height: var(--neo-touch-target-safe);
+}
+
+@supports (content-visibility: auto) {
+  .neo-page-shell > section,
+  .neo-page-shell > article,
+  .neo-page-shell .web-card,
+  .neo-page-shell .data-table-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 360px;
+  }
+}
+
+@media (max-width: 760px) {
+  .neo-shell {
+    min-width: 0;
+  }
+
+  .neo-page-shell,
+  .neo-header-grid,
+  .neo-action-ribbon {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .neo-mobile-dock {
+    padding-bottom: var(--neo-mobile-safe-pad);
+  }
+}
+
+.neo-family-card {
+  border: 1px solid rgba(155, 159, 184, 0.22);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(63, 43, 18, 0.92), rgba(113, 101, 95, 0.58));
+  box-shadow: 0 18px 42px rgba(18, 12, 7, 0.24);
+  color: #f8f7f1;
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.neo-family-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.neo-family-head h2 {
+  margin: 4px 0 6px;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+}
+
+.neo-family-head p {
+  max-width: 780px;
+  margin: 0;
+  color: rgba(248, 247, 241, 0.76);
+}
+
+.neo-family-score {
+  min-width: 112px;
+  border: 1px solid rgba(248, 247, 241, 0.16);
+  border-radius: 20px;
+  background: rgba(248, 247, 241, 0.1);
+  padding: 12px;
+  text-align: center;
+}
+
+.neo-family-score strong {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.neo-family-score span {
+  color: rgba(248, 247, 241, 0.72);
+  font-size: 0.8rem;
+}
+
+.neo-family-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.neo-family-item {
+  border: 1px solid rgba(248, 247, 241, 0.16);
+  border-radius: 18px;
+  background: rgba(248, 247, 241, 0.09);
+  padding: 12px;
+  min-height: 126px;
+}
+
+.neo-family-item span,
+.neo-family-item small {
+  display: block;
+  color: rgba(248, 247, 241, 0.72);
+}
+
+.neo-family-item strong {
+  display: block;
+  margin: 5px 0;
+  font-size: 1.05rem;
+}
+
+.neo-family-ok {
+  border-color: rgba(112, 221, 153, 0.32);
+}
+
+.neo-family-warn {
+  border-color: rgba(245, 183, 91, 0.42);
+}
+
+.neo-family-info {
+  border-color: rgba(155, 159, 184, 0.28);
+}
+
+@media (max-width: 760px) {
+  .neo-family-head {
+    flex-direction: column;
+  }
+
+  .neo-family-score {
+    width: 100%;
+  }
+
+  .neo-family-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .neo-family-item {
+    min-height: auto;
+  }
+}

@@ -1,0 +1,29 @@
+/* Mega Lote 78 — limpeza controlada de duplicidades CSS sem quebra visual */
+:root {
+  --lote78-css-cleanup: active;
+  --lote78-css-target: dedupe-safe;
+}
+
+.css-inventory-card,
+.module-visual-card,
+.production-check-card,
+.design-readiness-card {
+  overflow-wrap: anywhere;
+}
+
+.css-inventory-item small,
+.module-visual-row small,
+.module-visual-row em,
+.production-check-row small,
+.production-check-row em {
+  text-wrap: pretty;
+}
+
+@media (max-width: 760px) {
+  .css-inventory-card,
+  .module-visual-card,
+  .production-check-card,
+  .design-readiness-card {
+    scroll-margin-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+}

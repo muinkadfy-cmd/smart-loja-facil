@@ -1,0 +1,379 @@
+
+:root {
+  --lote93-backup-settings-premium: active;
+  --bs93-line: rgba(113, 101, 95, 0.18);
+  --bs93-card: #ffffff;
+  --bs93-soft: #fbf8f3;
+  --bs93-ink: #0f172a;
+  --bs93-muted: #5b6778;
+  --bs93-blue: #2563eb;
+  --bs93-green: #13834b;
+  --bs93-orange: #dd7a2a;
+  --bs93-red: #b84343;
+  --bs93-shadow: 0 18px 38px rgba(63, 43, 18, 0.08);
+}
+
+.neo-page-backup .neo-page-shell,
+.neo-page-settings .neo-page-shell {
+  background: #f8f4ef !important;
+  padding: 18px 24px 24px !important;
+}
+
+.neo-page-backup .neo-page-meta,
+.neo-page-settings .neo-page-meta {
+  border: 1px solid var(--bs93-line) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf7f2 100%) !important;
+  box-shadow: 0 12px 28px rgba(63, 43, 18, 0.06) !important;
+}
+
+.neo-page-backup .page-title,
+.neo-page-settings .page-title {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 14px !important;
+  align-items: center !important;
+  padding: 16px 18px !important;
+  border: 1px solid var(--bs93-line) !important;
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8f3 100%) !important;
+  box-shadow: var(--bs93-shadow) !important;
+}
+
+.neo-page-settings .page-title {
+  grid-template-columns: 1fr !important;
+}
+
+.neo-page-backup .page-title h1,
+.neo-page-settings .page-title h1 {
+  color: #123f78 !important;
+  font-size: clamp(1.35rem, 1.8vw, 1.72rem) !important;
+  letter-spacing: -0.03em !important;
+}
+
+.neo-page-backup .page-title p,
+.neo-page-settings .page-title p {
+  color: var(--bs93-muted) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.45 !important;
+}
+
+.neo-page-backup .backup-premium-v93,
+.neo-page-settings .settings-premium-v93 {
+  display: grid !important;
+  gap: 16px !important;
+  color: var(--bs93-ink) !important;
+}
+
+.neo-page-backup .panel,
+.neo-page-settings .panel,
+.neo-page-settings .settings-helper-v93,
+.neo-page-settings .settings-summary-grid-v93 article {
+  border: 1px solid var(--bs93-line) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%) !important;
+  box-shadow: var(--bs93-shadow) !important;
+}
+
+.neo-page-backup .hero-status,
+.neo-page-backup .settings-helper-chips-v93 {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.neo-page-backup .status-chip,
+.neo-page-settings .settings-helper-chips-v93 span {
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid #cbdcf8 !important;
+  background: #eef5ff !important;
+  color: #1b4f93 !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+}
+
+.neo-page-backup .reports-summary-grid {
+  gap: 14px !important;
+}
+
+.neo-page-backup .mini-insight-card,
+.neo-page-backup .backup-tip-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(37, 99, 235, 0.12) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+}
+
+.neo-page-backup .mini-insight-card strong {
+  color: #0f172a !important;
+  font-size: clamp(1.32rem, 1.8vw, 1.72rem) !important;
+}
+
+.neo-page-backup .backup-main-action-v93 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 16px !important;
+  align-items: center !important;
+  border-left: 6px solid var(--bs93-green) !important;
+}
+
+.neo-page-backup .backup-main-action-v93 strong,
+.neo-page-backup .backup-import-v93 h2,
+.neo-page-backup .backup-history-v93 h2,
+.neo-page-settings .settings-helper-v93 strong {
+  color: #0d2856 !important;
+  font-size: 1.05rem !important;
+  font-weight: 950 !important;
+}
+
+.neo-page-backup .backup-main-action-v93 p,
+.neo-page-backup .backup-tip-card p,
+.neo-page-backup .backup-import-v93 p,
+.neo-page-settings .settings-helper-v93 span,
+.neo-page-settings .settings-summary-grid-v93 span {
+  color: #5b6778 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.4 !important;
+}
+
+.neo-page-backup .backup-action-buttons {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+}
+
+.neo-page-backup .backup-action-buttons button,
+.neo-page-backup .backup-import-v93 .secondary-btn,
+.neo-page-backup .backup-history-v93 .secondary-btn,
+.neo-page-settings .settings-save-btn-v93 {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  font-weight: 950 !important;
+}
+
+.neo-page-backup .backup-action-buttons .primary-btn,
+.neo-page-settings .settings-save-btn-v93 {
+  background: linear-gradient(135deg, #2775f6 0%, #1f5fd1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.22) !important;
+}
+
+.neo-page-backup .backup-tips-v93 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.neo-page-backup .backup-import-v93 .panel-head,
+.neo-page-backup .backup-history-v93 .panel-head {
+  align-items: center !important;
+}
+
+.neo-page-backup .backup-history-v93 .table-filters,
+.neo-page-backup .backup-history-v93 .data-table-shell {
+  border: 1px solid rgba(113, 101, 95, 0.16) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfaf7 100%) !important;
+  box-shadow: 0 10px 22px rgba(63, 43, 18, 0.05) !important;
+}
+
+.neo-page-backup .backup-file-cell strong {
+  color: #0f172a !important;
+}
+
+.neo-page-backup .backup-file-cell small {
+  color: #68778a !important;
+}
+
+.neo-page-backup .ok-dot,
+.neo-page-backup .bad-dot {
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 0.74rem !important;
+  font-weight: 950 !important;
+}
+
+.neo-page-backup .ok-dot { background: #ecf9f0 !important; color: #147240 !important; }
+.neo-page-backup .bad-dot { background: #fff0f0 !important; color: #b84343 !important; }
+
+.neo-page-settings .settings-helper-v93 {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 14px !important;
+  align-items: center !important;
+  padding: 16px 18px !important;
+  border-left: 6px solid var(--bs93-blue) !important;
+}
+
+.neo-page-settings .settings-summary-grid-v93 {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.neo-page-settings .settings-summary-grid-v93 article {
+  display: grid !important;
+  gap: 6px !important;
+  padding: 16px !important;
+}
+
+.neo-page-settings .settings-summary-grid-v93 small {
+  color: #66758a !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+}
+
+.neo-page-settings .settings-summary-grid-v93 strong {
+  color: #0f172a !important;
+  font-size: 1.06rem !important;
+  line-height: 1.15 !important;
+}
+
+.neo-page-settings .settings-form-panel-v93 {
+  padding: 18px !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 {
+  gap: 14px !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 label {
+  min-height: 82px !important;
+  display: grid !important;
+  align-content: start !important;
+  gap: 7px !important;
+  padding: 12px !important;
+  border: 1px solid rgba(37, 99, 235, 0.12) !important;
+  border-radius: 16px !important;
+  background: #f8fbff !important;
+  color: #32445d !important;
+  font-size: 0.78rem !important;
+  font-weight: 900 !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 input,
+.neo-page-settings .settings-form-grid-v93 select {
+  min-height: 48px !important;
+  border: 1px solid #cfdbea !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  font-size: 0.92rem !important;
+  font-weight: 800 !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 input:focus,
+.neo-page-settings .settings-form-grid-v93 select:focus {
+  border-color: #6ea8ff !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+  outline: 0 !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 .check-row {
+  min-height: 62px !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  align-content: center !important;
+}
+
+.neo-page-settings .settings-form-grid-v93 .check-row input {
+  min-height: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.neo-page-settings .settings-save-btn-v93 {
+  min-height: 52px !important;
+  grid-column: 1 / -1 !important;
+}
+
+.neo-page-settings .notice,
+.neo-page-settings .error-box,
+.neo-page-backup .notice,
+.neo-page-backup .error-box {
+  border-radius: 18px !important;
+  padding: 14px 18px !important;
+  box-shadow: 0 12px 24px rgba(63, 43, 18, 0.06) !important;
+}
+
+@media (max-width: 1180px) {
+  .neo-page-backup .page-title,
+  .neo-page-backup .backup-main-action-v93,
+  .neo-page-settings .settings-helper-v93 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .neo-page-backup .backup-action-buttons {
+    justify-content: flex-start !important;
+  }
+
+  .neo-page-backup .backup-tips-v93,
+  .neo-page-settings .settings-summary-grid-v93 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .neo-page-backup .neo-page-shell,
+  .neo-page-settings .neo-page-shell {
+    padding: 12px 12px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .neo-page-backup .page-title,
+  .neo-page-settings .page-title,
+  .neo-page-settings .settings-helper-v93,
+  .neo-page-backup .backup-main-action-v93,
+  .neo-page-backup .backup-import-v93,
+  .neo-page-backup .backup-history-v93,
+  .neo-page-settings .settings-form-panel-v93 {
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .neo-page-backup .backup-action-buttons,
+  .neo-page-backup .backup-action-buttons button,
+  .neo-page-backup .backup-import-v93 .secondary-btn,
+  .neo-page-settings .settings-helper-chips-v93,
+  .neo-page-settings .settings-helper-chips-v93 span {
+    width: 100% !important;
+  }
+
+  .neo-page-backup .backup-action-buttons button,
+  .neo-page-backup .backup-import-v93 .secondary-btn {
+    justify-content: center !important;
+  }
+
+  .neo-page-settings .settings-form-grid-v93 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .neo-page-settings .settings-form-grid-v93 label,
+  .neo-page-settings .settings-form-grid-v93 .span-2,
+  .neo-page-settings .settings-save-btn-v93 {
+    grid-column: 1 !important;
+    min-height: auto !important;
+  }
+
+  .neo-page-backup .table-filters-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .neo-page-backup .table-filter-search,
+  .neo-page-backup .table-filter-select {
+    width: 100% !important;
+  }
+
+  .neo-page-backup .mobile-data-card,
+  .neo-page-settings .settings-summary-grid-v93 article {
+    border-radius: 16px !important;
+  }
+}
