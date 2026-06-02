@@ -1,0 +1,44 @@
+:root {
+  --lote97-realtime-sync: active;
+  --sync-ok-bg: rgba(34, 197, 94, 0.13);
+  --sync-warn-bg: rgba(245, 158, 11, 0.16);
+  --sync-info-bg: rgba(59, 130, 246, 0.14);
+}
+
+.neo-page-meta-status {
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.neo-mini-chip.ok {
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.22) inset;
+}
+
+.neo-mini-chip.warn {
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.30) inset;
+}
+
+.web-sync-synced {
+  background: var(--sync-ok-bg);
+}
+
+.web-sync-syncing,
+.web-sync-idle {
+  background: var(--sync-info-bg);
+}
+
+.web-sync-pending,
+.web-sync-error {
+  background: var(--sync-warn-bg);
+}
+
+@media (max-width: 720px) {
+  .neo-page-meta-status {
+    justify-content: flex-start;
+  }
+
+  .neo-page-meta-status .neo-mini-chip {
+    min-height: 34px;
+    white-space: normal;
+  }
+}
