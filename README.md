@@ -1,52 +1,127 @@
-# Smart Loja Fácil Offline
+# Smart Loja Fácil Web Mobile
 
-Sistema comercial local para Windows criado do zero com **Tauri v2 + React + TypeScript + Vite + SQLite local real**.
+Sistema **PWA web/mobile** com React, TypeScript, Vite, Supabase e deploy Cloudflare.
 
-## Objetivo
+Este projeto deve ser tratado como **PWA para navegador/celular**, não como entrega Tauri/desktop. Qualquer pasta ou script antigo de Tauri deve ser considerado legado e não deve bloquear o deploy web/mobile.
 
-Rodar em PC fraco, sem internet, sem login online, sem Supabase, sem Cloudflare, sem API externa e sem servidor na nuvem. Dados importantes são gravados no SQLite local pelo backend Tauri/Rust.
+## Objetivo do projeto
 
-## Rodar em modo dev
+- Rodar bem no navegador, Android e iPhone.
+- Sincronizar dados entre web e mobile via Supabase.
+- Usar Supabase Auth, banco, RLS/policies e Storage quando configurado.
+- Publicar no Cloudflare usando a pasta `dist` gerada pelo Vite.
+- Mostrar alertas simples para usuário leigo: salvando, sincronizando, sincronizado, pendente, erro e offline.
+
+## Ambiente local
 
 ```bash
 npm install
+npm run type-check
+npm run lint
+npm run build
 npm run release:check
-npm run tauri:dev
 ```
 
-## Build Windows
+O build gera a pasta:
+
+```txt
+dist
+```
+
+## Deploy Cloudflare
+
+Depois do build passar:
 
 ```bash
-npm run type-check
-npm run build
-npm run tauri:build
+npx wrangler deploy
 ```
 
-## Módulos entregues nesta base
+O `wrangler.jsonc`/configuração de deploy deve apontar para:
 
-- Tela inicial simples sem login obrigatório
-- Dashboard offline
-- Clientes
-- Produtos com ajuste de estoque e motivo
-- Vendas/PDV com transação SQLite
-- Caixa com abertura, resumo diário e fechamento auditado
-- Crediário com parcelas e recebimento
-- Pedidos locais
-- Comprovantes 80mm/A4 via impressão
-- Relatórios CSV locais
-- Backup manual do SQLite
-- Restauração segura com confirmação dupla e backup antes de restaurar
-- Configurações
-- Auditoria/logs
+```txt
+dist
+```
 
-## Onde fica o banco
+## Supabase
 
-O SQLite é criado pelo Tauri na pasta de dados do aplicativo do Windows. O caminho exato aparece no rodapé do sistema ao abrir.
+O modo web/mobile usa Supabase para:
 
-## Regras importantes
+- autenticação;
+- loja/grupo;
+- clientes;
+- produtos;
+- vendas;
+- caixa;
+- crediário;
+- pedidos;
+- recibos;
+- estoque;
+- permissões;
+- fila/estado de sincronização;
+- Storage de fotos, quando o bucket estiver configurado.
 
-- Não há dados falsos de demonstração.
-- Configurações iniciais são criadas no SQLite.
-- Vendas gravam venda, itens, caixa, estoque, recibo e auditoria em transação.
-- Recebimento de parcela atualiza parcela, crediário, pagamento, caixa e auditoria em transação.
-- Backup copia o SQLite e valida `PRAGMA integrity_check`.
+Antes de vender para cliente real:
+
+1. aplicar as migrations em `supabase/migrations`;
+2. validar RLS/policies no Supabase;
+3. testar login real;
+4. testar criar/editar no web e aparecer no mobile;
+5. testar criar/editar no mobile e aparecer no web;
+6. testar offline/online e pendências;
+7. validar permissões de dono/admin/operador/leitor;
+8. confirmar service worker/cache novo no celular.
+
+## PWA/cache
+
+Arquivos importantes:
+
+```txt
+public/manifest.webmanifest
+public/sw.js
+src/lib/webApi.ts
+```
+
+Quando alterar app PWA, atualizar versão/cache para evitar celular preso em versão antiga.
+
+## Segurança
+
+Não subir para GitHub e não colocar em ZIP comercial:
+
+```txt
+.env
+.env.local
+.env.production
+*.sqlite3
+*.sqlite
+*.db
+node_modules
+dist
+release-commercial
+*.zip
+```
+
+A chave `anon public` do Supabase pode existir no frontend quando for pública. Nunca colocar `service_role`, chaves privadas, tokens privados, backups reais ou bancos de cliente no frontend.
+
+## Release check PWA
+
+O comando:
+
+```bash
+npm run release:check
+```
+
+valida o pacote PWA web/mobile. Ele **não exige Tauri** e não deve bloquear deploy por ausência de `src-tauri`.
+
+Avisos sobre base64 gigante ou arquivos comerciais ausentes indicam melhoria futura, mas não impedem o deploy PWA quando `type-check`, `lint` e `build` passam.
+
+## Checklist rápido antes de publicar
+
+- `npm run type-check` passou.
+- `npm run lint` passou.
+- `npm run build` passou.
+- `npm run release:check` passou.
+- `dist/index.html` existe.
+- Supabase URL e anon key estão configurados no Cloudflare.
+- Migration do lote aplicada no Supabase.
+- Teste real em web e celular feito.
+- Nenhum `.env` real, banco SQLite ou ZIP antigo foi commitado.

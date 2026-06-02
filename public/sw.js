@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v76-web-auth-unlock';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v97-realtime-sync';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -15,6 +15,7 @@ const APP_SHELL = [
   '/icons/icon-512-maskable.png',
   '/brand/smart-loja-icon.png',
   '/brand/smart-loja-logo.png',
+  '/brand/jaque-logo-premium.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -37,15 +38,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
-
-  if (event.data?.type === 'CLEAR_OLD_CACHES') {
-    event.waitUntil(
-      caches
-        .keys()
-        .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-        .then(() => self.clients.claim())
-    );
-  }
 });
 
 async function cacheFirst(request) {

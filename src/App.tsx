@@ -2,64 +2,29 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Modal } from './components/Modal';
 import { Shell } from './components/Shell';
 import { PwaUpdateNotice } from './components/PwaUpdateNotice';
-import { WebAuthPanel } from './components/WebAuthPanel';
 import { Welcome } from './pages/Welcome';
-import { Dashboard } from './pages/Dashboard';
-import { CustomersPage } from './pages/Customers';
-import { ProductsPage } from './pages/Products';
-import { SalesPage } from './pages/Sales';
-import { CashPage } from './pages/Cash';
-import { CreditsPage } from './pages/Credits';
-import { OrdersPage } from './pages/Orders';
-import { ReceiptsPage } from './pages/Receipts';
-import { ReportsPage } from './pages/Reports';
-import { BackupPage } from './pages/Backup';
-import { SettingsPage } from './pages/Settings';
-import { AuditPage } from './pages/Audit';
-import { WebDiagnosticsPage } from './pages/WebDiagnostics';
-import { WebMigrationPage } from './pages/WebMigration';
 import { api } from './lib/api';
-import { getWebAuthSnapshot, webFlushQueuedSync, type WebAuthSnapshot } from './lib/webApi';
-import { subscribeWebStoreRealtime } from './lib/webSync';
+import { subscribeWebStoreChanges, type WebRealtimeEvent } from './lib/webApi';
 import { getRuntimeInfo, hasTauriWindowMetadata } from './lib/runtime';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from './lib/preferences';
 import { playOperationSound } from './lib/sound';
 import type { AppStatus, PageKey, Settings } from './types';
 
-const webPageLabels: Record<PageKey, string> = {
-  dashboard: 'Início',
-  products: 'Produtos',
-  customers: 'Clientes',
-  orders: 'Pedidos',
-  sales: 'Vendas / PDV',
-  cash: 'Caixa',
-  credits: 'Crediário',
-  receipts: 'Comprovantes',
-  reports: 'Relatórios',
-  backup: 'Backup',
-  settings: 'Configurações',
-  audit: 'Logs / Diagnóstico',
-  diagnostics: 'Diagnóstico Web',
-};
 
-function WebLoginRequiredGate({ pageLabel }: { pageLabel: string }): JSX.Element {
-  return (
-    <div className="stack web-login-required-v73 web-login-required-v74">
-      <section className="web-login-required-card">
-        <span className="web-kicker">Login obrigatório para salvar na nuvem</span>
-        <h1>Entre para usar {pageLabel}</h1>
-        <p>Para cadastrar, editar, excluir, vender, receber ou sincronizar entre computador e celular, faça login com e-mail e senha da loja. Sem login, mantemos a tela em modo seguro para evitar dados soltos.</p>
-        <div className="web-login-required-steps">
-          <span>1. Informe e-mail e senha.</span>
-          <span>2. Toque em Entrar e sincronizar.</span>
-          <span>3. Volte para {pageLabel} e salve novamente.</span>
-        </div>
-      </section>
-      <WebAuthPanel />
-    </div>
-  );
-}
-
+const Dashboard = React.lazy(async () => ({ default: (await import('./pages/Dashboard')).Dashboard }));
+const CustomersPage = React.lazy(async () => ({ default: (await import('./pages/Customers')).CustomersPage }));
+const ProductsPage = React.lazy(async () => ({ default: (await import('./pages/Products')).ProductsPage }));
+const SalesPage = React.lazy(async () => ({ default: (await import('./pages/Sales')).SalesPage }));
+const CashPage = React.lazy(async () => ({ default: (await import('./pages/Cash')).CashPage }));
+const CreditsPage = React.lazy(async () => ({ default: (await import('./pages/Credits')).CreditsPage }));
+const OrdersPage = React.lazy(async () => ({ default: (await import('./pages/Orders')).OrdersPage }));
+const ReceiptsPage = React.lazy(async () => ({ default: (await import('./pages/Receipts')).ReceiptsPage }));
+const ReportsPage = React.lazy(async () => ({ default: (await import('./pages/Reports')).ReportsPage }));
+const BackupPage = React.lazy(async () => ({ default: (await import('./pages/Backup')).BackupPage }));
+const SettingsPage = React.lazy(async () => ({ default: (await import('./pages/Settings')).SettingsPage }));
+const AuditPage = React.lazy(async () => ({ default: (await import('./pages/Audit')).AuditPage }));
+const WebDiagnosticsPage = React.lazy(async () => ({ default: (await import('./pages/WebDiagnostics')).WebDiagnosticsPage }));
+const WebMigrationPage = React.lazy(async () => ({ default: (await import('./pages/WebMigration')).WebMigrationPage }));
 
 export default function App(): JSX.Element {
   const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
@@ -74,9 +39,9 @@ export default function App(): JSX.Element {
   const [closeBusy, setCloseBusy] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
   const [preferredBackupFolder, setPreferredBackupFolderState] = useState<string | null>(getPreferredBackupFolder());
-  const [webAuth, setWebAuth] = useState<WebAuthSnapshot | null>(null);
   const startupSoundPlayed = useRef(false);
   const forceCloseRef = useRef(false);
+  const lastWebAutoRefreshRef = useRef(0);
 
   const boot = useCallback(async () => {
     setLoading(true);
@@ -96,73 +61,77 @@ export default function App(): JSX.Element {
     }
   }, [runtimeInfo.isWeb]);
 
-  const refreshWebAuth = useCallback(async (createIfMissing = false) => {
-    if (!runtimeInfo.isWeb) return;
-    try {
-      const snapshot = await getWebAuthSnapshot({ createIfMissing });
-      setWebAuth(snapshot);
-    } catch {
-      setWebAuth(null);
-    }
-  }, [runtimeInfo.isWeb]);
-
   useEffect(() => {
-    if (entered) {
-      void boot();
-      void refreshWebAuth(true);
-    }
-  }, [boot, entered, refreshWebAuth]);
+    if (entered) void boot();
+  }, [boot, entered]);
 
   useEffect(() => {
     if (!runtimeInfo.isWeb) return undefined;
-    const reloadWebSession = () => {
-      void boot();
-      void refreshWebAuth(true);
-    };
+    const reloadWebSession = () => void boot();
     window.addEventListener('smart-loja:web-session-changed', reloadWebSession);
     return () => window.removeEventListener('smart-loja:web-session-changed', reloadWebSession);
-  }, [boot, refreshWebAuth, runtimeInfo.isWeb]);
-
-  useEffect(() => {
-    if (!entered || !runtimeInfo.isWeb) return undefined;
-    let busy = false;
-    const flushAndReload = () => {
-      if (busy) return;
-      busy = true;
-      void webFlushQueuedSync()
-        .then((report) => {
-          if (report.sent > 0) {
-            setRefreshToken((value) => value + 1);
-            void boot();
-          }
-        })
-        .finally(() => {
-          busy = false;
-        });
-    };
-    window.addEventListener('online', flushAndReload);
-    window.addEventListener('smart-loja:web-sync-queue-changed', flushAndReload);
-    flushAndReload();
-    return () => {
-      window.removeEventListener('online', flushAndReload);
-      window.removeEventListener('smart-loja:web-sync-queue-changed', flushAndReload);
-    };
-  }, [boot, entered, runtimeInfo.isWeb]);
-
-  useEffect(() => {
-    if (!entered || !runtimeInfo.isWeb || !webAuth?.hasSession || !webAuth.storeId) return undefined;
-    return subscribeWebStoreRealtime(() => {
-      setRefreshToken((value) => value + 1);
-      void boot();
-      void refreshWebAuth(false);
-    });
-  }, [boot, entered, refreshWebAuth, runtimeInfo.isWeb, webAuth?.hasSession, webAuth?.storeId]);
+  }, [boot, runtimeInfo.isWeb]);
 
   const refresh = useCallback(() => {
     setRefreshToken((value) => value + 1);
     void boot();
-    void refreshWebAuth(false);
-  }, [boot, refreshWebAuth]);
+  }, [boot]);
+
+  useEffect(() => {
+    if (!entered || !runtimeInfo.isWeb) return undefined;
+
+    const refreshVisibleWebData = () => {
+      if (document.visibilityState === 'hidden') return;
+      const now = Date.now();
+      if (now - lastWebAutoRefreshRef.current < 15000) return;
+      lastWebAutoRefreshRef.current = now;
+      setRefreshToken((value) => value + 1);
+      void boot();
+    };
+
+    window.addEventListener('focus', refreshVisibleWebData);
+    window.addEventListener('online', refreshVisibleWebData);
+    document.addEventListener('visibilitychange', refreshVisibleWebData);
+    return () => {
+      window.removeEventListener('focus', refreshVisibleWebData);
+      window.removeEventListener('online', refreshVisibleWebData);
+      document.removeEventListener('visibilitychange', refreshVisibleWebData);
+    };
+  }, [boot, entered, runtimeInfo.isWeb]);
+
+  useEffect(() => {
+    if (!entered || !runtimeInfo.isWeb || !status?.sqlite_ok) return undefined;
+
+    let active = true;
+    let dispose: (() => void) | undefined;
+    let refreshTimer = 0;
+
+    const scheduleCloudRefresh = (_event: WebRealtimeEvent) => {
+      if (!active || document.visibilityState === 'hidden') return;
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        if (!active) return;
+        setRefreshToken((value) => value + 1);
+        void boot();
+      }, 500);
+    };
+
+    void subscribeWebStoreChanges(scheduleCloudRefresh)
+      .then((unsubscribe) => {
+        if (!active) {
+          unsubscribe();
+          return;
+        }
+        dispose = unsubscribe;
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+      window.clearTimeout(refreshTimer);
+      if (dispose) dispose();
+    };
+  }, [boot, entered, runtimeInfo.isWeb, status?.sqlite_ok, status?.db_path]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('slow-mode', Boolean(settings?.slow_mode));
@@ -250,11 +219,6 @@ export default function App(): JSX.Element {
 
     if (runtimeInfo.isWeb) {
       if (activePage === 'diagnostics' || activePage === 'audit') return <WebDiagnosticsPage />;
-      const needsLogin = webAuth?.isConfigured !== false && webAuth?.hasSession === false;
-      const missingSupabaseConfig = webAuth?.isConfigured === false || status?.db_path === 'Supabase não configurado';
-      if (activePage !== 'dashboard' && (needsLogin || missingSupabaseConfig)) {
-        return <WebLoginRequiredGate pageLabel={webPageLabels[activePage] ?? 'Esta tela'} />;
-      }
       if (activePage === 'dashboard') return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
       if (activePage === 'customers') return <CustomersPage {...props} />;
       if (activePage === 'products') return <ProductsPage {...props} />;
@@ -299,7 +263,7 @@ export default function App(): JSX.Element {
       default:
         return <Dashboard status={status} onNavigate={setActivePage} {...props} />;
     }
-  }, [activePage, refreshToken, refresh, runtimeInfo.isWeb, settings, status, webAuth]);
+  }, [activePage, refreshToken, refresh, runtimeInfo.isWeb, settings, status]);
 
   if (!entered) {
     return <Welcome onEnter={() => setEntered(true)} />;
@@ -311,14 +275,16 @@ export default function App(): JSX.Element {
         <PwaUpdateNotice />
         {loading && <div className="notice">{runtimeInfo.isWeb ? 'Preparando loja online...' : 'Carregando SQLite local...'}</div>}
         {error && <div className="error-box">{error}</div>}
-        {page}
+        <React.Suspense fallback={<div className="notice">Carregando módulo...</div>}>
+          {page}
+        </React.Suspense>
       </Shell>
 
       <Modal open={closePromptOpen} title="Fechar o sistema" onClose={() => !closeBusy && setClosePromptOpen(false)}>
         <div className="close-flow">
           <div className="close-flow-hero">
-            <span className="micro-label close-flow-kicker">Saida segura</span>
-            <p>Antes de fechar, voce pode gerar um backup completo e sair com mais seguranca, ou fechar agora sem criar uma nova copia.</p>
+            <span className="micro-label close-flow-kicker">Saída segura</span>
+            <p>Antes de fechar, você pode gerar um backup completo e sair com mais segurança, ou fechar agora sem criar uma nova cópia.</p>
           </div>
 
           <div className="close-flow-grid">
@@ -328,9 +294,9 @@ export default function App(): JSX.Element {
               <span>Salva banco, comprovantes e arquivos do sistema antes de encerrar o aplicativo.</span>
             </section>
             <section className="close-flow-card close-flow-card-muted">
-              <span className="close-flow-badge close-flow-badge-risk">Atencao</span>
+              <span className="close-flow-badge close-flow-badge-risk">Atenção</span>
               <strong>Fechar sem novo backup</strong>
-              <span>Use essa opcao apenas quando voce ja tiver salvo uma copia recente.</span>
+              <span>Use essa opção apenas quando você já tiver salvo uma cópia recente.</span>
             </section>
           </div>
 
@@ -342,7 +308,7 @@ export default function App(): JSX.Element {
           ) : (
             <div className="close-flow-path close-flow-path-empty">
               <span className="micro-label">Pasta do backup</span>
-              <strong>Nenhuma pasta padrao salva</strong>
+              <strong>Nenhuma pasta padrão salva</strong>
               <span>Ao clicar em backup, o sistema vai pedir a pasta.</span>
             </div>
           )}

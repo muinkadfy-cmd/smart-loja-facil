@@ -2,73 +2,88 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const required = [
+const currentVersion = 'pwa-supabase-v97';
+const currentCache = 'smart-loja-pwa-supabase-v97-realtime-sync';
+const currentOutbox = 'smart-loja:web-outbox-v97';
+
+const requiredCore = [
   'package.json',
   'index.html',
   'src/main.tsx',
   'src/App.tsx',
   'src/lib/api.ts',
+  'src/lib/webApi.ts',
+  'src/lib/env.ts',
+  'src/lib/supabaseClient.ts',
+  'public/sw.js',
+  'public/manifest.webmanifest',
+  'README.md',
+];
+
+const optionalPwaCommercialFiles = [
+  'src/lib/productPhotoStorage.ts',
+  'src/lib/designSystemReadiness.ts',
+  'src/lib/cssInventoryReadiness.ts',
+  'src/lib/moduleVisualChecklist.ts',
+  'src/lib/neoFamilyReadiness.ts',
+  'src/lib/neoShellSidebarReadiness.ts',
+  'src/lib/neoImportantReadiness.ts',
+  'src/lib/productionChecklist.ts',
+  'src/lib/useWebPermissions.ts',
   'src/styles.css',
-  'src-tauri/Cargo.toml',
-  'src-tauri/src/main.rs',
-  'src-tauri/tauri.conf.json',
-  'src-tauri/capabilities/default.json',
+  'src/master-ui.css',
   'docs/MANUAL_USO.md',
   'docs/RELATORIO_TECNICO.md',
   'docs/CHECKLIST_TESTE_OFFLINE.md',
+  'scripts/css_audit.js',
+  'scripts/css_dedupe_safe.js',
+  'scripts/css_neo_family_audit.js',
+  'scripts/css_prune_empty_rules.js',
+  'scripts/css_prune_duplicate_rules.js',
+  'scripts/css_shell_sidebar_audit.js',
+  'scripts/css_reduce_neo_important_safe.js',
+  'scripts/css_important_audit.js',
+  'scripts/commercial_package_check.js',
+  'scripts/commercial_release_package.js',
 ];
 
 const forbiddenPatterns = [
-  { pattern: /https?:\/\//i, label: 'URL externa direta' },
   { pattern: /cdn\.|unpkg|jsdelivr|googleapis|gstatic/i, label: 'CDN ou fonte online' },
   { pattern: /indexedDB|indexeddb/i, label: 'IndexedDB como banco principal' },
-  { pattern: /fetch\(['"]https?:/i, label: 'fetch externo' },
+  { pattern: /fetch\(['"]https?:/i, label: 'fetch externo direto' },
 ];
 
-const webModeAllowedFiles = new Set([
-  'src/App.tsx',
-  'src/components/Shell.tsx',
-  'src/components/WebAuthPanel.tsx',
-  'src/components/PwaUpdateNotice.tsx',
-  'src/pages/Dashboard.tsx',
-  'src/pages/Settings.tsx',
-  'src/pages/Welcome.tsx',
-  'src/styles.css',
-  'src/lib/env.ts',
-  'src/lib/runtime.ts',
+const allowedUrlPatternFiles = new Set([
   'src/lib/supabaseClient.ts',
+  'src/lib/env.ts',
+  'src/lib/productPhotoStorage.ts',
   'src/lib/webApi.ts',
-  'src/lib/webSync.ts',
-  'src/pages/WebDiagnostics.tsx',
-  'src/pages/WebMigration.tsx',
-  'public/manifest.webmanifest',
-  'public/sw.js',
 ]);
 
 const onlineServicePattern = /supabase|cloudflare/i;
-
-const scanDirs = ['src', 'src-tauri', 'public', 'scripts'];
+const hugeInlineAssetPattern = /data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]{12000,}/;
+const scanDirs = ['src', 'public', 'scripts'];
 const ignoredFiles = new Set([
-  'src-tauri/Cargo.lock',
-  'src-tauri/tauri.conf.json',
   'scripts/release_check.js',
   'public/logo.svg',
 ]);
 const ignoredDirFragments = [
-  'src-tauri/target/',
-  'src-tauri/.cargo-check/',
-  'src-tauri/gen/',
-  'src-tauri/icons/',
-  'tools/QaWorkflow/bin/',
-  'tools/QaWorkflow/obj/',
   'dist/',
   'node_modules/',
+  '.git/',
+  'release-commercial/',
+  'tools/QaWorkflow/bin/',
+  'tools/QaWorkflow/obj/',
 ];
-const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html', '.md', '.rs', '.toml', '.svg', '.webmanifest']);
+const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html', '.md', '.svg', '.webmanifest']);
 
 function fail(message) {
   console.error(`ERRO: ${message}`);
   process.exitCode = 1;
+}
+
+function warn(message) {
+  console.warn(`AVISO: ${message}`);
 }
 
 function shouldSkip(relPath) {
@@ -79,19 +94,76 @@ function isTextFile(filePath) {
   return textExtensions.has(path.extname(filePath).toLowerCase());
 }
 
-for (const file of required) {
-  if (!fs.existsSync(path.join(root, file))) fail(`Arquivo obrigatório ausente: ${file}`);
+function exists(rel) {
+  return fs.existsSync(path.join(root, rel));
 }
 
-const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-for (const script of ['type-check', 'build', 'tauri:dev', 'tauri:build', 'release:check']) {
-  if (!packageJson.scripts?.[script]) fail(`Script npm ausente: ${script}`);
+function read(rel) {
+  return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
-const tauriConfig = JSON.parse(fs.readFileSync(path.join(root, 'src-tauri/tauri.conf.json'), 'utf8'));
-if (!tauriConfig.identifier || !tauriConfig.build?.devUrl || !tauriConfig.bundle?.active) {
-  fail('tauri.conf.json incompleto para build/dev/bundle');
+function readIf(rel) {
+  return exists(rel) ? read(rel) : '';
 }
+
+for (const file of requiredCore) {
+  if (!exists(file)) fail(`Arquivo essencial PWA ausente: ${file}`);
+}
+
+for (const file of optionalPwaCommercialFiles) {
+  if (!exists(file)) warn(`Arquivo comercial/auditoria ausente: ${file}. Não bloqueia deploy PWA, mas pode entrar no próximo lote comercial.`);
+}
+
+if (exists('src-tauri')) {
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v97 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+}
+
+if (process.exitCode) {
+  console.error('Release check encontrou arquivos PWA essenciais ausentes. Corrija antes do deploy.');
+  process.exit(process.exitCode);
+}
+
+const packageJson = JSON.parse(read('package.json'));
+for (const script of ['type-check', 'build', 'release:check']) {
+  if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
+}
+for (const script of ['lint', 'release:commercial:check', 'release:commercial:prepare']) {
+  if (!packageJson.scripts?.[script]) warn(`Script npm opcional ausente: ${script}.`);
+}
+
+const webApiSource = read('src/lib/webApi.ts');
+const serviceWorkerSource = read('public/sw.js');
+if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v97 de sincronização em tempo real.');
+if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v97.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v97 de sincronização em tempo real.');
+
+const requiredCssModules = exists('src/styles')
+  ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })).map((name) => `src/styles/${name}`)
+  : [];
+const mainSource = read('src/main.tsx');
+for (const cssFile of requiredCssModules) {
+  const importPath = `./${cssFile.replace('src/', '')}`;
+  if (!mainSource.includes(importPath)) fail(`main.tsx precisa importar ${importPath}.`);
+  const cssSource = read(cssFile);
+  const loteMatch = cssFile.match(/lote(\d+)-([a-z0-9-]+)\.css$/i);
+  if (loteMatch) {
+    const tokenPattern = new RegExp(`--lote${loteMatch[1]}-[a-z0-9-]+\\s*:\\s*active`, 'i');
+    if (!tokenPattern.test(cssSource)) fail(`${cssFile} precisa expor token ativo do lote ${loteMatch[1]}.`);
+  }
+}
+
+const productPhotoStorageSource = readIf('src/lib/productPhotoStorage.ts');
+if (productPhotoStorageSource && !productPhotoStorageSource.includes('PRODUCT_PHOTO_BUCKET')) fail('Utilitário de Storage de fotos precisa declarar PRODUCT_PHOTO_BUCKET.');
+if (exists('src/lib/neoShellSidebarReadiness.ts') && !read('src/lib/neoShellSidebarReadiness.ts').includes('getNeoShellSidebarReport')) fail('Diagnóstico shell/sidebar precisa existir.');
+if (exists('src/lib/neoImportantReadiness.ts') && !read('src/lib/neoImportantReadiness.ts').includes('getNeoImportantReport')) fail('Diagnóstico important precisa existir.');
+if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v95')) fail('css_audit.js precisa estar atualizado para auditoria real v95.');
+if (exists('scripts/commercial_package_check.js') && !read('scripts/commercial_package_check.js').includes('Commercial package check v97')) fail('commercial_package_check.js precisa estar em v97.');
+if (exists('scripts/commercial_release_package.js') && !read('scripts/commercial_release_package.js').includes('Commercial release package v97')) fail('commercial_release_package.js precisa estar em v97.');
+
+const readme = read('README.md');
+if (!/Supabase/i.test(readme) || !/Cloudflare/i.test(readme) || !/PWA/i.test(readme)) warn('README ainda não descreve claramente PWA/Supabase/Cloudflare.');
+if (/sem Supabase, sem Cloudflare/i.test(readme)) fail('README ainda contém texto antigo dizendo sem Supabase/sem Cloudflare.');
 
 const files = [];
 for (const dir of scanDirs) {
@@ -112,6 +184,33 @@ for (const dir of scanDirs) {
   }
 }
 
+const allowedOnlineServiceFiles = new Set([
+  'src/App.tsx',
+  'src/components/Shell.tsx',
+  'src/components/WebAuthPanel.tsx',
+  'src/components/PwaUpdateNotice.tsx',
+  'src/pages/Dashboard.tsx',
+  'src/pages/Settings.tsx',
+  'src/pages/Welcome.tsx',
+  'src/pages/WebDiagnostics.tsx',
+  'src/pages/WebMigration.tsx',
+  'src/lib/env.ts',
+  'src/lib/runtime.ts',
+  'src/lib/supabaseClient.ts',
+  'src/lib/productPhotoStorage.ts',
+  'src/lib/webApi.ts',
+  'src/lib/useWebPermissions.ts',
+  'src/lib/productionChecklist.ts',
+  'src/lib/designSystemReadiness.ts',
+  'src/lib/cssInventoryReadiness.ts',
+  'src/lib/moduleVisualChecklist.ts',
+  'src/lib/neoFamilyReadiness.ts',
+  'src/lib/neoShellSidebarReadiness.ts',
+  'src/lib/neoImportantReadiness.ts',
+  'public/manifest.webmanifest',
+  'public/sw.js',
+]);
+
 for (const file of files) {
   const rel = path.relative(root, file).replace(/\\/g, '/');
   if (shouldSkip(rel)) continue;
@@ -119,19 +218,34 @@ for (const file of files) {
   for (const rule of forbiddenPatterns) {
     if (rule.pattern.test(content)) fail(`${rule.label} encontrado em ${rel}`);
   }
-
-  if (!webModeAllowedFiles.has(rel) && onlineServicePattern.test(content)) {
-    fail(`Servico online fora da camada web segura encontrado em ${rel}`);
+  if (!allowedUrlPatternFiles.has(rel) && /https?:\/\//i.test(content)) fail(`URL externa direta encontrada fora das camadas permitidas em ${rel}`);
+  if (hugeInlineAssetPattern.test(content)) warn(`Imagem base64 gigante embutida no código em ${rel}. Não bloqueia deploy PWA, mas o próximo lote deve mover para public/brand para melhorar performance/cache.`);
+  const isAllowedDiagnosticOrScript = rel.endsWith('.css') || rel.startsWith('scripts/') || rel.startsWith('src/styles/');
+  if (!isAllowedDiagnosticOrScript && !allowedOnlineServiceFiles.has(rel) && onlineServicePattern.test(content)) {
+    fail(`Serviço online fora da camada web segura encontrado em ${rel}`);
   }
 }
 
-const rust = fs.readFileSync(path.join(root, 'src-tauri/src/main.rs'), 'utf8');
-for (const table of ['settings', 'customers', 'products', 'sales', 'sale_items', 'cash_movements', 'credits', 'credit_installments', 'payments', 'orders', 'order_items', 'receipts', 'stock_movements', 'backups_log', 'audit_log', 'cash_closings']) {
-  if (!rust.includes(`CREATE TABLE IF NOT EXISTS ${table}`)) fail(`Tabela SQLite ausente no schema: ${table}`);
+const sqliteFiles = [];
+for (const rel of fs.readdirSync(root)) {
+  if (/\.(sqlite3|sqlite|db)$/i.test(rel)) sqliteFiles.push(rel);
 }
+if (exists('src-tauri')) {
+  const stack = [path.join(root, 'src-tauri')];
+  while (stack.length) {
+    const current = stack.pop();
+    for (const item of fs.readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, item.name);
+      const rel = path.relative(root, full).replace(/\\/g, '/');
+      if (item.isDirectory()) stack.push(full);
+      else if (/\.(sqlite3|sqlite|db)$/i.test(rel)) sqliteFiles.push(rel);
+    }
+  }
+}
+if (sqliteFiles.length) warn(`Bancos SQLite de teste encontrados no workspace: ${sqliteFiles.join(', ')}. Não incluir no ZIP comercial final nem no GitHub.`);
 
 if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check passou. Estrutura offline preservada e camada PWA/Supabase restrita a arquivos permitidos.');
+console.log('OK: release_check v97 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');

@@ -1,17 +1,15 @@
 import { getPublicWebEnv } from './env';
 import { getSupabaseClient } from './supabaseClient';
 import {
-  enqueueWebSyncTask,
-  getWebSyncQueueSnapshot,
-  isWebNetworkOnline,
-  markWebSyncSuccess,
-  markWebSyncTaskError,
-  readWebSyncQueue,
-  removeWebSyncTask,
-  type WebSyncMutationType,
-} from './webSync';
+  PRODUCT_PHOTO_BUCKET,
+  PRODUCT_PHOTO_MAX_BYTES,
+  buildProductPhotoStoragePath,
+  isInlineProductImageData,
+  productPhotoDataUrlToBlob,
+} from './productPhotoStorage';
 import type {
   AppStatus,
+  AuditEvent,
   BackupInfo,
   CashMovement,
   CashSummary,
@@ -44,9 +42,6 @@ interface WebStoreRow {
   logo_url: string;
   receipt_message: string;
   low_stock_limit: number;
-  slow_mode: boolean;
-  admin_password_enabled: boolean;
-  receipt_width_mm: number;
   status: string;
   updated_at: string;
 }
@@ -59,8 +54,67 @@ export interface WebStoreContext {
 }
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
-const WEB_CONTEXT_CACHE_KEY = 'smart-loja:web-context-cache-v70';
-export const WEB_APP_VERSION = 'pwa-supabase-v76-web-auth-unlock';
+const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
+export const WEB_APP_VERSION = 'pwa-supabase-v97';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v97-realtime-sync';
+
+export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
+
+export interface WebSyncSnapshot {
+  status: WebSyncStatus;
+  module: string;
+  detail: string;
+  at: string;
+}
+
+export interface WebRealtimeEvent {
+  table: string;
+  eventType: string;
+  storeId: string;
+  at: string;
+}
+
+export const WEB_REALTIME_TABLES = [
+  'stores',
+  'store_members',
+  'customers',
+  'products',
+  'sales',
+  'sale_items',
+  'cash_sessions',
+  'cash_movements',
+  'credits',
+  'credit_installments',
+  'payments',
+  'orders',
+  'order_items',
+  'receipts',
+  'stock_movements',
+  'backups_log',
+  'sync_outbox',
+] as const;
+
+const WEB_REALTIME_STORE_TABLES = WEB_REALTIME_TABLES.filter((table) => table !== 'stores') as Array<Exclude<typeof WEB_REALTIME_TABLES[number], 'stores'>>;
+
+const WEB_REALTIME_LABELS: Record<typeof WEB_REALTIME_TABLES[number], string> = {
+  stores: 'configuração da loja',
+  store_members: 'permissões de usuários',
+  customers: 'clientes',
+  products: 'produtos/estoque',
+  sales: 'vendas',
+  sale_items: 'itens de venda',
+  cash_sessions: 'caixa',
+  cash_movements: 'movimentos do caixa',
+  credits: 'crediário',
+  credit_installments: 'parcelas',
+  payments: 'pagamentos',
+  orders: 'pedidos',
+  order_items: 'itens de pedido',
+  receipts: 'comprovantes',
+  stock_movements: 'histórico de estoque',
+  backups_log: 'histórico de backup',
+  sync_outbox: 'fila de sincronização',
+};
 
 function numberValue(value: unknown, fallback = 0): number {
   const parsed = Number(value);
@@ -76,50 +130,240 @@ function normalizeRole(value: unknown): WebStoreRole {
   return 'viewer';
 }
 
-function booleanValue(value: unknown, fallback = false): boolean {
-  if (typeof value === 'boolean') return value;
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return fallback;
+function canUseBrowserStorage(): boolean {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 }
 
-interface CachedWebStoreContext {
-  userId: string;
-  email: string;
-  role: WebStoreRole;
-  store: WebStoreRow;
-  cached_at: string;
-}
+export function readWebSyncSnapshot(): WebSyncSnapshot {
+  if (!canUseBrowserStorage()) {
+    return { status: 'idle', module: 'Web', detail: 'Sem armazenamento local disponível para diagnóstico.', at: '' };
+  }
 
-function cacheWebStoreContext(context: WebStoreContext): void {
   try {
-    const cached: CachedWebStoreContext = { ...context, cached_at: new Date().toISOString() };
-    window.localStorage.setItem(WEB_CONTEXT_CACHE_KEY, JSON.stringify(cached));
+    const raw = window.localStorage.getItem(WEB_SYNC_STATUS_KEY);
+    if (!raw) return { status: 'idle', module: 'Web', detail: 'Nenhuma tentativa de sincronização registrada neste aparelho.', at: '' };
+    const parsed = JSON.parse(raw) as Partial<WebSyncSnapshot>;
+    const status: WebSyncStatus = parsed.status === 'syncing' || parsed.status === 'synced' || parsed.status === 'pending' || parsed.status === 'error'
+      ? parsed.status
+      : 'idle';
+    return {
+      status,
+      module: typeof parsed.module === 'string' ? parsed.module : 'Web',
+      detail: typeof parsed.detail === 'string' ? parsed.detail : 'Sem detalhe registrado.',
+      at: typeof parsed.at === 'string' ? parsed.at : '',
+    };
   } catch {
-    // Cache local de contexto não pode travar login/sincronização.
+    return { status: 'idle', module: 'Web', detail: 'Registro local de sincronização inválido.', at: '' };
   }
 }
 
-function readCachedWebStoreContext(userId: string, email: string): WebStoreContext | null {
+export function recordWebSyncSnapshot(status: WebSyncStatus, module: string, detail: string): void {
+  if (!canUseBrowserStorage()) return;
+  const snapshot: WebSyncSnapshot = {
+    status,
+    module,
+    detail,
+    at: new Date().toISOString(),
+  };
+  window.localStorage.setItem(WEB_SYNC_STATUS_KEY, JSON.stringify(snapshot));
+  window.dispatchEvent(new CustomEvent('smart-loja:web-sync-status', { detail: snapshot }));
+}
+
+
+const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v97';
+const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
+  'smart-loja:web-outbox-v75', 'smart-loja:web-outbox-v74', 'smart-loja:web-outbox-v73'];
+
+export type WebOutboxAction =
+  | 'saveCustomer'
+  | 'inactivateCustomer'
+  | 'saveProduct'
+  | 'inactivateProduct'
+  | 'adjustStock'
+  | 'createSale'
+  | 'cancelSale'
+  | 'openCash'
+  | 'closeCash'
+  | 'addCashMovement'
+  | 'receiveInstallment'
+  | 'createOrder'
+  | 'setOrderStatus'
+  | 'cancelOrder'
+  | 'saveSettings';
+
+export interface WebOutboxItem {
+  id: string;
+  module: string;
+  action: WebOutboxAction;
+  payload: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  attempts: number;
+  lastError: string;
+}
+
+export interface WebOutboxStats {
+  total: number;
+  pending: number;
+  error: number;
+  lastCreatedAt: string;
+  lastError: string;
+}
+
+function dispatchWebOutboxChange(items: WebOutboxItem[]): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('smart-loja:web-outbox-change', { detail: getWebOutboxStats(items) }));
+}
+
+function parseWebOutboxItems(raw: string | null): WebOutboxItem[] {
+  if (!raw) return [];
   try {
-    const raw = window.localStorage.getItem(WEB_CONTEXT_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<CachedWebStoreContext>;
-    if (parsed.userId !== userId || !parsed.store?.id || !parsed.role) return null;
-    return { userId, email: email || parsed.email || '', role: normalizeRole(parsed.role), store: mapStore(parsed.store as unknown as Record<string, unknown>) };
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((row) => {
+        const source = row && typeof row === 'object' ? row as Partial<WebOutboxItem> : {};
+        const action = source.action;
+        if (
+          action !== 'saveCustomer' &&
+          action !== 'inactivateCustomer' &&
+          action !== 'saveProduct' &&
+          action !== 'inactivateProduct' &&
+          action !== 'adjustStock' &&
+          action !== 'createSale' &&
+          action !== 'cancelSale' &&
+          action !== 'openCash' &&
+          action !== 'closeCash' &&
+          action !== 'addCashMovement' &&
+          action !== 'receiveInstallment' &&
+          action !== 'createOrder' &&
+          action !== 'setOrderStatus' &&
+          action !== 'cancelOrder' &&
+          action !== 'saveSettings'
+        ) return null;
+        return {
+          id: typeof source.id === 'string' && source.id ? source.id : crypto.randomUUID(),
+          module: typeof source.module === 'string' && source.module ? source.module : 'Web',
+          action,
+          payload: source.payload && typeof source.payload === 'object' && !Array.isArray(source.payload) ? source.payload as Record<string, unknown> : {},
+          createdAt: typeof source.createdAt === 'string' ? source.createdAt : new Date().toISOString(),
+          updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : new Date().toISOString(),
+          attempts: typeof source.attempts === 'number' && Number.isFinite(source.attempts) ? source.attempts : 0,
+          lastError: typeof source.lastError === 'string' ? source.lastError : '',
+        } satisfies WebOutboxItem;
+      })
+      .filter((item): item is WebOutboxItem => Boolean(item));
   } catch {
-    return null;
+    return [];
   }
 }
 
-function ensureOnlineOrQueue(type: WebSyncMutationType, payload: Record<string, unknown>, action: string): void {
-  if (isWebNetworkOnline()) return;
-  enqueueWebSyncTask(type, payload, 'Aparelho sem internet no momento do salvamento.');
-  throw new Error(`Sem internet: ${action} ficou guardado na fila de sincronização. Quando a conexão voltar, abra o app e toque em Atualizar dados ou Diagnóstico Web.`);
+function readRawWebOutbox(): WebOutboxItem[] {
+  if (!canUseBrowserStorage()) return [];
+  const current = parseWebOutboxItems(window.localStorage.getItem(WEB_OUTBOX_KEY));
+  const legacy = LEGACY_WEB_OUTBOX_KEYS.flatMap((key) => parseWebOutboxItems(window.localStorage.getItem(key)));
+  const merged = [...current, ...legacy];
+  const byId = new Map<string, WebOutboxItem>();
+  for (const item of merged) byId.set(item.id, item);
+  const next = Array.from(byId.values());
+  if (legacy.length > 0) writeRawWebOutbox(next);
+  return next;
 }
 
-function mutationPayload(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? value as Record<string, unknown> : { value };
+function writeRawWebOutbox(items: WebOutboxItem[]): void {
+  if (!canUseBrowserStorage()) return;
+  window.localStorage.setItem(WEB_OUTBOX_KEY, JSON.stringify(items.slice(0, 100)));
+  for (const legacyKey of LEGACY_WEB_OUTBOX_KEYS) window.localStorage.removeItem(legacyKey);
+  dispatchWebOutboxChange(items);
+}
+
+export function readWebOutbox(): WebOutboxItem[] {
+  return readRawWebOutbox().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export function getWebOutboxStats(items = readRawWebOutbox()): WebOutboxStats {
+  const sorted = [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return {
+    total: items.length,
+    pending: items.filter((item) => !item.lastError).length,
+    error: items.filter((item) => item.lastError).length,
+    lastCreatedAt: sorted[0]?.createdAt ?? '',
+    lastError: sorted.find((item) => item.lastError)?.lastError ?? '',
+  };
+}
+
+function requestIdFromPayload(payload: Record<string, unknown>): string {
+  const direct = stringValue(payload.request_id) || stringValue(payload.client_request_id) || stringValue(payload.requestId);
+  if (direct) return direct;
+  const nestedKeys = ['payload', 'customer', 'product', 'settings'] as const;
+  for (const key of nestedKeys) {
+    const nested = payload[key];
+    if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+      const nestedRecord = nested as Record<string, unknown>;
+      const nestedId = stringValue(nestedRecord.request_id) || stringValue(nestedRecord.client_request_id) || stringValue(nestedRecord.requestId) || stringValue(nestedRecord.id);
+      if (nestedId) return nestedId;
+    }
+  }
+  return '';
+}
+
+function webOutboxFingerprint(action: WebOutboxAction, payload: Record<string, unknown>): string {
+  const requestId = requestIdFromPayload(payload);
+  if (requestId) return `${action}:${requestId}`;
+  const stableId = stringValue(payload.customerId) || stringValue(payload.productId) || stringValue(payload.saleId) || stringValue(payload.orderId) || stringValue(payload.creditId) || stringValue(payload.installmentId);
+  if (stableId) return `${action}:${stableId}`;
+  return '';
+}
+
+export function enqueueWebOutbox(module: string, action: WebOutboxAction, payload: Record<string, unknown>, error: unknown): WebOutboxItem {
+  const now = new Date().toISOString();
+  const items = readRawWebOutbox();
+  const fingerprint = webOutboxFingerprint(action, payload);
+  const existingIndex = fingerprint
+    ? items.findIndex((item) => item.action === action && webOutboxFingerprint(item.action, item.payload) === fingerprint)
+    : -1;
+  const item: WebOutboxItem = existingIndex >= 0
+    ? {
+        ...items[existingIndex],
+        module,
+        payload,
+        updatedAt: now,
+        lastError: humanizeWebError(error),
+      }
+    : {
+        id: crypto.randomUUID(),
+        module,
+        action,
+        payload,
+        createdAt: now,
+        updatedAt: now,
+        attempts: 0,
+        lastError: humanizeWebError(error),
+      };
+  const next = existingIndex >= 0
+    ? items.map((current, index) => (index === existingIndex ? item : current))
+    : [...items, item].slice(-100);
+  writeRawWebOutbox(next);
+  recordWebSyncSnapshot('pending', module, existingIndex >= 0
+    ? 'A alteração pendente foi atualizada neste aparelho sem criar duplicidade.'
+    : 'A alteração ficou pendente neste aparelho e será reenviada quando a internet voltar.');
+  return item;
+}
+
+export function shouldQueueWebError(error: unknown): boolean {
+  const raw = error instanceof Error ? error.message : String(error);
+  const lower = raw.toLowerCase();
+  return lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline') || lower.includes('internet') || (typeof navigator !== 'undefined' && !navigator.onLine);
+}
+
+export function humanizeWebError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const lower = raw.toLowerCase();
+  if (lower.includes('row-level security') || lower.includes('rls')) return `Permissão insuficiente no Supabase/RLS. ${raw}`;
+  if (lower.includes('jwt') || lower.includes('session') || lower.includes('login') || lower.includes('auth')) return `Login pendente ou sessão expirada. ${raw}`;
+  if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline')) return `Não foi possível sincronizar. Verifique a internet deste aparelho. ${raw}`;
+  if (lower.includes('supabase') && lower.includes('config')) return `Supabase não configurado. ${raw}`;
+  return raw;
 }
 
 
@@ -192,9 +436,6 @@ function mapStore(row: Record<string, unknown>): WebStoreRow {
     logo_url: stringValue(row.logo_url),
     receipt_message: stringValue(row.receipt_message, 'Obrigado pela preferência!'),
     low_stock_limit: numberValue(row.low_stock_limit, 3),
-    slow_mode: booleanValue(row.slow_mode, false),
-    admin_password_enabled: booleanValue(row.admin_password_enabled, false),
-    receipt_width_mm: numberValue(row.receipt_width_mm, 80),
     status: stringValue(row.status, 'active'),
     updated_at: toIso(row.updated_at),
   };
@@ -209,9 +450,9 @@ function mapSettings(store: WebStoreRow, email = ''): Settings {
     address: store.address,
     receipt_message: store.receipt_message,
     low_stock_limit: store.low_stock_limit,
-    slow_mode: store.slow_mode,
-    admin_password_enabled: store.admin_password_enabled,
-    receipt_width_mm: store.receipt_width_mm,
+    slow_mode: false,
+    admin_password_enabled: false,
+    receipt_width_mm: 80,
     updated_at: store.updated_at,
   };
 }
@@ -247,123 +488,13 @@ function guestSettings(): Settings {
   };
 }
 
-export const WEB_LOGIN_REQUIRED_MESSAGE = 'Para cadastrar cliente, produto, venda, caixa ou crediário na nuvem, entre com e-mail e senha em Diagnóstico Web. Sem login, o app fica somente leitura para proteger os dados da loja.';
-
 function missingSupabaseError(): Error {
   const env = getPublicWebEnv();
+  if (env.hasUnsafeServiceRoleKey) {
+    return new Error(`Configuração insegura detectada: ${env.securityWarnings.join(' ')}`);
+  }
   const missing = env.missing.join(' e ') || 'variáveis públicas';
-  return new Error(`Modo web precisa de ${missing} no Cloudflare para sincronizar com Supabase.`);
-}
-
-
-export interface WebAuthSnapshot {
-  isConfigured: boolean;
-  hasSession: boolean;
-  userId: string;
-  email: string;
-  role: WebStoreRole | 'sem login';
-  storeId: string;
-  storeName: string;
-  canRead: boolean;
-  canOperate: boolean;
-  message: string;
-}
-
-export async function getWebAuthSnapshot(options: { createIfMissing?: boolean } = {}): Promise<WebAuthSnapshot> {
-  const env = getPublicWebEnv();
-  if (!env.isConfigured) {
-    return {
-      isConfigured: false,
-      hasSession: false,
-      userId: '',
-      email: '',
-      role: 'sem login',
-      storeId: '',
-      storeName: '',
-      canRead: false,
-      canOperate: false,
-      message: `Configure ${env.missing.join(' e ') || 'as variáveis públicas'} para conectar ao Supabase.`,
-    };
-  }
-
-  const client = getSupabaseClient();
-  if (!client) {
-    return {
-      isConfigured: false,
-      hasSession: false,
-      userId: '',
-      email: '',
-      role: 'sem login',
-      storeId: '',
-      storeName: '',
-      canRead: false,
-      canOperate: false,
-      message: 'Cliente Supabase não iniciou neste navegador.',
-    };
-  }
-
-  const { data, error } = await client.auth.getSession();
-  if (error) {
-    return {
-      isConfigured: true,
-      hasSession: false,
-      userId: '',
-      email: '',
-      role: 'sem login',
-      storeId: '',
-      storeName: '',
-      canRead: false,
-      canOperate: false,
-      message: `Não foi possível ler o login: ${error.message}`,
-    };
-  }
-
-  const user = data.session?.user;
-  if (!user) {
-    return {
-      isConfigured: true,
-      hasSession: false,
-      userId: '',
-      email: '',
-      role: 'sem login',
-      storeId: '',
-      storeName: '',
-      canRead: false,
-      canOperate: false,
-      message: 'Entre com e-mail e senha para liberar a loja web.',
-    };
-  }
-
-  const email = user.email ?? 'usuário sem e-mail';
-  try {
-    const context = await getWebStoreContext({ createIfMissing: options.createIfMissing ?? false });
-    const caps = getWebRoleCapabilities(context.role);
-    return {
-      isConfigured: true,
-      hasSession: true,
-      userId: context.userId,
-      email: context.email,
-      role: context.role,
-      storeId: context.store.id,
-      storeName: context.store.name,
-      canRead: caps.canRead,
-      canOperate: caps.canOperate,
-      message: caps.writeLabel,
-    };
-  } catch (contextError) {
-    return {
-      isConfigured: true,
-      hasSession: true,
-      userId: user.id,
-      email,
-      role: 'sem login',
-      storeId: '',
-      storeName: '',
-      canRead: false,
-      canOperate: false,
-      message: contextError instanceof Error ? contextError.message : 'Login ativo, mas a loja ainda não foi vinculada.',
-    };
-  }
+  return new Error(`Modo web precisa de ${missing} no Cloudflare para sincronizar com Supabase. Use somente chave publica anon/publishable, nunca service_role.`);
 }
 
 async function getClient() {
@@ -377,7 +508,7 @@ async function getSignedUser() {
   const { data, error } = await client.auth.getSession();
   if (error) throw new Error(`Não foi possível ler a sessão web: ${error.message}`);
   const user = data.session?.user;
-  if (!user) throw new Error(WEB_LOGIN_REQUIRED_MESSAGE);
+  if (!user) throw new Error('Entre no modo web para usar dados sincronizados no celular.');
   return { client, user, email: user.email ?? 'usuário sem e-mail' };
 }
 
@@ -392,10 +523,10 @@ async function loadMembershipStores(userId: string): Promise<Array<{ role: WebSt
   const client = await getClient();
   const { data, error } = await client
     .from('store_members')
-    .select('store_id, role, stores(id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at)')
+    .select('store_id, role, stores(id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at)')
     .eq('user_id', userId);
 
-  if (error) throw new Error(`Não foi possível carregar lojas vinculadas ao usuário: ${error.message}`);
+  if (error) return [];
 
   return (data ?? [])
     .map((row: Record<string, unknown>) => {
@@ -408,6 +539,21 @@ async function loadMembershipStores(userId: string): Promise<Array<{ role: WebSt
 
 async function createFirstStore(userId: string, email: string): Promise<WebStoreContext> {
   const client = await getClient();
+  const selectFields = 'id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at';
+
+  const rpcResult = await client.rpc('create_owned_store', { store_name: 'Smart Loja Fácil Web' });
+  if (!rpcResult.error) {
+    const source = Array.isArray(rpcResult.data) ? rpcResult.data[0] : rpcResult.data;
+    if (source && typeof source === 'object') {
+      const store = mapStore(source as Record<string, unknown>);
+      if (store.id) {
+        window.localStorage.setItem(ACTIVE_STORE_KEY, store.id);
+        recordWebSyncSnapshot('synced', 'Primeira loja', 'Loja web criada com segurança e vinculada ao seu login.');
+        return { userId, email, role: 'owner', store };
+      }
+    }
+  }
+
   const { data, error } = await client
     .from('stores')
     .insert({
@@ -417,49 +563,43 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
       low_stock_limit: 3,
       status: 'active',
     })
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at')
+    .select(selectFields)
     .single();
 
-  if (error) throw new Error(`Não foi possível criar a loja web inicial: ${error.message}`);
+  if (error) {
+    const rpcDetail = rpcResult.error ? ` RPC create_owned_store: ${rpcResult.error.message}.` : '';
+    const hint = error.message.toLowerCase().includes('row-level security')
+      ? ' Aplique a migration 202606020097_web_realtime_sync_store_bootstrap.sql para liberar criação inicial via RPC segura e manter RLS ativa.'
+      : '';
+    throw new Error(`Não foi possível criar a loja web inicial: ${error.message}.${rpcDetail}${hint}`);
+  }
 
   const store = mapStore(data as Record<string, unknown>);
   window.localStorage.setItem(ACTIVE_STORE_KEY, store.id);
+  recordWebSyncSnapshot('synced', 'Primeira loja', 'Loja web criada e vinculada ao seu login.');
 
   return { userId, email, role: 'owner', store };
 }
 
 export async function getWebStoreContext(options: { createIfMissing?: boolean } = {}): Promise<WebStoreContext> {
   const { user, email } = await getSignedUser();
-  const cached = readCachedWebStoreContext(user.id, email);
-  let memberships: Array<{ role: WebStoreRole; store: WebStoreRow }> = [];
-
-  try {
-    memberships = await loadMembershipStores(user.id);
-  } catch (error) {
-    if (!isWebNetworkOnline() && cached) return cached;
-    throw error;
-  }
+  const memberships = await loadMembershipStores(user.id);
 
   if (memberships.length === 0) {
-    if (!isWebNetworkOnline() && cached) return cached;
     if (options.createIfMissing === false) throw new Error('Nenhuma loja web vinculada a este usuário.');
-    const created = await createFirstStore(user.id, email);
-    cacheWebStoreContext(created);
-    return created;
+    return createFirstStore(user.id, email);
   }
 
   const preferredStoreId = window.localStorage.getItem(ACTIVE_STORE_KEY);
   const active = memberships.find((item) => item.store.id === preferredStoreId) ?? memberships[0];
   window.localStorage.setItem(ACTIVE_STORE_KEY, active.store.id);
 
-  const context = {
+  return {
     userId: user.id,
     email,
     role: active.role,
     store: active.store,
   };
-  cacheWebStoreContext(context);
-  return context;
 }
 
 type SupabaseQueryBuilder = {
@@ -614,6 +754,58 @@ export async function webDashboardSalesSeries(period: DashboardSalesPeriod | str
   return model;
 }
 
+function getRealtimeStoreId(payload: unknown, fallbackStoreId: string): string {
+  const source = payload && typeof payload === 'object' ? payload as { new?: unknown; old?: unknown } : {};
+  const row = source.new && typeof source.new === 'object' ? source.new as Record<string, unknown> : source.old && typeof source.old === 'object' ? source.old as Record<string, unknown> : {};
+  return stringValue(row.store_id) || stringValue(row.id) || fallbackStoreId;
+}
+
+function getRealtimeEventType(payload: unknown): string {
+  const source = payload && typeof payload === 'object' ? payload as { eventType?: unknown } : {};
+  return stringValue(source.eventType, 'UPDATE');
+}
+
+export async function subscribeWebStoreChanges(onChange: (event: WebRealtimeEvent) => void): Promise<() => void> {
+  const context = await getWebStoreContext({ createIfMissing: false });
+  const client = await getClient();
+  const channel = client.channel(`smart-loja-store-${context.store.id}`);
+  let closed = false;
+  let lastNotificationAt = 0;
+
+  const notify = (table: typeof WEB_REALTIME_TABLES[number], payload: unknown) => {
+    if (closed) return;
+    const storeId = getRealtimeStoreId(payload, context.store.id);
+    if (storeId !== context.store.id) return;
+    const now = Date.now();
+    const eventType = getRealtimeEventType(payload);
+    if (now - lastNotificationAt > 1200) {
+      recordWebSyncSnapshot('synced', 'Atualização automática', `Mudança em ${WEB_REALTIME_LABELS[table]} recebida da nuvem. Atualizando esta tela.`);
+      lastNotificationAt = now;
+    }
+    onChange({ table, eventType, storeId, at: new Date().toISOString() });
+  };
+
+  channel.on('postgres_changes', { event: '*', schema: 'public', table: 'stores', filter: `id=eq.${context.store.id}` }, (payload: unknown) => notify('stores', payload));
+  for (const table of WEB_REALTIME_STORE_TABLES) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table, filter: `store_id=eq.${context.store.id}` }, (payload: unknown) => notify(table, payload));
+  }
+
+  channel.subscribe((status) => {
+    if (closed) return;
+    if (status === 'SUBSCRIBED') {
+      recordWebSyncSnapshot('synced', 'Atualização automática', `Escuta multiaparelhos ativa para ${WEB_REALTIME_TABLES.length} áreas da loja.`);
+    }
+    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+      recordWebSyncSnapshot('pending', 'Atualização automática', 'Não consegui manter atualização ao vivo agora. O botão atualizar e o foco da janela continuam seguros.');
+    }
+  });
+
+  return () => {
+    closed = true;
+    void client.removeChannel(channel);
+  };
+}
+
 export async function webAppStatus(): Promise<AppStatus> {
   const env = getPublicWebEnv();
   if (!env.isConfigured) {
@@ -647,7 +839,6 @@ export async function webSettings(): Promise<Settings> {
 export async function webSaveSettings(settings: Settings): Promise<Settings> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'alterar configurações da loja');
-  ensureOnlineOrQueue('settings.save', { settings }, 'as configurações da loja');
   const client = await getClient();
   const { data, error } = await client
     .from('stores')
@@ -658,12 +849,9 @@ export async function webSaveSettings(settings: Settings): Promise<Settings> {
       address: settings.address.trim(),
       receipt_message: settings.receipt_message.trim() || 'Obrigado pela preferência!',
       low_stock_limit: Math.max(0, Math.round(settings.low_stock_limit || 0)),
-      slow_mode: Boolean(settings.slow_mode),
-      admin_password_enabled: Boolean(settings.admin_password_enabled),
-      receipt_width_mm: Math.max(58, Math.round(settings.receipt_width_mm || 80)),
     })
     .eq('id', context.store.id)
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, updated_at')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at')
     .single();
 
   if (error) throw new Error(`Não foi possível salvar as configurações no Supabase: ${error.message}`);
@@ -702,11 +890,12 @@ export async function webCustomers(): Promise<Customer[]> {
 export async function webSaveCustomer(customer: Partial<Customer>): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar clientes');
-  ensureOnlineOrQueue('customers.save', { customer: mutationPayload(customer) }, 'o cliente');
   const client = await getClient();
   const name = String(customer.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do cliente antes de salvar.');
 
+  const source = customer as Record<string, unknown>;
+  const requestId = stringValue(source.client_request_id) || stringValue(source.request_id) || customer.id || clientRequestId('web-customer');
   const payload = {
     store_id: context.store.id,
     name,
@@ -716,8 +905,18 @@ export async function webSaveCustomer(customer: Partial<Customer>): Promise<Cust
     credit_limit: numberValue(customer.credit_limit),
     status: mapStatusToCloud(customer.status),
     notes: String(customer.notes ?? '').trim(),
-    client_request_id: customer.id || crypto.randomUUID(),
+    client_request_id: requestId,
   };
+
+  if (!customer.id) {
+    const { data: existing } = await client
+      .from('customers')
+      .select('id, name, phone, whatsapp, address, credit_limit, status, notes, created_at, updated_at')
+      .eq('store_id', context.store.id)
+      .eq('client_request_id', requestId)
+      .maybeSingle();
+    if (existing) return mapCustomer(existing as Record<string, unknown>);
+  }
 
   const request = customer.id
     ? client.from('customers').update(payload).eq('id', customer.id).eq('store_id', context.store.id)
@@ -734,7 +933,6 @@ export async function webSaveCustomer(customer: Partial<Customer>): Promise<Cust
 export async function webInactivateCustomer(customerId: string): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar clientes');
-  ensureOnlineOrQueue('customers.inactivate', { customerId }, 'a inativação do cliente');
   const client = await getClient();
   const { data, error } = await client
     .from('customers')
@@ -746,6 +944,44 @@ export async function webInactivateCustomer(customerId: string): Promise<Custome
 
   if (error) throw new Error(`Não foi possível inativar o cliente no Supabase: ${error.message}`);
   return mapCustomer(data as Record<string, unknown>);
+}
+
+
+async function uploadProductPhotoForWeb(params: {
+  client: Awaited<ReturnType<typeof getClient>>;
+  storeId: string;
+  productId: string;
+  productName: string;
+  requestId: string;
+  imageData: string;
+}): Promise<string> {
+  const photo = productPhotoDataUrlToBlob(params.imageData);
+  if (photo.bytes > PRODUCT_PHOTO_MAX_BYTES) {
+    throw new Error('A foto precisa ter no máximo 2 MB para subir na nuvem.');
+  }
+
+  const path = buildProductPhotoStoragePath({
+    storeId: params.storeId,
+    productId: params.productId,
+    productName: params.productName,
+    extension: photo.extension,
+    requestId: params.requestId,
+  });
+
+  const { error } = await params.client.storage
+    .from(PRODUCT_PHOTO_BUCKET)
+    .upload(path, photo.blob, {
+      cacheControl: '31536000',
+      contentType: photo.mimeType,
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Não foi possível enviar a foto para o Storage: ${error.message}`);
+  }
+
+  const { data } = params.client.storage.from(PRODUCT_PHOTO_BUCKET).getPublicUrl(path);
+  return data.publicUrl || path;
 }
 
 function mapProduct(row: Record<string, unknown>): Product {
@@ -785,11 +1021,14 @@ export async function webProducts(): Promise<Product[]> {
 export async function webSaveProduct(product: Partial<Product>): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar produtos');
-  ensureOnlineOrQueue('products.save', { product: mutationPayload(product) }, 'o produto');
   const client = await getClient();
   const name = String(product.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do produto antes de salvar.');
 
+  const source = product as Record<string, unknown>;
+  const requestId = stringValue(source.client_request_id) || stringValue(source.request_id) || product.id || clientRequestId('web-product');
+  const imageSource = String(product.image_data ?? '').trim();
+  const inlinePhoto = isInlineProductImageData(imageSource) ? imageSource : '';
   const payload = {
     store_id: context.store.id,
     name,
@@ -802,10 +1041,20 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     color: String(product.color ?? '').trim(),
     internal_code: String(product.internal_code ?? '').trim() || `WEB-${Date.now().toString(36).toUpperCase()}`,
     barcode: String(product.barcode ?? '').trim(),
-    image_url: String(product.image_data ?? '').trim(),
+    image_url: inlinePhoto ? '' : imageSource,
     status: mapStatusToCloud(product.status),
-    client_request_id: product.id || crypto.randomUUID(),
+    client_request_id: requestId,
   };
+
+  if (!product.id) {
+    const { data: existing } = await client
+      .from('products')
+      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+      .eq('store_id', context.store.id)
+      .eq('client_request_id', requestId)
+      .maybeSingle();
+    if (existing) return mapProduct(existing as Record<string, unknown>);
+  }
 
   const request = product.id
     ? client.from('products').update(payload).eq('id', product.id).eq('store_id', context.store.id)
@@ -816,13 +1065,48 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     .single();
 
   if (error) throw new Error(`Não foi possível salvar o produto no Supabase: ${error.message}`);
-  return mapProduct(data as Record<string, unknown>);
+
+  let saved = mapProduct(data as Record<string, unknown>);
+  if (!inlinePhoto) return saved;
+
+  try {
+    const imageUrl = await uploadProductPhotoForWeb({
+      client,
+      storeId: context.store.id,
+      productId: saved.id,
+      productName: saved.name,
+      requestId,
+      imageData: inlinePhoto,
+    });
+    const { data: updated, error: updateError } = await client
+      .from('products')
+      .update({ image_url: imageUrl })
+      .eq('id', saved.id)
+      .eq('store_id', context.store.id)
+      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+      .single();
+    if (updateError) throw new Error(`Foto enviada, mas não consegui vincular ao produto: ${updateError.message}`);
+    saved = mapProduct(updated as Record<string, unknown>);
+    recordWebSyncSnapshot('synced', 'Produtos', 'Foto do produto enviada para a nuvem e vinculada ao cadastro.');
+    return saved;
+  } catch (photoError) {
+    const { data: fallbackData, error: fallbackError } = await client
+      .from('products')
+      .update({ image_url: inlinePhoto })
+      .eq('id', saved.id)
+      .eq('store_id', context.store.id)
+      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+      .single();
+    const detail = photoError instanceof Error ? photoError.message : String(photoError);
+    recordWebSyncSnapshot('pending', 'Fotos de produtos', `Produto salvo. Foto ficou em modo compatibilidade porque o Storage ainda não confirmou envio. Detalhe: ${detail}`);
+    if (fallbackError) throw new Error(`Produto salvo, mas a foto não foi vinculada. Detalhe: ${detail}. Fallback: ${fallbackError.message}`);
+    return mapProduct(fallbackData as Record<string, unknown>);
+  }
 }
 
 export async function webInactivateProduct(productId: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar produtos');
-  ensureOnlineOrQueue('products.inactivate', { productId }, 'a inativação do produto');
   const client = await getClient();
   const { data, error } = await client
     .from('products')
@@ -839,7 +1123,6 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
 export async function webAdjustStock(productId: string, delta: number, reason: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
-  ensureOnlineOrQueue('products.adjustStock', { productId, delta, reason }, 'o ajuste de estoque');
   const client = await getClient();
   if (!reason.trim()) throw new Error('Informe o motivo do ajuste de estoque.');
 
@@ -1079,27 +1362,34 @@ async function upsertRows(table: WebBackupTableName, rows: JsonRecord[], storeId
 }
 
 export async function webBackups(): Promise<BackupInfo[]> {
-  try {
-    const context = await getWebStoreContext({ createIfMissing: false });
-    const client = await getClient();
-    const { data, error } = await client
-      .from('backups_log')
-      .select('id, file_name, file_path, size_bytes, integrity_ok, created_at')
-      .eq('store_id', context.store.id)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    if (error) throw error;
-    return (data ?? []).map((row: Record<string, unknown>) => ({
-      id: stringValue(row.id),
-      file_name: stringValue(row.file_name),
-      file_path: stringValue(row.file_path),
-      size_bytes: numberValue(row.size_bytes),
-      integrity_ok: Boolean(row.integrity_ok),
-      created_at: toIso(row.created_at),
-    }));
-  } catch {
-    return readWebBackupHistory();
+  const localHistory = readWebBackupHistory();
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data, error } = await client
+    .from('backups_log')
+    .select('id, file_name, file_path, size_bytes, integrity_ok, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(80);
+
+  if (error) {
+    return localHistory;
   }
+
+  const cloudHistory = (data ?? []).map((row: Record<string, unknown>) => ({
+    id: stringValue(row.id),
+    file_name: stringValue(row.file_name),
+    file_path: stringValue(row.file_path),
+    size_bytes: numberValue(row.size_bytes),
+    integrity_ok: Boolean(row.integrity_ok),
+    created_at: toIso(row.created_at),
+  })).filter((row) => row.id && row.file_name);
+
+  const merged = new Map<string, BackupInfo>();
+  for (const row of [...cloudHistory, ...localHistory]) {
+    merged.set(row.id || row.file_name, row);
+  }
+  return Array.from(merged.values()).sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export async function webCreateBackup(): Promise<BackupInfo> {
@@ -1108,7 +1398,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
   const client = await getClient();
   const { data: storeData, error: storeError } = await client
     .from('stores')
-    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, slow_mode, admin_password_enabled, receipt_width_mm, status, created_at, updated_at')
+    .select('id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, created_at, updated_at')
     .eq('id', context.store.id)
     .single();
   if (storeError) throw new Error(`Não foi possível incluir a loja no backup web: ${storeError.message}`);
@@ -1145,18 +1435,37 @@ export async function webCreateBackup(): Promise<BackupInfo> {
   };
   const history = [info, ...readWebBackupHistory().filter((row) => row.file_name !== fileName)];
   saveWebBackupHistory(history);
-  await client.from('backups_log').insert({
-    store_id: context.store.id,
-    user_id: context.userId,
-    file_name: fileName,
-    file_path: 'download:' + fileName,
-    size_bytes: info.size_bytes,
-    integrity_ok: true,
-    source: 'web',
-    metadata: { app_version: WEB_APP_VERSION, counts },
-  });
+  const { data: backupLog, error: backupLogError } = await client
+    .from('backups_log')
+    .insert({
+      store_id: context.store.id,
+      user_id: context.userId,
+      file_name: fileName,
+      file_path: info.file_path,
+      size_bytes: info.size_bytes,
+      integrity_ok: true,
+      source: 'web_json',
+      metadata: {
+        app_version: WEB_APP_VERSION,
+        cache_version: WEB_CACHE_VERSION,
+        counts,
+        local_history_id: info.id,
+      },
+    })
+    .select('id, file_name, file_path, size_bytes, integrity_ok, created_at')
+    .single();
+  if (backupLogError) {
+    throw new Error(`Backup baixado, mas o log Supabase não foi gravado. Aplique a migration de auditoria/sync. Detalhe: ${backupLogError.message}`);
+  }
   await insertAudit(context.store.id, context.userId, 'stores', context.store.id, 'web_backup_exported', { file_name: fileName, counts });
-  return info;
+  return backupLog ? {
+    id: stringValue((backupLog as Record<string, unknown>).id, info.id),
+    file_name: stringValue((backupLog as Record<string, unknown>).file_name, info.file_name),
+    file_path: stringValue((backupLog as Record<string, unknown>).file_path, info.file_path),
+    size_bytes: numberValue((backupLog as Record<string, unknown>).size_bytes, info.size_bytes),
+    integrity_ok: Boolean((backupLog as Record<string, unknown>).integrity_ok),
+    created_at: toIso((backupLog as Record<string, unknown>).created_at),
+  } : info;
 }
 
 export async function webRestoreBackupContent(fileContent: string, confirmation: string): Promise<AppStatus> {
@@ -1247,7 +1556,7 @@ function parseOrderPayload(payload: unknown): WebOrderPayload {
   return { request_id: requestId, customer_id: customerId, items: normalizedItems };
 }
 
-async function insertAudit(storeId: string, userId: string, entity: string, entityId: string, action: string, details: Record<string, unknown>): Promise<void> {
+async function insertAudit(storeId: string, userId: string, entity: string, entityId: string | null, action: string, details: Record<string, unknown>): Promise<void> {
   try {
     const client = await getClient();
     await client.from('audit_log').insert({ store_id: storeId, user_id: userId, entity, entity_id: entityId, action, details });
@@ -1433,7 +1742,6 @@ export async function webSales(): Promise<SaleSummary[]> {
 export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'finalizar vendas');
-  ensureOnlineOrQueue('sales.create', { payload: mutationPayload(payload) }, 'a venda');
   const client = await getClient();
   const salePayload = parseSalePayload(payload);
   const rpcPayload = { ...salePayload, store_id: context.store.id };
@@ -1447,7 +1755,6 @@ export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
 export async function webCancelSale(saleId: string, reason: string): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'cancelar vendas');
-  ensureOnlineOrQueue('sales.cancel', { saleId, reason }, 'o cancelamento da venda');
   const client = await getClient();
   const cleanReason = reason.trim() || 'Cancelamento manual web';
   const { data, error } = await client.rpc('web_cancel_sale', { target_sale_id: saleId, cancel_reason_text: cleanReason });
@@ -1534,21 +1841,19 @@ export async function webCashSummary(): Promise<CashSummary> {
 export async function webOpenCash(openingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'abrir caixa');
-  ensureOnlineOrQueue('cash.open', { openingAmount, notes }, 'a abertura do caixa');
   const client = await getClient();
   if (openingAmount < 0) throw new Error('O valor inicial não pode ser negativo.');
   const alreadyOpen = await currentCashSessionId(context.store.id);
   if (alreadyOpen) throw new Error('Já existe um caixa aberto para esta loja.');
   const { error } = await client.from('cash_sessions').insert({ store_id: context.store.id, opened_by: context.userId, opening_amount: openingAmount, notes: notes.trim(), status: 'open' });
   if (error) throw new Error(`Não foi possível abrir caixa no Supabase: ${error.message}`);
-  await insertAudit(context.store.id, context.userId, 'cash', null as unknown as string, 'open', { opening_amount: openingAmount });
+  await insertAudit(context.store.id, context.userId, 'cash', null, 'open', { opening_amount: openingAmount });
   return webCashSummary();
 }
 
 export async function webCloseCash(closingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'fechar caixa');
-  ensureOnlineOrQueue('cash.close', { closingAmount, notes }, 'o fechamento do caixa');
   const client = await getClient();
   if (closingAmount < 0) throw new Error('O valor contado não pode ser negativo.');
   const sessionId = await currentCashSessionId(context.store.id);
@@ -1564,10 +1869,9 @@ export async function webCloseCash(closingAmount: number, notes: string): Promis
   return webCashSummary();
 }
 
-export async function webAddCashMovement(movementType: string, method: string, amount: number, reason: string): Promise<CashSummary> {
+export async function webAddCashMovement(movementType: string, method: string, amount: number, reason: string, requestId = clientRequestId('cash')): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'lançar movimento de caixa');
-  ensureOnlineOrQueue('cash.movement', { movementType, method, amount, reason }, 'o movimento do caixa');
   const client = await getClient();
   const cleanType = movementType === 'entrada' ? 'entrada' : 'saida';
   const cleanReason = reason.trim();
@@ -1577,7 +1881,7 @@ export async function webAddCashMovement(movementType: string, method: string, a
   const { error } = await client.from('cash_movements').insert({
     store_id: context.store.id,
     cash_session_id: sessionId,
-    client_request_id: clientRequestId('cash'),
+    client_request_id: requestId,
     type: cleanType,
     method: method.trim() || 'dinheiro',
     amount,
@@ -1585,7 +1889,7 @@ export async function webAddCashMovement(movementType: string, method: string, a
     created_by: context.userId,
   });
   if (error) throw new Error(`Não foi possível lançar movimento no Supabase: ${error.message}`);
-  await insertAudit(context.store.id, context.userId, 'cash', null as unknown as string, 'manual_movement', { type: cleanType, amount, method, reason: cleanReason });
+  await insertAudit(context.store.id, context.userId, 'cash', null, 'manual_movement', { type: cleanType, amount, method, reason: cleanReason });
   return webCashSummary();
 }
 
@@ -1681,7 +1985,6 @@ export async function webCredits(): Promise<CreditSummary[]> {
 export async function webReceiveInstallment(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'receber crediário');
-  ensureOnlineOrQueue('credits.receiveInstallment', { payload: mutationPayload(payload) }, 'o recebimento do crediário');
   const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
   const creditId = stringValue(source.credit_id);
   const installmentId = stringValue(source.installment_id);
@@ -1723,7 +2026,6 @@ export async function webOrders(): Promise<OrderSummary[]> {
 export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'criar pedidos');
-  ensureOnlineOrQueue('orders.create', { payload: mutationPayload(payload) }, 'o pedido');
   const client = await getClient();
   const orderPayload = parseOrderPayload(payload);
   const existing = await client
@@ -1777,7 +2079,6 @@ export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
 export async function webSetOrderStatus(orderId: string, status: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'alterar status de pedidos');
-  ensureOnlineOrQueue('orders.status', { orderId, status }, 'a alteração do pedido');
   const client = await getClient();
   const nextStatus = mapOrderStatusToCloud(status);
   if (nextStatus === 'delivered') {
@@ -1807,7 +2108,6 @@ export async function webSetOrderStatus(orderId: string, status: string): Promis
 export async function webCancelOrder(orderId: string, reason: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'cancelar pedidos');
-  ensureOnlineOrQueue('orders.cancel', { orderId, reason }, 'o cancelamento do pedido');
   const client = await getClient();
   const { data, error } = await client
     .from('orders')
@@ -1852,6 +2152,38 @@ export async function webReceipts(): Promise<ReceiptSummary[]> {
     }
   }
   return (receipts ?? []).map((row: Record<string, unknown>) => mapReceipt(row, salesById, whatsappByCustomerId));
+}
+
+function formatAuditDetails(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+export async function webAudit(): Promise<AuditEvent[]> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  const client = await getClient();
+  const { data, error } = await client
+    .from('audit_log')
+    .select('id, entity, entity_id, action, details, created_at')
+    .eq('store_id', context.store.id)
+    .order('created_at', { ascending: false })
+    .limit(300);
+
+  if (error) throw new Error(`Não foi possível carregar auditoria do Supabase: ${error.message}`);
+
+  return (data ?? []).map((row: Record<string, unknown>) => ({
+    id: stringValue(row.id),
+    entity: stringValue(row.entity),
+    entity_id: stringValue(row.entity_id),
+    action: stringValue(row.action),
+    details: formatAuditDetails(row.details),
+    created_at: toIso(row.created_at),
+  }));
 }
 
 function escapeHtml(value: string): string {
@@ -1944,68 +2276,113 @@ export async function webReportsCsv(report: string, from: string, to: string): P
   return `download:${fileName}`;
 }
 
-export interface WebSyncFlushReport {
-  pending_before: number;
-  sent: number;
-  failed: number;
-  pending_after: number;
+
+
+async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
+  if (item.action === 'saveCustomer') {
+    await webSaveCustomer(item.payload.customer as Partial<Customer>);
+    return;
+  }
+  if (item.action === 'inactivateCustomer') {
+    await webInactivateCustomer(String(item.payload.customerId ?? ''));
+    return;
+  }
+  if (item.action === 'saveProduct') {
+    await webSaveProduct(item.payload.product as Partial<Product>);
+    return;
+  }
+  if (item.action === 'inactivateProduct') {
+    await webInactivateProduct(String(item.payload.productId ?? ''));
+    return;
+  }
+  if (item.action === 'adjustStock') {
+    await webAdjustStock(String(item.payload.productId ?? ''), numberValue(item.payload.delta), String(item.payload.reason ?? 'Ajuste pendente reenviado'));
+    return;
+  }
+  if (item.action === 'createSale') {
+    await webCreateSale(item.payload.payload);
+    return;
+  }
+  if (item.action === 'cancelSale') {
+    await webCancelSale(String(item.payload.saleId ?? ''), String(item.payload.reason ?? 'Cancelamento pendente reenviado'));
+    return;
+  }
+  if (item.action === 'openCash') {
+    await webOpenCash(numberValue(item.payload.openingAmount), String(item.payload.notes ?? ''));
+    return;
+  }
+  if (item.action === 'closeCash') {
+    await webCloseCash(numberValue(item.payload.closingAmount), String(item.payload.notes ?? ''));
+    return;
+  }
+  if (item.action === 'addCashMovement') {
+    await webAddCashMovement(String(item.payload.movementType ?? 'entrada'), String(item.payload.method ?? 'dinheiro'), numberValue(item.payload.amount), String(item.payload.reason ?? 'Movimento pendente reenviado'), String(item.payload.requestId || clientRequestId('cash')));
+    return;
+  }
+  if (item.action === 'receiveInstallment') {
+    await webReceiveInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'createOrder') {
+    await webCreateOrder(item.payload.payload);
+    return;
+  }
+  if (item.action === 'setOrderStatus') {
+    await webSetOrderStatus(String(item.payload.orderId ?? ''), String(item.payload.status ?? 'open'));
+    return;
+  }
+  if (item.action === 'cancelOrder') {
+    await webCancelOrder(String(item.payload.orderId ?? ''), String(item.payload.reason ?? 'Cancelamento pendente reenviado'));
+    return;
+  }
+  if (item.action === 'saveSettings') {
+    await webSaveSettings(item.payload.settings as Settings);
+    return;
+  }
+  throw new Error('Ação pendente não reconhecida.');
 }
 
-async function replayWebSyncTask(taskType: WebSyncMutationType, payload: Record<string, unknown>): Promise<void> {
-  if (taskType === 'settings.save') await webSaveSettings(payload.settings as Settings);
-  else if (taskType === 'customers.save') await webSaveCustomer(payload.customer as Partial<Customer>);
-  else if (taskType === 'customers.inactivate') await webInactivateCustomer(stringValue(payload.customerId));
-  else if (taskType === 'products.save') await webSaveProduct(payload.product as Partial<Product>);
-  else if (taskType === 'products.inactivate') await webInactivateProduct(stringValue(payload.productId));
-  else if (taskType === 'products.adjustStock') await webAdjustStock(stringValue(payload.productId), numberValue(payload.delta), stringValue(payload.reason));
-  else if (taskType === 'sales.create') await webCreateSale(payload.payload);
-  else if (taskType === 'sales.cancel') await webCancelSale(stringValue(payload.saleId), stringValue(payload.reason));
-  else if (taskType === 'cash.open') await webOpenCash(numberValue(payload.openingAmount), stringValue(payload.notes));
-  else if (taskType === 'cash.close') await webCloseCash(numberValue(payload.closingAmount), stringValue(payload.notes));
-  else if (taskType === 'cash.movement') await webAddCashMovement(stringValue(payload.movementType), stringValue(payload.method), numberValue(payload.amount), stringValue(payload.reason));
-  else if (taskType === 'credits.receiveInstallment') await webReceiveInstallment(payload.payload);
-  else if (taskType === 'orders.create') await webCreateOrder(payload.payload);
-  else if (taskType === 'orders.status') await webSetOrderStatus(stringValue(payload.orderId), stringValue(payload.status));
-  else if (taskType === 'orders.cancel') await webCancelOrder(stringValue(payload.orderId), stringValue(payload.reason));
-}
+export async function flushWebOutbox(): Promise<WebOutboxStats> {
+  const queue = readWebOutbox();
+  if (queue.length === 0) {
+    recordWebSyncSnapshot('synced', 'Sincronização', 'Nenhuma alteração pendente neste aparelho.');
+    return getWebOutboxStats([]);
+  }
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    recordWebSyncSnapshot('pending', 'Sincronização', 'Ainda sem internet. As alterações continuam guardadas neste aparelho.');
+    return getWebOutboxStats(queue);
+  }
 
-export async function webFlushQueuedSync(): Promise<WebSyncFlushReport> {
-  const queue = readWebSyncQueue();
-  const report: WebSyncFlushReport = { pending_before: queue.length, sent: 0, failed: 0, pending_after: queue.length };
-  if (!isWebNetworkOnline() || queue.length === 0) return report;
+  recordWebSyncSnapshot('syncing', 'Sincronização', `Enviando ${queue.length} alteração(ões) pendente(s) para a nuvem...`);
+  const remaining: WebOutboxItem[] = [];
+  let sent = 0;
 
-  for (const task of queue) {
+  for (let index = 0; index < queue.length; index += 1) {
+    const item = queue[index];
     try {
-      await replayWebSyncTask(task.type, task.payload);
-      removeWebSyncTask(task.id);
-      report.sent += 1;
+      await runWebOutboxItem(item);
+      sent += 1;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      markWebSyncTaskError(task.id, message);
-      report.failed += 1;
-      if (!isWebNetworkOnline()) break;
+      remaining.push({
+        ...item,
+        attempts: item.attempts + 1,
+        updatedAt: new Date().toISOString(),
+        lastError: humanizeWebError(error),
+      });
+      if (shouldQueueWebError(error)) {
+        remaining.push(...queue.slice(index + 1));
+        break;
+      }
     }
   }
 
-  if (report.sent > 0) markWebSyncSuccess();
-  report.pending_after = readWebSyncQueue().length;
-  return report;
-}
-
-export function webSyncQueueSnapshot() {
-  return getWebSyncQueueSnapshot();
-}
-
-export async function webRemoteSyncHealth(): Promise<Record<string, unknown> | null> {
-  try {
-    const context = await getWebStoreContext({ createIfMissing: false });
-    const client = await getClient();
-    const { data, error } = await client.rpc('web_sync_health', { target_store_id: context.store.id });
-    if (error) return null;
-    return data && typeof data === 'object' ? data as Record<string, unknown> : null;
-  } catch {
-    return null;
+  writeRawWebOutbox(remaining);
+  if (remaining.length === 0) {
+    recordWebSyncSnapshot('synced', 'Sincronização', `${sent} alteração(ões) pendente(s) enviada(s) para a nuvem.`);
+  } else {
+    recordWebSyncSnapshot('pending', 'Sincronização', `${sent} enviada(s). ${remaining.length} ainda pendente(s) neste aparelho.`);
   }
+  return getWebOutboxStats(remaining);
 }
 
 export function openWebUrl(url: string): void {

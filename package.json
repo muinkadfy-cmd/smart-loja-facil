@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil Offline - Tauri v2 + React + TypeScript + SQLite local",
+  "description": "Smart Loja Fácil Web Mobile - PWA React + TypeScript + Vite + Supabase + Cloudflare",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",
@@ -12,7 +12,9 @@
     "type-check": "tsc --noEmit",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "release:check": "node scripts/release_check.js"
+    "release:check": "node scripts/release_check.js",
+    "release:commercial:check": "node scripts/commercial_package_check.js --strict",
+    "release:commercial:prepare": "node scripts/commercial_release_package.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
@@ -27,6 +29,6 @@
     "@vitejs/plugin-react": "^4.3.3",
     "typescript": "^5.6.3",
     "vite": "^6.0.1",
-    "wrangler": "^4.94.0"
+    "wrangler": "^4.95.0"
   }
 }
