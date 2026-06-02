@@ -168,3 +168,22 @@ Antes de vender para cliente real, valide no mínimo: criar cliente no PC e ver 
 - foco em PWA-only web/mobile, tela de login compatível com o dashboard clean, sidebar clara, cards premium, topbar leve, mobile-first e menor poluição visual.
 
 Este lote não altera a fonte oficial de dados nem as regras de Supabase. A mudança principal é visual/UX, com versionamento PWA para o celular puxar a nova interface após deploy.
+
+## Mega Lote 102 — Login centralizado e fundo com contraste suave
+
+- versão lógica `pwa-supabase-v102`;
+- cache `smart-loja-pwa-supabase-v102-centered-login`;
+- fila local `smart-loja:web-outbox-v102`, preservando filas antigas como legado;
+- login web/mobile centralizado, sem bloco lateral de texto grande;
+- fundo geral levemente mais escuro para melhorar contraste e leitura;
+- refinamento visual nas telas internas com menos branco estourado.
+
+## Mega Lote 103 — Clean total das abas internas + mobile premium
+
+- versão lógica `pwa-supabase-v103`;
+- cache `smart-loja-pwa-supabase-v103-clean-internal-mobile`;
+- fila local `smart-loja:web-outbox-v103`, preservando filas antigas como legado;
+- nova camada visual `src/styles/lote103-clean-internal-mobile.css`;
+- abas internas com fundo menos branco, cards mais visíveis, contraste suave e melhor respiro;
+- melhoria global de tabelas, formulários, cards, botões, estados vazios e PDV mobile;
+- release/check mantido como PWA-only web/mobile.

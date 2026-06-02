@@ -1,0 +1,523 @@
+:root {
+  --lote103-clean-internal-mobile: active;
+  --slf103-bg: #edf2f7;
+  --slf103-bg-2: #e8eef5;
+  --slf103-surface: #f7f9fc;
+  --slf103-card: #ffffff;
+  --slf103-ink: #101d33;
+  --slf103-muted: #61708a;
+  --slf103-line: #d3deeb;
+  --slf103-line-soft: #e5edf5;
+  --slf103-blue: #215aa9;
+  --slf103-blue-soft: #edf5ff;
+  --slf103-green: #159457;
+  --slf103-brown: #71655f;
+  --slf103-salmon: #cb7c76;
+  --slf103-shadow: 0 16px 38px rgba(16, 29, 51, .07);
+  --slf103-soft-shadow: 0 8px 22px rgba(16, 29, 51, .045);
+}
+
+html.lote103-clean-internal-mobile,
+html.lote103-clean-internal-mobile body,
+.lote103-clean-internal-mobile #root {
+  background:
+    radial-gradient(circle at 4% 0%, rgba(33, 90, 169, .12), transparent 26rem),
+    radial-gradient(circle at 100% 6%, rgba(203, 124, 118, .10), transparent 24rem),
+    linear-gradient(180deg, #f8fafc 0%, var(--slf103-bg) 100%) !important;
+  color: var(--slf103-ink) !important;
+}
+
+/* Base clean: contraste melhor, menos branco estourado e mais respiro nas abas. */
+.lote103-clean-internal-mobile .neo-main {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, .96), rgba(237, 242, 247, .98)) !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-shell {
+  width: min(100%, 1300px) !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-content,
+.lote103-clean-internal-mobile .classic-page,
+.lote103-clean-internal-mobile .stack {
+  gap: 18px !important;
+}
+
+.lote103-clean-internal-mobile .neo-topbar {
+  background: rgba(246, 249, 253, .96) !important;
+  border-bottom: 1px solid rgba(211, 222, 235, .92) !important;
+  box-shadow: 0 10px 28px rgba(16, 29, 51, .035) !important;
+}
+
+.lote103-clean-internal-mobile .neo-sidebar {
+  background: rgba(247, 250, 253, .98) !important;
+  border-right: 1px solid rgba(211, 222, 235, .88) !important;
+}
+
+.lote103-clean-internal-mobile .neo-sidebar-brand,
+.lote103-clean-internal-mobile .neo-sidebar-footer {
+  border-color: rgba(211, 222, 235, .85) !important;
+}
+
+.lote103-clean-internal-mobile .neo-nav-item {
+  color: #243852 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.lote103-clean-internal-mobile .neo-nav-item:hover {
+  background: rgba(237, 245, 255, .9) !important;
+  border-color: #cfe2f7 !important;
+}
+
+.lote103-clean-internal-mobile .neo-nav-item.active {
+  background: linear-gradient(135deg, #f3f8ff 0%, #edf5ff 100%) !important;
+  color: #0e3b73 !important;
+  border-color: #b9d5f4 !important;
+  box-shadow: inset 3px 0 0 var(--slf103-blue), 0 10px 22px rgba(33, 90, 169, .10) !important;
+}
+
+.lote103-clean-internal-mobile .neo-nav-item.active .neo-nav-item-label,
+.lote103-clean-internal-mobile .neo-nav-item.active span,
+.lote103-clean-internal-mobile .neo-nav-item.active small {
+  color: #0e3b73 !important;
+}
+
+.lote103-clean-internal-mobile .neo-env-block,
+.lote103-clean-internal-mobile .neo-version-block,
+.lote103-clean-internal-mobile .neo-command-search,
+.lote103-clean-internal-mobile .neo-icon-tool,
+.lote103-clean-internal-mobile .neo-store-switch,
+.lote103-clean-internal-mobile .neo-mobile-quick-access,
+.lote103-clean-internal-mobile .dash-kpi-card,
+.lote103-clean-internal-mobile .dash-panel,
+.lote103-clean-internal-mobile .classic-panel,
+.lote103-clean-internal-mobile .panel,
+.lote103-clean-internal-mobile .web-card,
+.lote103-clean-internal-mobile .data-table-shell,
+.lote103-clean-internal-mobile .metric-card,
+.lote103-clean-internal-mobile .stat-card,
+.lote103-clean-internal-mobile .mini-insight-card,
+.lote103-clean-internal-mobile .backup-tip-card,
+.lote103-clean-internal-mobile .mobile-readiness-card,
+.lote103-clean-internal-mobile .design-readiness-card,
+.lote103-clean-internal-mobile .css-inventory-card,
+.lote103-clean-internal-mobile .neo-family-card,
+.lote103-clean-internal-mobile .neo-shell-sidebar-card,
+.lote103-clean-internal-mobile .neo-important-card,
+.lote103-clean-internal-mobile .web-sync-test-card,
+.lote103-clean-internal-mobile .web-sync-module-check-card {
+  background: rgba(255,255,255,.94) !important;
+  border: 1px solid rgba(211, 222, 235, .95) !important;
+  box-shadow: var(--slf103-soft-shadow) !important;
+}
+
+.lote103-clean-internal-mobile .dash-panel,
+.lote103-clean-internal-mobile .classic-panel,
+.lote103-clean-internal-mobile .panel,
+.lote103-clean-internal-mobile .web-card,
+.lote103-clean-internal-mobile .data-table-shell {
+  border-radius: 20px !important;
+}
+
+.lote103-clean-internal-mobile .classic-panel,
+.lote103-clean-internal-mobile .panel,
+.lote103-clean-internal-mobile .web-card {
+  padding: 18px !important;
+}
+
+.lote103-clean-internal-mobile .panel-head,
+.lote103-clean-internal-mobile .classic-panel-header,
+.lote103-clean-internal-mobile .classic-fieldset-title,
+.lote103-clean-internal-mobile .classic-sales-section-title,
+.lote103-clean-internal-mobile .dash-panel-head {
+  margin-bottom: 14px !important;
+  padding-bottom: 11px !important;
+  border-bottom: 1px solid var(--slf103-line-soft) !important;
+}
+
+.lote103-clean-internal-mobile .panel-head h2,
+.lote103-clean-internal-mobile .classic-panel-header h2,
+.lote103-clean-internal-mobile .classic-fieldset-title,
+.lote103-clean-internal-mobile .classic-sales-section-title h2,
+.lote103-clean-internal-mobile .classic-sales-section-title strong,
+.lote103-clean-internal-mobile .dash-panel-head h2 {
+  color: #142541 !important;
+  letter-spacing: -.035em !important;
+  font-size: clamp(1rem, 1.6vw, 1.18rem) !important;
+}
+
+.lote103-clean-internal-mobile .page-title,
+.lote103-clean-internal-mobile .classic-legacy-title,
+.lote103-clean-internal-mobile .neo-page-meta-title h1,
+.lote103-clean-internal-mobile .neo-page-meta h1 {
+  color: #12223b !important;
+  letter-spacing: -.055em !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-meta p,
+.lote103-clean-internal-mobile .page-title p,
+.lote103-clean-internal-mobile .classic-legacy-title p,
+.lote103-clean-internal-mobile .panel-head p,
+.lote103-clean-internal-mobile .classic-panel-header p,
+.lote103-clean-internal-mobile .dash-panel-head p {
+  color: var(--slf103-muted) !important;
+  line-height: 1.45 !important;
+}
+
+/* Cards e métricas: valores sem quebra e legenda curta. */
+.lote103-clean-internal-mobile .dash-kpi-grid,
+.lote103-clean-internal-mobile .stats-grid,
+.lote103-clean-internal-mobile .metric-grid,
+.lote103-clean-internal-mobile .reports-summary-grid,
+.lote103-clean-internal-mobile .settings-summary-grid-v93,
+.lote103-clean-internal-mobile .web-health-grid,
+.lote103-clean-internal-mobile .web-sync-module-grid {
+  gap: 14px !important;
+}
+
+.lote103-clean-internal-mobile .dash-kpi-card,
+.lote103-clean-internal-mobile .stat-card,
+.lote103-clean-internal-mobile .metric-card,
+.lote103-clean-internal-mobile .mini-insight-card {
+  min-height: 128px !important;
+  padding: 18px !important;
+  border-radius: 18px !important;
+}
+
+.lote103-clean-internal-mobile .dash-kpi-card strong,
+.lote103-clean-internal-mobile .stat-card strong,
+.lote103-clean-internal-mobile .metric-card strong,
+.lote103-clean-internal-mobile .mini-insight-card strong,
+.lote103-clean-internal-mobile .total-box strong,
+.lote103-clean-internal-mobile .classic-sale-summary-total strong {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  letter-spacing: -.045em !important;
+}
+
+.lote103-clean-internal-mobile .dash-kpi-card small,
+.lote103-clean-internal-mobile .stat-card small,
+.lote103-clean-internal-mobile .metric-card small,
+.lote103-clean-internal-mobile .mini-insight-card small,
+.lote103-clean-internal-mobile .muted,
+.lote103-clean-internal-mobile .micro-label {
+  color: #5e6f89 !important;
+}
+
+/* Formulários e botões: hierarquia simples para usuário leigo. */
+.lote103-clean-internal-mobile input,
+.lote103-clean-internal-mobile select,
+.lote103-clean-internal-mobile textarea,
+.lote103-clean-internal-mobile .web-input-row,
+.lote103-clean-internal-mobile .web-password-row {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  background: #f4f7fb !important;
+  border: 1px solid var(--slf103-line) !important;
+  color: #15243b !important;
+}
+
+.lote103-clean-internal-mobile input::placeholder,
+.lote103-clean-internal-mobile textarea::placeholder {
+  color: #8290a6 !important;
+}
+
+.lote103-clean-internal-mobile label > span,
+.lote103-clean-internal-mobile .form-grid label > span,
+.lote103-clean-internal-mobile .classic-page label > span {
+  color: #263952 !important;
+  font-weight: 800 !important;
+}
+
+.lote103-clean-internal-mobile .primary-btn,
+.lote103-clean-internal-mobile .secondary-btn,
+.lote103-clean-internal-mobile .ghost-btn,
+.lote103-clean-internal-mobile .danger-btn,
+.lote103-clean-internal-mobile button {
+  border-radius: 14px !important;
+  min-height: 42px !important;
+}
+
+.lote103-clean-internal-mobile .primary-btn {
+  background: linear-gradient(135deg, #259452 0%, #17783f 100%) !important;
+  border-color: #17783f !important;
+  color: #fff !important;
+  box-shadow: 0 10px 20px rgba(23, 120, 63, .16) !important;
+}
+
+.lote103-clean-internal-mobile .secondary-btn {
+  background: #eef5ff !important;
+  border-color: #c8dcf4 !important;
+  color: #16447d !important;
+}
+
+.lote103-clean-internal-mobile .ghost-btn {
+  background: #fff !important;
+  border-color: var(--slf103-line) !important;
+  color: #34465f !important;
+}
+
+.lote103-clean-internal-mobile .pill,
+.lote103-clean-internal-mobile .status-chip,
+.lote103-clean-internal-mobile .neo-mini-chip,
+.lote103-clean-internal-mobile .web-kicker {
+  border-radius: 999px !important;
+  min-height: 26px !important;
+  padding: 5px 10px !important;
+  font-size: .72rem !important;
+  font-weight: 850 !important;
+}
+
+/* Estados vazios: mais visíveis, curtos e com contraste. */
+.lote103-clean-internal-mobile .empty-state-card,
+.lote103-clean-internal-mobile .data-empty-state,
+.lote103-clean-internal-mobile .dash-empty-activity,
+.lote103-clean-internal-mobile .empty-state,
+.lote103-clean-internal-mobile .no-data,
+.lote103-clean-internal-mobile .notice {
+  background: #f8fafc !important;
+  border: 1px dashed #c6d6e8 !important;
+  color: #263952 !important;
+  border-radius: 18px !important;
+}
+
+.lote103-clean-internal-mobile .empty-state-card strong,
+.lote103-clean-internal-mobile .data-empty-state strong,
+.lote103-clean-internal-mobile .dash-empty-activity strong,
+.lote103-clean-internal-mobile .empty-state h3,
+.lote103-clean-internal-mobile .no-data h3 {
+  color: #142541 !important;
+}
+
+/* Tabelas: limpas no desktop e sem estourar tanto no mobile. */
+.lote103-clean-internal-mobile table,
+.lote103-clean-internal-mobile .data-table-shell table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.lote103-clean-internal-mobile th,
+.lote103-clean-internal-mobile .data-table-shell th {
+  background: #f2f6fb !important;
+  color: #213956 !important;
+  border-bottom: 1px solid var(--slf103-line) !important;
+  font-size: .78rem !important;
+  letter-spacing: .01em !important;
+}
+
+.lote103-clean-internal-mobile td,
+.lote103-clean-internal-mobile .data-table-shell td {
+  border-bottom: 1px solid var(--slf103-line-soft) !important;
+  color: #213047 !important;
+}
+
+/* PDV: menos scroll visual, pagamentos em blocos leves e resumo destacado. */
+.lote103-clean-internal-mobile .neo-page-sales .classic-sales-panel,
+.lote103-clean-internal-mobile .neo-page-sales .classic-panel {
+  border-radius: 20px !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-sales .classic-sales-guide,
+.lote103-clean-internal-mobile .neo-page-sales .classic-sales-hint,
+.lote103-clean-internal-mobile .products-clean-guide-v62,
+.lote103-clean-internal-mobile .customers-helper-v89,
+.lote103-clean-internal-mobile .orders-helper-v86,
+.lote103-clean-internal-mobile .cash-helper-v90,
+.lote103-clean-internal-mobile .credits-helper-v91,
+.lote103-clean-internal-mobile .reports-helper-v92,
+.lote103-clean-internal-mobile .settings-helper-v93 {
+  background: #f7fafc !important;
+  border: 1px solid var(--slf103-line) !important;
+  border-radius: 18px !important;
+  color: #465a75 !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-sales .classic-sales-add-row {
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-sales .classic-payment-row-option {
+  background: #f8fafc !important;
+  border: 1px solid var(--slf103-line) !important;
+  box-shadow: none !important;
+}
+
+.lote103-clean-internal-mobile .neo-page-sales .classic-payment-row-option:has(input:checked) {
+  border-color: rgba(33, 90, 169, .55) !important;
+  background: #eef5ff !important;
+}
+
+.lote103-clean-internal-mobile .classic-sale-summary-total,
+.lote103-clean-internal-mobile .total-box {
+  background: linear-gradient(135deg, #62544c 0%, #3f2b12 100%) !important;
+  color: #fff !important;
+  border-radius: 20px !important;
+}
+
+/* Diagnóstico: essencial primeiro, técnico com leitura melhor. */
+.lote103-clean-internal-mobile .webdiagnostics-light-v65 .web-hero-card,
+.lote103-clean-internal-mobile .webdiagnostics-safe-v66 .web-hero-card {
+  background: #fff !important;
+  border-radius: 22px !important;
+  box-shadow: var(--slf103-soft-shadow) !important;
+}
+
+.lote103-clean-internal-mobile .web-diagnostics-actions {
+  gap: 10px !important;
+}
+
+.lote103-clean-internal-mobile .web-sync-module-card,
+.lote103-clean-internal-mobile .web-health-grid > *,
+.lote103-clean-internal-mobile .design-readiness-grid > *,
+.lote103-clean-internal-mobile .css-inventory-grid > *,
+.lote103-clean-internal-mobile .neo-family-card,
+.lote103-clean-internal-mobile .neo-shell-sidebar-card,
+.lote103-clean-internal-mobile .neo-important-card {
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+}
+
+@media (min-width: 1180px) {
+  .lote103-clean-internal-mobile .products-clean-v62 .classic-products-layout,
+  .lote103-clean-internal-mobile .classic-products-layout,
+  .lote103-clean-internal-mobile .settings-form-grid-v93,
+  .lote103-clean-internal-mobile .form-grid.compact {
+    gap: 14px !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .lote103-clean-internal-mobile .neo-page-dashboard .dash-kpi-grid,
+  .lote103-clean-internal-mobile .stats-grid,
+  .lote103-clean-internal-mobile .metric-grid,
+  .lote103-clean-internal-mobile .reports-summary-grid,
+  .lote103-clean-internal-mobile .settings-summary-grid-v93 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lote103-clean-internal-mobile .classic-sales-middle,
+  .lote103-clean-internal-mobile .classic-sales-bottom,
+  .lote103-clean-internal-mobile .classic-sales-add-row,
+  .lote103-clean-internal-mobile .classic-customer-grid,
+  .lote103-clean-internal-mobile .classic-sale-summary-grid,
+  .lote103-clean-internal-mobile .form-grid.compact,
+  .lote103-clean-internal-mobile .settings-form-grid-v93 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote103-clean-internal-mobile .table-actions,
+  .lote103-clean-internal-mobile .backup-action-buttons,
+  .lote103-clean-internal-mobile .web-diagnostics-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .lote103-clean-internal-mobile .neo-page-content,
+  .lote103-clean-internal-mobile .classic-page,
+  .lote103-clean-internal-mobile .stack {
+    gap: 14px !important;
+  }
+
+  .lote103-clean-internal-mobile .classic-panel,
+  .lote103-clean-internal-mobile .panel,
+  .lote103-clean-internal-mobile .web-card,
+  .lote103-clean-internal-mobile .data-table-shell,
+  .lote103-clean-internal-mobile .dash-panel {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-meta-status {
+    display: none !important;
+  }
+
+  .lote103-clean-internal-mobile .dash-kpi-card,
+  .lote103-clean-internal-mobile .stat-card,
+  .lote103-clean-internal-mobile .metric-card,
+  .lote103-clean-internal-mobile .mini-insight-card {
+    min-height: 112px !important;
+    padding: 14px !important;
+  }
+
+  .lote103-clean-internal-mobile .dash-kpi-card small,
+  .lote103-clean-internal-mobile .stat-card small,
+  .lote103-clean-internal-mobile .metric-card small {
+    max-width: 100% !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-command-search,
+  .lote103-clean-internal-mobile .neo-store-switch {
+    border-radius: 16px !important;
+  }
+
+  .lote103-clean-internal-mobile .data-table-shell,
+  .lote103-clean-internal-mobile .classic-legacy-table-panel {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .lote103-clean-internal-mobile .classic-page table,
+  .lote103-clean-internal-mobile .data-table-shell table {
+    min-width: 560px !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-sales table {
+    min-width: 0 !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap table,
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap thead,
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap tbody,
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap tr,
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap thead {
+    display: none !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap tr {
+    margin-bottom: 10px !important;
+    padding: 12px !important;
+    border: 1px solid var(--slf103-line) !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+  }
+
+  .lote103-clean-internal-mobile .neo-page-sales .classic-sales-table-wrap td {
+    border: 0 !important;
+    padding: 6px 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .lote103-clean-internal-mobile .neo-page-dashboard .dash-kpi-grid,
+  .lote103-clean-internal-mobile .stats-grid,
+  .lote103-clean-internal-mobile .metric-grid,
+  .lote103-clean-internal-mobile .reports-summary-grid,
+  .lote103-clean-internal-mobile .settings-summary-grid-v93 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote103-clean-internal-mobile .page-title,
+  .lote103-clean-internal-mobile .classic-legacy-title,
+  .lote103-clean-internal-mobile .neo-page-meta-title h1,
+  .lote103-clean-internal-mobile .neo-page-meta h1 {
+    font-size: 1.42rem !important;
+  }
+
+  .lote103-clean-internal-mobile .primary-btn,
+  .lote103-clean-internal-mobile .secondary-btn,
+  .lote103-clean-internal-mobile .ghost-btn,
+  .lote103-clean-internal-mobile .danger-btn {
+    width: 100% !important;
+  }
+}

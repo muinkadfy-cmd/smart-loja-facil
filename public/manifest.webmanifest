@@ -1,13 +1,13 @@
 {
   "name": "Smart Loja Fácil Web",
   "short_name": "Smart Loja",
-  "description": "Sistema PWA web/mobile para loja com Supabase, sincronização, login limpo, interface web/mobile separada, atualização multiaparelhos, PDV mobile-first v101, diagnóstico comercial de sincronização e operação PWA-only mais leve para celular.",
+  "description": "Sistema PWA web/mobile para loja com Supabase, sincronização, login limpo, interface web/mobile separada, atualização multiaparelhos, PDV mobile-first v103, diagnóstico comercial de sincronização e operação PWA-only mais leve para celular.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f3f0e8",
-  "theme_color": "#2f241c",
+  "background_color": "#edf2f7",
+  "theme_color": "#215aa9",
   "categories": [
     "business",
     "productivity"
