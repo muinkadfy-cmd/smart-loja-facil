@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v106-dashboard-alerts';
-const currentCache = 'smart-loja-pwa-supabase-v106-dashboard-alerts';
-const currentOutbox = 'smart-loja:web-outbox-v106';
+const currentVersion = 'pwa-supabase-v107-dashboard-mobile-pixel';
+const currentCache = 'smart-loja-pwa-supabase-v107-dashboard-mobile-pixel';
+const currentOutbox = 'smart-loja:web-outbox-v107';
 
 const requiredCore = [
   'package.json',
@@ -115,7 +115,7 @@ for (const file of optionalPwaCommercialFiles) {
 }
 
 if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v106 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v107 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
 }
 
 if (process.exitCode) {
@@ -134,9 +134,9 @@ for (const script of ['lint', 'release:commercial:check', 'release:commercial:pr
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v106 dashboard alerts PWA/mobile.');
-if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v106.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v106 dashboard alerts PWA/mobile.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v107 dashboard mobile pixel PWA/mobile.');
+if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v107.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v107 dashboard mobile pixel PWA/mobile.');
 
 function publicAssetExists(url) {
   if (!url || !url.startsWith('/')) return true;
@@ -277,4 +277,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v106 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v107 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');

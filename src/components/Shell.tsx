@@ -64,6 +64,17 @@ interface WebIdentityState {
   storeName: string;
 }
 
+
+function BellIcon({ className }: { className?: string }): JSX.Element {
+  return (
+    <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <path d="M18 9.8c0-3.25-2.15-5.8-6-5.8S6 6.55 6 9.8v3.35c0 .58-.22 1.14-.62 1.55l-.96.98c-.65.66-.18 1.78.75 1.78h13.66c.93 0 1.4-1.12.75-1.78l-.96-.98A2.2 2.2 0 0 1 18 13.15V9.8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.75 19.1c.35.72 1.16 1.2 2.25 1.2s1.9-.48 2.25-1.2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 3.3V2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function shortDbName(value: string | undefined): string {
   if (!value) return 'Banco local';
   return value.split(/[/\\]/).pop() || value;
@@ -418,7 +429,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </div>
               <div className="neo-mobile-tools">
                 <button type="button" className="neo-notify-btn" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
-                  <AppIcon name="auditoria_logs" size={24} className="app-icon-chip" />
+                  <BellIcon className="neo-bell-inline-icon" />
                   {notificationCount > 0 ? <span>{notificationCount}</span> : null}
                 </button>
               </div>
@@ -457,7 +468,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   <span className="neo-tool-ok" />
                 </button>
                 <button type="button" className="neo-icon-tool neo-bell-tool" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
-                  <AppIcon name="auditoria_logs" size={24} className="app-icon-chip" />
+                  <BellIcon className="neo-bell-inline-icon" />
                   {notificationCount > 0 ? <span className="neo-alert-count">{notificationCount}</span> : null}
                 </button>
                 <button type="button" className="neo-store-switch" onClick={() => setActivePage('settings')} aria-label="Loja ativa">

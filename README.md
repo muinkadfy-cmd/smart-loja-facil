@@ -208,3 +208,14 @@ Este lote não altera a fonte oficial de dados nem as regras de Supabase. A muda
 - opção de ligar/desligar som dos alertas;
 - opção de pausar/ativar notificações do navegador;
 - micro ajustes de cards, topbar, bottom nav, contraste e espaçamentos.
+
+## Mega Lote 107 — Dashboard mobile pixel, sininho e cards sem quebra
+
+- versão lógica `pwa-supabase-v107-dashboard-mobile-pixel`;
+- cache `smart-loja-pwa-supabase-v107-dashboard-mobile-pixel`;
+- fila local `smart-loja:web-outbox-v107`, preservando filas antigas como legado;
+- sininho com SVG inline de fallback para não sumir no mobile;
+- badge vermelho posicionado no canto do botão sem cortar;
+- topbar mobile refinada para evitar `SMART LOJ...` cortado;
+- cards do Dashboard mobile com textos curtos e sem quebra feia;
+- ícones do manifest regenerados em PNG válido 192/512 e maskable.

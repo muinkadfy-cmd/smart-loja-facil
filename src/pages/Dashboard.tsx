@@ -197,7 +197,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Vendas hoje</span>
             <strong>{money(todaySalesTotal)}</strong>
-            <small>↑ {todaySalesCount} venda{todaySalesCount !== 1 ? 's' : ''} registradas</small>
+            <small>↑ {todaySalesCount} venda{todaySalesCount !== 1 ? 's' : ''}</small>
           </div>
           <div className="neo-kpi-icon"><AppIcon name="vendas_pdv" size={24} className="app-icon-stat" /></div>
         </article>
@@ -215,7 +215,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Produtos</span>
             <strong>{activeProducts}</strong>
-            <small>{data?.low_stock_count ?? 0} com estoque baixo</small>
+            <small>{data?.low_stock_count ?? 0} baixo</small>
           </div>
           <div className="neo-kpi-icon"><AppIcon name="produtos" size={24} className="app-icon-stat" /></div>
         </article>
@@ -224,7 +224,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Clientes</span>
             <strong>{data?.customers_total ?? 0}</strong>
-            <small>↑ base ativa da loja</small>
+            <small>↑ base ativa</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-violet"><AppIcon name="clientes" size={24} className="app-icon-stat" /></div>
         </article>
@@ -233,7 +233,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Ticket médio</span>
             <strong>{money(averageTicket)}</strong>
-            <small>↑ média por atendimento</small>
+            <small>↑ média</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-green"><AppIcon name="dinheiro" size={24} className="app-icon-stat" /></div>
         </article>
