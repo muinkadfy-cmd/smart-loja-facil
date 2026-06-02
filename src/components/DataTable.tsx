@@ -27,6 +27,14 @@ function recordLabel(count: number): string {
   return `${count} registros`;
 }
 
+function emptyStateCopy(empty: string): { title: string; detail: string } {
+  const [firstSentence, ...rest] = empty.split(/(?<=\.)\s+/).filter(Boolean);
+  if (!firstSentence) return { title: 'Nenhum registro encontrado', detail: 'Cadastre ou conclua uma ação para os dados aparecerem aqui.' };
+  const title = firstSentence.length <= 56 ? firstSentence : 'Nenhum registro encontrado';
+  const detail = rest.join(' ') || (title === firstSentence ? 'Cadastre ou conclua uma ação para os dados aparecerem aqui.' : empty);
+  return { title, detail };
+}
+
 export function DataTable<T>({
   columns,
   rows,
@@ -37,11 +45,12 @@ export function DataTable<T>({
 }: DataTableProps<T>): JSX.Element {
   const getKey = (row: T, index: number): string | number => (getRowKey ? getRowKey(row, index) : index);
 
+  const emptyCopy = emptyStateCopy(empty);
   const emptyState = (
     <div className="empty-state-card">
       <span className="empty-state-icon"><AppIcon name="buscar" size={24} className="app-icon-chip" /></span>
-      <strong>Nenhum registro encontrado</strong>
-      <small>{empty}</small>
+      <strong>{emptyCopy.title}</strong>
+      <small>{emptyCopy.detail}</small>
     </div>
   );
 

@@ -158,3 +158,13 @@ Principais pontos:
 - `release_check` continua PWA-only: não exige Tauri e só bloqueia riscos reais para web/mobile.
 
 Antes de vender para cliente real, valide no mínimo: criar cliente no PC e ver no celular, criar produto no celular e ver no PC, finalizar venda e conferir Dashboard/Caixa/Crediário nos dois aparelhos.
+
+
+## Mega Lote 100 — Interface clean fiel à referência
+
+- versão lógica `pwa-supabase-v100`;
+- cache `smart-loja-pwa-supabase-v100-reference-clean-interface`;
+- fila local `smart-loja:web-outbox-v100`, preservando filas antigas como legado;
+- foco em PWA-only web/mobile, tela de login compatível com o dashboard clean, sidebar clara, cards premium, topbar leve, mobile-first e menor poluição visual.
+
+Este lote não altera a fonte oficial de dados nem as regras de Supabase. A mudança principal é visual/UX, com versionamento PWA para o celular puxar a nova interface após deploy.

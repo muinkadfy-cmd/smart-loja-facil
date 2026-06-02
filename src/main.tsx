@@ -25,8 +25,9 @@ import './styles/lote96-commercial-validation.css';
 import './styles/lote97-realtime-sync.css';
 import './styles/lote98-pwa-commercial-pdv-sync.css';
 import './styles/lote99-commercial-final.css';
+import './styles/lote100-reference-clean-interface.css';
 
-document.documentElement.classList.add('lote77-touch-guard', 'lote78-css-dedupe', 'lote79-neo-family', 'lote80-neo-shell-sidebar', 'lote81-neo-important-reduction', 'lote82-login-premium', 'lote83-dashboard-premium', 'lote84-mobile-dashboard-refine', 'lote85-sales-pdv-premium', 'lote86-orders-premium', 'lote87-products-premium', 'lote88-product-photos-storage', 'lote89-customers-premium', 'lote90-cash-premium', 'lote91-credits-premium', 'lote92-reports-premium', 'lote93-backup-settings-premium', 'lote95-css-consolidation', 'lote96-commercial-validation', 'lote97-realtime-sync', 'lote98-pwa-commercial-pdv-sync', 'lote99-commercial-final');
+document.documentElement.classList.add('lote77-touch-guard', 'lote78-css-dedupe', 'lote79-neo-family', 'lote80-neo-shell-sidebar', 'lote81-neo-important-reduction', 'lote82-login-premium', 'lote83-dashboard-premium', 'lote84-mobile-dashboard-refine', 'lote85-sales-pdv-premium', 'lote86-orders-premium', 'lote87-products-premium', 'lote88-product-photos-storage', 'lote89-customers-premium', 'lote90-cash-premium', 'lote91-credits-premium', 'lote92-reports-premium', 'lote93-backup-settings-premium', 'lote95-css-consolidation', 'lote96-commercial-validation', 'lote97-realtime-sync', 'lote98-pwa-commercial-pdv-sync', 'lote99-commercial-final', 'lote100-reference-clean-interface');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil Web Mobile - PWA React + TypeScript + Vite + Supabase + Cloudflare v99",
+  "description": "Smart Loja Fácil Web Mobile - PWA React + TypeScript + Vite + Supabase + Cloudflare v100",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build",

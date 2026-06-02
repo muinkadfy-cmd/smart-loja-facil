@@ -3,6 +3,7 @@ import { AppIcon } from '../components/AppIcon';
 import { DataTable } from '../components/DataTable';
 import { api } from '../lib/api';
 import { makeRequestId, money } from '../lib/format';
+import { useWebPermissions } from '../lib/useWebPermissions';
 import type { Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -48,6 +49,8 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [printingReceipt, setPrintingReceipt] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const permissions = useWebPermissions(refreshToken);
+  const canOperate = permissions.canOperate;
   const customerSelectRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
@@ -113,11 +116,16 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   }, [amountPaid, paymentMethod, total]);
 
   function addItem() {
+    if (!canOperate) {
+      setMessage('');
+      setError(permissions.readonlyMessage || 'Você não tem permissão para montar vendas.');
+      return;
+    }
     const product = selectedProduct;
     if (!product || qty <= 0) return;
     const currentQty = cart.find((item) => item.product_id === product.id)?.qty ?? 0;
     if (currentQty + qty > product.stock) {
-      setError(`Estoque insuficiente para ${product.name}. Disponivel: ${product.stock}.`);
+      setError(`Estoque insuficiente para ${product.name}. Disponível: ${product.stock}.`);
       return;
     }
     setError('');
@@ -144,6 +152,11 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   }
 
   function updateSelectedItem() {
+    if (!canOperate) {
+      setMessage('');
+      setError(permissions.readonlyMessage || 'Você não tem permissão para alterar itens da venda.');
+      return;
+    }
     if (!selectedCartItem || qty <= 0) return;
     const product = products.find((item) => item.id === selectedCartItem.product_id);
     if (!product) return;
@@ -151,7 +164,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       .filter((item) => item.product_id !== selectedCartItem.product_id)
       .find((item) => item.product_id === product.id)?.qty ?? 0;
     if (qty + otherQty > product.stock) {
-      setError(`Estoque insuficiente para ${product.name}. Disponivel: ${product.stock}.`);
+      setError(`Estoque insuficiente para ${product.name}. Disponível: ${product.stock}.`);
       return;
     }
     setError('');
@@ -159,6 +172,11 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   }
 
   function removeItem(productIdToRemove: string) {
+    if (!canOperate) {
+      setMessage('');
+      setError(permissions.readonlyMessage || 'Você não tem permissão para remover itens da venda.');
+      return;
+    }
     setCart((current) => current.filter((item) => item.product_id !== productIdToRemove));
     if (selectedCartProductId === productIdToRemove) setSelectedCartProductId(null);
   }
@@ -188,7 +206,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     try {
       const fileStem = `comprovante-venda-${latestReceipt.sale_number || latestReceipt.sale_id}`;
       const path = await api.exportHtmlPdf(latestReceipt.content, fileStem, true);
-      setMessage(`Comprovante da ultima venda enviado para PDF em ${path}.`);
+      setMessage(`Comprovante da última venda enviado para PDF em ${path}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -199,6 +217,11 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   async function finishSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (cart.length === 0 || saving) return;
+    if (!canOperate) {
+      setMessage('');
+      setError(permissions.readonlyMessage || 'Você não tem permissão para finalizar vendas.');
+      return;
+    }
     setSaving(true);
     setError('');
     setMessage('');
@@ -227,11 +250,14 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   }
 
   return (
-    <div className="stack classic-sales-stack">
+    <div className="stack classic-sales-stack sales-light-v64 sales-pdv-v85">
       {error && <div className="error-box">{error}</div>}
       {message && <div className="notice">{message}</div>}
+      {!canOperate && permissions.isWeb ? <div className="web-readonly-module-note"><strong>{permissions.roleLabel}</strong><span>{permissions.readonlyMessage}</span></div> : null}
 
       <form className="classic-sales-panel" onSubmit={finishSale}>
+        <div className="light-section-note-v64 sales-helper-v64"><strong>Fluxo do PDV</strong><span>{canOperate ? '1. Adicione produtos · 2. Confira cliente e pagamento · 3. Finalize no resumo.' : 'Consulta liberada. Para vender ou alterar, entre com um perfil autorizado.'}</span></div>
+        <div className="sales-mobile-pdv-guide"><strong>PDV no celular</strong><span>Busque o produto, toque em Adicionar e confira o total antes de finalizar. Os itens aparecem em cards para evitar corte lateral.</span></div>
         <section className="panel classic-panel">
           <div className="classic-fieldset-title">Adicionar produto</div>
           <div className="classic-sales-add-row">
@@ -241,8 +267,8 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             </label>
             <label className="classic-sales-product-field">
               <span>Descrição do produto</span>
-              <select value={productId} onChange={(event) => setProductId(event.target.value)}>
-                <option value="">Digite o código, nome ou use o leitor de código de barras</option>
+              <select value={productId} onChange={(event) => setProductId(event.target.value)} disabled={!canOperate}>
+                <option value="">Selecione um produto ou use o leitor de código de barras</option>
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.name} | estoque {product.stock}
@@ -252,13 +278,13 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             </label>
             <label>
               <span>Quantidade</span>
-              <input type="number" min="1" step="1" value={qty} onChange={(event) => setQty(Number(event.target.value) || 1)} />
+              <input type="number" min="1" step="1" value={qty} onChange={(event) => setQty(Number(event.target.value) || 1)} readOnly={!canOperate} />
             </label>
             <label>
-              <span>Preço unitario (R$)</span>
+              <span>Preço unitário (R$)</span>
               <input value={selectedProduct ? (selectedProduct.promo_price ?? selectedProduct.price).toFixed(2).replace('.', ',') : '0,00'} readOnly />
             </label>
-            <button type="button" className="primary-btn classic-add-btn" onClick={addItem}>
+            <button type="button" className="primary-btn classic-add-btn" onClick={addItem} disabled={!canOperate}>
               <AppIcon name="novo_item_adicionar" size={16} className="app-icon-button-inline" />
               Adicionar
             </button>
@@ -270,7 +296,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             <div className="classic-fieldset-title">Itens da venda ({cart.length} itens)</div>
             <DataTable<CartItem>
               rows={cart}
-              empty="Nenhum item adicionado."
+              empty="Nenhum item adicionado ainda. Busque um produto pelo código, nome ou leitor e toque em Adicionar."
               getRowKey={(row) => row.product_id}
               selectedRowKey={selectedCartProductId}
               onRowClick={(row) => {
@@ -282,20 +308,44 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                 { key: 'code', label: 'Código', render: (row) => row.internal_code || '-' },
                 { key: 'name', label: 'Descrição do produto', render: (row) => row.name },
                 { key: 'qty', label: 'Qtd.', align: 'right', render: (row) => row.qty.toFixed(3).replace('.', ',') },
-                { key: 'unit', label: 'Unitario (R$)', align: 'right', render: (row) => money(row.unit_price) },
+                { key: 'unit', label: 'Unitário (R$)', align: 'right', render: (row) => money(row.unit_price) },
                 { key: 'total', label: 'Total (R$)', align: 'right', render: (row) => money(row.unit_price * row.qty) },
               ]}
             />
+            <div className="sales-mobile-cart-cards" aria-label="Itens da venda em cards para celular">
+              {cart.length === 0 ? (
+                <div className="empty-state-card">
+                  <span className="empty-state-icon"><AppIcon name="buscar" size={24} className="app-icon-chip" /></span>
+                  <strong>Nenhum item adicionado ainda.</strong>
+                  <small>Busque um produto pelo código, nome ou leitor e toque em Adicionar.</small>
+                </div>
+              ) : cart.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.product_id}
+                  className={`sales-mobile-cart-card ${selectedCartProductId === item.product_id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedCartProductId(item.product_id);
+                    setQty(item.qty);
+                    setProductId(item.product_id);
+                  }}
+                >
+                  <span className="sales-mobile-cart-card-top"><small>ITEM {String(index + 1).padStart(2, '0')}</small><em>{money(item.unit_price * item.qty)}</em></span>
+                  <strong>{item.name}</strong>
+                  <span className="sales-mobile-cart-card-bottom"><span>Cód. {item.internal_code || '-'}</span><span>{item.qty.toFixed(3).replace('.', ',')} × {money(item.unit_price)}</span></span>
+                </button>
+              ))}
+            </div>
             <div className="classic-sales-item-actions">
-              <button type="button" className="ghost-btn" onClick={() => selectedCartItem && removeItem(selectedCartItem.product_id)} disabled={!selectedCartItem}>
+              <button type="button" className="ghost-btn" onClick={() => selectedCartItem && removeItem(selectedCartItem.product_id)} disabled={!selectedCartItem || !canOperate}>
                 <AppIcon name="remover_menos" size={16} className="app-icon-button-inline" />
                 Remover
               </button>
-              <button type="button" className="ghost-btn" onClick={updateSelectedItem} disabled={!selectedCartItem}>
+              <button type="button" className="ghost-btn" onClick={updateSelectedItem} disabled={!selectedCartItem || !canOperate}>
                 <AppIcon name="editar" size={16} className="app-icon-button-inline" />
                 Alterar
               </button>
-              <button type="button" className="ghost-btn" onClick={clearSale} disabled={cart.length === 0}>
+              <button type="button" className="ghost-btn" onClick={clearSale} disabled={cart.length === 0 || !canOperate}>
                 <AppIcon name="excluir" size={16} className="app-icon-button-inline" />
                 Limpar venda
               </button>
@@ -312,8 +362,8 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             </div>
             <label>
               <span>Selecionar cliente</span>
-              <select ref={customerSelectRef} value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
-                <option value="">Consumidor Final / Balcão</option>
+              <select ref={customerSelectRef} value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={!canOperate}>
+                <option value="">Consumidor final / balcão</option>
                 {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
               </select>
             </label>
@@ -344,63 +394,63 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
 
         <section className="classic-sales-bottom">
           <article className="panel classic-panel">
-            <div className="classic-fieldset-title">Formas de Pagamento</div>
+            <div className="classic-fieldset-title">Formas de pagamento</div>
             <div className="classic-payment-options">
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
-                  <input type="radio" checked={paymentMethod === 'dinheiro'} onChange={() => setPaymentMethod('dinheiro')} />
+                  <input type="radio" checked={paymentMethod === 'dinheiro'} onChange={() => setPaymentMethod('dinheiro')} disabled={!canOperate} />
                   <strong><AppIcon name="dinheiro" size={16} className="app-icon-button-inline" />Dinheiro</strong>
                 </div>
                 <span>Valor pago (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'dinheiro' ? amountPaid : 0} onChange={(event) => setAmountPaid(Number(event.target.value))} />
+                <input type="number" min="0" step="0.01" value={paymentMethod === 'dinheiro' ? amountPaid : 0} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
                 <span>Troco (R$)</span>
                 <input value={money(cashChange).replace('R$ ', '')} readOnly />
               </label>
 
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
-                  <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} />
-                  <strong><AppIcon name="cartao_debito" size={16} className="app-icon-button-inline" />Cartão Debito / Credito</strong>
+                  <input type="radio" checked={paymentMethod === 'cartao'} onChange={() => setPaymentMethod('cartao')} disabled={!canOperate} />
+                  <strong><AppIcon name="cartao_debito" size={16} className="app-icon-button-inline" />Cartão Débito / Crédito</strong>
                 </div>
                 <span>Valor (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'cartao' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} />
+                <input type="number" min="0" step="0.01" value={paymentMethod === 'cartao' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
                 <span>Taxa (%)</span>
                 <input value="0,00" readOnly />
               </label>
 
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
-                  <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} />
+                  <input type="radio" checked={paymentMethod === 'pix'} onChange={() => setPaymentMethod('pix')} disabled={!canOperate} />
                   <strong><AppIcon name="pix" size={16} className="app-icon-button-inline" />Pix</strong>
                 </div>
                 <span>Valor (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'pix' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} />
+                <input type="number" min="0" step="0.01" value={paymentMethod === 'pix' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
                 <span>Total (R$)</span>
                 <input value={money(total).replace('R$ ', '')} readOnly />
               </label>
 
               <label className="classic-payment-row-option">
                 <div className="classic-payment-title">
-                  <input type="radio" checked={paymentMethod === 'crediario'} onChange={() => setPaymentMethod('crediario')} />
+                  <input type="radio" checked={paymentMethod === 'crediario'} onChange={() => setPaymentMethod('crediario')} disabled={!canOperate} />
                   <strong><AppIcon name="crediario" size={16} className="app-icon-button-inline" />Crediário</strong>
                 </div>
                 <span>Parcelas</span>
-                <input type="number" min="1" max="24" step="1" value={installmentCount} onChange={(event) => setInstallmentCount(Math.min(24, Math.max(1, Number(event.target.value) || 1)))} />
+                <input type="number" min="1" max="24" step="1" value={installmentCount} onChange={(event) => setInstallmentCount(Math.min(24, Math.max(1, Number(event.target.value) || 1)))} readOnly={!canOperate} />
                 <span>Primeiro vencimento</span>
-                <input type="date" value={firstDueDate} onChange={(event) => setFirstDueDate(event.target.value)} />
+                <input type="date" value={firstDueDate} onChange={(event) => setFirstDueDate(event.target.value)} readOnly={!canOperate} />
               </label>
             </div>
           </article>
 
           <aside className="panel classic-panel classic-sale-summary-panel">
-            <div className="classic-fieldset-title">Resumo da Venda</div>
+            <div className="classic-fieldset-title">Resumo da venda</div>
             <div className="classic-sale-summary-grid">
               <div><span>Total de itens:</span><strong>{cart.length}</strong></div>
               <div><span>Quantidade total:</span><strong>{totalQty.toFixed(3).replace('.', ',')}</strong></div>
               <div><span>Subtotal:</span><strong>{money(subtotal)}</strong></div>
               <div>
                 <span>Descontos:</span>
-                <input type="number" min="0" step="0.01" value={discount} onChange={(event) => setDiscount(Number(event.target.value) || 0)} />
+                <input type="number" min="0" step="0.01" value={discount} onChange={(event) => setDiscount(Number(event.target.value) || 0)} readOnly={!canOperate} />
               </div>
             </div>
             <div className="classic-sale-total-box">
@@ -409,16 +459,16 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <small>Troco: {money(cashChange)}</small>
             </div>
             <div className="classic-sale-action-buttons">
-              <button className="primary-btn big" disabled={saving || cart.length === 0}>
-                {saving ? 'Gravando venda...' : <><AppIcon name="finalizar_venda" size={24} className="app-icon-button-inline" />Finalizar venda (F9)</>}
+              <button className="primary-btn big" disabled={saving || cart.length === 0 || !canOperate}>
+                {saving ? 'Gravando venda...' : canOperate ? <><AppIcon name="finalizar_venda" size={24} className="app-icon-button-inline" />Finalizar venda (F9)</> : 'Somente leitura'}
               </button>
-              <button type="button" className="ghost-btn big" onClick={clearSale} disabled={cart.length === 0}>
+              <button type="button" className="ghost-btn big" onClick={clearSale} disabled={cart.length === 0 || !canOperate}>
                 <AppIcon name="cancelar_venda" size={24} className="app-icon-button-inline" />
                 Cancelar venda
               </button>
               <button type="button" className="secondary-btn big" onClick={printLatestReceipt} disabled={printingReceipt}>
                 <AppIcon name="imprimir" size={24} className="app-icon-button-inline" />
-                {printingReceipt ? 'Gerando comprovante...' : 'Imprimir previa'}
+                {printingReceipt ? 'Gerando comprovante...' : 'Imprimir prévia'}
               </button>
             </div>
           </aside>
@@ -431,7 +481,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
         </div>
         <DataTable<SaleSummary>
           rows={sales.slice(0, 8)}
-          empty="Nenhuma venda registrada."
+          empty="Nenhuma venda registrada ainda. Quando finalizar uma venda, ela aparecerá aqui."
           getRowKey={(row) => row.id}
           columns={[
             { key: 'number', label: 'Venda', render: (row) => `#${row.number}` },

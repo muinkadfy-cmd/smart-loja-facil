@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v99';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v99-commercial-final-pdv-mobile';
+export const WEB_APP_VERSION = 'pwa-supabase-v100';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v100-reference-clean-interface';
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -170,7 +170,7 @@ export function recordWebSyncSnapshot(status: WebSyncStatus, module: string, det
 }
 
 
-const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v99';
+const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v100';
 const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
   'smart-loja:web-outbox-v75', 'smart-loja:web-outbox-v74', 'smart-loja:web-outbox-v73'];
 
