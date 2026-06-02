@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v103';
-const currentCache = 'smart-loja-pwa-supabase-v103-clean-internal-mobile';
-const currentOutbox = 'smart-loja:web-outbox-v103';
+const currentVersion = 'pwa-supabase-v104-mobile-photo-map';
+const currentCache = 'smart-loja-pwa-supabase-v104-mobile-photo-map';
+const currentOutbox = 'smart-loja:web-outbox-v104';
 
 const requiredCore = [
   'package.json',
@@ -115,7 +115,7 @@ for (const file of optionalPwaCommercialFiles) {
 }
 
 if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v103 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v104 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
 }
 
 if (process.exitCode) {
@@ -134,9 +134,38 @@ for (const script of ['lint', 'release:commercial:check', 'release:commercial:pr
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v103 clean internal mobile PWA/mobile.');
-if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v103.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v103 clean internal mobile PWA/mobile.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v104 mobile photo map PWA/mobile.');
+if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v104.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v104 mobile photo map PWA/mobile.');
+
+function publicAssetExists(url) {
+  if (!url || !url.startsWith('/')) return true;
+  if (url === '/' || url === '/index.html') return true;
+  return exists(`public/${url.slice(1)}`);
+}
+
+try {
+  const manifest = JSON.parse(read('public/manifest.webmanifest'));
+  for (const icon of manifest.icons ?? []) {
+    if (!publicAssetExists(icon.src)) fail(`Manifest referencia icon ausente: ${icon.src}`);
+  }
+  for (const shortcut of manifest.shortcuts ?? []) {
+    for (const icon of shortcut.icons ?? []) {
+      if (!publicAssetExists(icon.src)) fail(`Manifest shortcut referencia icon ausente: ${icon.src}`);
+    }
+  }
+} catch (error) {
+  fail(`Manifest web invalido: ${error instanceof Error ? error.message : String(error)}`);
+}
+
+const appShellMatch = serviceWorkerSource.match(/const APP_SHELL = \[([\s\S]*?)\];/);
+if (!appShellMatch) fail('Service worker precisa declarar APP_SHELL.');
+else {
+  const appShellAssets = Array.from(appShellMatch[1].matchAll(/'([^']+)'/g), (match) => match[1]);
+  for (const asset of appShellAssets) {
+    if (!publicAssetExists(asset)) fail(`Service worker tenta cachear asset ausente: ${asset}`);
+  }
+}
 
 const requiredCssModules = exists('src/styles')
   ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })).map((name) => `src/styles/${name}`)
@@ -248,4 +277,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v103 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v104 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');

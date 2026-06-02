@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v103';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v103-clean-internal-mobile';
+export const WEB_APP_VERSION = 'pwa-supabase-v104-mobile-photo-map';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v104-mobile-photo-map';
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -170,8 +170,8 @@ export function recordWebSyncSnapshot(status: WebSyncStatus, module: string, det
 }
 
 
-const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v103';
-const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v100', 'smart-loja:web-outbox-v99', 'smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
+const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v104';
+const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v103-scroll3', 'smart-loja:web-outbox-v103-scroll2', 'smart-loja:web-outbox-v100', 'smart-loja:web-outbox-v99', 'smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
   'smart-loja:web-outbox-v75', 'smart-loja:web-outbox-v74', 'smart-loja:web-outbox-v73'];
 
 export type WebOutboxAction =

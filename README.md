@@ -180,10 +180,22 @@ Este lote não altera a fonte oficial de dados nem as regras de Supabase. A muda
 
 ## Mega Lote 103 — Clean total das abas internas + mobile premium
 
-- versão lógica `pwa-supabase-v103`;
-- cache `smart-loja-pwa-supabase-v103-clean-internal-mobile`;
-- fila local `smart-loja:web-outbox-v103`, preservando filas antigas como legado;
+- versão lógica `pwa-supabase-v103-scroll3`;
+- cache `smart-loja-pwa-supabase-v103-scroll3-clean-internal-mobile`;
+- fila local `smart-loja:web-outbox-v103-scroll3`, preservando filas antigas como legado;
 - nova camada visual `src/styles/lote103-clean-internal-mobile.css`;
 - abas internas com fundo menos branco, cards mais visíveis, contraste suave e melhor respiro;
 - melhoria global de tabelas, formulários, cards, botões, estados vazios e PDV mobile;
 - release/check mantido como PWA-only web/mobile.
+
+## Mega Lote 104 — Mapeamento de fotos mobile + navegação 10/10
+
+- analisado ZIP do projeto e ZIP com 40 imagens de conferência mobile;
+- versão lógica `pwa-supabase-v104-mobile-photo-map`;
+- cache PWA `smart-loja-pwa-supabase-v104-mobile-photo-map`;
+- fila local `smart-loja:web-outbox-v104`, preservando filas antigas como legado;
+- correção forte de rolagem mobile em `.neo-main`;
+- sidebar fechada não ocupa mais espaço no layout mobile;
+- bottom nav mantém safe-area sem cobrir o conteúdo;
+- adicionados aliases de ícones PWA para reduzir warnings de manifest/cache antigo;
+- relatório de mapeamento em `docs/MEGA_LOTE_104_MAPEAMENTO_FOTOS_MOBILE.md`.

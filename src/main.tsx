@@ -30,8 +30,10 @@ import './styles/lote101-ultra-clean.css';
 import './styles/lote102-centered-login.css';
 import './styles/lote103-clean-internal-mobile.css';
 import './styles/lote103-scroll-abas-hotfix.css';
+import './styles/lote103-scroll-mobile-hotfix2.css';
+import './styles/lote104-mobile-photo-map.css';
 
-document.documentElement.classList.add('lote77-touch-guard', 'lote78-css-dedupe', 'lote79-neo-family', 'lote80-neo-shell-sidebar', 'lote81-neo-important-reduction', 'lote82-login-premium', 'lote83-dashboard-premium', 'lote84-mobile-dashboard-refine', 'lote85-sales-pdv-premium', 'lote86-orders-premium', 'lote87-products-premium', 'lote88-product-photos-storage', 'lote89-customers-premium', 'lote90-cash-premium', 'lote91-credits-premium', 'lote92-reports-premium', 'lote93-backup-settings-premium', 'lote95-css-consolidation', 'lote96-commercial-validation', 'lote97-realtime-sync', 'lote98-pwa-commercial-pdv-sync', 'lote99-commercial-final', 'lote100-reference-clean-interface', 'lote101-ultra-clean', 'lote102-centered-login', 'lote103-clean-internal-mobile', 'lote103-scroll-abas-hotfix');
+document.documentElement.classList.add('lote77-touch-guard', 'lote78-css-dedupe', 'lote79-neo-family', 'lote80-neo-shell-sidebar', 'lote81-neo-important-reduction', 'lote82-login-premium', 'lote83-dashboard-premium', 'lote84-mobile-dashboard-refine', 'lote85-sales-pdv-premium', 'lote86-orders-premium', 'lote87-products-premium', 'lote88-product-photos-storage', 'lote89-customers-premium', 'lote90-cash-premium', 'lote91-credits-premium', 'lote92-reports-premium', 'lote93-backup-settings-premium', 'lote95-css-consolidation', 'lote96-commercial-validation', 'lote97-realtime-sync', 'lote98-pwa-commercial-pdv-sync', 'lote99-commercial-final', 'lote100-reference-clean-interface', 'lote101-ultra-clean', 'lote102-centered-login', 'lote103-clean-internal-mobile', 'lote103-scroll-abas-hotfix', 'lote103-scroll-mobile-hotfix2', 'lote104-mobile-photo-map');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

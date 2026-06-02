@@ -1,0 +1,283 @@
+:root {
+  --lote102-centered-login: active;
+  --slf102-page-bg: #edf1f6;
+  --slf102-surface: #f4f6fa;
+  --slf102-card: #ffffff;
+  --slf102-line: #d7e1ec;
+  --slf102-ink: #12223b;
+  --slf102-muted: #5f7190;
+  --slf102-blue: #2a56a8;
+  --slf102-green: #1f9549;
+  --slf102-shadow: 0 20px 48px rgba(17, 32, 55, .09);
+  --slf102-soft-shadow: 0 12px 28px rgba(17, 32, 55, .06);
+}
+
+html.lote102-centered-login,
+html.lote102-centered-login body,
+.lote102-centered-login #root {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(73, 121, 204, .14), transparent 28rem),
+    radial-gradient(circle at 100% 0%, rgba(203, 124, 118, .12), transparent 26rem),
+    linear-gradient(180deg, #f8fafc 0%, var(--slf102-page-bg) 100%) !important;
+  color: var(--slf102-ink) !important;
+}
+
+/* Fundo geral um pouco mais escuro para destacar cards e bordas. */
+.lote102-centered-login .neo-main,
+.lote102-centered-login .neo-page-shell,
+.lote102-centered-login .classic-page,
+.lote102-centered-login .dash-panel,
+.lote102-centered-login .classic-panel,
+.lote102-centered-login .classic-sales-panel,
+.lote102-centered-login .data-table-shell,
+.lote102-centered-login .web-card {
+  background: rgba(255, 255, 255, .92) !important;
+}
+
+.lote102-centered-login .neo-topbar,
+.lote102-centered-login .neo-sidebar {
+  background: rgba(247, 249, 252, .94) !important;
+}
+
+.lote102-centered-login .neo-nav-item,
+.lote102-centered-login .neo-env-block,
+.lote102-centered-login .neo-version-block,
+.lote102-centered-login .dash-kpi-card,
+.lote102-centered-login .web-input-row,
+.lote102-centered-login .web-password-row,
+.lote102-centered-login input,
+.lote102-centered-login textarea,
+.lote102-centered-login select {
+  background-color: var(--slf102-surface) !important;
+  border-color: var(--slf102-line) !important;
+}
+
+/* Login: remover bloco de letras à esquerda e centralizar tudo. */
+.lote102-centered-login .welcome-screen,
+.lote102-centered-login .login-landing {
+  min-height: 100dvh !important;
+  padding: clamp(18px, 3vw, 32px) !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.lote102-centered-login .master-login-centered-shell {
+  width: min(100%, 560px) !important;
+  display: grid !important;
+  justify-items: center !important;
+}
+
+.lote102-centered-login .master-login-centered-card,
+.lote102-centered-login .master-login-form-card {
+  width: 100% !important;
+  min-height: auto !important;
+  padding: clamp(24px, 3vw, 34px) !important;
+  gap: 14px !important;
+  border-radius: 28px !important;
+  background: rgba(255, 255, 255, .96) !important;
+  border: 1px solid var(--slf102-line) !important;
+  box-shadow: var(--slf102-shadow) !important;
+}
+
+.lote102-centered-login .master-login-hero-panel,
+.lote102-centered-login .master-login-benefits,
+.lote102-centered-login .master-login-single-shell > .master-login-hero-panel {
+  display: none !important;
+}
+
+.lote102-centered-login .master-login-centered-head,
+.lote102-centered-login .master-login-form-head {
+  display: grid !important;
+  justify-items: center !important;
+  text-align: center !important;
+  gap: 8px !important;
+  margin-bottom: 4px !important;
+}
+
+.lote102-centered-login .master-login-form-head strong {
+  font-size: clamp(1.5rem, 3vw, 1.9rem) !important;
+  letter-spacing: -0.04em !important;
+  color: #16243f !important;
+}
+
+.lote102-centered-login .master-login-form-head small {
+  color: var(--slf102-muted) !important;
+  font-size: .9rem !important;
+}
+
+.lote102-centered-login .web-auth-panel.web-auth-panel-simple {
+  width: 100% !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.lote102-centered-login .web-auth-panel .web-kicker,
+.lote102-centered-login .web-auth-status-pill,
+.lote102-centered-login .web-forgot-link {
+  display: none !important;
+}
+
+.lote102-centered-login .web-auth-panel h2 {
+  margin: 0 0 10px !important;
+  text-align: center !important;
+  font-size: 1.25rem !important;
+  color: #16243f !important;
+}
+
+.lote102-centered-login .web-auth-compact-email {
+  display: block !important;
+  margin: -2px 0 8px !important;
+  text-align: center !important;
+  font-size: .96rem !important;
+  color: #24416d !important;
+  word-break: break-word !important;
+}
+
+.lote102-centered-login .web-auth-form {
+  gap: 14px !important;
+}
+
+.lote102-centered-login .web-auth-form label > span,
+.lote102-centered-login .master-login-local-card label > span {
+  display: block !important;
+  margin-bottom: 6px !important;
+  font-size: .84rem !important;
+  font-weight: 800 !important;
+  color: #243754 !important;
+}
+
+.lote102-centered-login .web-input-row,
+.lote102-centered-login .web-password-row {
+  min-height: 54px !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.65) !important;
+}
+
+.lote102-centered-login .web-input-row input,
+.lote102-centered-login .web-password-row input {
+  background: transparent !important;
+  font-size: .96rem !important;
+}
+
+.lote102-centered-login .web-password-row .secondary-btn {
+  min-height: 42px !important;
+  min-width: 74px !important;
+  border-radius: 12px !important;
+}
+
+.lote102-centered-login .web-auth-form-options {
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+.lote102-centered-login .web-check-row {
+  gap: 10px !important;
+  font-size: .86rem !important;
+  color: #40526e !important;
+}
+
+.lote102-centered-login .web-auth-panel .primary-btn,
+.lote102-centered-login .web-auth-panel .secondary-btn,
+.lote102-centered-login .master-login-final-btn {
+  width: 100% !important;
+  min-height: 54px !important;
+  border-radius: 16px !important;
+}
+
+.lote102-centered-login .web-auth-session-actions {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.lote102-centered-login .web-auth-session-actions-compact .secondary-btn {
+  order: 2 !important;
+}
+
+.lote102-centered-login .web-message {
+  margin-top: 2px !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  text-align: center !important;
+  font-size: .82rem !important;
+}
+
+.lote102-centered-login .master-login-panel-link,
+.lote102-centered-login .master-login-final-btn,
+.lote102-centered-login .web-auth-panel .primary-btn {
+  background: linear-gradient(135deg, #25a04d 0%, #188344 100%) !important;
+  border-color: #188344 !important;
+  color: #fff !important;
+}
+
+/* Páginas internas: menos estourado, mais contraste suave e respiro. */
+.lote102-centered-login .neo-page-shell {
+  width: min(100%, 1280px) !important;
+}
+
+.lote102-centered-login .neo-main {
+  padding-inline: 28px !important;
+}
+
+.lote102-centered-login .neo-topbar {
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid rgba(215, 225, 236, .85) !important;
+}
+
+.lote102-centered-login .neo-page-meta {
+  margin-bottom: 18px !important;
+}
+
+.lote102-centered-login .dash-panel,
+.lote102-centered-login .classic-panel,
+.lote102-centered-login .classic-sales-panel,
+.lote102-centered-login .data-table-shell,
+.lote102-centered-login .web-card {
+  border: 1px solid rgba(215, 225, 236, .9) !important;
+  box-shadow: var(--slf102-soft-shadow) !important;
+}
+
+.lote102-centered-login .dash-kpi-card {
+  min-height: 132px !important;
+}
+
+@media (max-width: 860px) {
+  .lote102-centered-login .welcome-screen,
+  .lote102-centered-login .login-landing {
+    padding: 14px !important;
+  }
+
+  .lote102-centered-login .master-login-centered-shell {
+    width: min(100%, 420px) !important;
+  }
+
+  .lote102-centered-login .master-login-centered-card,
+  .lote102-centered-login .master-login-form-card {
+    padding: 22px 18px !important;
+    border-radius: 24px !important;
+  }
+
+  .lote102-centered-login .neo-main {
+    padding: 0 12px calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .lote102-centered-login .neo-page-shell {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .lote102-centered-login .master-login-form-head strong {
+    font-size: 1.34rem !important;
+  }
+
+  .lote102-centered-login .web-auth-panel h2 {
+    font-size: 1.14rem !important;
+  }
+
+  .lote102-centered-login .web-input-row,
+  .lote102-centered-login .web-password-row {
+    min-height: 52px !important;
+  }
+}

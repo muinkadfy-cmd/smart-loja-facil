@@ -1,12 +1,9 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v103-clean-internal-mobile';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v104-mobile-photo-map';
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/favicon.ico',
-  '/apple-touch-icon.png',
   '/manifest.webmanifest',
-  '/icons/favicon-16.png',
-  '/icons/favicon-32.png',
+  '/logo.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/maskable-192.png',
@@ -14,15 +11,25 @@ const APP_SHELL = [
   '/icons/icon-192-maskable.png',
   '/icons/icon-512-maskable.png',
   '/brand/smart-loja-icon.png',
-  '/brand/smart-loja-logo.png',
-  '/brand/jaque-logo-premium.png',
 ];
+
+async function precacheAppShell(cache) {
+  await Promise.all(
+    APP_SHELL.map(async (url) => {
+      try {
+        await cache.add(url);
+      } catch {
+        // Mantem o PWA instalavel mesmo se um asset opcional falhar no deploy.
+      }
+    })
+  );
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) => precacheAppShell(cache))
       .then(() => self.skipWaiting())
   );
 });
@@ -73,7 +80,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname === '/favicon.ico' || url.pathname === '/apple-touch-icon.png' || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(cacheFirst(event.request));
     return;
   }

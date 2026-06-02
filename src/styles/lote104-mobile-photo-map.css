@@ -1,0 +1,559 @@
+:root {
+  --lote104-mobile-photo-map: active;
+  --slf104-bg: #edf2f7;
+  --slf104-bg-2: #e7eef6;
+  --slf104-card: #ffffff;
+  --slf104-line: #d4dfeb;
+  --slf104-ink: #10213b;
+  --slf104-muted: #5d6f89;
+  --slf104-blue: #245ca8;
+  --slf104-green: #159453;
+  --slf104-shadow: 0 14px 34px rgba(15, 30, 52, .075);
+}
+
+html.lote104-mobile-photo-map,
+html.lote104-mobile-photo-map body,
+.lote104-mobile-photo-map #root {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(36, 92, 168, .10), transparent 28rem),
+    linear-gradient(180deg, #f7fafc 0%, var(--slf104-bg) 100%) !important;
+  color: var(--slf104-ink) !important;
+}
+
+/* Lote 104: ajuste baseado no mapeamento das fotos mobile. Remove tela branca, corrige fluxo e libera navegação. */
+.lote104-mobile-photo-map .neo-shell,
+.lote104-mobile-photo-map .neo-layout,
+.lote104-mobile-photo-map .neo-main,
+.lote104-mobile-photo-map .neo-page-shell,
+.lote104-mobile-photo-map .neo-page-content {
+  min-width: 0 !important;
+}
+
+.lote104-mobile-photo-map .neo-page-shell,
+.lote104-mobile-photo-map .neo-page-content,
+.lote104-mobile-photo-map .classic-page,
+.lote104-mobile-photo-map .stack {
+  position: relative !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+.lote104-mobile-photo-map .neo-page-shell,
+.lote104-mobile-photo-map .classic-page,
+.lote104-mobile-photo-map .dash-panel,
+.lote104-mobile-photo-map .classic-panel,
+.lote104-mobile-photo-map .classic-sales-panel,
+.lote104-mobile-photo-map .web-card,
+.lote104-mobile-photo-map .data-table-shell {
+  background: rgba(255, 255, 255, .96) !important;
+  border-color: var(--slf104-line) !important;
+  box-shadow: var(--slf104-shadow) !important;
+}
+
+.lote104-mobile-photo-map .neo-page-alert,
+.lote104-mobile-photo-map .empty-state-card,
+.lote104-mobile-photo-map .data-empty-state,
+.lote104-mobile-photo-map .dash-empty-activity {
+  background: #f8fbff !important;
+  border-color: var(--slf104-line) !important;
+}
+
+.lote104-mobile-photo-map .neo-nav-item-label,
+.lote104-mobile-photo-map .neo-mobile-dock span,
+.lote104-mobile-photo-map .neo-mobile-quick-access span,
+.lote104-mobile-photo-map .neo-store-switch strong,
+.lote104-mobile-photo-map .dash-kpi-card strong,
+.lote104-mobile-photo-map .dash-kpi-card small {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+.lote104-mobile-photo-map .neo-mini-chip,
+.lote104-mobile-photo-map .status-badge,
+.lote104-mobile-photo-map .badge,
+.lote104-mobile-photo-map .chip {
+  white-space: nowrap !important;
+}
+
+/* Desktop: mantém app estável e rolagem só no conteúdo principal. */
+@media (min-width: 861px) {
+  html.lote104-mobile-photo-map,
+  html.lote104-mobile-photo-map body,
+  .lote104-mobile-photo-map #root {
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .lote104-mobile-photo-map .neo-shell {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .lote104-mobile-photo-map .neo-layout {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .lote104-mobile-photo-map .neo-main {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar,
+  .lote104-mobile-photo-map .neo-toast {
+    flex: 0 0 auto !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-shell {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    padding-bottom: 36px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar .neo-nav {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+/* Mobile real: o scroll fica no conteúdo, sidebar fechada não ocupa espaço e bottom nav não cobre tela. */
+@media (max-width: 860px) {
+  html.lote104-mobile-photo-map,
+  html.lote104-mobile-photo-map body,
+  .lote104-mobile-photo-map #root {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+    position: static !important;
+    touch-action: manipulation !important;
+  }
+
+  .lote104-mobile-photo-map body {
+    background: var(--slf104-bg) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-windowbar {
+    display: none !important;
+  }
+
+  .lote104-mobile-photo-map .neo-shell {
+    width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    background: var(--slf104-bg) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-layout {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-main {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    padding: 0 12px calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+    background: var(--slf104-bg) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    flex: 0 0 auto !important;
+    margin: 0 -12px 12px !important;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px !important;
+    border-radius: 0 0 20px 20px !important;
+    background: rgba(247, 250, 253, .98) !important;
+    border-bottom: 1px solid var(--slf104-line) !important;
+    box-shadow: 0 10px 26px rgba(17, 32, 55, .06) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar-mobile-row {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+    gap: 8px !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-branding {
+    justify-content: center !important;
+    min-width: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-branding small,
+  .lote104-mobile-photo-map .neo-mobile-quick-access,
+  .lote104-mobile-photo-map .neo-bell-tool,
+  .lote104-mobile-photo-map .neo-page-meta p,
+  .lote104-mobile-photo-map .neo-page-meta-status .neo-mini-chip:nth-child(n+2) {
+    display: none !important;
+  }
+
+  .lote104-mobile-photo-map .neo-header-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-command-search {
+    min-height: 48px !important;
+    border-radius: 16px !important;
+    max-width: none !important;
+    width: 100% !important;
+    background: #fff !important;
+  }
+
+  .lote104-mobile-photo-map .neo-command-search input {
+    height: 38px !important;
+    font-size: .92rem !important;
+    min-width: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-command-search button {
+    min-width: 46px !important;
+    min-height: 38px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar-actions {
+    display: grid !important;
+    grid-template-columns: 46px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar-actions .neo-icon-tool:nth-of-type(n+2) {
+    display: none !important;
+  }
+
+  .lote104-mobile-photo-map .neo-icon-tool {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 15px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-store-switch {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 46px !important;
+    border-radius: 15px !important;
+    grid-template-columns: 36px minmax(0, 1fr) auto !important;
+    padding: 6px 10px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-store-avatar {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-store-switch small,
+  .lote104-mobile-photo-map .neo-store-switch i {
+    display: none !important;
+  }
+
+  .lote104-mobile-photo-map .neo-store-switch strong {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .84rem !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-shell {
+    flex: 1 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 0 18px !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-meta {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin: 8px 0 12px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-meta-title {
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-meta-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 12px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-meta h1 {
+    font-size: clamp(1.35rem, 7vw, 1.82rem) !important;
+    line-height: 1.04 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-meta-status {
+    flex: 0 0 auto !important;
+  }
+
+  .lote104-mobile-photo-map .neo-page-content,
+  .lote104-mobile-photo-map .classic-page,
+  .lote104-mobile-photo-map .stack {
+    display: grid !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: min(84vw, 310px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    transform: translateX(-110%) !important;
+    transition: transform .22s ease !important;
+    z-index: 120 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 0 22px 22px 0 !important;
+    box-shadow: 28px 0 72px rgba(15, 30, 52, .22) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar.open,
+  .lote104-mobile-photo-map .neo-nav-open .neo-sidebar {
+    transform: translateX(0) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar-brand,
+  .lote104-mobile-photo-map .neo-sidebar-footer {
+    flex: 0 0 auto !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar .neo-nav {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+  }
+
+  .lote104-mobile-photo-map .neo-sidebar-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 110 !important;
+    background: rgba(15, 30, 52, .32) !important;
+    backdrop-filter: blur(3px) !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 90 !important;
+    min-height: 74px !important;
+    border-radius: 22px !important;
+    background: rgba(255, 255, 255, .96) !important;
+    border: 1px solid var(--slf104-line) !important;
+    box-shadow: 0 18px 46px rgba(17, 32, 55, .16) !important;
+    padding: 7px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock button {
+    min-width: 0 !important;
+    min-height: 58px !important;
+    border-radius: 17px !important;
+    color: #40516b !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock button.active {
+    background: #eaf4ff !important;
+    color: #1859aa !important;
+    border: 1px solid #bcd9fb !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock .app-icon,
+  .lote104-mobile-photo-map .neo-mobile-dock svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock span {
+    font-size: .68rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .lote104-mobile-photo-map .dash-kpi-grid,
+  .lote104-mobile-photo-map .stats-grid,
+  .lote104-mobile-photo-map .metric-grid,
+  .lote104-mobile-photo-map .reports-summary-grid,
+  .lote104-mobile-photo-map .settings-summary-grid-v93,
+  .lote104-mobile-photo-map .web-health-grid,
+  .lote104-mobile-photo-map .web-sync-module-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .lote104-mobile-photo-map .dash-kpi-card,
+  .lote104-mobile-photo-map .stat-card,
+  .lote104-mobile-photo-map .metric-card,
+  .lote104-mobile-photo-map .mini-insight-card {
+    min-height: 96px !important;
+    padding: 14px 58px 14px 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .lote104-mobile-photo-map .dash-kpi-card strong,
+  .lote104-mobile-photo-map .stat-card strong,
+  .lote104-mobile-photo-map .metric-card strong {
+    font-size: clamp(1.45rem, 8vw, 2rem) !important;
+    line-height: 1 !important;
+  }
+
+  .lote104-mobile-photo-map .dash-kpi-card small,
+  .lote104-mobile-photo-map .stat-card small,
+  .lote104-mobile-photo-map .metric-card small {
+    max-width: 190px !important;
+    font-size: .75rem !important;
+    line-height: 1.22 !important;
+  }
+
+  .lote104-mobile-photo-map .dash-kpi-card .app-icon-stat,
+  .lote104-mobile-photo-map .dash-kpi-card > svg,
+  .lote104-mobile-photo-map .dash-kpi-card .app-icon {
+    width: 38px !important;
+    height: 38px !important;
+    right: 14px !important;
+    bottom: 14px !important;
+  }
+
+  .lote104-mobile-photo-map .dash-main-grid,
+  .lote104-mobile-photo-map .dash-bottom-grid,
+  .lote104-mobile-photo-map .classic-sales-middle,
+  .lote104-mobile-photo-map .classic-sales-bottom,
+  .lote104-mobile-photo-map .classic-sales-add-row,
+  .lote104-mobile-photo-map .classic-customer-grid,
+  .lote104-mobile-photo-map .classic-sale-summary-grid,
+  .lote104-mobile-photo-map .form-grid,
+  .lote104-mobile-photo-map .two-col,
+  .lote104-mobile-photo-map .grid-two,
+  .lote104-mobile-photo-map .grid-2,
+  .lote104-mobile-photo-map .grid-3,
+  .lote104-mobile-photo-map .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote104-mobile-photo-map .dash-panel,
+  .lote104-mobile-photo-map .classic-panel,
+  .lote104-mobile-photo-map .classic-sales-panel,
+  .lote104-mobile-photo-map .web-card,
+  .lote104-mobile-photo-map .data-table-shell {
+    border-radius: 18px !important;
+    padding: 14px !important;
+  }
+
+  .lote104-mobile-photo-map .data-table-scroll,
+  .lote104-mobile-photo-map .table-scroll,
+  .lote104-mobile-photo-map .responsive-table,
+  .lote104-mobile-photo-map .classic-table-wrap,
+  .lote104-mobile-photo-map .classic-sales-table-wrap {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .lote104-mobile-photo-map input,
+  .lote104-mobile-photo-map select,
+  .lote104-mobile-photo-map textarea,
+  .lote104-mobile-photo-map .web-input-row,
+  .lote104-mobile-photo-map .web-password-row {
+    max-width: 100% !important;
+    min-height: 46px !important;
+    font-size: .95rem !important;
+  }
+
+  .lote104-mobile-photo-map button,
+  .lote104-mobile-photo-map .primary-btn,
+  .lote104-mobile-photo-map .secondary-btn,
+  .lote104-mobile-photo-map .ghost-btn,
+  .lote104-mobile-photo-map .danger-btn {
+    min-height: 44px !important;
+    touch-action: manipulation !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .lote104-mobile-photo-map .neo-main {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-topbar {
+    margin-left: -10px !important;
+    margin-right: -10px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock {
+    left: 8px !important;
+    right: 8px !important;
+  }
+
+  .lote104-mobile-photo-map .neo-mobile-dock span {
+    font-size: .64rem !important;
+  }
+}

@@ -8,9 +8,10 @@ const REMEMBER_EMAIL_KEY = 'smart-loja:web-auth-email';
 
 interface WebAuthPanelProps {
   compact?: boolean;
+  onOpenPanel?: () => void;
 }
 
-export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Element {
+export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps): JSX.Element {
   const env = useMemo(() => getPublicWebEnv(), []);
   const [session, setSession] = useState<WebSessionSummary | null>(null);
   const [email, setEmail] = useState(() => window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? '');
@@ -162,15 +163,20 @@ export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Elemen
       <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
         <span className="web-kicker">Login ativo</span>
         <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{statusLabel}</div>
-        <h2>{session.email}</h2>
-        {!compact ? <p>Conta conectada. Os dados da loja podem sincronizar entre PC e celular.</p> : null}
+        <h2>{compact ? 'Tudo pronto' : session.email}</h2>
+        {compact ? <strong className="web-auth-compact-email">{session.email}</strong> : <p>Conta conectada. Os dados da loja podem sincronizar entre PC e celular.</p>}
         {!compact ? (
           <div className="web-auth-session-grid">
             <span><strong>ID</strong><small>{session.userId}</small></span>
             <span><strong>Expira</strong><small>{session.expiresAt ? new Date(session.expiresAt * 1000).toLocaleString('pt-BR') : 'sessão persistente'}</small></span>
           </div>
         ) : null}
-        <button type="button" className="secondary-btn" onClick={signOut} disabled={busy}>Sair</button>
+        <div className={`web-auth-session-actions ${compact ? 'web-auth-session-actions-compact' : ''}`}>
+          {compact && onOpenPanel ? (
+            <button type="button" className="primary-btn" onClick={onOpenPanel} disabled={busy}>Abrir painel</button>
+          ) : null}
+          <button type="button" className="secondary-btn" onClick={signOut} disabled={busy}>Sair</button>
+        </div>
         {message && <small className={`web-message web-message-${messageTone}`}>{message}</small>}
       </section>
     );
