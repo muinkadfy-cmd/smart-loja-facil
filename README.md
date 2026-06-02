@@ -125,3 +125,36 @@ Avisos sobre base64 gigante ou arquivos comerciais ausentes indicam melhoria fut
 - Migration do lote aplicada no Supabase.
 - Teste real em web e celular feito.
 - Nenhum `.env` real, banco SQLite ou ZIP antigo foi commitado.
+
+## Mega Lote 98 — PWA Comercial + PDV Mobile + Sync Real
+
+Projeto validado como **PWA web/mobile** com Supabase e Cloudflare. O lote 98 reforçou a base visual e o lote 99 atualiza a versão ativa abaixo. Histórico do lote 98:
+
+- versionamento base `pwa-supabase-v98`;
+- cache base `smart-loja-pwa-supabase-v98-commercial-pdv-sync`;
+- fila local web base `smart-loja:web-outbox-v98`;
+- PDV com guia mobile e cards de itens no celular;
+- navegação rápida do topo oculta no desktop para evitar visual antigo duplicado;
+- estados vazios mais claros;
+- diagnóstico com teste guiado para clientes, produtos e vendas;
+- release check PWA-only, sem exigir Tauri para deploy web.
+
+A pasta `src-tauri`, se existir, é legado e não deve bloquear deploy PWA. Não subir `.env.production`, bancos SQLite, `node_modules`, `dist` ou `src-tauri/target` para o GitHub.
+
+
+
+## Lote 99 — validação comercial final PWA
+
+Este lote mantém o projeto como **PWA web/mobile com Supabase e Cloudflare**. O foco foi corrigir acabamento comercial sem trazer dependência Tauri/SQLite para o fluxo web.
+
+Principais pontos:
+
+- versão lógica `pwa-supabase-v99`;
+- cache `smart-loja-pwa-supabase-v99-commercial-final-pdv-mobile`;
+- fila local `smart-loja:web-outbox-v99`, preservando filas antigas como legado;
+- Dashboard com cards mais estáveis para moeda, status e `PWA/cache`;
+- PDV com reforço mobile-first, formas de pagamento em cards, últimas vendas em cards no celular e menor risco de corte lateral;
+- diagnóstico com checklist manual de sincronização por módulo;
+- `release_check` continua PWA-only: não exige Tauri e só bloqueia riscos reais para web/mobile.
+
+Antes de vender para cliente real, valide no mínimo: criar cliente no PC e ver no celular, criar produto no celular e ver no PC, finalizar venda e conferir Dashboard/Caixa/Crediário nos dois aparelhos.

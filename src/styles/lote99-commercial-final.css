@@ -1,0 +1,468 @@
+:root {
+  --lote99-commercial-final: active;
+  --slf99-brown: #3f2b12;
+  --slf99-taupe: #71655f;
+  --slf99-cream: #d0d1c4;
+  --slf99-lilac: #9b9fb8;
+  --slf99-rose: #cb7c76;
+  --slf99-paper: #fffdf9;
+  --slf99-ink: #111827;
+  --slf99-muted: #4b5563;
+  --slf99-line: rgba(113, 101, 95, 0.24);
+  --slf99-soft-shadow: 0 18px 36px rgba(63, 43, 18, 0.12);
+  --slf99-success: #057a39;
+}
+
+/* Lote 99: ajustes finais PWA-only para leitura, mobile e venda comercial. */
+html.lote99-commercial-final body {
+  background: radial-gradient(circle at 50% 0%, rgba(208, 209, 196, 0.34), transparent 32%), #f4f1eb;
+}
+
+/* Menu lateral: item ativo precisa ficar legível em qualquer contraste. */
+.lote99-commercial-final .neo-sidebar .neo-nav-item.active {
+  background: linear-gradient(135deg, rgba(63, 43, 18, 0.98) 0%, rgba(113, 101, 95, 0.96) 100%) !important;
+  border-color: rgba(255, 253, 249, 0.24) !important;
+  box-shadow: 0 16px 30px rgba(18, 11, 6, 0.32), inset 4px 0 0 var(--slf99-rose) !important;
+}
+
+.lote99-commercial-final .neo-sidebar .neo-nav-item.active .neo-nav-item-label,
+.lote99-commercial-final .neo-sidebar .neo-nav-item.active span,
+.lote99-commercial-final .neo-sidebar .neo-nav-item.active small {
+  color: #fffdf9 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.22) !important;
+}
+
+.lote99-commercial-final .neo-sidebar .neo-nav-item.active .neo-nav-item-icon {
+  background: rgba(255,255,255,0.14) !important;
+  border-color: rgba(255,255,255,0.34) !important;
+}
+
+.lote99-commercial-final .neo-sidebar .neo-nav-item:not(.active):hover,
+.lote99-commercial-final .neo-sidebar .neo-nav-item:not(.active):focus-visible {
+  background: rgba(255, 253, 249, 0.12) !important;
+  color: #fffdf9 !important;
+}
+
+/* Topo e shell: evita corte lateral e mantém o PWA com cara única de produto web/mobile. */
+.lote99-commercial-final .neo-shell-web .neo-main,
+.lote99-commercial-final .neo-shell-web .neo-page-shell,
+.lote99-commercial-final .neo-shell-web .neo-page-content {
+  min-width: 0 !important;
+}
+
+.lote99-commercial-final .neo-shell-web .neo-page-content {
+  overflow-x: clip !important;
+}
+
+.lote99-commercial-final .neo-shell-web .neo-page-meta-status {
+  gap: 8px !important;
+}
+
+.lote99-commercial-final .neo-shell-web .neo-mini-chip {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  line-height: 1 !important;
+}
+
+/* Dashboard: moedas e status não podem quebrar feio como R$ 0,0 / 0 ou PWA/c ache. */
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)) !important;
+  align-items: stretch !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-card {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding-right: 58px !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-card strong {
+  display: block !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  font-size: clamp(1.38rem, 2vw, 2.05rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -0.055em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-card span,
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-card small {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-status-list div,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip article,
+.lote99-commercial-final .neo-page-dashboard .dash-status-list strong,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip strong,
+.lote99-commercial-final .neo-page-dashboard .dash-status-list span,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip small {
+  min-width: 0 !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-status-list strong,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip strong,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip small {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.lote99-commercial-final .neo-page-dashboard .dash-panel,
+.lote99-commercial-final .neo-page-dashboard .dash-kpi-card,
+.lote99-commercial-final .neo-page-dashboard .dash-status-strip article {
+  border-color: var(--slf99-line) !important;
+}
+
+/* DataTable: tabela web continua limpa; mobile vira card forte e sem scroll lateral. */
+.lote99-commercial-final .data-table-shell {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.lote99-commercial-final .mobile-data-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(113, 101, 95, 0.24) !important;
+  background: linear-gradient(180deg, #fffdf9 0%, #f8f1ea 100%) !important;
+  box-shadow: 0 12px 22px rgba(63, 43, 18, 0.07) !important;
+}
+
+.lote99-commercial-final .mobile-data-field strong,
+.lote99-commercial-final .mobile-data-field-primary strong {
+  color: var(--slf99-brown) !important;
+  word-break: break-word !important;
+}
+
+/* PDV: reduzir cortes, priorizar resumo e transformar pagamento em cards confortáveis. */
+.lote99-commercial-final .neo-page-sales .classic-sales-panel,
+.lote99-commercial-final .neo-page-sales .classic-panel,
+.lote99-commercial-final .neo-page-sales .data-table-shell,
+.lote99-commercial-final .neo-page-sales .table-wrap {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sales-add-row {
+  grid-template-columns: minmax(90px, 0.7fr) minmax(240px, 2fr) minmax(100px, 0.75fr) minmax(128px, 0.9fr) minmax(132px, 0.85fr) !important;
+  gap: 10px !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sales-add-row label,
+.lote99-commercial-final .neo-page-sales .classic-payment-row-option,
+.lote99-commercial-final .neo-page-sales .classic-customer-grid label,
+.lote99-commercial-final .neo-page-sales .classic-sale-summary-grid div {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sales-add-row span,
+.lote99-commercial-final .neo-page-sales .classic-payment-row-option span,
+.lote99-commercial-final .neo-page-sales .classic-customer-grid span,
+.lote99-commercial-final .neo-page-sales .classic-sale-summary-grid span {
+  color: #263244 !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  word-break: normal !important;
+}
+
+.lote99-commercial-final .neo-page-sales input,
+.lote99-commercial-final .neo-page-sales select {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  font-size: 0.96rem !important;
+  text-overflow: ellipsis !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sales-middle {
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr) !important;
+  gap: 16px !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sales-bottom {
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.72fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-payment-options {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-payment-row-option {
+  display: grid !important;
+  grid-template-columns: minmax(156px, 1.05fr) minmax(94px, 0.65fr) minmax(120px, 0.75fr) minmax(94px, 0.65fr) minmax(130px, 0.78fr) !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 8px !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-payment-title strong {
+  color: var(--slf99-brown) !important;
+  line-height: 1.18 !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sale-total-box strong {
+  white-space: nowrap !important;
+  font-size: clamp(1.9rem, 3.1vw, 2.9rem) !important;
+  letter-spacing: -0.055em !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-sale-action-buttons button.big,
+.lote99-commercial-final .neo-page-sales .classic-sales-item-actions button {
+  min-height: 50px !important;
+  border-radius: 16px !important;
+}
+
+.lote99-commercial-final .neo-page-sales .classic-customer-grid input {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.lote99-commercial-final .neo-page-sales .desktop-table-wrap {
+  overflow-x: auto !important;
+  scrollbar-width: thin !important;
+}
+
+.lote99-commercial-final .neo-page-sales .empty-state-card {
+  max-width: 560px !important;
+  margin: 0 auto !important;
+}
+
+/* Diagnóstico: checklist manual de sync por módulo com aparência de produto, não relatório cru. */
+.web-sync-module-check-card {
+  border: 1px solid rgba(113, 101, 95, 0.24) !important;
+  border-radius: 24px !important;
+  padding: 20px !important;
+  background: linear-gradient(180deg, #fffdf9 0%, #f7f0e9 100%) !important;
+  box-shadow: var(--slf99-soft-shadow) !important;
+}
+
+.web-sync-module-check-head {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.web-sync-module-check-head h2 {
+  margin: 0;
+  color: var(--slf99-brown);
+  letter-spacing: -0.03em;
+}
+
+.web-sync-module-check-head p {
+  margin: 0;
+  color: var(--slf99-muted);
+  line-height: 1.45;
+}
+
+.web-sync-module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.web-sync-module-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 13px;
+  border-radius: 18px;
+  border: 1px solid rgba(113, 101, 95, 0.22);
+  background: #fffdf9;
+  box-shadow: 0 10px 20px rgba(63, 43, 18, 0.06);
+}
+
+.web-sync-module-card i {
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--slf99-success);
+  box-shadow: 0 0 0 6px rgba(5, 122, 57, 0.10);
+}
+
+.web-sync-module-card strong {
+  display: block;
+  color: var(--slf99-brown);
+  font-size: 0.94rem;
+}
+
+.web-sync-module-card span {
+  display: block;
+  color: var(--slf99-muted);
+  font-size: 0.82rem;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.web-sync-module-steps {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px dashed rgba(203, 124, 118, 0.45);
+  background: rgba(203, 124, 118, 0.08);
+}
+
+.web-sync-module-steps strong {
+  color: var(--slf99-brown);
+}
+
+.web-sync-module-steps ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #374151;
+  line-height: 1.45;
+  font-weight: 720;
+}
+
+@media (max-width: 1180px) {
+  .lote99-commercial-final .neo-page-sales .classic-sales-add-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-add-btn {
+    grid-column: 1 / -1 !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sales-middle,
+  .lote99-commercial-final .neo-page-sales .classic-sales-bottom {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sale-summary-panel {
+    position: static !important;
+  }
+
+  .web-sync-module-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .lote99-commercial-final .neo-windowbar {
+    min-height: 58px !important;
+    padding-inline: 12px !important;
+  }
+
+  .lote99-commercial-final .neo-windowbar-brand strong {
+    font-size: 1.02rem !important;
+    white-space: nowrap !important;
+  }
+
+  .lote99-commercial-final .neo-shell-web .neo-page-shell {
+    padding-inline: 10px !important;
+    gap: 12px !important;
+  }
+
+  .lote99-commercial-final .neo-shell-web .neo-page-content {
+    overflow-x: hidden !important;
+  }
+
+  .lote99-commercial-final .neo-page-dashboard .dash-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .lote99-commercial-final .neo-page-dashboard .dash-kpi-card {
+    min-height: 116px !important;
+    padding: 14px 46px 12px 12px !important;
+  }
+
+  .lote99-commercial-final .neo-page-dashboard .dash-kpi-card:nth-child(5) {
+    grid-column: 1 / -1 !important;
+  }
+
+  .lote99-commercial-final .neo-page-dashboard .dash-kpi-card strong {
+    font-size: clamp(1.2rem, 7vw, 1.75rem) !important;
+  }
+
+  .lote99-commercial-final .neo-page-dashboard .dash-status-list strong,
+  .lote99-commercial-final .neo-page-dashboard .dash-status-strip strong,
+  .lote99-commercial-final .neo-page-dashboard .dash-status-strip small {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sales-panel {
+    gap: 12px !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sales-add-row,
+  .lote99-commercial-final .neo-page-sales .classic-payment-row-option,
+  .lote99-commercial-final .neo-page-sales .classic-customer-grid,
+  .lote99-commercial-final .neo-page-sales .classic-sale-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-payment-row-option {
+    padding: 13px !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-payment-row-option:not(:has(.classic-payment-title input:checked)) > span,
+  .lote99-commercial-final .neo-page-sales .classic-payment-row-option:not(:has(.classic-payment-title input:checked)) > input {
+    display: none !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-payment-row-option:has(.classic-payment-title input:checked) {
+    background: linear-gradient(180deg, #fffdf9 0%, #fff5ef 100%) !important;
+    box-shadow: inset 4px 0 0 var(--slf99-rose), 0 12px 22px rgba(63, 43, 18, 0.08) !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sale-summary-panel {
+    order: -1 !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sale-total-box {
+    display: grid !important;
+    gap: 2px !important;
+    padding: 16px !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-sale-total-box strong {
+    font-size: 2.15rem !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-customer-grid {
+    display: grid !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .classic-customer-grid label:not(.span-2):nth-child(n+3) {
+    display: none !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .desktop-table-wrap {
+    display: none !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .mobile-data-list {
+    display: grid !important;
+  }
+
+  .lote99-commercial-final .neo-page-sales .sales-mobile-cart-cards + .classic-sales-item-actions,
+  .lote99-commercial-final .neo-page-sales .classic-sales-item-actions {
+    gap: 8px !important;
+  }
+
+  .lote99-commercial-final .web-sync-module-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lote99-commercial-final .web-sync-module-check-card,
+  .lote99-commercial-final .web-sync-test-card {
+    padding: 14px !important;
+    border-radius: 20px !important;
+  }
+}

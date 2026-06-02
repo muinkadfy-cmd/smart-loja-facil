@@ -25,6 +25,23 @@ interface WebContextState {
   detail: string;
 }
 
+interface SyncModuleCheck {
+  title: string;
+  detail: string;
+}
+
+const SYNC_MODULE_CHECKS: SyncModuleCheck[] = [
+  { title: 'Clientes', detail: 'Criar/editar no PC, conferir no celular e depois testar o caminho inverso.' },
+  { title: 'Produtos', detail: 'Cadastrar produto, alterar estoque e confirmar nos dois aparelhos.' },
+  { title: 'Vendas / PDV', detail: 'Finalizar venda simples e conferir histórico, recibo e indicadores.' },
+  { title: 'Caixa', detail: 'Confirmar entrada da venda e recebimentos sem duplicar valores.' },
+  { title: 'Crediário', detail: 'Gerar parcela, receber e verificar status nos dois aparelhos.' },
+  { title: 'Pedidos', detail: 'Criar pedido e alterar status com atualização em web/mobile.' },
+  { title: 'Relatórios', detail: 'Conferir se Dashboard e relatórios leem os mesmos totais da nuvem.' },
+  { title: 'Permissões', detail: 'Testar dono/admin/operador/leitor sem botão indevido liberado.' },
+  { title: 'Cache / PWA', detail: 'Fechar, abrir, atualizar versão e confirmar que não ficou preso no cache antigo.' },
+];
+
 
 export function WebDiagnosticsPage(): JSX.Element {
   const runtime = useMemo(() => getRuntimeInfo(), []);
@@ -39,6 +56,7 @@ export function WebDiagnosticsPage(): JSX.Element {
   const [syncSnapshot, setSyncSnapshot] = useState<WebSyncSnapshot>(() => readWebSyncSnapshot());
   const [outboxStats, setOutboxStats] = useState<WebOutboxStats>(() => getWebOutboxStats());
   const [outboxBusy, setOutboxBusy] = useState(false);
+  const [syncGuideMessage, setSyncGuideMessage] = useState('Escolha uma área para ver o teste web/mobile recomendado.');
   const [productionChecks, setProductionChecks] = useState<ProductionCheckState>(() => readProductionCheckState());
   const [designReadiness, setDesignReadiness] = useState<DesignReadinessReport>(() => getDesignReadinessReport());
   const [cssInventory, setCssInventory] = useState<CssInventoryReport>(() => getCssInventoryReport());
@@ -185,6 +203,7 @@ export function WebDiagnosticsPage(): JSX.Element {
     `Último erro pendente: ${outboxStats.lastError || 'nenhum'}`,
     `Checklist comercial: ${productionSummary.done}/${productionSummary.total} (${productionSummary.percent}%)`,
     `Checklist visual por tela: ${moduleVisualSummary.done}/${moduleVisualSummary.total} (${moduleVisualSummary.percent}%)`,
+    `Checklist manual de sync v99: ${SYNC_MODULE_CHECKS.map((item) => item.title).join(', ')}`,
     buildDesignReadinessText(designReadiness),
     buildCssInventoryText(cssInventory),
     buildNeoFamilyText(neoFamily),
@@ -247,6 +266,20 @@ export function WebDiagnosticsPage(): JSX.Element {
     } finally {
       setOutboxBusy(false);
     }
+  }
+
+  function showSyncTestGuide(area: 'clientes' | 'produtos' | 'vendas'): void {
+    const labels = {
+      clientes: 'Clientes',
+      produtos: 'Produtos',
+      vendas: 'Vendas/PDV',
+    } as const;
+    const action = area === 'clientes'
+      ? 'cadastre ou edite um cliente no web e confirme no celular; depois faça o inverso.'
+      : area === 'produtos'
+        ? 'cadastre ou ajuste estoque de um produto no celular e confirme no web; depois faça o inverso.'
+        : 'monte uma venda pequena no PDV web, finalize e confira Dashboard/Caixa no celular.';
+    setSyncGuideMessage(`${labels[area]}: ${action} Aguarde alguns segundos, recarregue somente se necessário e copie este diagnóstico se algo não aparecer.`);
   }
 
   const items: HealthItem[] = [
@@ -409,6 +442,48 @@ export function WebDiagnosticsPage(): JSX.Element {
             <small>{item.detail}</small>
           </article>
         ))}
+      </section>
+
+      <section className="web-sync-test-card" aria-label="Teste guiado de sincronização web e celular">
+        <div className="web-sync-test-head">
+          <div>
+            <span className="web-kicker">Teste web/mobile real</span>
+            <h2>Valide a sincronização antes de vender</h2>
+            <p>{syncGuideMessage}</p>
+          </div>
+          <strong className={`neo-mini-chip ${outboxStats.total === 0 && syncSnapshot.status !== 'error' ? 'ok' : 'warn'}`}>{outboxStats.total === 0 ? 'Sem pendências locais' : `${outboxStats.total} pendente(s)`}</strong>
+        </div>
+        <div className="web-sync-test-grid">
+          <button type="button" onClick={() => showSyncTestGuide('clientes')}>Testar clientes</button>
+          <button type="button" onClick={() => showSyncTestGuide('produtos')}>Testar produtos</button>
+          <button type="button" onClick={() => showSyncTestGuide('vendas')}>Testar vendas</button>
+          <button type="button" className="primary-sync-action" onClick={() => void retryPendingSync()} disabled={outboxBusy}>{outboxBusy ? 'Sincronizando...' : 'Forçar sincronização'}</button>
+        </div>
+      </section>
+
+      <section className="web-sync-module-check-card" aria-label="Checklist manual de sincronização por módulo">
+        <div className="web-sync-module-check-head">
+          <span className="web-kicker">Checklist manual v99</span>
+          <h2>O que conferir no PC e no celular</h2>
+          <p>Marque como pronto para vender somente depois de testar estas áreas em dois aparelhos reais. O app mostra status de sync, mas a validação comercial precisa confirmar dados aparecendo nos dois lados.</p>
+        </div>
+        <div className="web-sync-module-grid">
+          {SYNC_MODULE_CHECKS.map((item) => (
+            <article key={item.title} className="web-sync-module-card">
+              <i />
+              <span><strong>{item.title}</strong><span>{item.detail}</span></span>
+            </article>
+          ))}
+        </div>
+        <div className="web-sync-module-steps">
+          <strong>Roteiro rápido antes de vender</strong>
+          <ol>
+            <li>Abra o sistema no PC e no celular com o mesmo usuário.</li>
+            <li>Crie cliente/produto em um aparelho e confira no outro sem limpar dados.</li>
+            <li>Finalize uma venda simples e confira Dashboard, Caixa e Relatórios.</li>
+            <li>Feche e abra o PWA no celular para confirmar cache novo e dados preservados.</li>
+          </ol>
+        </div>
       </section>
 
       <section className="mobile-readiness-card">
