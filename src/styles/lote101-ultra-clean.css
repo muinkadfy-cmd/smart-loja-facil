@@ -1,0 +1,642 @@
+:root {
+  --lote101-ultra-clean: active;
+  --slf101-bg: #f6f8fb;
+  --slf101-card: #ffffff;
+  --slf101-ink: #0e1a2f;
+  --slf101-muted: #718096;
+  --slf101-line: #e2eaf3;
+  --slf101-blue: #2367d1;
+  --slf101-blue-soft: #eef6ff;
+  --slf101-green: #16a765;
+  --slf101-brown: #71655f;
+  --slf101-salmon: #cb7c76;
+  --slf101-shadow: 0 14px 34px rgba(15, 27, 45, .07);
+  --slf101-soft-shadow: 0 8px 22px rgba(15, 27, 45, .055);
+}
+
+html.lote101-ultra-clean,
+html.lote101-ultra-clean body,
+.lote101-ultra-clean #root {
+  background:
+    radial-gradient(circle at 6% 0%, rgba(35, 103, 209, .10), transparent 24rem),
+    radial-gradient(circle at 100% 8%, rgba(203, 124, 118, .10), transparent 22rem),
+    linear-gradient(180deg, #fbfdff 0%, var(--slf101-bg) 100%) !important;
+  color: var(--slf101-ink) !important;
+}
+
+/* Lote 101: limpar excesso, aumentar área útil e deixar o app menos apertado. */
+.lote101-ultra-clean .neo-layout {
+  grid-template-columns: 232px minmax(0, 1fr) !important;
+}
+
+.lote101-ultra-clean .neo-sidebar {
+  width: 232px !important;
+  padding: 24px 14px !important;
+  gap: 14px !important;
+  background: rgba(255, 255, 255, .92) !important;
+}
+
+.lote101-ultra-clean .neo-sidebar::before,
+.lote101-ultra-clean .dash-kpi-card::after {
+  display: none !important;
+}
+
+.lote101-ultra-clean .neo-sidebar-brand {
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  padding-bottom: 16px !important;
+}
+
+.lote101-ultra-clean .neo-sidebar-brand-mark {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+}
+
+.lote101-ultra-clean .neo-sidebar-brand-copy strong {
+  max-width: 138px !important;
+  font-size: .96rem !important;
+  line-height: 1.05 !important;
+}
+
+.lote101-ultra-clean .neo-sidebar-brand-copy small {
+  padding: 3px 8px !important;
+  font-size: .68rem !important;
+}
+
+.lote101-ultra-clean .neo-nav {
+  gap: 6px !important;
+}
+
+.lote101-ultra-clean .neo-nav-item {
+  min-height: 44px !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  gap: 9px !important;
+  padding: 6px 9px !important;
+  border-radius: 13px !important;
+  color: #223451 !important;
+  font-size: .88rem !important;
+  font-weight: 820 !important;
+}
+
+.lote101-ultra-clean .neo-nav-item-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 11px !important;
+}
+
+.lote101-ultra-clean .neo-nav-item.active {
+  background: #f3f8ff !important;
+  border-color: #bddbff !important;
+  box-shadow: inset 3px 0 0 var(--slf101-blue), 0 8px 18px rgba(35, 103, 209, .09) !important;
+  color: #0d376f !important;
+}
+
+.lote101-ultra-clean .neo-nav-item.active .neo-nav-item-label,
+.lote101-ultra-clean .neo-nav-item.active span,
+.lote101-ultra-clean .neo-nav-item.active small {
+  color: #0d376f !important;
+}
+
+.lote101-ultra-clean .neo-sidebar-footer {
+  gap: 8px !important;
+  padding-top: 8px !important;
+}
+
+.lote101-ultra-clean .neo-env-block,
+.lote101-ultra-clean .neo-version-block {
+  padding: 10px 11px !important;
+  border-radius: 14px !important;
+}
+
+.lote101-ultra-clean .neo-version-block span,
+.lote101-ultra-clean .neo-env-block small {
+  font-size: .62rem !important;
+}
+
+.lote101-ultra-clean .neo-version-block strong,
+.lote101-ultra-clean .neo-env-block strong {
+  font-size: .86rem !important;
+}
+
+.lote101-ultra-clean .neo-main {
+  padding: 24px 26px 22px !important;
+}
+
+.lote101-ultra-clean .neo-topbar {
+  margin: -24px -26px 18px !important;
+  padding: 18px 26px 14px !important;
+  background: rgba(248, 251, 255, .72) !important;
+}
+
+.lote101-ultra-clean .neo-header-grid {
+  grid-template-columns: minmax(320px, 560px) minmax(0, auto) !important;
+  gap: 14px !important;
+}
+
+.lote101-ultra-clean .neo-command-search {
+  min-height: 50px !important;
+  max-width: 560px !important;
+  border-radius: 16px !important;
+  box-shadow: var(--slf101-soft-shadow) !important;
+}
+
+.lote101-ultra-clean .neo-command-search input {
+  height: 38px !important;
+  font-size: .92rem !important;
+}
+
+.lote101-ultra-clean .neo-command-search button {
+  min-height: 38px !important;
+  min-width: 48px !important;
+  border-radius: 12px !important;
+}
+
+.lote101-ultra-clean .neo-icon-tool {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 14px !important;
+}
+
+.lote101-ultra-clean .neo-bell-tool,
+.lote101-ultra-clean .neo-page-meta-status .neo-mini-chip:nth-child(n+2) {
+  display: none !important;
+}
+
+.lote101-ultra-clean .neo-store-switch {
+  min-height: 52px !important;
+  max-width: 270px !important;
+  border-radius: 16px !important;
+}
+
+.lote101-ultra-clean .neo-store-avatar {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.lote101-ultra-clean .neo-store-switch small,
+.lote101-ultra-clean .neo-store-switch i {
+  display: none !important;
+}
+
+.lote101-ultra-clean .neo-store-switch strong {
+  font-size: .85rem !important;
+}
+
+.lote101-ultra-clean .neo-page-shell {
+  width: min(100%, 1240px) !important;
+}
+
+.lote101-ultra-clean .neo-page-meta {
+  margin-bottom: 16px !important;
+  align-items: center !important;
+}
+
+.lote101-ultra-clean .neo-page-meta-icon {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 11px !important;
+}
+
+.lote101-ultra-clean .neo-page-meta h1 {
+  font-size: clamp(1.38rem, 2vw, 1.86rem) !important;
+}
+
+.lote101-ultra-clean .neo-page-meta p {
+  display: none !important;
+}
+
+.lote101-ultra-clean .neo-mini-chip {
+  min-height: 28px !important;
+  padding: 6px 11px !important;
+  font-size: .72rem !important;
+}
+
+/* Dashboard limpo: menos blocos, cards mais legíveis e sem poluição textual. */
+.lote101-ultra-clean .neo-page-dashboard .dash-main-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .36fr) !important;
+  gap: 16px !important;
+}
+
+.lote101-ultra-clean .neo-page-dashboard .dash-bottom-grid {
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+}
+
+.lote101-ultra-clean .neo-page-dashboard .dash-shortcuts-panel .dash-message-head,
+.lote101-ultra-clean .neo-page-dashboard .dash-message-list,
+.lote101-ultra-clean .neo-page-dashboard .dash-activity-panel,
+.lote101-ultra-clean .neo-page-dashboard .dash-panel-head p {
+  display: none !important;
+}
+
+.lote101-ultra-clean .neo-page-dashboard .dash-kpi-grid {
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+.lote101-ultra-clean .dash-kpi-card {
+  min-height: 126px !important;
+  padding: 20px 62px 18px 18px !important;
+  border-radius: 18px !important;
+  box-shadow: var(--slf101-soft-shadow) !important;
+}
+
+.lote101-ultra-clean .dash-kpi-card span {
+  font-size: .68rem !important;
+  letter-spacing: .035em !important;
+}
+
+.lote101-ultra-clean .dash-kpi-card strong {
+  display: block !important;
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  line-height: 1.02 !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  max-width: 100% !important;
+}
+
+.lote101-ultra-clean .dash-kpi-card small {
+  display: block !important;
+  max-width: 110px !important;
+  font-size: .70rem !important;
+  line-height: 1.25 !important;
+}
+
+.lote101-ultra-clean .dash-kpi-card .app-icon-stat,
+.lote101-ultra-clean .dash-kpi-card > svg,
+.lote101-ultra-clean .dash-kpi-card .app-icon {
+  width: 40px !important;
+  height: 40px !important;
+  right: 16px !important;
+  bottom: 18px !important;
+}
+
+.lote101-ultra-clean .dash-panel,
+.lote101-ultra-clean .classic-panel,
+.lote101-ultra-clean .classic-sales-panel,
+.lote101-ultra-clean .web-card,
+.lote101-ultra-clean .data-table-shell {
+  border-radius: 18px !important;
+  box-shadow: var(--slf101-soft-shadow) !important;
+}
+
+.lote101-ultra-clean .dash-panel {
+  padding: 18px !important;
+}
+
+.lote101-ultra-clean .dash-panel-head,
+.lote101-ultra-clean .classic-panel-header,
+.lote101-ultra-clean .classic-sales-section-title {
+  margin-bottom: 12px !important;
+  padding-bottom: 10px !important;
+}
+
+.lote101-ultra-clean .dash-panel-head h2,
+.lote101-ultra-clean .classic-panel-header h2,
+.lote101-ultra-clean .classic-sales-section-title h2,
+.lote101-ultra-clean .classic-sales-section-title strong {
+  font-size: 1rem !important;
+}
+
+.lote101-ultra-clean .dash-operation-grid {
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.lote101-ultra-clean .dash-operation-grid button,
+.lote101-ultra-clean .dash-shortcut-row button {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  font-size: .84rem !important;
+}
+
+.lote101-ultra-clean .dash-shortcut-row {
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.lote101-ultra-clean .dash-status-list div {
+  min-height: 42px !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+}
+
+/* Login ultra clean: só marca, e-mail, senha e ações. */
+.lote101-ultra-clean .welcome-screen,
+.lote101-ultra-clean .login-landing {
+  padding: clamp(18px, 4vw, 48px) !important;
+}
+
+.lote101-ultra-clean .master-login-single-shell {
+  width: min(100%, 920px) !important;
+  grid-template-columns: minmax(0, .72fr) minmax(320px, 420px) !important;
+  gap: 16px !important;
+  padding: 14px !important;
+  border-radius: 26px !important;
+  box-shadow: 0 24px 58px rgba(18,34,60,.10) !important;
+}
+
+.lote101-ultra-clean .master-login-hero-panel {
+  min-height: 430px !important;
+  padding: clamp(28px, 4vw, 44px) !important;
+  gap: 14px !important;
+}
+
+.lote101-ultra-clean .master-login-hero-logo {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 18px !important;
+}
+
+.lote101-ultra-clean .master-login-hero-panel .web-kicker,
+.lote101-ultra-clean .master-login-benefits {
+  display: none !important;
+}
+
+.lote101-ultra-clean .master-login-hero-panel h1 {
+  max-width: 390px !important;
+  font-size: clamp(2.3rem, 4.6vw, 4rem) !important;
+  line-height: .95 !important;
+}
+
+.lote101-ultra-clean .master-login-hero-panel p {
+  max-width: 360px !important;
+  font-size: .98rem !important;
+  line-height: 1.42 !important;
+}
+
+.lote101-ultra-clean .master-login-form-card {
+  min-height: 430px !important;
+  padding: clamp(20px, 3vw, 30px) !important;
+  gap: 12px !important;
+}
+
+.lote101-ultra-clean .master-login-form-head {
+  justify-items: center !important;
+  text-align: center !important;
+  gap: 6px !important;
+  margin-bottom: 4px !important;
+}
+
+.lote101-ultra-clean .master-login-form-head small,
+.lote101-ultra-clean .web-auth-panel .web-kicker,
+.lote101-ultra-clean .web-auth-panel p,
+.lote101-ultra-clean .web-auth-session-grid,
+.lote101-ultra-clean .master-login-safe-note,
+.lote101-ultra-clean .web-forgot-link,
+.lote101-ultra-clean .web-auth-status-pill {
+  display: none !important;
+}
+
+.lote101-ultra-clean .web-auth-panel h2 {
+  margin: 0 0 12px !important;
+  text-align: center !important;
+  font-size: 1.22rem !important;
+  letter-spacing: -0.04em !important;
+}
+
+.lote101-ultra-clean .web-auth-form {
+  gap: 12px !important;
+}
+
+.lote101-ultra-clean .web-input-row,
+.lote101-ultra-clean .web-password-row {
+  min-height: 50px !important;
+  border-radius: 14px !important;
+  background: #f7fbff !important;
+}
+
+.lote101-ultra-clean .web-auth-form-options {
+  margin: 2px 0 4px !important;
+  justify-content: flex-start !important;
+}
+
+.lote101-ultra-clean .web-check-row {
+  font-size: .82rem !important;
+  color: #465a75 !important;
+}
+
+.lote101-ultra-clean .web-auth-panel .primary-btn,
+.lote101-ultra-clean .master-login-panel-link,
+.lote101-ultra-clean .master-login-final-btn {
+  min-height: 52px !important;
+  border-radius: 15px !important;
+}
+
+.lote101-ultra-clean .master-login-panel-link {
+  background: linear-gradient(135deg, #1f9a55 0%, #11743e 100%) !important;
+  border-color: #11743e !important;
+  color: #fff !important;
+}
+
+.lote101-ultra-clean .web-auth-panel .secondary-btn:not(.web-password-row .secondary-btn) {
+  width: 100% !important;
+}
+
+.lote101-ultra-clean .web-message {
+  margin-top: 6px !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  font-size: .8rem !important;
+}
+
+/* PDV e páginas internas: menos texto e mais área útil. */
+.lote101-ultra-clean .neo-page-sales .classic-sales-guide,
+.lote101-ultra-clean .neo-page-sales .classic-sales-hint {
+  padding: 12px 14px !important;
+}
+
+.lote101-ultra-clean .neo-page-sales .classic-sales-guide span,
+.lote101-ultra-clean .neo-page-sales .classic-sales-hint span {
+  font-size: .88rem !important;
+  line-height: 1.35 !important;
+}
+
+.lote101-ultra-clean .neo-page-sales .classic-sales-add-row label,
+.lote101-ultra-clean .neo-page-sales .classic-customer-grid label,
+.lote101-ultra-clean .neo-page-sales .classic-payment-row-option,
+.lote101-ultra-clean .neo-page-sales .classic-sale-summary-grid div {
+  padding: 10px !important;
+  border-radius: 14px !important;
+}
+
+.lote101-ultra-clean .neo-page-sales input,
+.lote101-ultra-clean .neo-page-sales select,
+.lote101-ultra-clean .classic-page input,
+.lote101-ultra-clean .classic-page select,
+.lote101-ultra-clean .classic-page textarea {
+  min-height: 42px !important;
+}
+
+.lote101-ultra-clean .empty-state-card,
+.lote101-ultra-clean .dash-empty-activity,
+.lote101-ultra-clean .data-empty-state {
+  padding: 24px 18px !important;
+}
+
+@media (min-width: 1400px) {
+  .lote101-ultra-clean .neo-page-shell {
+    width: min(100%, 1320px) !important;
+  }
+}
+
+@media (max-width: 1120px) {
+  .lote101-ultra-clean .neo-layout {
+    grid-template-columns: 216px minmax(0, 1fr) !important;
+  }
+  .lote101-ultra-clean .neo-sidebar {
+    width: 216px !important;
+  }
+  .lote101-ultra-clean .neo-page-dashboard .dash-kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .lote101-ultra-clean .neo-page-dashboard .dash-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .lote101-ultra-clean .neo-sidebar {
+    width: min(82vw, 288px) !important;
+  }
+
+  .lote101-ultra-clean .neo-main {
+    padding: 0 12px calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .lote101-ultra-clean .neo-topbar {
+    margin: 0 -12px 14px !important;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 10px !important;
+    border-radius: 0 0 20px 20px !important;
+  }
+
+  .lote101-ultra-clean .neo-topbar-mobile-row {
+    grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  }
+
+  .lote101-ultra-clean .neo-mobile-branding strong {
+    font-size: .9rem !important;
+  }
+
+  .lote101-ultra-clean .neo-command-search {
+    min-height: 48px !important;
+  }
+
+  .lote101-ultra-clean .neo-store-switch {
+    min-height: 52px !important;
+  }
+
+  .lote101-ultra-clean .neo-page-meta {
+    margin-bottom: 12px !important;
+  }
+
+  .lote101-ultra-clean .neo-page-dashboard .dash-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .lote101-ultra-clean .dash-kpi-card {
+    min-height: 116px !important;
+    padding: 14px 48px 12px 12px !important;
+    border-radius: 15px !important;
+  }
+
+  .lote101-ultra-clean .dash-kpi-card span {
+    font-size: .62rem !important;
+  }
+
+  .lote101-ultra-clean .dash-kpi-card strong {
+    font-size: 1.28rem !important;
+  }
+
+  .lote101-ultra-clean .dash-kpi-card small {
+    max-width: 92px !important;
+    font-size: .64rem !important;
+  }
+
+  .lote101-ultra-clean .dash-kpi-card .app-icon-stat,
+  .lote101-ultra-clean .dash-kpi-card > svg,
+  .lote101-ultra-clean .dash-kpi-card .app-icon {
+    width: 34px !important;
+    height: 34px !important;
+    right: 12px !important;
+    bottom: 13px !important;
+  }
+
+  .lote101-ultra-clean .dash-operation-grid,
+  .lote101-ultra-clean .dash-shortcut-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .lote101-ultra-clean .dash-operation-grid button,
+  .lote101-ultra-clean .dash-shortcut-row button {
+    min-height: 66px !important;
+    padding: 8px 6px !important;
+    font-size: .72rem !important;
+  }
+
+  .lote101-ultra-clean .master-login-single-shell {
+    width: min(100%, 420px) !important;
+    grid-template-columns: 1fr !important;
+    padding: 10px !important;
+    border-radius: 22px !important;
+  }
+
+  .lote101-ultra-clean .master-login-hero-panel {
+    min-height: auto !important;
+    padding: 22px 20px !important;
+  }
+
+  .lote101-ultra-clean .master-login-hero-panel h1 {
+    font-size: clamp(2.05rem, 11vw, 3rem) !important;
+    max-width: 320px !important;
+  }
+
+  .lote101-ultra-clean .master-login-hero-panel p {
+    font-size: .9rem !important;
+    max-width: 300px !important;
+  }
+
+  .lote101-ultra-clean .master-login-form-card {
+    min-height: auto !important;
+    padding: 20px !important;
+  }
+
+  .lote101-ultra-clean .neo-page-sales .classic-sales-middle,
+  .lote101-ultra-clean .neo-page-sales .classic-sales-bottom,
+  .lote101-ultra-clean .neo-page-sales .classic-sales-add-row,
+  .lote101-ultra-clean .neo-page-sales .classic-payment-row-option,
+  .lote101-ultra-clean .neo-page-sales .classic-customer-grid,
+  .lote101-ultra-clean .neo-page-sales .classic-sale-summary-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .lote101-ultra-clean .welcome-screen,
+  .lote101-ultra-clean .login-landing {
+    padding: 12px !important;
+    place-items: start center !important;
+  }
+
+  .lote101-ultra-clean .master-login-hero-panel {
+    display: none !important;
+  }
+
+  .lote101-ultra-clean .master-login-form-card {
+    margin-top: 8px !important;
+    min-height: calc(100dvh - 40px) !important;
+    align-content: center !important;
+  }
+
+  .lote101-ultra-clean .neo-page-dashboard .dash-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .lote101-ultra-clean .dash-panel {
+    padding: 14px !important;
+  }
+}

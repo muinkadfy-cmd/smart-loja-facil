@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v100';
-const currentCache = 'smart-loja-pwa-supabase-v100-reference-clean-interface';
-const currentOutbox = 'smart-loja:web-outbox-v100';
+const currentVersion = 'pwa-supabase-v101';
+const currentCache = 'smart-loja-pwa-supabase-v101-ultra-clean';
+const currentOutbox = 'smart-loja:web-outbox-v101';
 
 const requiredCore = [
   'package.json',
@@ -115,7 +115,7 @@ for (const file of optionalPwaCommercialFiles) {
 }
 
 if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v100 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v101 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
 }
 
 if (process.exitCode) {
@@ -134,9 +134,9 @@ for (const script of ['lint', 'release:commercial:check', 'release:commercial:pr
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v100 interface clean referência PWA/mobile.');
-if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v100.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v100 interface clean referência PWA/mobile.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v101 ultra clean PWA/mobile.');
+if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v101.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v101 ultra clean PWA/mobile.');
 
 const requiredCssModules = exists('src/styles')
   ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })).map((name) => `src/styles/${name}`)
@@ -248,4 +248,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v100 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v101 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');

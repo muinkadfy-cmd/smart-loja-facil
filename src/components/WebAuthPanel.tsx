@@ -1,40 +1,40 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AppIcon } from './AppIcon';
 import { getPublicWebEnv } from '../lib/env';
 import { getSupabaseClient, summarizeSession, type WebSessionSummary } from '../lib/supabaseClient';
+import { humanizeWebError, recordWebSyncSnapshot } from '../lib/webApi';
 
 const REMEMBER_EMAIL_KEY = 'smart-loja:web-auth-email';
 
 interface WebAuthPanelProps {
   compact?: boolean;
-  onAuthenticated?: () => void;
-  loginTitle?: string;
-  loginSubtitle?: string;
-  showHelp?: boolean;
 }
 
-export function WebAuthPanel({
-  compact = false,
-  onAuthenticated,
-  loginTitle = 'Login da loja',
-  loginSubtitle = 'Entre com sua conta Supabase',
-  showHelp = true,
-}: WebAuthPanelProps): JSX.Element {
+export function WebAuthPanel({ compact = false }: WebAuthPanelProps): JSX.Element {
   const env = useMemo(() => getPublicWebEnv(), []);
   const [session, setSession] = useState<WebSessionSummary | null>(null);
   const [email, setEmail] = useState(() => window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? '');
   const [password, setPassword] = useState('');
   const [rememberEmail, setRememberEmail] = useState(Boolean(window.localStorage.getItem(REMEMBER_EMAIL_KEY)));
-  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<'error' | 'success' | 'info'>('info');
 
   useEffect(() => {
     const client = getSupabaseClient();
-    if (!client) return undefined;
+    if (!client) {
+      setSessionLoading(false);
+      return undefined;
+    }
 
     let active = true;
     void client.auth.getSession().then(({ data }) => {
       if (active) setSession(summarizeSession(data.session));
+    }).finally(() => {
+      if (active) setSessionLoading(false);
     });
 
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
@@ -47,65 +47,57 @@ export function WebAuthPanel({
     };
   }, []);
 
+  useEffect(() => {
+    const syncNetwork = () => setNetworkOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
+    window.addEventListener('online', syncNetwork);
+    window.addEventListener('offline', syncNetwork);
+    syncNetwork();
+    return () => {
+      window.removeEventListener('online', syncNetwork);
+      window.removeEventListener('offline', syncNetwork);
+    };
+  }, []);
+
   async function signIn(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setMessage(null);
+    setMessageTone('info');
     const client = getSupabaseClient();
     if (!client) {
-      setMessage('Configure a URL e a chave pública do Supabase no deploy para liberar o login da loja.');
+      setMessageTone('error');
+      setMessage(env.hasUnsafeServiceRoleKey ? env.securityWarnings.join(' ') : 'Nuvem não configurada. Informe a URL e a chave pública anon/publishable para ativar login e sincronização.');
+      recordWebSyncSnapshot('error', 'Login', 'Nuvem não configurada.');
       return;
     }
     if (!email.trim() || !password) {
-      setMessage('Preencha e-mail e senha para entrar.');
+      setMessageTone('error');
+      setMessage('Não foi possível entrar. Confira login e senha.');
+      return;
+    }
+    if (!networkOnline) {
+      setMessageTone('error');
+      setMessage('Sem internet neste aparelho. Entre quando a conexão voltar para sincronizar dados na nuvem.');
+      recordWebSyncSnapshot('pending', 'Login', 'Login pendente por falta de internet.');
       return;
     }
     setBusy(true);
+    recordWebSyncSnapshot('syncing', 'Login', 'Validando login seguro no Supabase...');
     const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) {
-      setMessage(error.message);
+      const detail = humanizeWebError(error);
+      recordWebSyncSnapshot('error', 'Login', detail);
+      setMessageTone('error');
+      setMessage(detail);
       return;
     }
     if (rememberEmail) window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
     else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
     setPassword('');
+    recordWebSyncSnapshot('synced', 'Login', 'Conexão segura. Sessão Supabase ativa neste aparelho.');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
-    setMessage('Login confirmado. A loja já pode sincronizar clientes, produtos, vendas e crediário.');
-    onAuthenticated?.();
-  }
-
-  async function signUp(): Promise<void> {
-    setMessage(null);
-    const client = getSupabaseClient();
-    if (!client) {
-      setMessage('Configure a URL e a chave pública do Supabase no deploy para criar a primeira conta.');
-      return;
-    }
-    if (!email.trim() || !password) {
-      setMessage('Preencha e-mail e senha antes de criar a conta da loja.');
-      return;
-    }
-    if (password.length < 6) {
-      setMessage('Use uma senha com pelo menos 6 caracteres.');
-      return;
-    }
-    setBusy(true);
-    const { data, error } = await client.auth.signUp({ email: email.trim(), password });
-    setBusy(false);
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-    if (rememberEmail) window.localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
-    else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
-    setPassword('');
-    if (data.session) {
-      window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
-      setMessage('Conta criada e login ativo. A primeira loja será preparada como dona do sistema.');
-      onAuthenticated?.();
-      return;
-    }
-    setMessage('Conta criada. Se o Supabase pedir confirmação, confirme o e-mail e depois toque em Entrar.');
+    setMessageTone('success');
+    setMessage('Login confirmado. Tudo pronto para vender.');
   }
 
   async function signOut(): Promise<void> {
@@ -115,26 +107,51 @@ export function WebAuthPanel({
     await client.auth.signOut();
     setBusy(false);
     setSession(null);
+    recordWebSyncSnapshot('idle', 'Login', 'Sessão encerrada. Entre para sincronizar.');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
-    setMessage('Sessão web encerrada com segurança.');
+    setMessageTone('info');
+    setMessage('Sessão web encerrada.');
   }
+
+  const statusTone = !env.isConfigured ? 'warn' : session ? 'ok' : networkOnline ? 'warn' : 'danger';
+  const statusLabel = !env.isConfigured
+    ? 'Nuvem não configurada'
+    : session
+      ? 'Conexão segura'
+      : networkOnline
+        ? 'Login pendente'
+        : 'Sem internet';
 
   if (!env.isConfigured) {
     return (
-      <section className={`web-card web-auth-panel web-auth-clean-v74 web-auth-config-v74 ${compact ? 'web-auth-panel-compact' : ''}`}>
-        <div className="web-auth-clean-shell">
-          <div className="web-auth-hero-side">
-            <span className="web-auth-safe-badge">Supabase</span>
-            <h2>Conexão da nuvem pendente</h2>
-            <p>Falta configurar a URL e a chave pública para liberar login, celular e sincronização.</p>
-          </div>
-          <div className="web-auth-form-card">
-            <strong>Configuração necessária</strong>
-            <p>Adicione as variáveis públicas no Cloudflare ou no arquivo local de build.</p>
-            <div className="web-code-list">
-              {env.missing.map((item) => <code key={item}>{item}</code>)}
+      <section className={`web-card web-auth-panel web-auth-panel-unconfigured ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
+        <span className="web-kicker">Login web</span>
+        <div className="web-auth-status-pill web-auth-status-warn">Nuvem não configurada</div>
+        <h2>Login pronto para ativar</h2>
+        <p>Configure somente variáveis públicas no Cloudflare para liberar login, celular e sincronização. Nunca use service_role no frontend.</p>
+        {env.securityWarnings.length > 0 ? (
+          <div className="web-auth-alert">{env.securityWarnings.join(' ')}</div>
+        ) : null}
+        <form className="web-auth-form web-auth-form-disabled" aria-label="Login aguardando configuração">
+          <label>
+            <span>E-mail</span>
+            <div className="web-input-row">
+              <AppIcon name="usuario_administrador" size={24} className="web-input-icon" />
+              <input value="" placeholder="Digite seu e-mail" autoComplete="email" disabled readOnly />
             </div>
-          </div>
+          </label>
+          <label>
+            <span>Senha</span>
+            <div className="web-password-row web-input-row">
+              <AppIcon name="bloqueio_seguro" size={24} className="web-input-icon" />
+              <input value="" type="password" placeholder="Digite sua senha" autoComplete="current-password" disabled readOnly />
+              <button type="button" className="secondary-btn" disabled>Ver</button>
+            </div>
+          </label>
+          <button type="button" className="primary-btn" disabled>Entrar pela nuvem</button>
+        </form>
+        <div className="web-code-list">
+          {env.missing.map((item) => <code key={item}>{item}</code>)}
         </div>
       </section>
     );
@@ -142,96 +159,66 @@ export function WebAuthPanel({
 
   if (session) {
     return (
-      <section className={`web-card web-auth-panel web-auth-clean-v74 web-auth-session-v74 ${compact ? 'web-auth-panel-compact' : ''}`}>
-        <div className="web-auth-session-head">
-          <span className="web-auth-icon-bubble">✓</span>
-          <div>
-            <span className="web-auth-safe-badge">Login ativo</span>
-            <h2>{session.email}</h2>
-            <p>Conta conectada ao Supabase. Os dados podem sincronizar entre web e celular.</p>
+      <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
+        <span className="web-kicker">Login ativo</span>
+        <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{statusLabel}</div>
+        <h2>{session.email}</h2>
+        {!compact ? <p>Conta conectada. Os dados da loja podem sincronizar entre PC e celular.</p> : null}
+        {!compact ? (
+          <div className="web-auth-session-grid">
+            <span><strong>ID</strong><small>{session.userId}</small></span>
+            <span><strong>Expira</strong><small>{session.expiresAt ? new Date(session.expiresAt * 1000).toLocaleString('pt-BR') : 'sessão persistente'}</small></span>
           </div>
-        </div>
-        <div className="web-auth-session-grid">
-          <span><strong>ID do usuário</strong><small>{session.userId}</small></span>
-          <span><strong>Sessão</strong><small>{session.expiresAt ? `expira em ${new Date(session.expiresAt * 1000).toLocaleString('pt-BR')}` : 'persistente'}</small></span>
-        </div>
-        <div className="web-auth-session-actions-v75">
-          {onAuthenticated && (
-            <button type="button" className="primary-btn web-auth-full-button" onClick={onAuthenticated} disabled={busy}>Abrir sistema</button>
-          )}
-          <button type="button" className="secondary-btn web-auth-full-button" onClick={signOut} disabled={busy}>Sair do modo web</button>
-        </div>
-        {message && <small className="web-message web-message-ok-v74">{message}</small>}
+        ) : null}
+        <button type="button" className="secondary-btn" onClick={signOut} disabled={busy}>Sair</button>
+        {message && <small className={`web-message web-message-${messageTone}`}>{message}</small>}
       </section>
     );
   }
 
   return (
-    <section className={`web-card web-auth-panel web-auth-clean-v74 ${compact ? 'web-auth-panel-compact' : ''}`} aria-label="Login Supabase da loja">
-      <div className="web-auth-clean-shell">
-        <aside className="web-auth-hero-side" aria-label="Resumo da sincronização">
-          <span className="web-auth-safe-badge">Supabase seguro</span>
-          <h2>Entrar para sincronizar</h2>
-          <p>Use e-mail e senha da loja. Depois do login, clientes, produtos, vendas, caixa e crediário podem aparecer no web e no celular.</p>
-          <ul className="web-auth-benefits">
-            <li><span>✓</span> Dados protegidos por loja</li>
-            <li><span>✓</span> Web e mobile usando a mesma nuvem</li>
-            <li><span>✓</span> Avisos claros quando algo ficar pendente</li>
-          </ul>
-        </aside>
-
-        <form className="web-auth-form web-auth-form-card" onSubmit={signIn}>
-          <div className="web-auth-form-title">
-            <span className="web-auth-icon-bubble">🔐</span>
-            <div>
-              <strong>{loginTitle}</strong>
-              <small>{loginSubtitle}</small>
+    <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
+      <span className="web-kicker">Login web</span>
+      <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{sessionLoading ? 'Verificando sessão...' : statusLabel}</div>
+      <h2>Entrar</h2>
+      {!compact ? <p>Use sua conta da loja para acessar.</p> : null}
+      <form className="web-auth-form" onSubmit={signIn}>
+        <label>
+          <span>E-mail</span>
+          <div className="web-input-row">
+              <AppIcon name="usuario_administrador" size={24} className="web-input-icon" />
+              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="seu@email.com" autoComplete="email" inputMode="email" />
             </div>
+        </label>
+        <label>
+          <span>Senha</span>
+          <div className="web-password-row web-input-row">
+            <AppIcon name="bloqueio_seguro" size={24} className="web-input-icon" />
+            <input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Digite sua senha" autoComplete="current-password" />
+            <button type="button" className="secondary-btn" onClick={() => setShowPassword((value) => !value)}>
+              {showPassword ? 'Ocultar' : 'Ver'}
+            </button>
           </div>
-
-          <label className="web-auth-field">
-            <span>E-mail</span>
-            <input
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="email@loja.com"
-              autoComplete="email"
-              inputMode="email"
-              autoCapitalize="none"
-              spellCheck={false}
-            />
-          </label>
-
-          <label className="web-auth-field">
-            <span>Senha</span>
-            <div className="web-auth-password-wrap">
-              <input
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Digite sua senha"
-                autoComplete="current-password"
-              />
-              <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}>
-                {showPassword ? 'Ocultar' : 'Mostrar'}
-              </button>
-            </div>
-          </label>
-
-          <label className="web-check-row web-auth-remember-row">
+        </label>
+        <div className="web-auth-form-options">
+          <label className="web-check-row">
             <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
-            <span>Salvar só o e-mail neste aparelho</span>
+            <span>Salvar e-mail</span>
           </label>
-
-          <div className="web-auth-actions">
-            <button type="submit" className="primary-btn" disabled={busy}>{busy ? 'Entrando...' : 'Entrar'}</button>
-            <button type="button" className="secondary-btn" onClick={signUp} disabled={busy}>{busy ? 'Aguarde...' : 'Criar conta'}</button>
-          </div>
-
-          {showHelp && <small className="web-auth-help-text">Não salvamos senha no navegador. A sessão fica protegida pelo Supabase.</small>}
-          {message && <small className="web-message">{message}</small>}
-        </form>
-      </div>
+          <button
+            type="button"
+            className="web-forgot-link"
+            onClick={() => {
+              setMessageTone('info');
+              setMessage('Para recuperar a senha, solicite um novo acesso ao administrador da loja.');
+            }}
+          >
+            Ajuda
+          </button>
+        </div>
+        <button type="submit" className="primary-btn" disabled={busy || sessionLoading}>{busy ? 'Aguarde, entrando no sistema...' : 'Entrar'}</button>
+      </form>
+      {message && <small className={`web-message web-message-${messageTone}`}>{message}</small>}
     </section>
   );
 }

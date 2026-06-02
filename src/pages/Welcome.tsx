@@ -62,20 +62,15 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
             <AppIcon name="app_logo_cadeado_carrinho" size={48} alt="Smart Loja Fácil" />
           </div>
           <span className="web-kicker">PWA/Web seguro</span>
-          <h1>Sistema rápido, <b>web e mobile</b> para vender.</h1>
-          <p>Entre pelo navegador ou pelo celular com dados sincronizados na nuvem segura, sem poluição visual e com operação simples para usuário leigo.</p>
-          <div className="master-login-benefits" aria-label="Benefícios principais">
-            <span>✓ Login seguro pelo Supabase</span>
-            <span>✓ Clientes, produtos e vendas sincronizados</span>
-            <span>✓ Interface limpa no PC e no celular</span>
-          </div>
+          <h1>Venda fácil, <b>sem poluição</b>.</h1>
+          <p>Entre com e-mail e senha para abrir sua loja no PC ou celular.</p>
         </section>
 
         <section className="master-login-form-card master-login-single-card" aria-label="Login web e mobile">
           <div className="master-login-form-head">
             <AppIcon name="app_logo_cadeado_carrinho" size={64} alt="Smart Loja Fácil" className="master-login-brand-icon" />
             <strong>SMART LOJA <b>FÁCIL</b></strong>
-            <small>{isWeb ? 'Entre para sincronizar na nuvem' : 'Entrada local do sistema'}</small>
+            <small>{isWeb ? 'Entrar na loja' : 'Entrada local'}</small>
           </div>
 
           {isWeb ? (
@@ -118,14 +113,14 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
 
           {isWeb ? (
             <button type="button" className="secondary-btn master-login-panel-link" onClick={handleEnter} disabled={props.disabled || busy || !action}>
-              {busy ? 'Abrindo painel...' : webReady ? 'Abrir painel conectado' : 'Continuar sem nuvem'}
+              {busy ? 'Abrindo...' : webReady ? 'Abrir painel' : 'Continuar'}
             </button>
           ) : (
             <button type="button" className="primary-btn master-login-final-btn" onClick={handleEnter} disabled={props.disabled || busy || !action}>
               {busy ? 'Abrindo...' : 'Entrar'}
             </button>
           )}
-          <small className="master-login-safe-note">Sua senha não é salva pelo app. No modo sem nuvem, os dados ficam só neste aparelho até configurar a sincronização.</small>
+          
         </section>
       </section>
     </main>
