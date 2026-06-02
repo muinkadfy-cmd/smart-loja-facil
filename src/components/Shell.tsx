@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon } from './AppIcon';
 import { buildAppAlerts } from '../lib/alerts';
 import { api } from '../lib/api';
-import { playOperationSound } from '../lib/sound';
+import { getOperationNotificationsEnabled, getOperationSoundsEnabled, playOperationSound, setOperationNotificationsEnabled, setOperationSoundsEnabled } from '../lib/sound';
 import { getRuntimeInfo } from '../lib/runtime';
 import { getPublicWebEnv } from '../lib/env';
 import { flushWebOutbox, getWebOutboxStats, getWebRoleCapabilities, getWebStoreContext, readWebSyncSnapshot, type WebOutboxStats, type WebStoreRole, type WebSyncSnapshot } from '../lib/webApi';
@@ -103,6 +103,9 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const [products, setProducts] = useState<Product[]>([]);
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [toast, setToast] = useState<{ title: string; detail: string; page: PageKey; level: 'danger' | 'warning' | 'info' } | null>(null);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [soundsEnabled, setSoundsEnabled] = useState(() => getOperationSoundsEnabled());
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => getOperationNotificationsEnabled());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
   const [webIdentity, setWebIdentity] = useState<WebIdentityState>({ email: '', role: 'sem login', storeName: '' });
@@ -239,7 +242,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     }
 
     return result;
-  }, [alerts]);
+  }, [alerts, notificationsEnabled]);
 
   const activeAlerts = alerts.filter((alert) => alert.page === activePage && alert.level !== 'ok');
   const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length;
@@ -267,12 +270,12 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       const incoming = mainAlerts[0];
       setToast({ title: incoming.title, detail: incoming.detail, page: incoming.page, level: incoming.level as 'danger' | 'warning' | 'info' });
       playOperationSound(incoming.level === 'danger' ? 'error' : 'warning');
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Alerta da loja', { body: `${incoming.title} - ${incoming.detail}` });
+      if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Smart Loja Fácil', { body: `${incoming.title} - ${incoming.detail}` });
       }
       prevAlertSignature.current = signature;
     }
-  }, [alerts]);
+  }, [alerts, notificationsEnabled]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -310,6 +313,27 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       })
       .catch(() => setOutboxStats(getWebOutboxStats()))
       .finally(() => setOutboxBusy(false));
+  }
+
+  function toggleSounds(): void {
+    const next = !soundsEnabled;
+    setSoundsEnabled(next);
+    setOperationSoundsEnabled(next);
+    if (next) playOperationSound('success');
+  }
+
+  function toggleNotifications(): void {
+    const next = !notificationsEnabled;
+    setNotificationsEnabled(next);
+    setOperationNotificationsEnabled(next);
+    if (next && 'Notification' in window && Notification.permission === 'default') {
+      void Notification.requestPermission();
+    }
+  }
+
+  function openAlertPage(page: PageKey): void {
+    setActivePage(page);
+    setAlertsOpen(false);
   }
 
   return (
@@ -393,7 +417,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                 </div>
               </div>
               <div className="neo-mobile-tools">
-                <button type="button" className="neo-notify-btn" onClick={() => setActivePage('audit')} aria-label="Notificações">
+                <button type="button" className="neo-notify-btn" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
                   <AppIcon name="auditoria_logs" size={24} className="app-icon-chip" />
                   {notificationCount > 0 ? <span>{notificationCount}</span> : null}
                 </button>
@@ -432,7 +456,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   <AppIcon name="backup" size={24} className="app-icon-chip" />
                   <span className="neo-tool-ok" />
                 </button>
-                <button type="button" className="neo-icon-tool neo-bell-tool" onClick={() => setActivePage('audit')} aria-label="Notificações">
+                <button type="button" className="neo-icon-tool neo-bell-tool" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
                   <AppIcon name="auditoria_logs" size={24} className="app-icon-chip" />
                   {notificationCount > 0 ? <span className="neo-alert-count">{notificationCount}</span> : null}
                 </button>
@@ -449,10 +473,48 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
           </header>
 
           {toast ? (
-            <button type="button" className={`neo-toast neo-toast-${toast.level}`} onClick={() => setActivePage(toast.page)}>
+            <button type="button" className={`neo-toast neo-toast-${toast.level}`} onClick={() => openAlertPage(toast.page)}>
               <strong>{toast.title}</strong>
               <span>{toast.detail}</span>
             </button>
+          ) : null}
+
+          {alertsOpen ? (
+            <section className="neo-alert-center" aria-label="Central de alertas da loja">
+              <div className="neo-alert-center-head">
+                <div>
+                  <strong>Alertas da loja</strong>
+                  <small>{notificationCount > 0 ? `${notificationCount} atenção(ões)` : 'Tudo certo agora'}</small>
+                </div>
+                <button type="button" onClick={() => setAlertsOpen(false)} aria-label="Fechar alertas">×</button>
+              </div>
+
+              <div className="neo-alert-preferences">
+                <button type="button" className={soundsEnabled ? 'active' : ''} onClick={toggleSounds}>
+                  Som {soundsEnabled ? 'ligado' : 'desligado'}
+                </button>
+                <button type="button" className={notificationsEnabled ? 'active' : ''} onClick={toggleNotifications}>
+                  Notificações {notificationsEnabled ? 'ativas' : 'pausadas'}
+                </button>
+              </div>
+
+              <div className="neo-alert-list">
+                {alerts.map((alert) => (
+                  <button type="button" key={alert.id} className={`neo-alert-card neo-alert-card-${alert.level}`} onClick={() => openAlertPage(alert.page)}>
+                    <span className="neo-alert-card-dot" />
+                    <span>
+                      <strong>{alert.title}</strong>
+                      <small>{alert.detail}</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="neo-alert-actions">
+                <button type="button" onClick={onRefresh}>Atualizar</button>
+                <button type="button" onClick={() => openAlertPage('diagnostics')}>Diagnóstico</button>
+              </div>
+            </section>
           ) : null}
 
           <section className="neo-page-shell">

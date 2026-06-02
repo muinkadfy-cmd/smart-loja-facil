@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v104-mobile-photo-map';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v106-dashboard-alerts';
 const APP_SHELL = [
   '/',
   '/index.html',

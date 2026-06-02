@@ -231,13 +231,18 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
 
         <article className="neo-kpi-card neo-kpi-card-ticket">
           <div>
-            <span>Ticket medio</span>
+            <span>Ticket médio</span>
             <strong>{money(averageTicket)}</strong>
             <small>↑ média por atendimento</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-green"><AppIcon name="dinheiro" size={24} className="app-icon-stat" /></div>
         </article>
       </section>
+
+      <div className="neo-dashboard-updated">
+        <AppIcon name="atualizar" size={16} className="app-icon-chip" />
+        <span>Atualizado agora há poucos segundos</span>
+      </div>
 
       <section className="neo-surface neo-context-surface">
         <div className="neo-section-head">

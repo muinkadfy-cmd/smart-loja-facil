@@ -1,0 +1,717 @@
+:root {
+  --lote106-reference: active;
+  --slf106-bg: #f3f7fb;
+  --slf106-card: #ffffff;
+  --slf106-line: #dbe5f0;
+  --slf106-ink: #0d1c35;
+  --slf106-muted: #64728b;
+  --slf106-blue: #1677ff;
+  --slf106-blue-dark: #12386f;
+  --slf106-green: #18a058;
+  --slf106-orange: #ef5a22;
+  --slf106-shadow: 0 18px 46px rgba(15, 34, 61, .075);
+  --slf106-soft-shadow: 0 10px 26px rgba(15, 34, 61, .055);
+}
+
+html.lote106-dashboard-reference-alerts,
+html.lote106-dashboard-reference-alerts body,
+.lote106-dashboard-reference-alerts #root {
+  background: linear-gradient(180deg, #f9fbfe 0%, var(--slf106-bg) 100%) !important;
+  color: var(--slf106-ink) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-windowbar {
+  display: none !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-shell {
+  background: var(--slf106-bg) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-layout {
+  background: var(--slf106-bg) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-sidebar,
+.lote106-dashboard-reference-alerts .neo-main,
+.lote106-dashboard-reference-alerts .neo-topbar,
+.lote106-dashboard-reference-alerts .neo-surface,
+.lote106-dashboard-reference-alerts .neo-kpi-card,
+.lote106-dashboard-reference-alerts .web-card,
+.lote106-dashboard-reference-alerts .classic-panel,
+.lote106-dashboard-reference-alerts .data-table-shell {
+  border-color: var(--slf106-line) !important;
+}
+
+/* Dashboard referência: branco premium, cards soltos e leitura limpa. */
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta {
+  align-items: center !important;
+  margin: 0 0 22px !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-title {
+  gap: 12px !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-icon {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+  background: #eaf3ff !important;
+  box-shadow: 0 10px 22px rgba(22, 119, 255, .12) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta h1 {
+  font-size: clamp(2rem, 3vw, 2.65rem) !important;
+  letter-spacing: -0.055em !important;
+  color: var(--slf106-ink) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta p {
+  display: block !important;
+  margin-top: 6px !important;
+  color: var(--slf106-muted) !important;
+  font-size: 1rem !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-status .neo-mini-chip:nth-child(n+2) {
+  display: none !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-status .neo-mini-chip {
+  min-height: 42px !important;
+  padding: 10px 20px !important;
+  border-radius: 999px !important;
+  font-size: 1rem !important;
+  gap: 8px !important;
+  background: #effaf4 !important;
+  border-color: #c9efd9 !important;
+  color: #078640 !important;
+  box-shadow: none !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: clamp(14px, 1.6vw, 22px) !important;
+  margin-bottom: 22px !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card {
+  position: relative !important;
+  min-height: 150px !important;
+  display: grid !important;
+  grid-template-columns: 78px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 24px 26px !important;
+  border-radius: 24px !important;
+  background: var(--slf106-card) !important;
+  border: 1px solid var(--slf106-line) !important;
+  box-shadow: var(--slf106-soft-shadow) !important;
+  overflow: hidden !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card::after {
+  display: none !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card > div:first-child {
+  display: contents !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card span {
+  grid-column: 2 !important;
+  display: block !important;
+  margin-bottom: 6px !important;
+  color: #59677d !important;
+  font-size: 1rem !important;
+  font-weight: 650 !important;
+  letter-spacing: -0.025em !important;
+  text-transform: none !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card strong {
+  grid-column: 2 !important;
+  display: block !important;
+  font-size: clamp(2rem, 2.8vw, 2.65rem) !important;
+  line-height: .98 !important;
+  letter-spacing: -0.055em !important;
+  color: var(--slf106-ink) !important;
+  white-space: nowrap !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card small {
+  grid-column: 2 !important;
+  display: block !important;
+  margin-top: 12px !important;
+  color: #66758d !important;
+  font-size: .95rem !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-icon {
+  grid-column: 1 !important;
+  grid-row: 1 / span 3 !important;
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 20px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: #eff6ff !important;
+  border: 1px solid #d8e8ff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card-sales .neo-kpi-icon {
+  background: #fff1ec !important;
+  border-color: #ffd9ca !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-card-sales .neo-kpi-icon svg,
+.lote106-dashboard-reference-alerts .neo-kpi-card-sales .neo-kpi-icon * {
+  color: var(--slf106-orange) !important;
+  stroke: var(--slf106-orange) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-icon-gold {
+  background: #edf5ff !important;
+  border-color: #cfe3ff !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-icon-green {
+  background: #fff5df !important;
+  border-color: #ffe1a7 !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-kpi-icon-violet {
+  background: #f5ecff !important;
+  border-color: #e6d4ff !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-dashboard-updated {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  color: #9aa6b8 !important;
+  font-size: .95rem !important;
+  font-weight: 650 !important;
+  margin: 2px 0 24px !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-context-surface,
+.lote106-dashboard-reference-alerts .neo-quick-surface,
+.lote106-dashboard-reference-alerts .neo-chart-surface,
+.lote106-dashboard-reference-alerts .neo-system-surface,
+.lote106-dashboard-reference-alerts .neo-trust-strip {
+  border-radius: 24px !important;
+  background: var(--slf106-card) !important;
+  border: 1px solid var(--slf106-line) !important;
+  box-shadow: var(--slf106-soft-shadow) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-chip-row {
+  display: none !important;
+}
+
+/* Central de alertas personalizada. */
+.lote106-dashboard-reference-alerts .neo-alert-center {
+  position: fixed !important;
+  top: calc(82px + env(safe-area-inset-top, 0px)) !important;
+  right: clamp(14px, 2vw, 28px) !important;
+  z-index: 90 !important;
+  width: min(92vw, 390px) !important;
+  padding: 16px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.98) !important;
+  border: 1px solid var(--slf106-line) !important;
+  box-shadow: 0 26px 70px rgba(14, 30, 52, .18) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-center-head,
+.lote106-dashboard-reference-alerts .neo-alert-actions,
+.lote106-dashboard-reference-alerts .neo-alert-preferences {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-center-head strong {
+  display: block !important;
+  font-size: 1rem !important;
+  color: var(--slf106-ink) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-center-head small {
+  color: var(--slf106-muted) !important;
+  font-weight: 700 !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-center-head button {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--slf106-line) !important;
+  background: #f8fbff !important;
+  font-size: 1.3rem !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-preferences {
+  margin: 14px 0 !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-preferences button,
+.lote106-dashboard-reference-alerts .neo-alert-actions button {
+  flex: 1 !important;
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--slf106-line) !important;
+  background: #f7f9fc !important;
+  color: #344761 !important;
+  font-weight: 850 !important;
+  font-size: .76rem !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-preferences button.active {
+  background: #eafbf1 !important;
+  border-color: #c7eed7 !important;
+  color: #087d3f !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-list {
+  display: grid !important;
+  gap: 10px !important;
+  max-height: min(52vh, 420px) !important;
+  overflow-y: auto !important;
+  padding-right: 2px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-card {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 12px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  text-align: left !important;
+  padding: 13px !important;
+  border-radius: 16px !important;
+  background: #f8fbff !important;
+  border: 1px solid var(--slf106-line) !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-card-dot {
+  width: 10px !important;
+  height: 10px !important;
+  margin-top: 5px !important;
+  border-radius: 999px !important;
+  background: #1677ff !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-card-warning .neo-alert-card-dot { background: #f0a400 !important; }
+.lote106-dashboard-reference-alerts .neo-alert-card-danger .neo-alert-card-dot { background: #e5484d !important; }
+.lote106-dashboard-reference-alerts .neo-alert-card-ok .neo-alert-card-dot { background: var(--slf106-green) !important; }
+
+.lote106-dashboard-reference-alerts .neo-alert-card strong {
+  display: block !important;
+  color: var(--slf106-ink) !important;
+  font-size: .9rem !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-card small {
+  display: block !important;
+  color: var(--slf106-muted) !important;
+  margin-top: 3px !important;
+  line-height: 1.25 !important;
+}
+
+.lote106-dashboard-reference-alerts .neo-alert-actions {
+  margin-top: 14px !important;
+}
+
+/* Mobile: fidelidade à referência enviada. */
+@media (max-width: 860px) {
+  .lote106-dashboard-reference-alerts .neo-main {
+    padding: 0 14px calc(110px + env(safe-area-inset-bottom, 0px)) !important;
+    background: #f7faff !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-topbar {
+    position: relative !important;
+    top: auto !important;
+    margin: 0 -14px 24px !important;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 16px 18px !important;
+    border-radius: 0 !important;
+    background: rgba(255,255,255,.94) !important;
+    box-shadow: 0 1px 0 rgba(219,229,240,.9) !important;
+    backdrop-filter: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-topbar-mobile-row {
+    display: grid !important;
+    grid-template-columns: 64px minmax(0, 1fr) 64px !important;
+    align-items: center !important;
+    gap: 12px !important;
+    min-height: 74px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-menu-button,
+  .lote106-dashboard-reference-alerts .neo-notify-btn {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    border: 1px solid var(--slf106-line) !important;
+    box-shadow: var(--slf106-soft-shadow) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-branding {
+    justify-content: center !important;
+    gap: 10px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-branding .neo-mobile-brand-logo {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-branding strong {
+    font-size: 1.35rem !important;
+    font-weight: 950 !important;
+    color: var(--slf106-ink) !important;
+    letter-spacing: -0.04em !important;
+    text-transform: uppercase !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-branding small {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-quick-access {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-header-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-topbar-actions {
+    order: 1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-topbar-actions .neo-icon-tool,
+  .lote106-dashboard-reference-alerts .neo-bell-tool {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-store-switch {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 72px !important;
+    border-radius: 18px !important;
+    padding: 12px 16px !important;
+    background: #fff !important;
+    border: 1px solid var(--slf106-line) !important;
+    box-shadow: var(--slf106-soft-shadow) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-store-avatar {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 1rem !important;
+    background: #0e2d5a !important;
+    color: #fff !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-store-switch small {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-store-switch strong {
+    font-size: 1.05rem !important;
+    color: var(--slf106-ink) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-command-search {
+    order: 2 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 72px !important;
+    border-radius: 18px !important;
+    padding: 10px 12px !important;
+    background: #fff !important;
+    border: 1px solid var(--slf106-line) !important;
+    box-shadow: var(--slf106-soft-shadow) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-command-search input {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-command-search button {
+    min-width: 70px !important;
+    min-height: 50px !important;
+    border-radius: 14px !important;
+    background: #fff0ea !important;
+    border-color: #ffd6c7 !important;
+    color: #d84917 !important;
+    font-size: 1.1rem !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-shell {
+    padding: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 12px !important;
+    margin-bottom: 22px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-icon,
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta p {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta h1 {
+    font-size: 1.8rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-status {
+    align-self: center !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-page-dashboard .neo-page-meta-status .neo-mini-chip {
+    min-height: 44px !important;
+    padding: 10px 18px !important;
+    font-size: 1rem !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card {
+    min-height: 158px !important;
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 7px 20px rgba(16, 35, 61, .06) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card-ticket {
+    grid-column: 1 / -1 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-icon {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 16px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card span {
+    font-size: 1rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card strong {
+    font-size: 1.65rem !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card small {
+    margin-top: 10px !important;
+    font-size: .92rem !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-context-surface,
+  .lote106-dashboard-reference-alerts .neo-dashboard-grid,
+  .lote106-dashboard-reference-alerts .neo-trust-strip {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-dashboard-updated {
+    margin: 22px 0 0 !important;
+    padding-bottom: 2px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-dock {
+    left: 14px !important;
+    right: 14px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    height: 78px !important;
+    border-radius: 22px !important;
+    background: rgba(255,255,255,.96) !important;
+    border: 1px solid var(--slf106-line) !important;
+    box-shadow: 0 18px 45px rgba(18, 34, 59, .13) !important;
+    padding: 8px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-dock button {
+    border-radius: 16px !important;
+    color: #40516b !important;
+    font-size: .78rem !important;
+    font-weight: 750 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-mobile-dock button.active {
+    background: #eaf4ff !important;
+    color: #1174ff !important;
+    box-shadow: inset 0 3px 0 #1677ff !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar {
+    width: min(78vw, 334px) !important;
+    padding: calc(26px + env(safe-area-inset-top, 0px)) 22px 24px !important;
+    background: rgba(255,255,255,.98) !important;
+    border-radius: 0 30px 30px 0 !important;
+    box-shadow: 24px 0 70px rgba(12, 28, 50, .22) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-brand {
+    grid-template-columns: 58px minmax(0, 1fr) 48px !important;
+    padding-bottom: 22px !important;
+    margin-bottom: 18px !important;
+    border-bottom: 1px solid var(--slf106-line) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-brand-mark {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 18px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-brand-copy strong {
+    font-size: 1.16rem !important;
+    letter-spacing: -0.035em !important;
+    color: var(--slf106-ink) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-brand-copy small {
+    display: inline-flex !important;
+    width: fit-content !important;
+    margin-top: 8px !important;
+    padding: 6px 12px !important;
+    border-radius: 999px !important;
+    background: #ebfaf1 !important;
+    color: #078640 !important;
+    font-weight: 850 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-close {
+    display: grid !important;
+    place-items: center !important;
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    border: 1px solid var(--slf106-line) !important;
+    color: var(--slf106-ink) !important;
+    font-size: 1.6rem !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-nav {
+    gap: 12px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-nav-item {
+    min-height: 64px !important;
+    grid-template-columns: 52px minmax(0, 1fr) auto !important;
+    padding: 8px 14px !important;
+    border-radius: 18px !important;
+    background: transparent !important;
+    color: #1d304d !important;
+    font-size: 1.05rem !important;
+    font-weight: 920 !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-nav-item-icon {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 16px !important;
+    background: #fff !important;
+    border: 1px solid #d5e4f4 !important;
+    box-shadow: 0 8px 18px rgba(20, 70, 130, .08) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-nav-item.active {
+    background: linear-gradient(135deg, #cc7a67 0%, #a45f42 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 14px 28px rgba(169, 86, 60, .24) !important;
+    border-color: transparent !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-nav-item.active .neo-nav-item-label,
+  .lote106-dashboard-reference-alerts .neo-nav-item.active span {
+    color: #fff !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-footer {
+    margin-top: 18px !important;
+    gap: 12px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-env-block,
+  .lote106-dashboard-reference-alerts .neo-version-block {
+    min-height: 78px !important;
+    padding: 15px 18px !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    border: 1px solid var(--slf106-line) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-version-block button {
+    display: none !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-sidebar-backdrop {
+    background: rgba(20, 30, 45, .42) !important;
+    backdrop-filter: blur(6px) !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-alert-center {
+    left: 14px !important;
+    right: 14px !important;
+    top: calc(90px + env(safe-area-inset-top, 0px)) !important;
+    width: auto !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .lote106-dashboard-reference-alerts .neo-kpi-grid {
+    gap: 10px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card {
+    grid-template-columns: 1fr !important;
+    min-height: 150px !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-icon {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .lote106-dashboard-reference-alerts .neo-kpi-card span,
+  .lote106-dashboard-reference-alerts .neo-kpi-card strong,
+  .lote106-dashboard-reference-alerts .neo-kpi-card small {
+    grid-column: 1 !important;
+  }
+}

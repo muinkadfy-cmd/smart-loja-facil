@@ -20,6 +20,11 @@ function dateLabel(value: string): string {
   return parsed.toLocaleDateString('pt-BR');
 }
 
+function pushUnique(alerts: AppAlert[], alert: AppAlert): void {
+  if (alerts.some((item) => item.id === alert.id)) return;
+  alerts.push(alert);
+}
+
 export function buildAppAlerts(status: AppStatus | null, products: Product[], credits: CreditSummary[]): AppAlert[] {
   const limit = status?.settings.low_stock_limit ?? 3;
   const today = todayOnly(new Date());
@@ -27,6 +32,7 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
   soonLimit.setDate(soonLimit.getDate() + 3);
 
   const lowStock = products.filter((product) => product.status === 'ativo' && product.stock <= limit);
+  const inactiveProducts = products.filter((product) => product.status === 'inativo');
   const overdue = credits.flatMap((credit) =>
     credit.installments
       .filter((item) => item.status !== 'pago' && todayOnly(new Date(`${item.due_date}T00:00:00`)) < today)
@@ -44,9 +50,59 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
 
   const alerts: AppAlert[] = [];
 
+  if (!status) {
+    pushUnique(alerts, {
+      id: 'status-loading',
+      level: 'info',
+      title: 'Carregando loja',
+      detail: 'Aguarde a leitura inicial dos dados.',
+      page: 'dashboard',
+    });
+  } else {
+    if (!status.sqlite_ok) {
+      pushUnique(alerts, {
+        id: 'cloud-not-ready',
+        level: 'warning',
+        title: 'Conexão pendente',
+        detail: 'Verifique login e internet para sincronizar.',
+        page: 'diagnostics',
+      });
+    }
+
+    if (!status.offline_ready) {
+      pushUnique(alerts, {
+        id: 'pwa-cache-check',
+        level: 'info',
+        title: 'Preparando PWA',
+        detail: 'Abra novamente se o celular ainda mostrar cache antigo.',
+        page: 'diagnostics',
+      });
+    }
+
+    if ((status.dashboard.today_sales_count ?? 0) === 0) {
+      pushUnique(alerts, {
+        id: 'sales-empty-today',
+        level: 'info',
+        title: 'Nenhuma venda hoje',
+        detail: 'Abra o PDV para registrar a primeira venda.',
+        page: 'sales',
+      });
+    }
+
+    if ((status.dashboard.credits_open_total ?? 0) > 0) {
+      pushUnique(alerts, {
+        id: 'credits-open-total',
+        level: 'info',
+        title: 'Crediário ativo',
+        detail: `Há parcelas em aberto para acompanhar.`,
+        page: 'credits',
+      });
+    }
+  }
+
   if (overdue.length > 0) {
     const first = overdue[0];
-    alerts.push({
+    pushUnique(alerts, {
       id: 'credit-overdue',
       level: 'danger',
       title: `${overdue.length} vencida(s)`,
@@ -57,7 +113,7 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
 
   if (dueSoon.length > 0) {
     const first = dueSoon[0];
-    alerts.push({
+    pushUnique(alerts, {
       id: 'credit-due-soon',
       level: 'warning',
       title: `${dueSoon.length} próxima(s)`,
@@ -68,7 +124,7 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
 
   if (lowStock.length > 0) {
     const first = lowStock[0];
-    alerts.push({
+    pushUnique(alerts, {
       id: 'low-stock',
       level: 'warning',
       title: `${lowStock.length} estoque baixo`,
@@ -77,8 +133,18 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
     });
   }
 
+  if (inactiveProducts.length > 0 && products.length <= 10) {
+    pushUnique(alerts, {
+      id: 'inactive-products-small-base',
+      level: 'info',
+      title: 'Produtos inativos',
+      detail: 'Revise o catálogo para manter a loja limpa.',
+      page: 'products',
+    });
+  }
+
   if ((status?.dashboard.orders_open ?? 0) > 0) {
-    alerts.push({
+    pushUnique(alerts, {
       id: 'open-orders',
       level: 'info',
       title: `${status?.dashboard.orders_open ?? 0} pedido(s)`,
@@ -92,7 +158,7 @@ export function buildAppAlerts(status: AppStatus | null, products: Product[], cr
       id: 'all-ok',
       level: 'ok',
       title: 'Tudo certo',
-      detail: 'Sem pendências',
+      detail: 'Loja pronta para operar.',
       page: 'dashboard',
     });
   }
