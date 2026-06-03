@@ -58,24 +58,81 @@ function formatTimeAgo(value?: string): string {
   return `há ${diffDay} dia${diffDay > 1 ? 's' : ''}`;
 }
 
+
+function shortVersionLabel(value?: string): string {
+  if (!value) return 'Verificando';
+  const clean = value.replace(/^pwa-supabase-/i, '').replace(/-/g, ' ').trim();
+  if (/^v\d+/i.test(clean)) return clean;
+  return value.length > 26 ? `${value.slice(0, 26)}…` : value;
+}
 function chartLabel(point: DashboardSalesPoint | null): string {
   if (!point) return 'Sem dados';
   return `${point.label} · ${money(point.total)}`;
 }
 
-export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.Element {
+function plural(value: number, singular: string, pluralText: string): string {
+  return `${value} ${value === 1 ? singular : pluralText}`;
+}
+
+function safeErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  return fallback;
+}
+
+function paymentMethodLabel(method: string): string {
+  if (method === 'pix') return 'PIX';
+  if (method === 'cartao') return 'Cartão';
+  if (method === 'crediario') return 'Crediário';
+  return 'Dinheiro';
+}
+
+export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageProps): JSX.Element {
   const [data, setData] = useState<DashboardData | null>(status?.dashboard ?? null);
   const [chartPeriod, setChartPeriod] = useState<DashboardSalesPeriod>('7d');
   const [salesSeries, setSalesSeries] = useState<DashboardSalesPoint[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [dataLoading, setDataLoading] = useState(!status?.dashboard);
+  const [dashboardError, setDashboardError] = useState('');
+  const [chartError, setChartError] = useState('');
   const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [webIdentity, setWebIdentity] = useState<WebDashboardIdentity>({ email: '', role: 'sem login', storeName: '' });
 
   useEffect(() => {
-    api.dashboard().then(setData).catch(() => undefined);
-    api.products().then(setProducts).catch(() => setProducts([]));
-  }, [refreshToken]);
+    let active = true;
+    setDataLoading(true);
+    setDashboardError('');
+
+    void api.dashboard()
+      .then((payload) => {
+        if (!active) return;
+        setData(payload);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setDashboardError(safeErrorMessage(error, 'Não foi possível atualizar o painel agora.'));
+      })
+      .finally(() => {
+        if (active) setDataLoading(false);
+      });
+
+    if (runtimeInfo.isWeb) {
+      setProducts([]);
+    } else {
+      void api.products()
+        .then((items) => {
+          if (active) setProducts(items);
+        })
+        .catch(() => {
+          if (active) setProducts([]);
+        });
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [refreshToken, runtimeInfo.isWeb]);
 
   useEffect(() => {
     if (!runtimeInfo.isWeb) return undefined;
@@ -95,17 +152,41 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
   }, [refreshToken, runtimeInfo.isWeb, status?.db_path]);
 
   useEffect(() => {
+    let active = true;
     setChartLoading(true);
-    api.dashboardSalesSeries(chartPeriod)
-      .then(setSalesSeries)
-      .catch(() => setSalesSeries([]))
-      .finally(() => setChartLoading(false));
+    setChartError('');
+
+    void api.dashboardSalesSeries(chartPeriod)
+      .then((series) => {
+        if (!active) return;
+        setSalesSeries(series);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setSalesSeries([]);
+        setChartError(safeErrorMessage(error, 'Não foi possível atualizar o gráfico.'));
+      })
+      .finally(() => {
+        if (active) setChartLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [chartPeriod, refreshToken]);
 
   const todaySalesCount = data?.today_sales_count ?? 0;
   const todaySalesTotal = data?.today_sales_total ?? 0;
   const averageTicket = todaySalesCount > 0 ? todaySalesTotal / todaySalesCount : 0;
   const activeProducts = useMemo(() => products.filter((item) => item.status !== 'inativo').length, [products]);
+  const activeProductCount = typeof data?.products_total === 'number' ? data.products_total : activeProducts;
+  const lowStockCount = data?.low_stock_count ?? 0;
+  const ordersOpen = data?.orders_open ?? 0;
+  const hasSalesToday = todaySalesCount > 0;
+  const paymentSummary = data?.payment_today ?? [];
+  const paymentSummaryText = paymentSummary.length > 0
+    ? paymentSummary.slice(0, 3).map((item) => `${paymentMethodLabel(item.method)} ${money(item.total)}`).join(' · ')
+    : 'Sem recebimentos registrados hoje.';
   const storeName = webIdentity.storeName || status?.settings.store_name || 'Smart Loja Fácil';
   const userLabel = runtimeInfo.isWeb
     ? webIdentity.email || status?.settings.owner_name || 'Aguardando login'
@@ -119,9 +200,10 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
         ? Array.from({ length: 8 }, (_, index) => ({ label: `${String(index * 3).padStart(2, '0')}h`, total: 0 }))
         : []);
     const maxValue = activeSeries.reduce((highest, point) => Math.max(highest, point.total), 0);
+    const isEmpty = activeSeries.length === 0 || maxValue <= 0;
     const upperBound = chartUpperBound(maxValue);
-    const yValues = upperBound <= 0
-      ? [0, 0, 0, 0, 0]
+    const yValues = isEmpty
+      ? [0]
       : [upperBound, upperBound * 0.75, upperBound * 0.5, upperBound * 0.25, 0];
     const width = 720;
     const left = 18;
@@ -142,8 +224,8 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
       ? ''
       : `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${bottom} L ${points[0].x.toFixed(1)} ${bottom} Z`;
     const peakIndex = points.reduce((best, point, index, all) => (point.total > all[best].total ? index : best), 0);
-    const peakPoint = points[peakIndex] ?? null;
-    return { activeSeries, yValues, points, linePath, areaPath, peakPoint, maxValue };
+    const peakPoint = isEmpty ? null : points[peakIndex] ?? null;
+    return { activeSeries, yValues, points, linePath, areaPath, peakPoint, maxValue, isEmpty };
   }, [chartPeriod, salesSeries]);
 
   const statusRows = runtimeInfo.isWeb ? [
@@ -158,8 +240,8 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
       ok: Boolean(status?.offline_ready),
     },
     {
-      label: 'PWA/cache',
-      value: status?.version ?? 'Verificando',
+      label: 'Versão',
+      value: shortVersionLabel(status?.version),
       ok: Boolean(status?.version),
     },
     {
@@ -191,13 +273,34 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
   ];
 
   return (
-    <div className="neo-dashboard">
+    <div className="neo-dashboard" aria-busy={dataLoading}>
+      {dashboardError ? (
+        <section className="neo-dashboard-state neo-dashboard-state-error" role="alert">
+          <span><AppIcon name="auditoria_logs" size={24} className="app-icon-chip" /></span>
+          <div>
+            <strong>Não consegui atualizar o painel</strong>
+            <small>{dashboardError}</small>
+          </div>
+          <button type="button" onClick={onChanged}>Tentar novamente</button>
+        </section>
+      ) : null}
+
+      {dataLoading && !data ? (
+        <section className="neo-dashboard-state" role="status">
+          <span><AppIcon name="atualizar" size={24} className="app-icon-chip" /></span>
+          <div>
+            <strong>Atualizando painel</strong>
+            <small>Buscando vendas, pedidos, produtos e clientes sincronizados.</small>
+          </div>
+        </section>
+      ) : null}
+
       <section className="neo-kpi-grid" aria-label="Indicadores principais">
         <article className="neo-kpi-card neo-kpi-card-sales">
           <div>
             <span>Vendas hoje</span>
             <strong>{money(todaySalesTotal)}</strong>
-            <small>↑ {todaySalesCount} venda{todaySalesCount !== 1 ? 's' : ''}</small>
+            <small>{hasSalesToday ? `${plural(todaySalesCount, 'venda', 'vendas')} hoje` : 'Nenhuma venda hoje'}</small>
           </div>
           <div className="neo-kpi-icon"><AppIcon name="vendas_pdv" size={24} className="app-icon-stat" /></div>
         </article>
@@ -206,7 +309,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Pedidos</span>
             <strong>{data?.orders_open ?? 0}</strong>
-            <small>↑ {data?.orders_open ?? 0} em aberto</small>
+            <small>{ordersOpen > 0 ? `${ordersOpen} em aberto` : 'Nenhum pedido aberto'}</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-gold"><AppIcon name="pedidos" size={24} className="app-icon-stat" /></div>
         </article>
@@ -214,8 +317,8 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
         <article className="neo-kpi-card">
           <div>
             <span>Produtos</span>
-            <strong>{activeProducts}</strong>
-            <small>{data?.low_stock_count ?? 0} baixo</small>
+            <strong>{activeProductCount}</strong>
+            <small>{lowStockCount > 0 ? `${lowStockCount} com estoque baixo` : 'Estoque saudável'}</small>
           </div>
           <div className="neo-kpi-icon"><AppIcon name="produtos" size={24} className="app-icon-stat" /></div>
         </article>
@@ -224,7 +327,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Clientes</span>
             <strong>{data?.customers_total ?? 0}</strong>
-            <small>↑ base ativa</small>
+            <small>{(data?.customers_total ?? 0) > 0 ? 'base ativa' : 'Sem clientes cadastrados'}</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-violet"><AppIcon name="clientes" size={24} className="app-icon-stat" /></div>
         </article>
@@ -233,15 +336,29 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div>
             <span>Ticket médio</span>
             <strong>{money(averageTicket)}</strong>
-            <small>↑ média</small>
+            <small>{hasSalesToday ? 'por venda hoje' : 'Sem vendas hoje'}</small>
           </div>
           <div className="neo-kpi-icon neo-kpi-icon-green"><AppIcon name="dinheiro" size={24} className="app-icon-stat" /></div>
         </article>
       </section>
 
+      <section className={`neo-dashboard-insight ${hasSalesToday ? 'is-ok' : 'is-warning'}`} aria-label="Próxima ação recomendada">
+        <span className="neo-dashboard-insight-icon">
+          <AppIcon name={hasSalesToday ? 'dinheiro' : 'vendas_pdv'} size={24} className="app-icon-stat" />
+        </span>
+        <div>
+          <strong>{hasSalesToday ? 'Dia em movimento' : 'Nenhuma venda registrada hoje'}</strong>
+          <small>{hasSalesToday ? paymentSummaryText : 'Abra o PDV para registrar a primeira venda e atualizar os indicadores automaticamente.'}</small>
+        </div>
+        <div className="neo-dashboard-insight-actions">
+          <button type="button" className="neo-dashboard-primary-action" onClick={() => onNavigate('sales')}>{hasSalesToday ? 'Ver vendas' : 'Abrir PDV'}</button>
+          <button type="button" onClick={() => onNavigate('reports')}>Relatórios</button>
+        </div>
+      </section>
+
       <div className="neo-dashboard-updated">
         <AppIcon name="atualizar" size={16} className="app-icon-chip" />
-        <span>Atualizado agora há poucos segundos</span>
+        <span>{`Atualizado ${formatTimeAgo(status?.settings.updated_at)}`}</span>
       </div>
 
       <section className="neo-surface neo-context-surface">
@@ -277,7 +394,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
             <div className="neo-context-card-icon"><AppIcon name="offline_local" size={24} className="app-icon-stat" /></div>
             <div>
               <span>Ambiente</span>
-              <strong>{runtimeInfo.isWeb ? 'Online' : status?.offline_ready ? 'Producao' : 'Verificando'}</strong>
+              <strong>{runtimeInfo.isWeb ? 'Online' : status?.offline_ready ? 'Produção' : 'Verificando'}</strong>
               <small>{runtimeInfo.isWeb ? 'Supabase web/mobile' : status?.sqlite_ok ? 'SQLite local ativo' : 'Aguardando leitura do banco'}</small>
             </div>
             <mark className="green">{runtimeInfo.isWeb ? 'Web' : status?.sqlite_ok ? 'Local' : 'Checando'}</mark>
@@ -313,19 +430,19 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           <div className="neo-quick-grid">
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('products')}>
               <span className="neo-quick-icon"><AppIcon name="novo_item_adicionar" size={24} className="app-icon-button-inline" /></span>
-              <strong>Novo Produto</strong>
+              <strong>Novo produto</strong>
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('orders')}>
               <span className="neo-quick-icon"><AppIcon name="pedidos" size={24} className="app-icon-button-inline" /></span>
-              <strong>Novo Pedido</strong>
+              <strong>Novo pedido</strong>
             </button>
-            <button type="button" className="neo-quick-card" onClick={() => onNavigate('sales')}>
+            <button type="button" className="neo-quick-card neo-quick-card-primary" onClick={() => onNavigate('sales')}>
               <span className="neo-quick-icon"><AppIcon name="vendas_pdv" size={24} className="app-icon-button-inline" /></span>
               <strong>Abrir PDV</strong>
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('customers')}>
               <span className="neo-quick-icon"><AppIcon name="clientes" size={24} className="app-icon-button-inline" /></span>
-              <strong>Novo Cliente</strong>
+              <strong>Novo cliente</strong>
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('reports')}>
               <span className="neo-quick-icon"><AppIcon name="relatorios" size={24} className="app-icon-button-inline" /></span>
@@ -333,7 +450,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('backup')}>
               <span className="neo-quick-icon"><AppIcon name="backup" size={24} className="app-icon-button-inline" /></span>
-              <strong>Backup Agora</strong>
+              <strong>Backup agora</strong>
             </button>
           </div>
         </article>
@@ -351,6 +468,8 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
                   key={period}
                   className={chartPeriod === period ? 'active' : ''}
                   onClick={() => setChartPeriod(period)}
+                  role="tab"
+                  aria-selected={chartPeriod === period}
                 >
                   {periodLabel(period)}
                 </button>
@@ -360,9 +479,9 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
 
           <div className="neo-chart-layout">
             <div className="neo-chart-y-axis">
-              {chartModel.yValues.map((value, index) => <span key={`${value}-${index}`}>{axisLabel(value)}</span>)}
+              {chartModel.isEmpty ? <span>R$ 0</span> : chartModel.yValues.map((value, index) => <span key={`${value}-${index}`}>{axisLabel(value)}</span>)}
             </div>
-            <div className="neo-chart-stage">
+            <div className={`neo-chart-stage ${chartModel.isEmpty ? 'is-empty' : ''}`.trim()}>
               <svg viewBox="0 0 720 248" className="neo-chart-svg" aria-label={chartLabel(chartModel.peakPoint)} role="img">
                 <defs>
                   <linearGradient id="neoChartArea" x1="0" y1="0" x2="0" y2="1">
@@ -370,14 +489,14 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
                     <stop offset="100%" stopColor="rgba(96, 128, 255, 0.02)" />
                   </linearGradient>
                 </defs>
-                {chartModel.yValues.map((value, index) => (
-                  <line key={`grid-${value}-${index}`} x1="18" y1={18 + ((210 / 4) * index)} x2="702" y2={18 + ((210 / 4) * index)} className="neo-chart-grid-line" />
+                {Array.from({ length: 5 }, (_, index) => (
+                  <line key={`grid-${index}`} x1="18" y1={18 + ((210 / 4) * index)} x2="702" y2={18 + ((210 / 4) * index)} className="neo-chart-grid-line" />
                 ))}
-                {chartModel.areaPath ? <path d={chartModel.areaPath} fill="url(#neoChartArea)" /> : null}
-                {chartModel.linePath ? <path d={chartModel.linePath} fill="none" stroke="#7d86ff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" /> : null}
-                {chartModel.points.map((point) => (
-                  <circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r="5" fill="#9fd0ff" stroke="#141f52" strokeWidth="3" />
-                ))}
+                {!chartModel.isEmpty && chartModel.areaPath ? <path d={chartModel.areaPath} fill="url(#neoChartArea)" /> : null}
+                {!chartModel.isEmpty && chartModel.linePath ? <path d={chartModel.linePath} fill="none" stroke="#1769d2" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" /> : null}
+                {!chartModel.isEmpty ? chartModel.points.map((point) => (
+                  <circle key={`${point.label}-${point.x}`} cx={point.x} cy={point.y} r="5" fill="#d8ecff" stroke="#1769d2" strokeWidth="3" />
+                )) : null}
               </svg>
 
               {chartModel.peakPoint ? (
@@ -393,6 +512,14 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
                 </div>
               ) : null}
 
+              {chartModel.isEmpty ? (
+                <div className="neo-chart-empty" role="status">
+                  <strong>Sem vendas neste período</strong>
+                  <small>Quando registrar vendas no PDV, o gráfico será preenchido automaticamente.</small>
+                  <button type="button" onClick={() => onNavigate('sales')}>Registrar venda</button>
+                </div>
+              ) : null}
+
               <div className="neo-chart-x-axis" style={{ gridTemplateColumns: `repeat(${Math.max(chartModel.activeSeries.length, 1)}, 1fr)` }}>
                 {chartModel.activeSeries.length > 0
                   ? chartModel.activeSeries.map((point, index) => <span key={`${point.label}-${index}`}>{point.label}</span>)
@@ -402,8 +529,8 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
           </div>
 
           <div className="neo-chart-footer">
-            <span>{chartLoading ? 'Atualizando gráfico...' : 'Série real carregada com dados do sistema.'}</span>
-            <strong>{chartModel.peakPoint ? chartLabel(chartModel.peakPoint) : 'Sem vendas no período.'}</strong>
+            <span>{chartLoading ? 'Atualizando gráfico...' : chartError || (chartModel.isEmpty ? 'Nenhuma venda registrada neste período.' : 'Série real carregada com dados do sistema.')}</span>
+            <strong>{chartError ? 'Tente sincronizar novamente.' : chartModel.peakPoint ? chartLabel(chartModel.peakPoint) : 'Abra o PDV para começar.'}</strong>
           </div>
         </article>
 
@@ -417,7 +544,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
 
           <div className="neo-system-list">
             {statusRows.map((item) => (
-              <div key={item.label} className="neo-system-row">
+              <div key={item.label} className="neo-system-row" aria-label={`${item.label}: ${item.value}`}>
                 <div className={`neo-system-dot ${item.ok ? 'ok' : 'warn'}`} />
                 <span>{item.label}</span>
                 <strong>{item.value}</strong>
@@ -427,7 +554,7 @@ export function Dashboard({ status, refreshToken, onNavigate }: PageProps): JSX.
 
           <button type="button" className="neo-diagnostic-button" onClick={() => onNavigate('audit')}>
             <AppIcon name="auditoria_logs" size={24} className="app-icon-button-inline" />
-            Diagnóstico completo
+            Abrir diagnóstico
           </button>
         </article>
       </section>

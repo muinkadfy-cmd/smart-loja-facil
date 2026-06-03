@@ -42,6 +42,7 @@ export interface DashboardData {
   today_sales_total: number;
   today_sales_count: number;
   customers_total: number;
+  products_total?: number;
   orders_open: number;
   credits_open_total: number;
   credits_active_customers: number;

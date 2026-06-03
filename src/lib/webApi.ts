@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v122-clean-alerts';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v122-clean-alerts';
+export const WEB_APP_VERSION = 'pwa-supabase-v123-dashboard-supreme';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v123-dashboard-supreme';
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -663,6 +663,7 @@ export async function webDashboard(): Promise<DashboardData> {
   const dashboard = emptyDashboard();
 
   dashboard.customers_total = await countRows('customers', context.store.id, { status: 'active' });
+  dashboard.products_total = await countRows('products', context.store.id, { status: 'active' });
   dashboard.low_stock_count = await countRows('products', context.store.id, { lowStockLimit: context.store.low_stock_limit });
   dashboard.orders_open = await countRows('orders', context.store.id, { status: 'open' });
 
