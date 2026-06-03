@@ -2590,3 +2590,146 @@ img, svg { max-width: 100%; }
     min-height: 48px;
   }
 }
+
+
+.mapp-final-release-panel {
+  border-color: rgba(22, 163, 74, .18);
+  background: linear-gradient(180deg, #f8fff9 0%, #ffffff 100%);
+}
+
+.mapp-final-release-panel.danger {
+  border-color: rgba(220, 38, 38, .22);
+  background: linear-gradient(180deg, #fff7f7 0%, #ffffff 100%);
+}
+
+.mapp-final-release-panel.warn {
+  border-color: rgba(245, 158, 11, .26);
+  background: linear-gradient(180deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.mapp-final-release-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 24px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .06);
+}
+
+.mapp-final-release-hero span,
+.mapp-final-honesty {
+  color: var(--mapp-muted);
+  font-weight: 850;
+}
+
+.mapp-final-release-hero strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--mapp-ink);
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.mapp-final-release-hero p {
+  margin: 6px 0 0;
+  color: var(--mapp-text);
+  line-height: 1.35;
+}
+
+.mapp-final-release-score {
+  min-width: 108px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 12px;
+  background: linear-gradient(180deg, #0f172a, #1f2937);
+  color: #fff;
+}
+
+.mapp-final-release-score strong {
+  color: #fff;
+  margin: 0;
+}
+
+.mapp-final-release-score small {
+  color: #f8e7a2;
+  font-weight: 950;
+  letter-spacing: .03em;
+}
+
+.mapp-final-release-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.mapp-final-release-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--mapp-ink);
+  font-size: .82rem;
+  font-weight: 900;
+}
+
+.mapp-final-release-grid input,
+.mapp-final-release-grid textarea {
+  width: 100%;
+  border: 1px solid #cfddeb;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--mapp-ink);
+  padding: 12px 13px;
+  font: inherit;
+  outline: none;
+}
+
+.mapp-final-alert-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  border-radius: 20px;
+  padding: 14px;
+  border: 1px solid #e8edf5;
+  background: #fff;
+}
+
+.mapp-final-alert-list strong {
+  color: var(--mapp-ink);
+}
+
+.mapp-final-alert-list p {
+  margin: 0;
+  color: var(--mapp-text);
+  line-height: 1.35;
+}
+
+.mapp-final-alert-list.danger {
+  border-color: #f3c6c6;
+  background: #fff6f6;
+}
+
+.mapp-final-alert-list.warn {
+  border-color: #f4dfad;
+  background: #fffaf0;
+}
+
+.mapp-final-honesty {
+  display: block;
+  margin-top: 10px;
+  line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+  .mapp-final-release-hero {
+    flex-direction: column;
+  }
+
+  .mapp-final-release-score {
+    min-width: 0;
+    width: 100%;
+  }
+}

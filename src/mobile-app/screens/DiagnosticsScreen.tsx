@@ -47,8 +47,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v129';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v130';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -146,7 +146,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v129 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v130 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -200,17 +200,42 @@ interface CommercialTriageItem {
   status: TriageStatus;
 }
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v129';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+
+type FinalSellDecision = 'blocked' | 'pending' | 'ready';
+
+interface FinalAcceptanceState {
+  responsible: string;
+  storeOrClient: string;
+  note: string;
+  acceptedAt: string;
+  acceptedBy: string;
+}
+
+interface FinalSellGate {
+  decision: FinalSellDecision;
+  title: string;
+  subtitle: string;
+  score: number;
+  stars: string;
+  tone: 'danger' | 'warn' | 'ok';
+  blockers: string[];
+  warnings: string[];
+}
+
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v130';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v129'];
+
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v130';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v129-real',
+    id: 'deploy-cache-v130-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v129',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v129.',
+    title: 'Deploy aplicado e PWA abriu v130',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v130.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v129.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v130.',
     critical: true,
   },
   {
@@ -335,7 +360,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' ? 'deploy-cache-v129-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' ? 'deploy-cache-v130-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -479,6 +504,169 @@ function summarizeTriage(items: CommercialTriageItem[]): { p0: number; p1: numbe
   return { p0, p1, p2, total: items.length, decision };
 }
 
+
+function emptyFinalAcceptanceState(): FinalAcceptanceState {
+  return { responsible: '', storeOrClient: '', note: '', acceptedAt: '', acceptedBy: '' };
+}
+
+function normalizeFinalAcceptanceState(value: unknown): FinalAcceptanceState {
+  const source = value && typeof value === 'object' ? value as Partial<FinalAcceptanceState> : {};
+  return {
+    responsible: typeof source.responsible === 'string' ? source.responsible.slice(0, 80) : '',
+    storeOrClient: typeof source.storeOrClient === 'string' ? source.storeOrClient.slice(0, 120) : '',
+    note: typeof source.note === 'string' ? source.note.slice(0, 1200) : '',
+    acceptedAt: typeof source.acceptedAt === 'string' ? source.acceptedAt : '',
+    acceptedBy: typeof source.acceptedBy === 'string' ? source.acceptedBy.slice(0, 80) : '',
+  };
+}
+
+function readFinalAcceptanceState(): FinalAcceptanceState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyFinalAcceptanceState();
+  try {
+    const current = normalizeFinalAcceptanceState(JSON.parse(window.localStorage.getItem(FINAL_ACCEPTANCE_KEY) || '{}'));
+    if (current.acceptedAt || current.responsible || current.storeOrClient || current.note) return current;
+    for (const key of LEGACY_FINAL_ACCEPTANCE_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeFinalAcceptanceState(JSON.parse(raw));
+      if (legacy.acceptedAt || legacy.responsible || legacy.storeOrClient || legacy.note) {
+        window.localStorage.setItem(FINAL_ACCEPTANCE_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyFinalAcceptanceState();
+  }
+  return emptyFinalAcceptanceState();
+}
+
+function saveFinalAcceptanceState(state: FinalAcceptanceState): FinalAcceptanceState {
+  const normalized = normalizeFinalAcceptanceState(state);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(FINAL_ACCEPTANCE_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function starRating(score: number): string {
+  if (score >= 9.5) return '★★★★★';
+  if (score >= 9) return '★★★★½';
+  if (score >= 8) return '★★★★☆';
+  if (score >= 7) return '★★★½☆';
+  return '★★★☆☆';
+}
+
+function buildFinalSellGate(params: {
+  report: WebCommercialValidationReport | null;
+  triage: ReturnType<typeof summarizeTriage>;
+  assisted: ReturnType<typeof summarizeAssistedState>;
+  guidedDone: number;
+  guidedTotal: number;
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+  acceptance: FinalAcceptanceState;
+}): FinalSellGate {
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  if (!params.report) blockers.push('Rodar o teste comercial automático no Diagnóstico Web.');
+  else {
+    if (params.report.readyLabel !== 'piloto') blockers.push(`Teste comercial ainda não liberou piloto: ${params.report.score}/10 — ${readyText(params.report)}.`);
+    if (params.report.score < 8.8) blockers.push('Nota automática abaixo de 8,8/10.');
+  }
+  if (params.triage.p0 > 0) blockers.push(`Existem ${params.triage.p0} item(ns) P0 crítico(s) na correção pós-teste.`);
+  if (params.triage.p1 > 0) blockers.push(`Existem ${params.triage.p1} item(ns) P1 alto(s) antes de vender em escala.`);
+  if (params.assisted.criticalProblems > 0 || params.assisted.failed > 0 || params.assisted.blocked > 0) blockers.push('Execução assistida tem Falhou/Bloqueado.');
+  if (params.assisted.passed < params.assisted.total) blockers.push(`Execução assistida incompleta: ${params.assisted.passed}/${params.assisted.total}.`);
+  if (params.guidedDone < params.guidedTotal) blockers.push(`Roteiro guiado incompleto: ${params.guidedDone}/${params.guidedTotal}.`);
+  if (params.outbox.total > 0) blockers.push(`Ainda há ${params.outbox.total} pendência(s) neste aparelho.`);
+  if (!params.online) blockers.push('Aparelho está offline agora.');
+  if (params.roleState.role === 'viewer' || params.roleState.role === 'sem login') blockers.push('Aceite final precisa ser feito por dono/admin/operador autorizado, não por leitor ou sem login.');
+  if (!params.acceptance.responsible.trim()) warnings.push('Informar responsável pelo aceite.');
+  if (!params.acceptance.storeOrClient.trim()) warnings.push('Informar loja/cliente ou ambiente testado.');
+  if (!params.acceptance.note.trim()) warnings.push('Anotar evidência curta: aparelhos, data, impressão e papel testado.');
+  if (params.triage.p2 > 0) warnings.push(`Restam ${params.triage.p2} ajuste(s) P2 de acabamento/validação.`);
+
+  const baseScore = params.report?.score ?? 0;
+  const penalty = Math.min(1.8, blockers.length * 0.35 + warnings.length * 0.08);
+  const score = Number(Math.max(0, Math.min(9.7, baseScore - penalty)).toFixed(1));
+  if (blockers.length) {
+    return {
+      decision: 'blocked',
+      title: 'Não vender ainda',
+      subtitle: 'Existe bloqueio real. Corrija P0/P1, finalize os testes e gere nova evidência.',
+      score,
+      stars: starRating(score),
+      tone: 'danger',
+      blockers,
+      warnings,
+    };
+  }
+  if (!params.acceptance.acceptedAt) {
+    return {
+      decision: 'pending',
+      title: 'Liberável após aceite',
+      subtitle: warnings.length ? 'Sem P0/P1, mas preencha os campos e registre o aceite responsável.' : 'Sem P0/P1. Registre o aceite final para liberar venda assistida.',
+      score: Number(Math.min(9.5, Math.max(score, 9.1)).toFixed(1)),
+      stars: starRating(Math.min(9.5, Math.max(score, 9.1))),
+      tone: warnings.length ? 'warn' : 'ok',
+      blockers,
+      warnings,
+    };
+  }
+  return {
+    decision: 'ready',
+    title: 'Liberado para venda assistida',
+    subtitle: 'Aceite final registrado. Ainda mantenha suporte próximo no primeiro cliente real.',
+    score: Number(Math.min(9.6, Math.max(score, 9.3)).toFixed(1)),
+    stars: starRating(Math.min(9.6, Math.max(score, 9.3))),
+    tone: warnings.length ? 'warn' : 'ok',
+    blockers,
+    warnings,
+  };
+}
+
+function buildFinalAcceptanceText(params: {
+  gate: FinalSellGate;
+  acceptance: FinalAcceptanceState;
+  report: WebCommercialValidationReport | null;
+  triage: ReturnType<typeof summarizeTriage>;
+  assisted: ReturnType<typeof summarizeAssistedState>;
+  guidedDone: number;
+  guidedTotal: number;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
+  const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
+  return [
+    'Smart Loja Fácil — fechamento comercial / aceite final v130',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.gate.title}`,
+    `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
+    `Aceite registrado: ${params.acceptance.acceptedAt ? new Date(params.acceptance.acceptedAt).toLocaleString('pt-BR') : 'não registrado'}`,
+    `Responsável: ${params.acceptance.responsible || params.acceptance.acceptedBy || 'não informado'}`,
+    `Loja/cliente testado: ${params.acceptance.storeOrClient || params.report?.storeName || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Correção pós-teste: P0=${params.triage.p0}; P1=${params.triage.p1}; P2=${params.triage.p2}`,
+    `Execução assistida: ${params.assisted.passed}/${params.assisted.total} passou; falhou=${params.assisted.failed}; bloqueado=${params.assisted.blocked}`,
+    `Roteiro guiado: ${params.guidedDone}/${params.guidedTotal}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.acceptance.note ? `Observação/evidência: ${params.acceptance.note}` : 'Observação/evidência: não preenchida',
+    '',
+    'Bloqueios:',
+    ...blockers,
+    '',
+    'Avisos:',
+    ...warnings,
+    '',
+    'Observação honesta: este aceite não promete 100%. Ele registra que os testes comerciais exigidos neste aparelho foram conferidos e que não há P0/P1 aberto no momento.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -499,7 +687,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção pós-teste v129',
+    'Smart Loja Fácil — plano de correção aceite v130',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -537,7 +725,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v129',
+    'Smart Loja Fácil — execução real assistida v130',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -611,7 +799,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v129',
+    'Smart Loja Fácil — roteiro guiado comercial v130',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -657,7 +845,7 @@ function readyText(report: WebCommercialValidationReport | null): string {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v129',
+    'Smart Loja Fácil — teste comercial v130',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -686,6 +874,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [report, setReport] = useState<WebCommercialValidationReport | null>(null);
   const [guidedDoneIds, setGuidedDoneIds] = useState<string[]>(() => readGuidedDoneIds());
   const [assistedState, setAssistedState] = useState<AssistedRealState>(() => readAssistedState());
+  const [finalAcceptance, setFinalAcceptance] = useState<FinalAcceptanceState>(() => readFinalAcceptanceState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -754,6 +943,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const assistedDecision = assistedDecisionText(assistedSummary, report);
   const triageItems = useMemo(() => buildCommercialTriageItems({ state: assistedState, report, outbox, online, snapshot }), [assistedState, report, outbox, online, snapshot]);
   const triageSummary = useMemo(() => summarizeTriage(triageItems), [triageItems]);
+  const finalGate = useMemo(() => buildFinalSellGate({ report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, outbox, online, roleState, acceptance: finalAcceptance }), [report, triageSummary, assistedSummary, guidedDoneCount, outbox, online, roleState, finalAcceptance]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -865,12 +1055,14 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   async function copyTriagePlan(): Promise<void> {
     const text = buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online });
     await navigator.clipboard?.writeText(text).catch(() => undefined);
-    setFeedback({ tone: triageSummary.p0 ? 'error' : triageSummary.p1 ? 'info' : 'success', text: 'Plano de correção pós-teste copiado sem senha e sem chave privada.' });
+    setFeedback({ tone: triageSummary.p0 ? 'error' : triageSummary.p1 ? 'info' : 'success', text: 'Plano de correção aceite copiado sem senha e sem chave privada.' });
   }
 
   async function copyDiagnostic(): Promise<void> {
     const text = report
-      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}`
+      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
+
+${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -1039,7 +1231,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
       </section>
 
       <section className="mapp-section-block mapp-triage-panel">
-        <div className="mapp-section-title"><h2>Correção pós-teste</h2><button type="button" onClick={() => void copyTriagePlan()}>Copiar plano</button></div>
+        <div className="mapp-section-title"><h2>Correção aceite</h2><button type="button" onClick={() => void copyTriagePlan()}>Copiar plano</button></div>
         <div className="mapp-triage-summary">
           <div>
             <strong>{triageSummary.decision}</strong>
@@ -1047,7 +1239,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
           </div>
           <span className={triageSummary.p0 ? 'danger' : triageSummary.p1 ? 'warn' : 'ok'}>{triageSummary.total ? `${triageSummary.total} item(ns)` : 'limpo'}</span>
         </div>
-        <div className="mapp-assisted-counters" aria-label="Resumo das correções pós-teste">
+        <div className="mapp-assisted-counters" aria-label="Resumo das correções aceite">
           <span><b>P0</b><strong>{triageSummary.p0}</strong></span>
           <span><b>P1</b><strong>{triageSummary.p1}</strong></span>
           <span><b>P2</b><strong>{triageSummary.p2}</strong></span>
@@ -1090,7 +1282,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v129 pós-teste</strong></span>
+          <span><b>Cache</b><strong>v130 aceite</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -1138,7 +1330,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v129 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v130 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>
