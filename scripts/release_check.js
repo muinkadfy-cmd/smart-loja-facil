@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v125-mobile-p1-operacional';
-const currentCache = 'smart-loja-pwa-supabase-v125-mobile-p1-operacional';
+const currentVersion = 'pwa-supabase-v126-validacao-comercial-real';
+const currentCache = 'smart-loja-pwa-supabase-v126-validacao-comercial-real';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v125')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v125.');
+if (!mainSource.includes('smart-mobile-rebuild-v126')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v126.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,8 +82,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v125 mobile P1.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v125 mobile P1.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v126 validação.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v126 validação.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
@@ -124,4 +124,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v125 PWA passou. Abas P1 mobile operacionais, navegação limpa e Supabase preservado.');
+console.log('OK: release_check v126 PWA passou. Abas P1 mobile operacionais, navegação limpa e Supabase preservado.');

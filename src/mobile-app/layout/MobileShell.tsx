@@ -70,7 +70,7 @@ export function MobileShell({
           <span>Ambiente</span>
           <strong>Produção</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v125 mobile P1'}</strong>
+          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v126 validação'}</strong>
         </div>
       </aside>
 

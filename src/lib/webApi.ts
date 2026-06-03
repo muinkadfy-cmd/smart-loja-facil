@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v125-mobile-p1-operacional';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v125-mobile-p1-operacional';
+export const WEB_APP_VERSION = 'pwa-supabase-v126-validacao-comercial-real';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v126-validacao-comercial-real';
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -170,8 +170,8 @@ export function recordWebSyncSnapshot(status: WebSyncStatus, module: string, det
 }
 
 
-const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v125';
-const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v124', 'smart-loja:web-outbox-v123', 'smart-loja:web-outbox-v107', 'smart-loja:web-outbox-v106', 'smart-loja:web-outbox-v105', 'smart-loja:web-outbox-v104', 'smart-loja:web-outbox-v103-scroll3', 'smart-loja:web-outbox-v103-scroll2', 'smart-loja:web-outbox-v100', 'smart-loja:web-outbox-v99', 'smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
+const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v126';
+const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v125', 'smart-loja:web-outbox-v124', 'smart-loja:web-outbox-v123', 'smart-loja:web-outbox-v107', 'smart-loja:web-outbox-v106', 'smart-loja:web-outbox-v105', 'smart-loja:web-outbox-v104', 'smart-loja:web-outbox-v103-scroll3', 'smart-loja:web-outbox-v103-scroll2', 'smart-loja:web-outbox-v100', 'smart-loja:web-outbox-v99', 'smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
   'smart-loja:web-outbox-v75', 'smart-loja:web-outbox-v74', 'smart-loja:web-outbox-v73'];
 
 export type WebOutboxAction =
@@ -569,7 +569,7 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
   if (error) {
     const rpcDetail = rpcResult.error ? ` RPC create_owned_store: ${rpcResult.error.message}.` : '';
     const hint = error.message.toLowerCase().includes('row-level security')
-      ? ' Aplique a migration 202606020097_web_realtime_sync_store_bootstrap.sql para liberar criação inicial via RPC segura e manter RLS ativa.'
+      ? ' Aplique a migration supabase/migrations/202606030126_commercial_validation_rpc_grants.sql para liberar criação inicial via RPC segura e manter RLS ativa.'
       : '';
     throw new Error(`Não foi possível criar a loja web inicial: ${error.message}.${rpcDetail}${hint}`);
   }
@@ -2385,6 +2385,224 @@ export async function flushWebOutbox(): Promise<WebOutboxStats> {
   }
   return getWebOutboxStats(remaining);
 }
+
+
+export type WebCommercialCheckLevel = 'ok' | 'warn' | 'danger';
+
+export interface WebCommercialCheckItem {
+  id: string;
+  area: string;
+  title: string;
+  detail: string;
+  level: WebCommercialCheckLevel;
+  evidence: string;
+}
+
+export interface WebCommercialValidationReport {
+  createdAt: string;
+  appVersion: string;
+  cacheVersion: string;
+  storeName: string;
+  email: string;
+  roleLabel: string;
+  score: number;
+  readyLabel: 'quase' | 'nao' | 'piloto';
+  checks: WebCommercialCheckItem[];
+  counts: Record<string, number>;
+  cacheKeys: string[];
+  outbox: WebOutboxStats;
+}
+
+type CommercialCountResult = { count: number | null; error: { message: string } | null };
+type CommercialCountQuery = {
+  eq: (column: string, value: unknown) => CommercialCountQuery;
+  then: Promise<CommercialCountResult>['then'];
+};
+
+function commercialLevelScore(level: WebCommercialCheckLevel): number {
+  if (level === 'ok') return 1;
+  if (level === 'warn') return 0.55;
+  return 0;
+}
+
+function commercialReadyLabel(score: number, dangerCount: number): WebCommercialValidationReport['readyLabel'] {
+  if (dangerCount > 0) return 'nao';
+  if (score >= 8.8) return 'piloto';
+  return 'quase';
+}
+
+async function countCommercialRows(table: string, storeId: string, filterColumn = 'store_id'): Promise<{ count: number; error: string }> {
+  try {
+    const client = await getClient();
+    let query = client.from(table).select('id', { count: 'exact', head: true }) as unknown as CommercialCountQuery;
+    if (filterColumn) query = query.eq(filterColumn, storeId);
+    const { count, error } = await query;
+    return { count: count ?? 0, error: error?.message ?? '' };
+  } catch (error) {
+    return { count: 0, error: humanizeWebError(error) };
+  }
+}
+
+async function readCommercialCacheKeys(): Promise<string[]> {
+  try {
+    if (typeof caches === 'undefined') return [];
+    return await caches.keys();
+  } catch {
+    return [];
+  }
+}
+
+async function hasCommercialServiceWorker(): Promise<boolean> {
+  try {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return false;
+    const registration = await navigator.serviceWorker.getRegistration();
+    return Boolean(registration);
+  } catch {
+    return false;
+  }
+}
+
+function pushCommercialCheck(checks: WebCommercialCheckItem[], item: WebCommercialCheckItem): void {
+  checks.push(item);
+}
+
+export async function webCommercialValidation(): Promise<WebCommercialValidationReport> {
+  const createdAt = new Date().toISOString();
+  const env = getPublicWebEnv();
+  const outbox = getWebOutboxStats();
+  const snapshot = readWebSyncSnapshot();
+  const cacheKeys = await readCommercialCacheKeys();
+  const serviceWorkerReady = await hasCommercialServiceWorker();
+  const checks: WebCommercialCheckItem[] = [];
+  const counts: Record<string, number> = {};
+  let context: WebStoreContext | null = null;
+
+  pushCommercialCheck(checks, {
+    id: 'env-public-only', area: 'Segurança', title: 'Variáveis públicas seguras',
+    detail: env.hasUnsafeServiceRoleKey ? 'Existe chave privada configurada no frontend. Remova antes de publicar.' : env.isConfigured ? 'Supabase público configurado sem service_role no PWA.' : `Falta configurar: ${env.missing.join(', ') || 'variáveis do Supabase'}.`,
+    level: env.hasUnsafeServiceRoleKey ? 'danger' : env.isConfigured ? 'ok' : 'warn',
+    evidence: env.hasUnsafeServiceRoleKey ? env.securityWarnings.join(' ') : `Chave usada: ${env.supabaseAnonKeyName || 'não configurada'}`,
+  });
+
+  pushCommercialCheck(checks, {
+    id: 'network', area: 'Conexão', title: 'Internet do aparelho',
+    detail: typeof navigator !== 'undefined' && navigator.onLine === false ? 'Aparelho offline. As alterações podem ficar pendentes.' : 'Aparelho online no momento do teste.',
+    level: typeof navigator !== 'undefined' && navigator.onLine === false ? 'warn' : 'ok',
+    evidence: typeof navigator !== 'undefined' ? `navigator.onLine=${String(navigator.onLine)}` : 'Sem navegador disponível.',
+  });
+
+  try {
+    context = await getWebStoreContext({ createIfMissing: false });
+    const capabilities = getWebRoleCapabilities(context.role);
+    pushCommercialCheck(checks, {
+      id: 'session-role', area: 'Permissões', title: 'Login e papel da loja',
+      detail: `${webRoleLabel(context.role)} logado em ${context.store.name}.`,
+      level: capabilities.canRead ? 'ok' : 'danger',
+      evidence: `email=${context.email}; role=${context.role}; store=${context.store.id}`,
+    });
+    pushCommercialCheck(checks, {
+      id: 'role-write-scope', area: 'Permissões', title: 'Limite de ação por papel',
+      detail: capabilities.writeLabel,
+      level: context.role === 'viewer' && capabilities.canOperate ? 'danger' : 'ok',
+      evidence: `operate=${capabilities.canOperate}; manageStore=${capabilities.canManageStore}; manageMembers=${capabilities.canManageMembers}`,
+    });
+  } catch (error) {
+    pushCommercialCheck(checks, {
+      id: 'session-role', area: 'Permissões', title: 'Login e papel da loja',
+      detail: 'Não foi possível confirmar loja/papel neste aparelho.',
+      level: 'danger',
+      evidence: humanizeWebError(error),
+    });
+  }
+
+  if (context) {
+    const tables: Array<{ table: string; label: string; required?: boolean; filter?: string }> = [
+      { table: 'stores', label: 'loja/configuração', required: true, filter: 'id' },
+      { table: 'store_members', label: 'membros/permissões', required: true },
+      { table: 'customers', label: 'clientes', required: true },
+      { table: 'products', label: 'produtos', required: true },
+      { table: 'sales', label: 'vendas', required: true },
+      { table: 'cash_sessions', label: 'caixa', required: true },
+      { table: 'cash_movements', label: 'movimentos de caixa', required: true },
+      { table: 'credits', label: 'crediário', required: true },
+      { table: 'orders', label: 'pedidos', required: true },
+      { table: 'receipts', label: 'comprovantes', required: true },
+      { table: 'backups_log', label: 'histórico de backup', required: false },
+      { table: 'audit_log', label: 'logs/auditoria', required: false },
+    ];
+    for (const item of tables) {
+      const result = await countCommercialRows(item.table, context.store.id, item.filter ?? 'store_id');
+      counts[item.table] = result.count;
+      pushCommercialCheck(checks, {
+        id: `read-${item.table}`, area: 'Supabase/RLS', title: `Leitura de ${item.label}`,
+        detail: result.error ? `Não leu ${item.label}. Verifique tabela, policy ou migration.` : `${result.count} registro(s) visíveis para esta loja.`,
+        level: result.error ? (item.required ? 'danger' : 'warn') : 'ok',
+        evidence: result.error || `select head count em ${item.table}`,
+      });
+    }
+  }
+
+  pushCommercialCheck(checks, {
+    id: 'outbox', area: 'Sincronização', title: 'Fila de pendências',
+    detail: outbox.total ? `${outbox.total} alteração(ões) ainda estão guardadas neste aparelho.` : 'Nenhuma pendência local no momento.',
+    level: outbox.error ? 'danger' : outbox.total ? 'warn' : 'ok',
+    evidence: `pending=${outbox.pending}; error=${outbox.error}; last=${outbox.lastError || snapshot.detail}`,
+  });
+
+  pushCommercialCheck(checks, {
+    id: 'service-worker', area: 'PWA/cache', title: 'Instalação PWA/cache',
+    detail: serviceWorkerReady ? 'Service worker registrado neste navegador.' : 'Service worker ainda não registrado. Depois do deploy, abra instalado no celular e teste de novo.',
+    level: serviceWorkerReady ? 'ok' : 'warn',
+    evidence: `cacheAtual=${WEB_CACHE_VERSION}; caches=${cacheKeys.join(', ') || 'nenhum cache listado'}`,
+  });
+
+  pushCommercialCheck(checks, {
+    id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v126 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
+    evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
+  });
+
+  pushCommercialCheck(checks, {
+    id: 'manual-required', area: 'Teste real', title: 'Teste multiaparelho obrigatório',
+    detail: 'Ainda precisa testar dono/admin/operador/leitor em celular real e computador antes de vender para cliente final.',
+    level: 'warn',
+    evidence: 'Este teste automático não consegue entrar em outros usuários sozinho.',
+  });
+
+  const score = Number(((checks.reduce((sum, check) => sum + commercialLevelScore(check.level), 0) / Math.max(1, checks.length)) * 10).toFixed(1));
+  const dangerCount = checks.filter((check) => check.level === 'danger').length;
+
+  return {
+    createdAt,
+    appVersion: WEB_APP_VERSION,
+    cacheVersion: WEB_CACHE_VERSION,
+    storeName: context?.store.name ?? 'sem loja confirmada',
+    email: context?.email ?? 'sem login confirmado',
+    roleLabel: context ? webRoleLabel(context.role) : 'Sem login',
+    score,
+    readyLabel: commercialReadyLabel(score, dangerCount),
+    checks,
+    counts,
+    cacheKeys,
+    outbox,
+  };
+}
+
+function sampleReceiptHtml(format: '58mm' | '80mm' | 'a4'): string {
+  const now = new Date().toLocaleString('pt-BR');
+  const rows = [
+    ['Blusa feminina', '1', 'R$ 59,90'],
+    ['Presente utilitário', '2', 'R$ 39,80'],
+  ];
+  return `<section class="slf-receipt"><header class="slf-receipt-head"><div class="slf-receipt-brand"><div class="slf-receipt-logo">SL</div><div><div class="slf-receipt-title">Smart Loja Fácil</div><div class="slf-receipt-sub">Teste seguro de impressão ${format}</div></div></div><span class="slf-receipt-badge">AMOSTRA</span></header><div class="slf-receipt-grid"><div class="slf-receipt-info"><span>Cliente</span><strong>Consumidor final</strong></div><div class="slf-receipt-info"><span>Data</span><strong>${now}</strong></div></div><table class="slf-receipt-table"><thead><tr><th>Item</th><th class="num">Qtd</th><th class="num">Total</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${row[0]}</td><td class="num">${row[1]}</td><td class="num">${row[2]}</td></tr>`).join('')}</tbody></table><div class="slf-receipt-total"><div class="slf-receipt-total-row"><span>Subtotal</span><strong>R$ 99,70</strong></div><div class="slf-receipt-total-row final"><span>Total</span><strong>R$ 99,70</strong></div></div><div class="slf-receipt-note">Este é apenas um teste. Não grava venda, não baixa estoque e não altera caixa.</div><footer class="slf-receipt-footer">Smart Loja Fácil · teste comercial de impressão</footer></section>`;
+}
+
+export async function webPrintTestReceipt(printFormat: '58mm' | '80mm' | 'a4'): Promise<string> {
+  const format = printFormat === '58mm' || printFormat === 'a4' ? printFormat : '80mm';
+  return webExportHtmlPdf(sampleReceiptHtml(format), `teste-impressao-smart-loja-${format}`, format);
+}
+
 
 export function openWebUrl(url: string): void {
   const popup = window.open(url, '_blank', 'noopener,noreferrer');

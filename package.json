@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil PWA mobile-first v125 com abas operacionais mobile e Produtos/Clientes preservados",
+  "description": "Smart Loja Fácil PWA mobile-first v126 com validação comercial real, impressão teste e abas operacionais mobile e Produtos/Clientes preservados",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
