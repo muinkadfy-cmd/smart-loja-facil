@@ -47,8 +47,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v128';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v129';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -146,7 +146,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v128 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v129 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -185,17 +185,32 @@ interface AssistedRealState {
   updatedAt: string;
 }
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v128';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v127'];
+type TriagePriority = 'P0' | 'P1' | 'P2';
+type TriageStatus = 'falhou' | 'bloqueado' | 'alerta' | 'pendente';
+
+interface CommercialTriageItem {
+  id: string;
+  priority: TriagePriority;
+  area: string;
+  title: string;
+  source: string;
+  impact: string;
+  nextAction: string;
+  evidence: string;
+  status: TriageStatus;
+}
+
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v129';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v128-real',
+    id: 'deploy-cache-v129-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v128',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v128.',
+    title: 'Deploy aplicado e PWA abriu v129',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v129.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v128.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v129.',
     critical: true,
   },
   {
@@ -320,9 +335,10 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    if (!allowedIds.has(id)) continue;
+    const normalizedId = id === 'deploy-cache-v128-real' ? 'deploy-cache-v129-real' : id;
+    if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
-    if (normalized !== 'pending') results[id] = normalized;
+    if (normalized !== 'pending') results[normalizedId] = normalized;
   }
   return {
     results,
@@ -386,6 +402,121 @@ function assistedDecisionText(summary: ReturnType<typeof summarizeAssistedState>
   return 'Em validação: conclua os passos críticos antes de vender.';
 }
 
+function triagePriorityLabel(priority: TriagePriority): string {
+  if (priority === 'P0') return 'P0 crítico';
+  if (priority === 'P1') return 'P1 alto';
+  return 'P2 médio';
+}
+
+function buildCommercialTriageItems(params: {
+  state: AssistedRealState;
+  report: WebCommercialValidationReport | null;
+  outbox: WebOutboxStats;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): CommercialTriageItem[] {
+  const items: CommercialTriageItem[] = [];
+  for (const step of ASSISTED_REAL_STEPS) {
+    const result = normalizeAssistedResult(params.state.results[step.id]);
+    if (result !== 'failed' && result !== 'blocked') continue;
+    items.push({
+      id: `assist-${step.id}`,
+      priority: step.critical ? 'P0' : 'P1',
+      area: step.phase.replace(/^\d+\.\s*/, ''),
+      title: step.title,
+      source: 'Execução real assistida',
+      impact: step.critical ? 'Pode afetar venda, dados, permissão, sync ou operação principal. Não vender antes de corrigir.' : 'Pode afetar acabamento operacional ou confiança do cliente. Corrigir antes de escala.',
+      nextAction: result === 'blocked' ? `Desbloquear o teste: ${step.whatToDo}` : `Corrigir e repetir: ${step.whatToDo}`,
+      evidence: step.evidence,
+      status: result === 'failed' ? 'falhou' : 'bloqueado',
+    });
+  }
+
+  for (const check of params.report?.checks ?? []) {
+    if (check.level === 'ok') continue;
+    if (check.level === 'warn' && check.area !== 'Teste real' && check.area !== 'PWA/cache' && check.area !== 'Sincronização') continue;
+    items.push({
+      id: `check-${check.id}`,
+      priority: check.level === 'danger' ? 'P0' : check.area === 'Teste real' ? 'P1' : 'P2',
+      area: check.area,
+      title: check.title,
+      source: 'Teste comercial automático',
+      impact: check.level === 'danger' ? 'Alerta vermelho no diagnóstico. Segurar venda até resolver.' : 'Alerta amarelo. Pode ser pendência de validação manual ou cache/sync.',
+      nextAction: check.detail,
+      evidence: check.evidence,
+      status: check.level === 'danger' ? 'falhou' : 'alerta',
+    });
+  }
+
+  if (!params.online) {
+    items.push({
+      id: 'offline-now', priority: 'P1', area: 'Conexão', title: 'Aparelho offline no teste', source: 'Diagnóstico local',
+      impact: 'Pode deixar vendas, clientes ou produtos pendentes neste aparelho.',
+      nextAction: 'Conectar na internet, tocar em Reenviar pendências e conferir no segundo aparelho.',
+      evidence: `Último status: ${params.snapshot.module} — ${params.snapshot.detail}`, status: 'bloqueado',
+    });
+  }
+
+  if (params.outbox.total > 0) {
+    items.push({
+      id: 'outbox-pending-now', priority: params.outbox.error ? 'P0' : 'P1', area: 'Sincronização', title: 'Existem pendências neste aparelho', source: 'Fila local',
+      impact: params.outbox.error ? 'Há erro de envio. Outro aparelho pode não ver a alteração.' : 'Ainda falta enviar alteração para a nuvem.',
+      nextAction: 'Tocar em Reenviar pendências, conferir internet e copiar o erro se continuar.',
+      evidence: `pendente=${params.outbox.pending}; erro=${params.outbox.error}; detalhe=${params.outbox.lastError || 'sem erro registrado'}`,
+      status: params.outbox.error ? 'falhou' : 'pendente',
+    });
+  }
+
+  const order: Record<TriagePriority, number> = { P0: 0, P1: 1, P2: 2 };
+  return items.sort((a, b) => order[a.priority] - order[b.priority] || a.area.localeCompare(b.area, 'pt-BR'));
+}
+
+function summarizeTriage(items: CommercialTriageItem[]): { p0: number; p1: number; p2: number; total: number; decision: string } {
+  const p0 = items.filter((item) => item.priority === 'P0').length;
+  const p1 = items.filter((item) => item.priority === 'P1').length;
+  const p2 = items.filter((item) => item.priority === 'P2').length;
+  const decision = p0 ? 'Não vender ainda: corrija os P0 primeiro.' : p1 ? 'Piloto com cuidado: resolva os P1 antes de escala.' : items.length ? 'Quase pronto: restam ajustes P2.' : 'Sem falha registrada: manter teste real e evidências.';
+  return { p0, p1, p2, total: items.length, decision };
+}
+
+function buildTriageText(params: {
+  items: CommercialTriageItem[];
+  state: AssistedRealState;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const summary = summarizeTriage(params.items);
+  const rows = params.items.length ? params.items.map((item) => [
+    `[${item.priority}]`,
+    item.status.toUpperCase(),
+    item.area,
+    item.title,
+    `Fonte: ${item.source}`,
+    `Impacto: ${item.impact}`,
+    `Próxima ação: ${item.nextAction}`,
+    `Evidência: ${item.evidence}`,
+  ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
+  return [
+    'Smart Loja Fácil — plano de correção pós-teste v129',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${summary.decision}`,
+    `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
+    `Responsável: ${params.state.tester || 'não informado'}`,
+    `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
+    `Aparelho 2: ${params.state.deviceB || 'não informado'}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.state.notes ? `Observações livres: ${params.state.notes}` : 'Observações livres: nenhuma',
+    '',
+    'Itens para corrigir:',
+    ...rows,
+  ].join('\n');
+}
+
 function buildAssistedExecutionText(params: {
   state: AssistedRealState;
   report: WebCommercialValidationReport | null;
@@ -406,7 +537,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v128',
+    'Smart Loja Fácil — execução real assistida v129',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -480,7 +611,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v128',
+    'Smart Loja Fácil — roteiro guiado comercial v129',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -526,7 +657,7 @@ function readyText(report: WebCommercialValidationReport | null): string {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v128',
+    'Smart Loja Fácil — teste comercial v129',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -621,6 +752,8 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   }, []);
   const assistedSummary = useMemo(() => summarizeAssistedState(assistedState), [assistedState]);
   const assistedDecision = assistedDecisionText(assistedSummary, report);
+  const triageItems = useMemo(() => buildCommercialTriageItems({ state: assistedState, report, outbox, online, snapshot }), [assistedState, report, outbox, online, snapshot]);
+  const triageSummary = useMemo(() => summarizeTriage(triageItems), [triageItems]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -729,9 +862,15 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: 'success', text: 'Execução assistida copiada. Guarde junto do deploy e dos prints dos aparelhos.' });
   }
 
+  async function copyTriagePlan(): Promise<void> {
+    const text = buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: triageSummary.p0 ? 'error' : triageSummary.p1 ? 'info' : 'success', text: 'Plano de correção pós-teste copiado sem senha e sem chave privada.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
-      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}`
+      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -899,6 +1038,36 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         </div>
       </section>
 
+      <section className="mapp-section-block mapp-triage-panel">
+        <div className="mapp-section-title"><h2>Correção pós-teste</h2><button type="button" onClick={() => void copyTriagePlan()}>Copiar plano</button></div>
+        <div className="mapp-triage-summary">
+          <div>
+            <strong>{triageSummary.decision}</strong>
+            <p>Transforma Falhou/Bloqueado em prioridade real para corrigir sem chute.</p>
+          </div>
+          <span className={triageSummary.p0 ? 'danger' : triageSummary.p1 ? 'warn' : 'ok'}>{triageSummary.total ? `${triageSummary.total} item(ns)` : 'limpo'}</span>
+        </div>
+        <div className="mapp-assisted-counters" aria-label="Resumo das correções pós-teste">
+          <span><b>P0</b><strong>{triageSummary.p0}</strong></span>
+          <span><b>P1</b><strong>{triageSummary.p1}</strong></span>
+          <span><b>P2</b><strong>{triageSummary.p2}</strong></span>
+        </div>
+        {triageItems.length ? (
+          <div className="mapp-triage-list">
+            {triageItems.map((item) => (
+              <article key={item.id} className={`mapp-triage-item priority-${item.priority.toLowerCase()}`}>
+                <header><span>{triagePriorityLabel(item.priority)}</span><small>{item.status} · {item.source}</small></header>
+                <strong>{item.area} — {item.title}</strong>
+                <p>{item.impact}</p>
+                <div><b>Próxima ação:</b> {item.nextAction}</div>
+                <small>Prova esperada: {item.evidence}</small>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mapp-success-card"><strong>Nenhuma falha marcada neste aparelho</strong><p>Continue testando em dois aparelhos. Se algo falhar, marque Falhou/Bloqueado na execução assistida e copie o plano.</p></div>
+        )}
+      </section>
 
       <section className="mapp-form-panel mapp-print-test-panel">
         <div className="mapp-form-head">
@@ -921,7 +1090,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v128 assistido</strong></span>
+          <span><b>Cache</b><strong>v129 pós-teste</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -969,7 +1138,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v128 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v129 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>
