@@ -25,7 +25,7 @@ import {
   type WebDemoModeState,
   type WebTrainingModeState,
 } from '../../lib/webApi';
-import type { AppStatus } from '../../types';
+import type { AppStatus, PageKey } from '../../types';
 import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
@@ -34,6 +34,7 @@ import { formatDateTime, formatNumber } from '../components/format';
 interface DiagnosticsScreenProps {
   status: AppStatus | null;
   onRefresh: () => void;
+  onNavigate: (page: PageKey) => void;
 }
 
 type Feedback = { tone: 'success' | 'error' | 'info'; text: string };
@@ -55,8 +56,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v133';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v134';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -154,7 +155,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v133 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v134 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -262,12 +263,147 @@ interface DemoModeStep {
   area: string;
 }
 
+interface CommercialTourStep {
+  id: string;
+  order: number;
+  title: string;
+  page: PageKey;
+  pageLabel: string;
+  goal: string;
+  script: string;
+  show: string;
+  close: string;
+  proof: string;
+  priority: 'P1' | 'P2';
+}
+
+interface CommercialTourState {
+  doneIds: string[];
+  currentId: string;
+  presenter: string;
+  audience: string;
+  objective: string;
+  note: string;
+  updatedAt: string;
+}
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
   { id: 'demo-sales', title: 'Simular venda sem finalizar', detail: 'Cliente entende o fluxo de PDV usando clientes/produtos demo. Finalizar venda real continua bloqueado.', area: 'Vendas' },
   { id: 'demo-receipts', title: 'Mostrar comprovantes de amostra', detail: 'Comprovantes demo podem ser abertos/impresso como modelo visual sem mexer no caixa.', area: 'Comprovantes' },
   { id: 'demo-exit', title: 'Sair da demo antes da operação real', detail: 'Antes da primeira venda verdadeira, desative a demo, confira login/Supabase e rode o teste comercial.', area: 'Segurança' },
+];
+
+
+const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v134';
+const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v133'];
+
+const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
+  {
+    id: 'tour-start-demo-safe',
+    order: 1,
+    title: 'Preparar demonstração segura',
+    page: 'diagnostics',
+    pageLabel: 'Diagnóstico Web',
+    goal: 'Começar sem expor dados reais e sem risco de gravar venda de teste.',
+    script: 'Antes de mostrar o sistema, eu ativo o ambiente demo. Assim você vê uma loja pronta, mas nada mexe nos seus dados reais.',
+    show: 'Ativar Tour comercial guiado, confirmar banner DEMO/Treinamento e abrir o resumo do tour.',
+    close: 'Cliente entende que a apresentação é segura e separada da operação verdadeira.',
+    proof: 'Print do banner de demo ativa ou resumo copiado do tour.',
+    priority: 'P1',
+  },
+  {
+    id: 'tour-dashboard-value',
+    order: 2,
+    title: 'Mostrar visão geral da loja',
+    page: 'dashboard',
+    pageLabel: 'Dashboard',
+    goal: 'Mostrar valor rápido: vendas, estoque baixo, pedidos, crediário e alertas em uma tela.',
+    script: 'Aqui o dono enxerga a loja do dia sem ficar procurando em várias abas. O importante aparece primeiro.',
+    show: 'Cards principais, vendas recentes, alertas e atalhos. Destacar leitura no celular.',
+    close: 'Cliente percebe controle diário e facilidade no mobile.',
+    proof: 'Cliente confirma que entendeu onde ver resumo do dia.',
+    priority: 'P1',
+  },
+  {
+    id: 'tour-pdv-flow',
+    order: 3,
+    title: 'Apresentar venda/PDV sem finalizar real',
+    page: 'sales',
+    pageLabel: 'Vendas / PDV',
+    goal: 'Demonstrar carrinho, cliente, desconto, pagamento e crediário sem baixar estoque real.',
+    script: 'A venda é feita em poucos toques. No treinamento, eu mostro o fluxo e paro antes da operação real.',
+    show: 'Busca de produto, carrinho, cliente, forma de pagamento e aviso de demo/treinamento.',
+    close: 'Cliente entende como vender no balcão pelo celular.',
+    proof: 'Cliente aponta onde finalizaria a venda real depois de sair da demo.',
+    priority: 'P1',
+  },
+  {
+    id: 'tour-products-customers',
+    order: 4,
+    title: 'Produtos e clientes organizados',
+    page: 'products',
+    pageLabel: 'Produtos',
+    goal: 'Mostrar cadastro simples, estoque, preço, busca e ficha do cliente como base da operação.',
+    script: 'Produto e cliente ficam fáceis de achar. Isso reduz erro de preço, estoque e cobrança.',
+    show: 'Produtos demo, estoque baixo, preço, filtros; depois orientar abrir Clientes se o cliente pedir.',
+    close: 'Cliente entende que dados principais ficam padronizados.',
+    proof: 'Cliente escolhe um produto demo e entende preço/estoque.',
+    priority: 'P1',
+  },
+  {
+    id: 'tour-cash-credit-orders',
+    order: 5,
+    title: 'Caixa, pedidos e crediário no controle',
+    page: 'cash',
+    pageLabel: 'Caixa',
+    goal: 'Mostrar que a loja controla dinheiro, encomendas e pagamentos pendentes.',
+    script: 'Depois de vender, o sistema ajuda a conferir caixa, pedidos e contas a receber sem planilha solta.',
+    show: 'Caixa demo, movimentos, atalhos para Pedidos e Crediário, alertas de vencimento.',
+    close: 'Cliente entende diferença entre venda, pedido, caixa e crediário.',
+    proof: 'Cliente confirma onde veria dinheiro do dia e pendências.',
+    priority: 'P1',
+  },
+  {
+    id: 'tour-receipts-print',
+    order: 6,
+    title: 'Comprovantes e impressão',
+    page: 'receipts',
+    pageLabel: 'Comprovantes',
+    goal: 'Mostrar reimpressão, compartilhamento e modelos 58mm/80mm/A4 sem venda real.',
+    script: 'O comprovante pode ser impresso ou compartilhado. Na demo usamos amostra segura sem mexer no caixa.',
+    show: 'Lista de comprovantes demo, prévia, WhatsApp/PDF e botões de teste 58/80/A4 no Diagnóstico.',
+    close: 'Cliente sabe como entregar comprovante para o consumidor.',
+    proof: 'Amostra aberta ou print da prévia sem dados reais.',
+    priority: 'P2',
+  },
+  {
+    id: 'tour-reports-backup',
+    order: 7,
+    title: 'Relatórios, backup e segurança',
+    page: 'reports',
+    pageLabel: 'Relatórios',
+    goal: 'Mostrar que a loja tem visão de resultado e caminhos seguros de diagnóstico/backup.',
+    script: 'Relatórios ajudam a decidir. Backup e diagnóstico ajudam a resolver problema sem perder dados.',
+    show: 'Relatórios demo, depois explicar Backup e Diagnóstico Web sem restaurar dados reais.',
+    close: 'Cliente entende que suporte e segurança fazem parte do produto.',
+    proof: 'Cliente sabe copiar diagnóstico se precisar de suporte.',
+    priority: 'P2',
+  },
+  {
+    id: 'tour-close-real-next-step',
+    order: 8,
+    title: 'Fechar apresentação com próximo passo real',
+    page: 'diagnostics',
+    pageLabel: 'Diagnóstico Web',
+    goal: 'Encerrar sem deixar demo ligada para venda verdadeira por engano.',
+    script: 'Para usar de verdade, saímos da demo, conferimos login, rodamos teste comercial e só então fazemos a primeira venda acompanhada.',
+    show: 'Copiar roteiro do tour, explicar Fechamento comercial e Kit do primeiro cliente.',
+    close: 'Cliente entende o caminho: demo → instalação → teste real → venda assistida.',
+    proof: 'Resumo do tour copiado e combinado de primeiro uso.',
+    priority: 'P1',
+  },
 ];
 
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
@@ -279,18 +415,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v133';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v134';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v133';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v134';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v133';
-const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v131'];
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v134';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v133 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v134 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -302,12 +438,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v133-real',
+    id: 'deploy-cache-v134-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v133',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v133.',
+    title: 'Deploy aplicado e PWA abriu v134',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v134.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v133.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v134.',
     critical: true,
   },
   {
@@ -432,7 +568,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v133-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v134-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -713,7 +849,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v133',
+    'Smart Loja Fácil — fechamento comercial / aceite final v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -807,7 +943,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v133',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -824,6 +960,101 @@ function buildFirstClientOnboardingText(params: {
     '',
     'Mensagem curta para o cliente:',
     `Olá! Seu Smart Loja Fácil foi preparado para ${params.state.clientName || 'sua loja'}. No primeiro dia, use o app com acompanhamento: cadastre produtos/clientes, faça uma venda pequena, confira caixa/comprovante e me envie o diagnóstico se aparecer qualquer aviso.`,
+  ].join('\n');
+}
+
+
+function emptyCommercialTourState(): CommercialTourState {
+  return { doneIds: [], currentId: COMMERCIAL_TOUR_STEPS[0]?.id ?? '', presenter: '', audience: '', objective: '', note: '', updatedAt: '' };
+}
+
+function normalizeCommercialTourState(value: unknown): CommercialTourState {
+  const source = value && typeof value === 'object' ? value as Partial<CommercialTourState> : {};
+  const allowed = new Set(COMMERCIAL_TOUR_STEPS.map((step) => step.id));
+  const rawDone = Array.isArray(source.doneIds) ? source.doneIds : [];
+  const doneIds = Array.from(new Set(rawDone.filter((id): id is string => typeof id === 'string' && allowed.has(id))));
+  const currentId = typeof source.currentId === 'string' && allowed.has(source.currentId) ? source.currentId : (COMMERCIAL_TOUR_STEPS[0]?.id ?? '');
+  return {
+    doneIds,
+    currentId,
+    presenter: typeof source.presenter === 'string' ? source.presenter.slice(0, 80) : '',
+    audience: typeof source.audience === 'string' ? source.audience.slice(0, 120) : '',
+    objective: typeof source.objective === 'string' ? source.objective.slice(0, 180) : '',
+    note: typeof source.note === 'string' ? source.note.slice(0, 1200) : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readCommercialTourState(): CommercialTourState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyCommercialTourState();
+  try {
+    const current = normalizeCommercialTourState(JSON.parse(window.localStorage.getItem(COMMERCIAL_TOUR_KEY) || '{}'));
+    if (current.doneIds.length || current.presenter || current.audience || current.objective || current.note) return current;
+    for (const key of LEGACY_COMMERCIAL_TOUR_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeCommercialTourState(JSON.parse(raw));
+      if (legacy.doneIds.length || legacy.presenter || legacy.audience || legacy.objective || legacy.note) {
+        window.localStorage.setItem(COMMERCIAL_TOUR_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyCommercialTourState();
+  }
+  return emptyCommercialTourState();
+}
+
+function saveCommercialTourState(state: CommercialTourState): CommercialTourState {
+  const normalized = normalizeCommercialTourState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(COMMERCIAL_TOUR_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function buildCommercialTourText(params: {
+  state: CommercialTourState;
+  demoMode: WebDemoModeState;
+  trainingMode: WebTrainingModeState;
+  roleState: RoleState;
+  report: WebCommercialValidationReport | null;
+  gate: FinalSellGate;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const done = new Set(params.state.doneIds);
+  const total = COMMERCIAL_TOUR_STEPS.length;
+  const doneCount = params.state.doneIds.length;
+  const percent = total ? Math.round((doneCount / total) * 100) : 0;
+  const rows = COMMERCIAL_TOUR_STEPS.map((step) => [
+    done.has(step.id) ? '[OK]' : step.id === params.state.currentId ? '[ATUAL]' : '[PENDENTE]',
+    `${step.order}. ${step.pageLabel}`,
+    step.title,
+    `Objetivo: ${step.goal}`,
+    `Fala: ${step.script}`,
+    `Prova: ${step.proof}`,
+  ].join(' · '));
+  return [
+    'Smart Loja Fácil — tour de apresentação comercial v134',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
+    `Cliente/público: ${params.state.audience || 'não informado'}`,
+    `Objetivo: ${params.state.objective || 'demonstração comercial segura'}`,
+    `Progresso tour: ${doneCount}/${total} (${percent}%)`,
+    `Ambiente demo: ${params.demoMode.enabled ? 'ativo com dados fictícios' : 'desativado'}`,
+    `Modo treinamento: ${params.trainingMode.enabled ? 'ativo com gravações reais bloqueadas' : 'desativado'}`,
+    `Fechamento comercial: ${params.gate.title} — ${params.gate.score}/10 ${params.gate.stars}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.state.note ? `Observações: ${params.state.note}` : 'Observações: nenhuma',
+    '',
+    'Roteiro de apresentação:',
+    ...rows,
+    '',
+    'Fechamento seguro: se o cliente quiser usar de verdade, desative a demo, rode teste comercial, valide dois aparelhos e registre o aceite final.',
   ].join('\n');
 }
 
@@ -847,7 +1078,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v133',
+    'Smart Loja Fácil — plano de correção aceite v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -885,7 +1116,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v133',
+    'Smart Loja Fácil — execução real assistida v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -959,7 +1190,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v133',
+    'Smart Loja Fácil — roteiro guiado comercial v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -1012,7 +1243,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v133',
+    'Smart Loja Fácil — modo treinamento seguro v134',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -1039,7 +1270,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v133',
+    'Smart Loja Fácil — teste comercial v134',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -1057,7 +1288,7 @@ function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSn
   return lines.join('\n');
 }
 
-export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps): JSX.Element {
+export function DiagnosticsScreen({ status, onRefresh, onNavigate }: DiagnosticsScreenProps): JSX.Element {
   const [snapshot, setSnapshot] = useState<WebSyncSnapshot>(() => readWebSyncSnapshot());
   const [outbox, setOutbox] = useState<WebOutboxStats>(() => getWebOutboxStats());
   const [roleState, setRoleState] = useState<RoleState>({ role: 'sem login', storeName: '', email: '' });
@@ -1072,6 +1303,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [onboardingState, setOnboardingState] = useState<FirstClientOnboardingState>(() => readOnboardingState());
   const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
   const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
+  const [tourState, setTourState] = useState<CommercialTourState>(() => readCommercialTourState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -1166,6 +1398,10 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const trainingActive = trainingMode.enabled;
   const trainingProtectionLabel = trainingActive ? 'Treinamento ativo: gravações reais bloqueadas' : 'Treinamento desligado: operação real liberada conforme permissão';
   const trainingBlockedAreas = ['Clientes', 'Produtos', 'Vendas', 'Caixa', 'Pedidos', 'Crediário', 'Configurações', 'Backup/Restauração', 'Reenvio de pendências'];
+  const tourDoneSet = useMemo(() => new Set(tourState.doneIds), [tourState.doneIds]);
+  const tourDoneCount = tourState.doneIds.length;
+  const tourPercent = Math.round((tourDoneCount / COMMERCIAL_TOUR_STEPS.length) * 100);
+  const currentTourStep = useMemo(() => COMMERCIAL_TOUR_STEPS.find((step) => step.id === tourState.currentId) ?? COMMERCIAL_TOUR_STEPS[0], [tourState.currentId]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -1388,7 +1624,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — ambiente demo separado v133',
+      'Smart Loja Fácil — tour comercial guiado v134',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
@@ -1407,6 +1643,54 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: 'success', text: 'Resumo do ambiente demo copiado sem dados reais, senha ou chave privada.' });
   }
 
+
+  function patchTourState(patch: Partial<CommercialTourState>): void {
+    setTourState((current) => saveCommercialTourState({ ...current, ...patch }));
+  }
+
+  function openTourStep(step: CommercialTourStep): void {
+    const next = saveCommercialTourState({ ...tourState, currentId: step.id });
+    setTourState(next);
+    setFeedback({ tone: 'info', text: `Tour: ${step.title}. Abra a tela, siga a fala sugerida e marque como apresentado.` });
+    onNavigate(step.page);
+  }
+
+  function toggleTourStep(id: string): void {
+    const done = new Set(tourState.doneIds);
+    if (done.has(id)) done.delete(id);
+    else done.add(id);
+    const nextId = done.has(id)
+      ? (COMMERCIAL_TOUR_STEPS.find((step) => !done.has(step.id))?.id ?? id)
+      : tourState.currentId;
+    setTourState((current) => saveCommercialTourState({ ...current, doneIds: Array.from(done), currentId: nextId }));
+  }
+
+  function resetCommercialTour(): void {
+    const ok = window.confirm('Zerar o tour comercial deste aparelho? Isso não apaga dados da loja, demo, clientes, vendas ou produtos.');
+    if (!ok) return;
+    setTourState(saveCommercialTourState(emptyCommercialTourState()));
+    setFeedback({ tone: 'info', text: 'Tour comercial zerado neste aparelho. Dados da loja preservados.' });
+  }
+
+  function activateDemoForTour(): void {
+    const next = setWebDemoModeEnabled(true, {
+      scenario: 'Tour comercial guiado com dados fictícios',
+      storeName: demoMode.storeName || tourState.audience || 'Loja Demonstração Fácil',
+      responsible: tourState.presenter || demoMode.responsible || roleState.email || '',
+      note: 'Tour guiado ativo: apresentar telas com dados fictícios, sem gravar venda, caixa, estoque ou crediário real.',
+    });
+    setDemoMode(next);
+    setTrainingMode(readWebTrainingMode());
+    setFeedback({ tone: 'info', text: 'Demo preparada para o tour. Dados fictícios ativos e gravações reais bloqueadas.' });
+    onRefresh();
+  }
+
+  async function copyCommercialTour(): Promise<void> {
+    const text = buildCommercialTourText({ state: tourState, demoMode, trainingMode, roleState, report, gate: finalGate, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Tour comercial copiado sem senha, sem chave privada e sem dados reais.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -1414,6 +1698,8 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
 ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online })}
 
 ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}
+
+${buildCommercialTourText({ state: tourState, demoMode, trainingMode, roleState, report, gate: finalGate, online, snapshot })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -1430,6 +1716,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Pendências: ${outbox.total}`,
           `Modo treinamento: ${trainingMode.enabled ? 'ativo - gravações reais bloqueadas' : 'desativado'}`,
           `Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`,
+          `Tour comercial: ${tourDoneCount}/${COMMERCIAL_TOUR_STEPS.length} (${tourPercent}%)`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -1480,6 +1767,63 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={() => void copyDemoMode()}>Copiar resumo</button>
         </div>
         <small className="mapp-final-honesty">Demo ativa não substitui teste real. Antes de vender de verdade, saia da demo, confira login/Supabase, rode o teste comercial e valide dois aparelhos.</small>
+      </section>
+
+
+      <section className={`mapp-section-block mapp-tour-panel ${demoActive ? 'is-demo-ready' : ''}`}>
+        <div className="mapp-section-title"><h2>Tour de apresentação comercial</h2><button type="button" onClick={() => void copyCommercialTour()}>Copiar tour</button></div>
+        <div className="mapp-tour-hero">
+          <div>
+            <span>Roteiro para vender melhor</span>
+            <strong>{tourDoneCount}/{COMMERCIAL_TOUR_STEPS.length} telas apresentadas</strong>
+            <p>Mostre as abas na ordem certa, com fala pronta, valor para o cliente e prova do que foi demonstrado.</p>
+          </div>
+          <b className={tourPercent >= 90 ? 'ok' : tourPercent >= 50 ? 'warn' : 'danger'}>{tourPercent}%</b>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do tour comercial ${tourPercent}%`}><span style={{ width: `${tourPercent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Apresentador<input value={tourState.presenter} onChange={(event) => patchTourState({ presenter: event.target.value })} placeholder="Ex.: João / suporte" /></label>
+          <label>Cliente ou público<input value={tourState.audience} onChange={(event) => patchTourState({ audience: event.target.value })} placeholder="Ex.: Jaque Confecções / dona da loja" /></label>
+          <label>Objetivo da apresentação<input value={tourState.objective} onChange={(event) => patchTourState({ objective: event.target.value })} placeholder="Ex.: Mostrar PDV mobile e fechar piloto" /></label>
+          <label>Observações do tour<textarea value={tourState.note} onChange={(event) => patchTourState({ note: event.target.value })} placeholder="Anote dúvidas, objeções, pedido de preço, impressora e próximo passo combinado." rows={3} /></label>
+        </div>
+        <div className="mapp-tour-current">
+          <span>Etapa atual</span>
+          <strong>{currentTourStep.order}. {currentTourStep.title}</strong>
+          <p>{currentTourStep.script}</p>
+          <small>Mostrar: {currentTourStep.show}</small>
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={activateDemoForTour} disabled={demoActive}>Preparar demo para tour</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => openTourStep(currentTourStep)}>Abrir etapa atual</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyCommercialTour()}>Copiar roteiro</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetCommercialTour}>Zerar tour</button>
+        </div>
+        <div className="mapp-tour-list">
+          {COMMERCIAL_TOUR_STEPS.map((step) => {
+            const done = tourDoneSet.has(step.id);
+            const active = step.id === tourState.currentId;
+            return (
+              <article key={step.id} className={`mapp-tour-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
+                <button type="button" className="mapp-tour-open" onClick={() => openTourStep(step)}>
+                  <b>{step.order}</b>
+                  <div>
+                    <strong>{step.title}</strong>
+                    <p>{step.goal}</p>
+                    <small>{step.pageLabel} · {step.priority} · Prova: {step.proof}</small>
+                  </div>
+                </button>
+                <div className="mapp-tour-script">
+                  <span>Fala sugerida</span>
+                  <p>{step.script}</p>
+                  <small>Fechamento: {step.close}</small>
+                </div>
+                <button type="button" className={`mapp-tour-check ${done ? 'done' : ''}`} onClick={() => toggleTourStep(step.id)}>{done ? 'Apresentado ✓' : 'Marcar apresentado'}</button>
+              </article>
+            );
+          })}
+        </div>
+        <small className="mapp-final-honesty">Tour não substitui teste real. Para vender de verdade: saia da demo, rode teste comercial, valide dois aparelhos, permissões, impressão e aceite final.</small>
       </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
@@ -1778,7 +2122,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v133 demo</strong></span>
+          <span><b>Cache</b><strong>v134 tour</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -1826,7 +2170,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v133 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v134 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

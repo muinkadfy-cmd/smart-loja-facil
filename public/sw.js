@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v133-ambiente-demo-separado';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v134-tour-comercial-guiado';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -3086,3 +3086,189 @@ img, svg { max-width: 100%; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Mega Lote 134 — Tour de apresentação comercial guiado */
+.mapp-tour-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(113, 101, 95, 0.24);
+}
+
+.mapp-tour-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, #cb7c76, #9b9fb8, #71655f);
+  opacity: 0.9;
+}
+
+.mapp-tour-panel.is-demo-ready {
+  border-color: rgba(203, 124, 118, 0.36);
+  box-shadow: 0 22px 52px rgba(63, 43, 18, 0.10);
+}
+
+.mapp-tour-hero,
+.mapp-tour-current {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(113, 101, 95, 0.18);
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(208, 209, 196, 0.42), rgba(255, 255, 255, 0.78));
+  margin: 12px 0;
+}
+
+.mapp-tour-hero span,
+.mapp-tour-current span,
+.mapp-tour-script span {
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #71655f;
+}
+
+.mapp-tour-hero strong,
+.mapp-tour-current strong {
+  display: block;
+  margin-top: 3px;
+  color: #3f2b12;
+  font-size: 1rem;
+}
+
+.mapp-tour-hero p,
+.mapp-tour-current p,
+.mapp-tour-current small {
+  display: block;
+  margin: 5px 0 0;
+  color: rgba(63, 43, 18, 0.72);
+  line-height: 1.35;
+}
+
+.mapp-tour-hero b {
+  min-width: 58px;
+  padding: 9px 10px;
+  border-radius: 18px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #fff;
+  background: #71655f;
+}
+
+.mapp-tour-hero b.ok { background: #3f7f5f; }
+.mapp-tour-hero b.warn { background: #bc8346; }
+.mapp-tour-hero b.danger { background: #cb7c76; }
+
+.mapp-tour-current {
+  display: block;
+  border-style: dashed;
+  background: rgba(208, 209, 196, 0.24);
+}
+
+.mapp-tour-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.mapp-tour-step {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  border-radius: 22px;
+  border: 1px solid rgba(113, 101, 95, 0.16);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 30px rgba(63, 43, 18, 0.06);
+}
+
+.mapp-tour-step.active {
+  border-color: rgba(155, 159, 184, 0.55);
+  background: linear-gradient(135deg, rgba(155, 159, 184, 0.18), rgba(255, 255, 255, 0.88));
+}
+
+.mapp-tour-step.done {
+  border-color: rgba(63, 127, 95, 0.36);
+}
+
+.mapp-tour-open {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.mapp-tour-open b {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  background: #3f2b12;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.mapp-tour-step.done .mapp-tour-open b {
+  background: #3f7f5f;
+}
+
+.mapp-tour-open strong {
+  display: block;
+  color: #3f2b12;
+  font-size: 0.96rem;
+}
+
+.mapp-tour-open p {
+  margin: 3px 0;
+  color: rgba(63, 43, 18, 0.72);
+  line-height: 1.32;
+}
+
+.mapp-tour-open small,
+.mapp-tour-script small {
+  color: rgba(63, 43, 18, 0.58);
+  line-height: 1.25;
+}
+
+.mapp-tour-script {
+  padding: 11px 12px;
+  border-radius: 18px;
+  background: rgba(208, 209, 196, 0.28);
+}
+
+.mapp-tour-script p {
+  margin: 4px 0 6px;
+  color: rgba(63, 43, 18, 0.78);
+  line-height: 1.35;
+}
+
+.mapp-tour-check {
+  min-height: 44px;
+  border: 1px solid rgba(113, 101, 95, 0.22);
+  border-radius: 16px;
+  background: #fff;
+  color: #3f2b12;
+  font-weight: 800;
+}
+
+.mapp-tour-check.done {
+  border-color: rgba(63, 127, 95, 0.42);
+  background: rgba(63, 127, 95, 0.12);
+  color: #25553f;
+}
+
+@media (min-width: 860px) {
+  .mapp-tour-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

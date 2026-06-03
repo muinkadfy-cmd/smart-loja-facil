@@ -105,7 +105,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       ) : activePage === 'backup' ? (
         <BackupScreen refreshToken={refreshToken} onRefresh={onRefresh} />
       ) : activePage === 'diagnostics' ? (
-        <DiagnosticsScreen status={status} onRefresh={onRefresh} />
+        <DiagnosticsScreen status={status} onRefresh={onRefresh} onNavigate={navigate} />
       ) : (
         <GenericDataScreen page={activePage} status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       )}
