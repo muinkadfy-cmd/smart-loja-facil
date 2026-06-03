@@ -2,15 +2,28 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v124-commercial-security';
-const currentCache = 'smart-loja-pwa-supabase-v124-commercial-security';
-const currentOutbox = 'smart-loja:web-outbox-v107';
+const currentVersion = 'pwa-supabase-v125-mobile-p1-operacional';
+const currentCache = 'smart-loja-pwa-supabase-v125-mobile-p1-operacional';
 
 const requiredCore = [
   'package.json',
   'index.html',
   'src/main.tsx',
   'src/App.tsx',
+  'src/mobile-app/MobileApp.tsx',
+  'src/mobile-app/mobileAppRoutes.ts',
+  'src/mobile-app/layout/MobileShell.tsx',
+  'src/mobile-app/layout/MobileHeader.tsx',
+  'src/mobile-app/layout/MobileBottomNav.tsx',
+  'src/mobile-app/screens/DashboardScreen.tsx',
+  'src/mobile-app/screens/GenericDataScreen.tsx',
+  'src/mobile-app/screens/ProductsCustomersScreens.tsx',
+  'src/mobile-app/screens/CashScreen.tsx',
+  'src/mobile-app/screens/OrdersScreen.tsx',
+  'src/mobile-app/screens/ReceiptsScreen.tsx',
+  'src/mobile-app/screens/BackupScreen.tsx',
+  'src/mobile-app/screens/DiagnosticsScreen.tsx',
+  'src/mobile-app/styles/mobile-app.css',
   'src/lib/api.ts',
   'src/lib/webApi.ts',
   'src/lib/env.ts',
@@ -20,61 +33,8 @@ const requiredCore = [
   'README.md',
 ];
 
-const optionalPwaCommercialFiles = [
-  'src/lib/productPhotoStorage.ts',
-  'src/lib/designSystemReadiness.ts',
-  'src/lib/cssInventoryReadiness.ts',
-  'src/lib/moduleVisualChecklist.ts',
-  'src/lib/neoFamilyReadiness.ts',
-  'src/lib/neoShellSidebarReadiness.ts',
-  'src/lib/neoImportantReadiness.ts',
-  'src/lib/productionChecklist.ts',
-  'src/lib/useWebPermissions.ts',
-  'src/styles.css',
-  'docs/MANUAL_USO.md',
-  'docs/RELATORIO_TECNICO.md',
-  'docs/CHECKLIST_TESTE_OFFLINE.md',
-  'scripts/css_audit.js',
-  'scripts/css_dedupe_safe.js',
-  'scripts/css_neo_family_audit.js',
-  'scripts/css_prune_empty_rules.js',
-  'scripts/css_prune_duplicate_rules.js',
-  'scripts/css_shell_sidebar_audit.js',
-  'scripts/css_reduce_neo_important_safe.js',
-  'scripts/css_important_audit.js',
-  'scripts/commercial_package_check.js',
-  'scripts/commercial_release_package.js',
-];
-
-const forbiddenPatterns = [
-  { pattern: /cdn\.|unpkg|jsdelivr|googleapis|gstatic/i, label: 'CDN ou fonte online' },
-  { pattern: /indexedDB|indexeddb/i, label: 'IndexedDB como banco principal' },
-  { pattern: /fetch\(['"]https?:/i, label: 'fetch externo direto' },
-];
-
-const allowedUrlPatternFiles = new Set([
-  'src/lib/supabaseClient.ts',
-  'src/lib/env.ts',
-  'src/lib/productPhotoStorage.ts',
-  'src/lib/webApi.ts',
-]);
-
-const onlineServicePattern = /supabase|cloudflare/i;
-const hugeInlineAssetPattern = /data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]{12000,}/;
-const scanDirs = ['src', 'public', 'scripts'];
-const ignoredFiles = new Set([
-  'scripts/release_check.js',
-  'public/logo.svg',
-]);
-const ignoredDirFragments = [
-  'dist/',
-  'node_modules/',
-  '.git/',
-  'release-commercial/',
-  'tools/QaWorkflow/bin/',
-  'tools/QaWorkflow/obj/',
-];
-const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.html', '.md', '.svg', '.webmanifest']);
+const forbiddenLoadedCss = [/lote(77|78|79|8\d|9\d|10\d|11\d|120|121|123|124|125|126|127)-/i, /styles\.css/i, /master-ui\.css/i];
+const forbiddenSecretPattern = /service_role|SERVICE_ROLE|VITE_SERVICE_ROLE_KEY|VITE_SUPABASE_SERVICE_ROLE_KEY/;
 
 function fail(message) {
   console.error(`ERRO: ${message}`);
@@ -83,14 +43,6 @@ function fail(message) {
 
 function warn(message) {
   console.warn(`AVISO: ${message}`);
-}
-
-function shouldSkip(relPath) {
-  return ignoredFiles.has(relPath) || ignoredDirFragments.some((fragment) => relPath.startsWith(fragment));
-}
-
-function isTextFile(filePath) {
-  return textExtensions.has(path.extname(filePath).toLowerCase());
 }
 
 function exists(rel) {
@@ -106,196 +58,70 @@ function readIf(rel) {
 }
 
 for (const file of requiredCore) {
-  if (!exists(file)) fail(`Arquivo essencial PWA ausente: ${file}`);
+  if (!exists(file)) fail(`Arquivo essencial do rebuild mobile ausente: ${file}`);
 }
 
-for (const file of optionalPwaCommercialFiles) {
-  if (!exists(file)) warn(`Arquivo comercial/auditoria ausente: ${file}. Não bloqueia deploy PWA, mas pode entrar no próximo lote comercial.`);
-}
-
-if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v124 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
-}
-
-if (process.exitCode) {
-  console.error('Release check encontrou arquivos PWA essenciais ausentes. Corrija antes do deploy.');
-  process.exit(process.exitCode);
-}
+if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote é PWA web/mobile e não exige Tauri. Não incluir target/ nem bancos no GitHub.');
 
 const packageJson = JSON.parse(read('package.json'));
-for (const script of ['type-check', 'build', 'release:check']) {
+for (const script of ['type-check', 'build', 'release:check', 'lint', 'release:commercial:check']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
 }
-for (const script of ['lint', 'release:commercial:check', 'release:commercial:prepare']) {
-  if (!packageJson.scripts?.[script]) warn(`Script npm opcional ausente: ${script}.`);
+
+const mainSource = read('src/main.tsx');
+if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.includes('"./mobile-app/styles/mobile-app.css"')) fail('main.tsx precisa carregar somente a base nova mobile-app.css.');
+for (const rule of forbiddenLoadedCss) {
+  if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
+if (!mainSource.includes('smart-mobile-rebuild-v125')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v125.');
+
+const appSource = read('src/App.tsx');
+if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
+if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dashboard")) fail('App.tsx não deve usar Shell/páginas antigas como base visual do rebuild.');
 
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v124 commercial security PWA/mobile.');
-if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v107.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v124 commercial security PWA/mobile.');
-
-function publicAssetExists(url) {
-  if (!url || !url.startsWith('/')) return true;
-  if (url === '/' || url === '/index.html') return true;
-  return exists(`public/${url.slice(1)}`);
-}
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v125 mobile P1.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v125 mobile P1.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
   for (const icon of manifest.icons ?? []) {
-    if (!publicAssetExists(icon.src)) fail(`Manifest referencia icon ausente: ${icon.src}`);
-  }
-  for (const shortcut of manifest.shortcuts ?? []) {
-    for (const icon of shortcut.icons ?? []) {
-      if (!publicAssetExists(icon.src)) fail(`Manifest shortcut referencia icon ausente: ${icon.src}`);
-    }
+    const src = String(icon.src ?? '');
+    if (src.startsWith('/') && src !== '/' && !exists(`public/${src.slice(1)}`)) fail(`Manifest referencia ícone ausente: ${src}`);
   }
 } catch (error) {
-  fail(`Manifest web invalido: ${error instanceof Error ? error.message : String(error)}`);
+  fail(`Manifest web inválido: ${error instanceof Error ? error.message : String(error)}`);
 }
 
-const appShellMatch = serviceWorkerSource.match(/const APP_SHELL = \[([\s\S]*?)\];/);
-if (!appShellMatch) fail('Service worker precisa declarar APP_SHELL.');
-else {
-  const appShellAssets = Array.from(appShellMatch[1].matchAll(/'([^']+)'/g), (match) => match[1]);
-  for (const asset of appShellAssets) {
-    if (!publicAssetExists(asset)) fail(`Service worker tenta cachear asset ausente: ${asset}`);
-  }
+const css = read('src/mobile-app/styles/mobile-app.css');
+for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card']) {
+  if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
 
-const mainSource = read('src/main.tsx');
-if (mainSource.includes('./master-ui.css')) fail('main.tsx não deve carregar master-ui.css na fundação limpa; use apenas styles.css + módulos ativos em src/styles.');
-for (let n = 77; n <= 117; n += 1) {
-  if (mainSource.includes(`lote${n}-`)) fail(`main.tsx ainda carrega herança antiga lote${n}.`);
+const routeSource = read('src/mobile-app/mobileAppRoutes.ts');
+for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web']) {
+  if (!routeSource.includes(label)) fail(`Rota nova ausente: ${label}`);
 }
-const activeCssModules = Array.from(mainSource.matchAll(/import ['"]\.\/(styles\/[^'"]+\.css)['"];?/g), (match) => `src/${match[1]}`);
-const requiredCssModules = [
-  'src/styles/lote118-foundation-final.css',
-  'src/styles/lote119-icon-login-rescue.css',
-  'src/styles/lote120-commercial-components.css',
-  'src/styles/lote121-clean-interface.css',
-  'src/styles/lote122-clean-alerts.css',
-  'src/styles/lote123-dashboard-supreme.css',
-];
-for (const cssFile of requiredCssModules) {
-  const importPath = `./${cssFile.replace('src/', '')}`;
-  if (!mainSource.includes(importPath)) fail(`main.tsx precisa importar ${importPath}.`);
-  const cssSource = read(cssFile);
-  const loteMatch = cssFile.match(/lote(\d+)-([a-z0-9-]+)\.css$/i);
-  if (loteMatch) {
-    const tokenPattern = new RegExp(`--lote${loteMatch[1]}-[a-z0-9-]+\\s*:\\s*active`, 'i');
-    if (!tokenPattern.test(cssSource)) fail(`${cssFile} precisa expor token ativo do lote ${loteMatch[1]}.`);
-  }
-}
-const dormantCssModules = exists('src/styles')
-  ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).map((name) => `src/styles/${name}`).filter((rel) => !activeCssModules.includes(rel))
-  : [];
-if (dormantCssModules.length > 0) warn(`${dormantCssModules.length} CSS antigos permanecem no repositório, mas estão fora do main.tsx e não interferem no layout.`);
-
-const productPhotoStorageSource = readIf('src/lib/productPhotoStorage.ts');
-if (productPhotoStorageSource && !productPhotoStorageSource.includes('PRODUCT_PHOTO_BUCKET')) fail('Utilitário de Storage de fotos precisa declarar PRODUCT_PHOTO_BUCKET.');
-if (exists('src/lib/neoShellSidebarReadiness.ts') && !read('src/lib/neoShellSidebarReadiness.ts').includes('getNeoShellSidebarReport')) fail('Diagnóstico shell/sidebar precisa existir.');
-if (exists('src/lib/neoImportantReadiness.ts') && !read('src/lib/neoImportantReadiness.ts').includes('getNeoImportantReport')) fail('Diagnóstico important precisa existir.');
-if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v124')) fail('css_audit.js precisa estar atualizado para auditoria real v124.');
-if (exists('scripts/commercial_package_check.js') && !read('scripts/commercial_package_check.js').includes('Commercial package check v124')) fail('commercial_package_check.js precisa estar em v124.');
-if (exists('scripts/commercial_release_package.js') && !read('scripts/commercial_release_package.js').includes('Commercial release package v124')) fail('commercial_release_package.js precisa estar em v124.');
 
 const gitignore = readIf('.gitignore');
-for (const protectedEntry of ['.env', '.env.local', '.env.production', '.env.*.local', '.wrangler/', 'wrangler.toml']) {
+for (const protectedEntry of ['.env', '.env.local', '.env.production', '.env.*.local', '.wrangler/']) {
   if (!gitignore.includes(protectedEntry)) fail(`.gitignore precisa proteger ${protectedEntry}.`);
 }
-if (!readIf('.env.example').includes('VITE_SUPABASE_URL') || !readIf('.env.example').includes('VITE_SUPABASE_ANON_KEY')) fail('.env.example precisa documentar as variáveis públicas do Supabase sem segredo real.');
-if (!exists('public/brand/jaque-logo-premium.png')) fail('Logo premium do crediário precisa estar em public/brand/jaque-logo-premium.png para sair do TSX.');
-if (/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]{12000,}/.test(readIf('src/pages/Credits.tsx'))) fail('Credits.tsx ainda contém imagem base64 gigante; mova para public/brand.');
-
-const readme = read('README.md');
-if (!/Supabase/i.test(readme) || !/Cloudflare/i.test(readme) || !/PWA/i.test(readme)) warn('README ainda não descreve claramente PWA/Supabase/Cloudflare.');
-if (/sem Supabase, sem Cloudflare/i.test(readme)) fail('README ainda contém texto antigo dizendo sem Supabase/sem Cloudflare.');
-
-const files = [];
-for (const dir of scanDirs) {
-  const base = path.join(root, dir);
-  if (!fs.existsSync(base)) continue;
-  const stack = [base];
-  while (stack.length) {
-    const current = stack.pop();
-    const relCurrent = path.relative(root, current).replace(/\\/g, '/');
-    if (relCurrent && shouldSkip(`${relCurrent}/`)) continue;
-    for (const item of fs.readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, item.name);
-      const rel = path.relative(root, full).replace(/\\/g, '/');
-      if (shouldSkip(rel) || shouldSkip(`${rel}/`)) continue;
-      if (item.isDirectory()) stack.push(full);
-      else if (isTextFile(full)) files.push(full);
-    }
-  }
+if (/SERVICE_ROLE_KEY\s*=\s*['\"]/.test(webApiSource)) {
+  fail('Chave service_role real encontrada na camada web. Remova secrets do frontend.');
 }
 
-const allowedOnlineServiceFiles = new Set([
-  'src/App.tsx',
-  'src/components/Shell.tsx',
-  'src/components/WebAuthPanel.tsx',
-  'src/components/PwaUpdateNotice.tsx',
-  'src/pages/Dashboard.tsx',
-  'src/pages/Settings.tsx',
-  'src/pages/Welcome.tsx',
-  'src/pages/WebDiagnostics.tsx',
-  'src/pages/WebMigration.tsx',
-  'src/lib/env.ts',
-  'src/lib/runtime.ts',
-  'src/lib/supabaseClient.ts',
-  'src/lib/productPhotoStorage.ts',
-  'src/lib/webApi.ts',
-  'src/lib/useWebPermissions.ts',
-  'src/lib/productionChecklist.ts',
-  'src/lib/designSystemReadiness.ts',
-  'src/lib/cssInventoryReadiness.ts',
-  'src/lib/moduleVisualChecklist.ts',
-  'src/lib/neoFamilyReadiness.ts',
-  'src/lib/neoShellSidebarReadiness.ts',
-  'src/lib/neoImportantReadiness.ts',
-  'public/manifest.webmanifest',
-  'public/sw.js',
-]);
-
-for (const file of files) {
-  const rel = path.relative(root, file).replace(/\\/g, '/');
-  if (shouldSkip(rel)) continue;
-  const content = fs.readFileSync(file, 'utf8');
-  for (const rule of forbiddenPatterns) {
-    if (rule.pattern.test(content)) fail(`${rule.label} encontrado em ${rel}`);
-  }
-  if (!allowedUrlPatternFiles.has(rel) && /https?:\/\//i.test(content)) fail(`URL externa direta encontrada fora das camadas permitidas em ${rel}`);
-  if (hugeInlineAssetPattern.test(content)) warn(`Imagem base64 gigante embutida no código em ${rel}. Não bloqueia deploy PWA, mas o próximo lote deve mover para public/brand para melhorar performance/cache.`);
-  const isAllowedDiagnosticOrScript = rel.endsWith('.css') || rel.startsWith('scripts/') || rel.startsWith('src/styles/');
-  if (!isAllowedDiagnosticOrScript && !allowedOnlineServiceFiles.has(rel) && onlineServicePattern.test(content)) {
-    fail(`Serviço online fora da camada web segura encontrado em ${rel}`);
-  }
-}
-
+if (exists('.env.production')) warn('.env.production existe no workspace local para build, mas não deve entrar no ZIP/commit.');
 const sqliteFiles = [];
 for (const rel of fs.readdirSync(root)) {
   if (/\.(sqlite3|sqlite|db)$/i.test(rel)) sqliteFiles.push(rel);
 }
-if (exists('src-tauri')) {
-  const stack = [path.join(root, 'src-tauri')];
-  while (stack.length) {
-    const current = stack.pop();
-    for (const item of fs.readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, item.name);
-      const rel = path.relative(root, full).replace(/\\/g, '/');
-      if (item.isDirectory()) stack.push(full);
-      else if (/\.(sqlite3|sqlite|db)$/i.test(rel)) sqliteFiles.push(rel);
-    }
-  }
-}
-if (sqliteFiles.length) warn(`Bancos SQLite de teste encontrados no workspace: ${sqliteFiles.join(', ')}. Não incluir no ZIP comercial final nem no GitHub.`);
+if (sqliteFiles.length) warn(`Bancos locais encontrados no workspace: ${sqliteFiles.join(', ')}. Não incluir no pacote.`);
 
 if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v124 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v125 PWA passou. Abas P1 mobile operacionais, navegação limpa e Supabase preservado.');

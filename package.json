@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil Web Mobile - PWA React + TypeScript + Vite + Supabase + Cloudflare v107",
+  "description": "Smart Loja Fácil PWA mobile-first v125 com abas operacionais mobile e Produtos/Clientes preservados",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
@@ -14,7 +14,8 @@
     "tauri:build": "tauri build",
     "release:check": "node scripts/release_check.js",
     "release:commercial:check": "node scripts/commercial_package_check.js --strict",
-    "release:commercial:prepare": "node scripts/commercial_release_package.js"
+    "release:commercial:prepare": "node scripts/commercial_release_package.js",
+    "css:clean-legacy": "node scripts/lote118_clean_legacy_css.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

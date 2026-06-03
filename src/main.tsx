@@ -1,17 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './styles.css';
-import './styles/lote118-foundation-final.css';
-import './styles/lote119-icon-login-rescue.css';
-import './styles/lote120-commercial-components.css';
-import './styles/lote121-clean-interface.css';
-import './styles/lote122-clean-alerts.css';
-import './styles/lote123-dashboard-supreme.css';
-import './styles/lote124-master-ui-10.css';
-import './styles/lote125-internal-tabs-premium.css';
+import './mobile-app/styles/mobile-app.css';
 
-document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface', 'lote122-clean-alerts', 'lote123-dashboard-supreme', 'lote124-master-ui-10', 'lote125-internal-tabs-premium');
+document.documentElement.className = 'smart-mobile-rebuild smart-mobile-rebuild-v125';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
