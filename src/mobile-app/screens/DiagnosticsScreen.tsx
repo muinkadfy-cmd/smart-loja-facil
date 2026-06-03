@@ -36,6 +36,204 @@ type RoleState = {
   email: string;
 };
 
+interface GuidedCommercialStep {
+  id: string;
+  group: string;
+  title: string;
+  action: string;
+  expected: string;
+  role: string;
+  device: string;
+  risk: 'baixo' | 'medio' | 'alto';
+}
+
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v127';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v126'];
+
+const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
+  {
+    id: 'owner-device-a-commercial-test',
+    group: '1. Dono no aparelho principal',
+    title: 'Dono entra e roda o teste comercial',
+    action: 'No PC ou celular principal, entrar como dono, abrir Diagnóstico Web e tocar em Rodar teste comercial.',
+    expected: 'O teste precisa ficar sem alerta vermelho. Alertas amarelos só podem ser de teste manual pendente.',
+    role: 'Dono',
+    device: 'Aparelho 1',
+    risk: 'alto',
+  },
+  {
+    id: 'owner-create-core-data',
+    group: '1. Dono no aparelho principal',
+    title: 'Criar cliente e produto reais de teste',
+    action: 'Cadastrar um cliente TESTE e um produto TESTE com preço e estoque pequeno.',
+    expected: 'Cliente e produto aparecem na lista, sem duplicar e sem mensagem de erro da nuvem.',
+    role: 'Dono',
+    device: 'Aparelho 1',
+    risk: 'alto',
+  },
+  {
+    id: 'device-b-load-same-data',
+    group: '2. Segundo aparelho',
+    title: 'Segundo aparelho puxa os mesmos dados',
+    action: 'Abrir o PWA instalado em outro celular ou no navegador do PC e tocar em Puxar dados da nuvem.',
+    expected: 'O mesmo cliente, produto, venda, caixa e pedido aparecem no segundo aparelho.',
+    role: 'Dono/Admin',
+    device: 'Aparelho 2',
+    risk: 'alto',
+  },
+  {
+    id: 'admin-operates-without-owner-power',
+    group: '3. Administrador',
+    title: 'Admin opera sem tomar lugar do dono',
+    action: 'Entrar como admin, criar/editar cliente ou produto e tentar acessar ações de dono/permissões.',
+    expected: 'Admin consegue operar a loja, mas não remove/promove dono nem libera área proibida.',
+    role: 'Admin',
+    device: 'Aparelho 1 ou 2',
+    risk: 'alto',
+  },
+  {
+    id: 'operator-sale-cash-order',
+    group: '4. Operador',
+    title: 'Operador vende, mas não altera configuração crítica',
+    action: 'Entrar como operador, abrir caixa se permitido, fazer uma venda pequena e criar um pedido simples.',
+    expected: 'Venda/pedido funcionam; configurações, usuários e permissões continuam bloqueados.',
+    role: 'Operador',
+    device: 'Aparelho 1 ou 2',
+    risk: 'alto',
+  },
+  {
+    id: 'viewer-read-only-block',
+    group: '5. Leitor',
+    title: 'Leitor consulta sem salvar nada',
+    action: 'Entrar como leitor e tentar salvar cliente, produto, caixa, pedido e crediário.',
+    expected: 'O app explica que é somente leitura e a nuvem também não aceita alteração.',
+    role: 'Leitor',
+    device: 'Aparelho 1 ou 2',
+    risk: 'alto',
+  },
+  {
+    id: 'offline-pending-retry-v127',
+    group: '6. Internet fraca',
+    title: 'Pendência offline não duplica',
+    action: 'No celular, desligar internet, fazer uma alteração segura, religar e tocar em Reenviar pendências.',
+    expected: 'A pendência some depois do envio e o dado não aparece duplicado.',
+    role: 'Dono/Admin/Operador',
+    device: 'Celular',
+    risk: 'medio',
+  },
+  {
+    id: 'print-real-58-80-a4',
+    group: '7. Impressão',
+    title: 'Testar impressão real 58mm, 80mm e A4',
+    action: 'Usar os botões Teste 58mm, Teste 80mm e Teste A4/PDF e depois testar uma venda real controlada.',
+    expected: 'O comprovante não corta informações importantes e a amostra não mexe no estoque/caixa.',
+    role: 'Dono/Admin/Operador',
+    device: 'Aparelho com impressora',
+    risk: 'medio',
+  },
+  {
+    id: 'backup-export-restore-controlled',
+    group: '8. Backup',
+    title: 'Backup e restauração controlados',
+    action: 'Criar backup, baixar arquivo e testar restauração apenas em ambiente de teste ou loja vazia.',
+    expected: 'Backup baixa corretamente e a restauração exige confirmação clara antes de mexer nos dados.',
+    role: 'Dono/Admin',
+    device: 'Aparelho 1',
+    risk: 'medio',
+  },
+  {
+    id: 'pwa-installed-cache-v127',
+    group: '9. PWA e atualização',
+    title: 'PWA instalado recebeu a versão nova',
+    action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
+    expected: 'Aparece v127 no app/cache e as telas novas continuam funcionando no celular.',
+    role: 'Qualquer papel',
+    device: 'Celular instalado',
+    risk: 'medio',
+  },
+  {
+    id: 'final-evidence-copy',
+    group: '10. Evidência antes de vender',
+    title: 'Copiar relatório final para suporte/cliente',
+    action: 'Com todos os testes marcados, tocar em Copiar roteiro e guardar a evidência junto do deploy.',
+    expected: 'O relatório mostra quem testou, o que passou, o que falta e não expõe senha nem chave privada.',
+    role: 'Dono/Admin',
+    device: 'Aparelho principal',
+    risk: 'baixo',
+  },
+];
+
+function normalizeGuidedDone(value: unknown): string[] {
+  const allowed = new Set(GUIDED_COMMERCIAL_STEPS.map((step) => step.id));
+  const source = value && typeof value === 'object' && Array.isArray((value as { doneIds?: unknown }).doneIds)
+    ? (value as { doneIds: unknown[] }).doneIds
+    : Array.isArray(value) ? value : [];
+  return Array.from(new Set(source.filter((id): id is string => typeof id === 'string' && allowed.has(id))));
+}
+
+function readGuidedDoneIds(): string[] {
+  if (typeof window === 'undefined' || !window.localStorage) return [];
+  try {
+    const current = normalizeGuidedDone(JSON.parse(window.localStorage.getItem(GUIDED_TEST_KEY) || '[]'));
+    if (current.length) return current;
+    for (const key of LEGACY_GUIDED_TEST_KEYS) {
+      const legacyRaw = window.localStorage.getItem(key);
+      if (!legacyRaw) continue;
+      const legacy = normalizeGuidedDone(JSON.parse(legacyRaw));
+      if (legacy.length) {
+        window.localStorage.setItem(GUIDED_TEST_KEY, JSON.stringify({ doneIds: legacy, updatedAt: new Date().toISOString() }));
+        return legacy;
+      }
+    }
+  } catch {
+    return [];
+  }
+  return [];
+}
+
+function saveGuidedDoneIds(doneIds: string[]): string[] {
+  const normalized = normalizeGuidedDone({ doneIds });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(GUIDED_TEST_KEY, JSON.stringify({ doneIds: normalized, updatedAt: new Date().toISOString() }));
+  }
+  return normalized;
+}
+
+function buildGuidedTestText(params: {
+  doneIds: string[];
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const done = new Set(params.doneIds);
+  const total = GUIDED_COMMERCIAL_STEPS.length;
+  const doneCount = params.doneIds.length;
+  const percent = total ? Math.round((doneCount / total) * 100) : 0;
+  const rows = GUIDED_COMMERCIAL_STEPS.map((step) => [
+    done.has(step.id) ? '[OK]' : '[PENDENTE]',
+    step.group,
+    step.role,
+    step.device,
+    step.title,
+    step.expected,
+  ].join(' · '));
+  return [
+    'Smart Loja Fácil — roteiro guiado comercial v127',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Progresso manual: ${doneCount}/${total} (${percent}%)`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Loja: ${params.roleState.storeName || params.report?.storeName || 'sem loja confirmada'}`,
+    `E-mail: ${params.roleState.email || params.report?.email || 'sem login confirmado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    '',
+    'Passos:',
+    ...rows,
+  ].join('\n');
+}
+
 function snapshotLabel(snapshot: WebSyncSnapshot): string {
   if (snapshot.status === 'synced') return 'Sincronizado';
   if (snapshot.status === 'syncing') return 'Enviando';
@@ -67,7 +265,7 @@ function readyText(report: WebCommercialValidationReport | null): string {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v126',
+    'Smart Loja Fácil — teste comercial v127',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -94,6 +292,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [commercialBusy, setCommercialBusy] = useState(false);
   const [printBusy, setPrintBusy] = useState<'58mm' | '80mm' | 'a4' | null>(null);
   const [report, setReport] = useState<WebCommercialValidationReport | null>(null);
+  const [guidedDoneIds, setGuidedDoneIds] = useState<string[]>(() => readGuidedDoneIds());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -137,6 +336,18 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     }
     return Array.from(groups.entries());
   }, [report]);
+  const guidedDoneSet = useMemo(() => new Set(guidedDoneIds), [guidedDoneIds]);
+  const guidedGroups = useMemo(() => {
+    const groups = new Map<string, GuidedCommercialStep[]>();
+    for (const step of GUIDED_COMMERCIAL_STEPS) {
+      const rows = groups.get(step.group) ?? [];
+      rows.push(step);
+      groups.set(step.group, rows);
+    }
+    return Array.from(groups.entries());
+  }, []);
+  const guidedDoneCount = guidedDoneIds.length;
+  const guidedPercent = Math.round((guidedDoneCount / GUIDED_COMMERCIAL_STEPS.length) * 100);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -199,9 +410,29 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     }
   }
 
+  function toggleGuidedStep(id: string): void {
+    const done = new Set(guidedDoneIds);
+    if (done.has(id)) done.delete(id);
+    else done.add(id);
+    setGuidedDoneIds(saveGuidedDoneIds(Array.from(done)));
+  }
+
+  function resetGuidedSteps(): void {
+    const ok = window.confirm('Zerar as marcações do roteiro guiado neste aparelho? Isso não apaga dados da loja.');
+    if (!ok) return;
+    setGuidedDoneIds(saveGuidedDoneIds([]));
+    setFeedback({ tone: 'info', text: 'Roteiro guiado zerado neste aparelho. Os dados da loja não foram alterados.' });
+  }
+
+  async function copyGuidedScript(): Promise<void> {
+    const text = buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Roteiro guiado copiado. Ele não mostra senha nem chave privada.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
-      ? reportToText(report, snapshot)
+      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -277,6 +508,42 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         </section>
       ) : null}
 
+      <section className="mapp-section-block mapp-guided-test-panel">
+        <div className="mapp-section-title"><h2>Roteiro guiado multiaparelho</h2><button type="button" onClick={() => void copyGuidedScript()}>Copiar roteiro</button></div>
+        <div className="mapp-guided-summary">
+          <div>
+            <strong>{guidedDoneCount}/{GUIDED_COMMERCIAL_STEPS.length} passos</strong>
+            <p>{guidedPercent}% conferido manualmente. Marque somente depois de testar no aparelho real.</p>
+          </div>
+          <span className={guidedPercent >= 90 ? 'ok' : guidedPercent >= 60 ? 'warn' : 'danger'}>{guidedPercent}%</span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do roteiro guiado ${guidedPercent}%`}><span style={{ width: `${guidedPercent}%` }} /></div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyGuidedScript()}>Copiar evidência</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetGuidedSteps}>Zerar roteiro</button>
+        </div>
+        <div className="mapp-guided-groups">
+          {guidedGroups.map(([group, steps]) => (
+            <article key={group} className="mapp-guided-group">
+              <header><strong>{group}</strong><small>{steps.filter((step) => guidedDoneSet.has(step.id)).length}/{steps.length}</small></header>
+              {steps.map((step) => {
+                const done = guidedDoneSet.has(step.id);
+                return (
+                  <button key={step.id} type="button" className={`mapp-guided-step ${done ? 'done' : ''} risk-${step.risk}`} onClick={() => toggleGuidedStep(step.id)}>
+                    <span className="mapp-guided-check">{done ? '✓' : ''}</span>
+                    <div>
+                      <strong>{step.title}</strong>
+                      <p>{step.action}</p>
+                      <small>{step.role} · {step.device} · Esperado: {step.expected}</small>
+                    </div>
+                  </button>
+                );
+              })}
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="mapp-form-panel mapp-print-test-panel">
         <div className="mapp-form-head">
           <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
@@ -298,7 +565,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v126 validação</strong></span>
+          <span><b>Cache</b><strong>v127 guiado</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>

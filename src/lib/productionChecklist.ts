@@ -21,20 +21,44 @@ export interface ProductionCheckSummary {
   percent: number;
 }
 
-const CHECKLIST_KEY = 'smart-loja:production-checklist-v126';
-const LEGACY_CHECKLIST_KEYS: string[] = [];
+const CHECKLIST_KEY = 'smart-loja:production-checklist-v127';
+const LEGACY_CHECKLIST_KEYS: string[] = ['smart-loja:production-checklist-v126'];
 
 export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   {
-    id: 'commercial-clean-package-v126',
+    id: 'guided-two-devices-v127',
+    group: 'Validação guiada v127',
+    title: 'Roteiro guiado multiaparelho concluído',
+    detail: 'Abrir Diagnóstico Web no celular, marcar os 11 passos do roteiro guiado e copiar a evidência final.',
+    expected: 'Dono, admin, operador e leitor testados em pelo menos dois aparelhos, com relatório copiado e sem alerta vermelho no teste comercial.',
+    tone: 'supabase',
+  },
+  {
+    id: 'role-permission-real-v127',
+    group: 'Permissões por papel',
+    title: 'Owner/admin/operator/viewer validados na prática',
+    detail: 'Entrar com cada papel e conferir ações liberadas e bloqueadas no app e pela nuvem.',
+    expected: 'Dono controla a loja; admin opera sem remover dono; operador vende sem mexer em permissões; leitor só consulta.',
+    tone: 'security',
+  },
+  {
+    id: 'pwa-cache-v127-installed',
+    group: 'PWA e cache',
+    title: 'Celular instalado recebeu v127',
+    detail: 'Depois do deploy, abrir o PWA instalado, conferir v127 no Diagnóstico Web e limpar cache antigo se necessário.',
+    expected: 'Versão pwa-supabase-v127-teste-guiado-comercial e cache smart-loja-pwa-supabase-v127-teste-guiado-comercial visíveis no celular.',
+    tone: 'cache',
+  },
+  {
+    id: 'commercial-clean-package-v127',
     group: 'Release comercial',
     title: 'Pacote comercial limpo sem banco de teste',
-    detail: 'Rodar release:commercial:check e release:commercial:prepare antes de enviar para cliente depois da atualização v126.',
+    detail: 'Rodar release:commercial:check e release:commercial:prepare antes de enviar para cliente depois da atualização v127.',
     expected: 'Nenhum .sqlite3/.db/.env real, log, ZIP antigo ou build gerado no pacote final; manifest de release gerado e conferido.',
     tone: 'security',
   },
   {
-    id: 'supabase-real-multi-device-v126',
+    id: 'supabase-real-multi-device-v127',
     group: 'Supabase produção',
     title: 'Supabase real validado em dois aparelhos',
     detail: 'Testar owner/admin/operator/viewer, duas lojas, produto com foto, cliente, venda, caixa, crediário e atualização automática em PC e celular.',
@@ -43,11 +67,11 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   },
 
   {
-    id: 'css-consolidation-v126',
+    id: 'css-consolidation-v127',
     group: 'Release técnico',
     title: 'CSS legado consolidado sem quebra visual',
     detail: 'Rodar css_audit, conferir Dashboard, PDV, Produtos, Clientes, Caixa, Crediário, Relatórios, Backup e Configurações depois do Lote 124.',
-    expected: 'Sem master-ui ativo, CSS limpo v126 no diagnóstico e telas críticas preservadas.',
+    expected: 'Sem master-ui ativo, CSS limpo v127 no diagnóstico e telas críticas preservadas.',
     tone: 'mobile',
   },
   {
@@ -208,7 +232,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v126-validacao-comercial-real, cache v126, abas mobile P1 operacionais, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v127-teste-guiado-comercial, cache v127, roteiro guiado multiaparelho, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
@@ -248,7 +272,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'Família neo-* limpa validada sem corte',
     detail: 'Abrir Dashboard, Produtos, Vendas e Crediário e conferir shell, topbar, sidebar, action ribbon e dock mobile.',
-    expected: 'Diagnóstico mostra shell mobile v126, abas operacionais, alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
+    expected: 'Diagnóstico mostra shell mobile v127, abas operacionais, alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
     tone: 'mobile',
   },
   {
@@ -256,7 +280,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'CSS modular e checklist visual por tela validados',
     detail: 'Abrir o Diagnóstico Web depois do deploy e conferir o bloco Inventário CSS + Checklist visual por módulo.',
-    expected: 'Fundação mobile, componentes comerciais, alertas limpos e abas P1 v126 ativos; telas críticas marcadas só depois de conferência real.',
+    expected: 'Fundação mobile, componentes comerciais, alertas limpos e abas P1 e roteiro v127 ativos; telas críticas marcadas só depois de conferência real.',
     tone: 'mobile',
   },
 ];
@@ -333,7 +357,7 @@ export function buildProductionChecklistText(state: ProductionCheckState): strin
   ].join(' · '));
 
   return [
-    `Checklist comercial Lote 97: ${summary.done}/${summary.total} (${summary.percent}%)`,
+    `Checklist comercial Lote 127: ${summary.done}/${summary.total} (${summary.percent}%)`,
     `Atualizado: ${state.updatedAt ? new Date(state.updatedAt).toLocaleString('pt-BR') : 'sem marcações'}`,
     ...rows,
   ].join('\n');

@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v126-validacao-comercial-real';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v126-validacao-comercial-real';
+export const WEB_APP_VERSION = 'pwa-supabase-v127-teste-guiado-comercial';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v127-teste-guiado-comercial';
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -170,6 +170,7 @@ export function recordWebSyncSnapshot(status: WebSyncStatus, module: string, det
 }
 
 
+// Mantido em v126 para preservar pendências locais já criadas antes do Lote 127.
 const WEB_OUTBOX_KEY = 'smart-loja:web-outbox-v126';
 const LEGACY_WEB_OUTBOX_KEYS = ['smart-loja:web-outbox-v125', 'smart-loja:web-outbox-v124', 'smart-loja:web-outbox-v123', 'smart-loja:web-outbox-v107', 'smart-loja:web-outbox-v106', 'smart-loja:web-outbox-v105', 'smart-loja:web-outbox-v104', 'smart-loja:web-outbox-v103-scroll3', 'smart-loja:web-outbox-v103-scroll2', 'smart-loja:web-outbox-v100', 'smart-loja:web-outbox-v99', 'smart-loja:web-outbox-v98', 'smart-loja:web-outbox-v97', 'smart-loja:web-outbox-v96', 'smart-loja:web-outbox-v95', 'smart-loja:web-outbox-v94', 'smart-loja:web-outbox-v93', 'smart-loja:web-outbox-v92', 'smart-loja:web-outbox-v91', 'smart-loja:web-outbox-v90', 'smart-loja:web-outbox-v89', 'smart-loja:web-outbox-v88', 'smart-loja:web-outbox-v87', 'smart-loja:web-outbox-v86', 'smart-loja:web-outbox-v85', 'smart-loja:web-outbox-v84', 'smart-loja:web-outbox-v83', 'smart-loja:web-outbox-v82', 'smart-loja:web-outbox-v81', 'smart-loja:web-outbox-v80', 'smart-loja:web-outbox-v79', 'smart-loja:web-outbox-v78', 'smart-loja:web-outbox-v77', 'smart-loja:web-outbox-v76',
   'smart-loja:web-outbox-v75', 'smart-loja:web-outbox-v74', 'smart-loja:web-outbox-v73'];
@@ -2466,6 +2467,28 @@ function pushCommercialCheck(checks: WebCommercialCheckItem[], item: WebCommerci
   checks.push(item);
 }
 
+function readGuidedCommercialProgress(): { done: number; total: number; percent: number } {
+  const total = 11;
+  if (typeof window === 'undefined' || !window.localStorage) return { done: 0, total, percent: 0 };
+  try {
+    const keys = ['smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { doneIds?: unknown } | unknown[];
+      const rows = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray((parsed as { doneIds?: unknown }).doneIds) ? (parsed as { doneIds: unknown[] }).doneIds : [];
+      const done = new Set(rows.filter((id): id is string => typeof id === 'string')).size;
+      return { done, total, percent: Math.round((done / total) * 100) };
+    }
+  } catch {
+    return { done: 0, total, percent: 0 };
+  }
+  return { done: 0, total, percent: 0 };
+}
+
+
 export async function webCommercialValidation(): Promise<WebCommercialValidationReport> {
   const createdAt = new Date().toISOString();
   const env = getPublicWebEnv();
@@ -2558,9 +2581,17 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v126 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v127 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
+  });
+
+  const guidedProgress = readGuidedCommercialProgress();
+  pushCommercialCheck(checks, {
+    id: 'guided-commercial-v127', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
+    detail: guidedProgress.done >= guidedProgress.total ? 'Roteiro guiado marcado como concluído neste aparelho.' : `Roteiro guiado ainda incompleto: ${guidedProgress.done}/${guidedProgress.total} passo(s).`,
+    level: guidedProgress.done >= guidedProgress.total ? 'ok' : guidedProgress.done >= 6 ? 'warn' : 'warn',
+    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v127`,
   });
 
   pushCommercialCheck(checks, {
