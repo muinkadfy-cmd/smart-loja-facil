@@ -2,7 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const files = ['src/styles.css', 'src/master-ui.css'];
+
+function getActiveCssFiles() {
+  const files = ['src/styles.css'];
+  const mainPath = path.join(root, 'src', 'main.tsx');
+  if (fs.existsSync(mainPath)) {
+    const mainSource = fs.readFileSync(mainPath, 'utf8');
+    const imports = Array.from(mainSource.matchAll(/import ['"]\.\/(styles\/[^'"]+\.css)['"];?/g), (match) => `src/${match[1]}`);
+    files.push(...imports);
+  }
+  return files.filter((file, index, all) => all.indexOf(file) === index && fs.existsSync(path.join(root, file)));
+}
+
+const files = getActiveCssFiles();
 const targetSelectors = ['.neo-page-shell', '.neo-sidebar'];
 const safeProperties = new Set([
   'min-width',

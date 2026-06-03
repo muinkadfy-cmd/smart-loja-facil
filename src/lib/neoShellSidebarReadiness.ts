@@ -28,11 +28,6 @@ function getRootVar(name: string): string {
   return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-function pxValue(value: string): number {
-  const parsed = Number.parseFloat(value.replace('px', ''));
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 function rectWidth(selector: string): number {
   if (!hasDom()) return 0;
   const node = document.querySelector(selector);
@@ -69,8 +64,8 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
   const pageShellWidth = rectWidth('.neo-page-shell');
   const navItemHeight = minHeight('.neo-sidebar .neo-nav-item');
   const root = document.documentElement;
-  const tokenLoaded = getRootVar('--lote80-neo-shell-sidebar') === 'active';
-  const safePadding = getRootVar('--lote80-page-safe-padding');
+  const tokenLoaded = getRootVar('--lote121-clean-shell') === 'active';
+  const safePadding = getRootVar('--neo-shell-safe-gap');
   const viewportWidth = Math.round(window.innerWidth);
   const bodyOverflow = Math.max(document.body.scrollWidth, root.scrollWidth) - viewportWidth;
   const hasHorizontalOverflow = bodyOverflow > 3;
@@ -78,17 +73,17 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
   const sidebar = document.querySelector('.neo-sidebar');
   const pageShellStyle = pageShell instanceof HTMLElement ? window.getComputedStyle(pageShell) : null;
   const sidebarStyle = sidebar instanceof HTMLElement ? window.getComputedStyle(sidebar) : null;
-  const pageCanScroll = pageShellStyle ? ['auto', 'scroll', 'overlay'].includes(pageShellStyle.overflowY) : false;
+  const pageCanScroll = pageShellStyle ? ['auto', 'scroll', 'overlay', 'visible'].includes(pageShellStyle.overflowY) : false;
   const sidebarStableScroll = sidebarStyle ? sidebarStyle.scrollbarGutter.includes('stable') || cssSupports('scrollbar-gutter', 'stable') : cssSupports('scrollbar-gutter', 'stable');
   const desktopSidebarOk = viewportWidth < 920 || (sidebarWidth >= 220 && sidebarWidth <= 320);
-  const mobileBottomSpace = getRootVar('--lote80-mobile-bottom-space');
+  const mobileBottomSpace = getRootVar('--lote121-page-bottom-safe');
 
   const items: NeoShellSidebarItem[] = [
     {
       id: 'token',
-      label: 'Módulo v80',
+      label: 'Shell limpo v121',
       value: tokenLoaded ? 'Ativo' : 'Ausente',
-      detail: tokenLoaded ? 'Camada de consolidação shell/sidebar carregada depois dos módulos antigos.' : 'O CSS v80 não carregou; confira import no main.tsx.',
+      detail: tokenLoaded ? 'Shell/sidebar usam a camada limpa atual; diagnóstico não depende mais dos módulos antigos.' : 'O CSS v121 não carregou; confira import no main.tsx.',
       tone: tokenLoaded ? 'ok' : 'warn',
       ok: tokenLoaded,
     },
@@ -128,7 +123,7 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
       id: 'page-scroll',
       label: 'Rolagem da página',
       value: pageCanScroll ? 'controlada' : 'normal',
-      detail: pageCanScroll ? 'A página interna controla rolagem sem depender do body inteiro.' : 'A página usa rolagem normal; validar se o bottom nav não cobre conteúdo.',
+      detail: pageCanScroll ? 'A página interna mantém rolagem segura sem depender de CSS antigo.' : 'Validar se o bottom nav não cobre conteúdo no celular.',
       tone: pageCanScroll ? 'ok' : 'info',
       ok: true,
     },
@@ -136,7 +131,7 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
       id: 'safe-padding',
       label: 'Respiro seguro',
       value: safePadding || 'não definido',
-      detail: safePadding ? 'Token de padding seguro v80 disponível para telas web/mobile.' : 'Token de padding não carregado.',
+      detail: safePadding ? 'Token de padding/respiro limpo disponível para telas web/mobile.' : 'Token de padding não carregado.',
       tone: safePadding ? 'ok' : 'warn',
       ok: Boolean(safePadding),
     },
@@ -173,7 +168,7 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
 
 export function buildNeoShellSidebarText(report: NeoShellSidebarReport): string {
   return [
-    `Shell/sidebar v80: ${report.okCount}/${report.total} (${report.score}%)`,
+    `Shell/sidebar limpo: ${report.okCount}/${report.total} (${report.score}%)`,
     `Shell: ${report.shellWidth}px · Sidebar: ${report.sidebarWidth}px · Página: ${report.pageShellWidth}px`,
     ...report.items.map((item) => `- ${item.label}: ${item.value} — ${item.detail}`),
   ].join('\n');

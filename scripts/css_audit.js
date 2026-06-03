@@ -2,15 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const cssRoots = ['src/styles.css', 'src/master-ui.css'];
-const cssModuleDir = path.join(root, 'src/styles');
-const cssModuleFiles = fs.existsSync(cssModuleDir)
-  ? fs.readdirSync(cssModuleDir)
-    .filter((name) => name.endsWith('.css'))
-    .sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true }))
-    .map((name) => `src/styles/${name}`)
-  : [];
-const cssFiles = [...cssRoots, ...cssModuleFiles].filter((file, index, all) => all.indexOf(file) === index && fs.existsSync(path.join(root, file)));
+
+function getActiveCssFiles() {
+  const files = ['src/styles.css'];
+  const mainPath = path.join(root, 'src', 'main.tsx');
+  if (fs.existsSync(mainPath)) {
+    const mainSource = fs.readFileSync(mainPath, 'utf8');
+    const imports = Array.from(mainSource.matchAll(/import ['"]\.\/(styles\/[^'"]+\.css)['"];?/g), (match) => `src/${match[1]}`);
+    files.push(...imports);
+  }
+  return files.filter((file, index, all) => all.indexOf(file) === index && fs.existsSync(path.join(root, file)));
+}
+
+const cssFiles = getActiveCssFiles();
 
 function stripComments(css) {
   return css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -103,7 +107,7 @@ const duplicatedSelectors = Array.from(selectorCount.entries())
 const largestFiles = [...fileRows].sort((a, b) => b.bytes - a.bytes).slice(0, 8);
 const importantHotspots = [...fileRows].sort((a, b) => b.important - a.important).slice(0, 8);
 
-process.stdout.write('CSS audit v95 — Smart Loja Fácil\n');
+process.stdout.write('CSS audit v121 — Smart Loja Fácil\n');
 process.stdout.write(`Arquivos medidos: ${cssFiles.length}\n`);
 for (const row of fileRows) {
   process.stdout.write(`- ${row.file}: ${formatKb(row.bytes)}, ${row.selectors} seletores, ${row.important} !important, ${row.media} media queries, ${row.duplicateDeclarations} declarações idênticas repetidas, ${row.emptyRules} regras vazias\n`);
@@ -120,8 +124,8 @@ for (const [selector, count] of duplicatedSelectors) process.stdout.write(`- ${s
 const report = { generatedAt: new Date().toISOString(), files: fileRows, totals, duplicatedSelectors };
 const outDir = path.join(root, 'docs/generated');
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(path.join(outDir, 'css-audit-v95.json'), `${JSON.stringify(report, null, 2)}\n`);
+fs.writeFileSync(path.join(outDir, 'css-audit-v121.json'), `${JSON.stringify(report, null, 2)}\n`);
 
-if (totals.bytes > 700 * 1024) process.stdout.write('Aviso: CSS bruto real acima de 700 KB. Próximo lote técnico deve consolidar CSS legado por família visual.\n');
-if (totals.important > 7000) process.stdout.write('Aviso: uso de !important ainda alto. Reduzir primeiro styles.css e master-ui.css com validação visual.\n');
+if (totals.bytes > 700 * 1024) process.stdout.write('Aviso: CSS ativo acima de 700 KB. Próximo lote técnico deve consolidar por família visual.\n');
+if (totals.important > 7000) process.stdout.write('Aviso: uso de !important ainda alto. Reduzir primeiro os CSS ativos com validação visual.\n');
 if (totals.emptyRules > 0) process.stdout.write('Aviso: existem regras vazias. Rode prune_empty_rules antes de release comercial final.\n');

@@ -2,15 +2,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const cssFiles = [
-  'src/styles.css',
-  'src/master-ui.css',
-  'src/styles/lote77-design-system.css',
-  'src/styles/lote78-css-cleanup.css',
-  'src/styles/lote79-neo-family.css',
-  'src/styles/lote80-neo-shell-sidebar.css',
-  'src/styles/lote81-neo-important-reduction.css',
-].filter((file) => fs.existsSync(path.join(root, file)));
+
+function getActiveCssFiles() {
+  const files = ['src/styles.css'];
+  const mainPath = path.join(root, 'src', 'main.tsx');
+  if (fs.existsSync(mainPath)) {
+    const mainSource = fs.readFileSync(mainPath, 'utf8');
+    const imports = Array.from(mainSource.matchAll(/import ['"]\.\/(styles\/[^'"]+\.css)['"];?/g), (match) => `src/${match[1]}`);
+    files.push(...imports);
+  }
+  return files.filter((file, index, all) => all.indexOf(file) === index && fs.existsSync(path.join(root, file)));
+}
+
+const cssFiles = getActiveCssFiles();
 const targets = ['neo-page-shell', 'neo-sidebar'];
 
 function stripComments(css) {

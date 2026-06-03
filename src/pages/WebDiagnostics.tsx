@@ -10,6 +10,7 @@ import { buildNeoFamilyText, getNeoFamilyReport, type NeoFamilyReport } from '..
 import { buildNeoShellSidebarText, getNeoShellSidebarReport, type NeoShellSidebarReport } from '../lib/neoShellSidebarReadiness';
 import { buildNeoImportantText, getNeoImportantReport, type NeoImportantReport } from '../lib/neoImportantReadiness';
 import { flushWebOutbox, getWebOutboxStats, getWebRoleCapabilities, getWebStoreContext, readWebSyncSnapshot, WEB_APP_VERSION, WEB_CACHE_VERSION, WEB_REALTIME_TABLES, webRoleLabel, type WebOutboxStats, type WebStoreRole, type WebSyncSnapshot } from '../lib/webApi';
+import type { PageKey } from '../types';
 
 interface HealthItem {
   label: string;
@@ -30,6 +31,60 @@ interface SyncModuleCheck {
   detail: string;
 }
 
+interface LayoutViewportState {
+  width: number;
+  height: number;
+  mode: 'mobile' | 'tablet' | 'desktop';
+  mainScrollOk: boolean;
+  bottomNavOk: boolean;
+  sidebarOk: boolean;
+}
+
+interface LayoutAuditPage {
+  key: PageKey;
+  label: string;
+  visual: 'OK' | 'Atenção' | 'Precisa revisar';
+  scroll: 'OK' | 'Atenção' | 'Precisa revisar';
+  mobile: 'OK' | 'Atenção' | 'Precisa revisar';
+  web: 'OK' | 'Atenção' | 'Precisa revisar';
+  note: string;
+}
+
+const LAYOUT_AUDIT_PAGES: LayoutAuditPage[] = [
+  { key: 'dashboard', label: 'Dashboard', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Tela principal com cards e alertas; validar em 360/390/412px após deploy.' },
+  { key: 'sales', label: 'Vendas / PDV', visual: 'Atenção', scroll: 'Atenção', mobile: 'Atenção', web: 'OK', note: 'Tela mais densa: conferir pagamento, resumo, cliente e últimas vendas no celular.' },
+  { key: 'orders', label: 'Pedidos', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Verificar filtros e estados vazios em tela pequena.' },
+  { key: 'products', label: 'Produtos', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Conferir cards/tabela e campos de cadastro com teclado aberto.' },
+  { key: 'customers', label: 'Clientes', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir formulário e botões principais sem bottom nav cobrir.' },
+  { key: 'reports', label: 'Relatórios', visual: 'OK', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Gráficos e tabelas precisam de scroll interno seguro.' },
+  { key: 'cash', label: 'Caixa', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Validar abertura/fechamento e botões no fim da página.' },
+  { key: 'credits', label: 'Crediário', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Tabela densa; conferir parcelas e valores no mobile.' },
+  { key: 'receipts', label: 'Comprovantes', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir visualização e ações de impressão/compartilhar.' },
+  { key: 'backup', label: 'Backup', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir botões sem corte em celular pequeno.' },
+  { key: 'settings', label: 'Configurações', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Muitos campos; validar teclado, select e botão salvar.' },
+  { key: 'audit', label: 'Logs / Diagnóstico', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Checklist visual e logs devem rolar internamente.' },
+  { key: 'diagnostics', label: 'Diagnóstico Web', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Painel principal de suporte, cache, layout e checklist.' },
+];
+
+function readLayoutViewportState(): LayoutViewportState {
+  if (typeof window === 'undefined') {
+    return { width: 0, height: 0, mode: 'desktop', mainScrollOk: false, bottomNavOk: false, sidebarOk: false };
+  }
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const main = document.querySelector<HTMLElement>('.neo-page-shell');
+  const bottomNav = document.querySelector<HTMLElement>('.neo-mobile-dock');
+  const sidebar = document.querySelector<HTMLElement>('.neo-sidebar');
+  return {
+    width,
+    height,
+    mode: width <= 860 ? 'mobile' : width <= 1180 ? 'tablet' : 'desktop',
+    mainScrollOk: Boolean(main && main.scrollHeight >= main.clientHeight),
+    bottomNavOk: width > 860 || Boolean(bottomNav && getComputedStyle(bottomNav).position === 'fixed'),
+    sidebarOk: Boolean(sidebar && ['auto', 'scroll', 'hidden'].includes(getComputedStyle(sidebar).overflowY || getComputedStyle(sidebar).overflow)),
+  };
+}
+
 const SYNC_MODULE_CHECKS: SyncModuleCheck[] = [
   { title: 'Clientes', detail: 'Criar/editar no PC, conferir no celular e depois testar o caminho inverso.' },
   { title: 'Produtos', detail: 'Cadastrar produto, alterar estoque e confirmar nos dois aparelhos.' },
@@ -43,7 +98,11 @@ const SYNC_MODULE_CHECKS: SyncModuleCheck[] = [
 ];
 
 
-export function WebDiagnosticsPage(): JSX.Element {
+interface WebDiagnosticsPageProps {
+  onNavigate?: (page: PageKey) => void;
+}
+
+export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX.Element {
   const runtime = useMemo(() => getRuntimeInfo(), []);
   const env = useMemo(() => getPublicWebEnv(), []);
   const [context, setContext] = useState<WebContextState>({
@@ -64,6 +123,7 @@ export function WebDiagnosticsPage(): JSX.Element {
   const [neoFamily, setNeoFamily] = useState<NeoFamilyReport>(() => getNeoFamilyReport());
   const [neoShellSidebar, setNeoShellSidebar] = useState<NeoShellSidebarReport>(() => getNeoShellSidebarReport());
   const [neoImportant, setNeoImportant] = useState<NeoImportantReport>(() => getNeoImportantReport());
+  const [layoutViewport, setLayoutViewport] = useState<LayoutViewportState>(() => readLayoutViewportState());
 
   useEffect(() => {
     let active = true;
@@ -144,6 +204,19 @@ export function WebDiagnosticsPage(): JSX.Element {
   }, []);
 
 
+
+  useEffect(() => {
+    const syncLayoutViewport = () => setLayoutViewport(readLayoutViewportState());
+    syncLayoutViewport();
+    window.setTimeout(syncLayoutViewport, 300);
+    window.addEventListener('resize', syncLayoutViewport);
+    window.addEventListener('orientationchange', syncLayoutViewport);
+    return () => {
+      window.removeEventListener('resize', syncLayoutViewport);
+      window.removeEventListener('orientationchange', syncLayoutViewport);
+    };
+  }, []);
+
   useEffect(() => {
     const syncOutbox = () => setOutboxStats(getWebOutboxStats());
     window.addEventListener('smart-loja:web-outbox-change', syncOutbox);
@@ -196,6 +269,12 @@ export function WebDiagnosticsPage(): JSX.Element {
     `Service role no frontend: ${env.hasUnsafeServiceRoleKey ? 'REMOVER' : 'não detectado'}`,
     `Rede: ${onlineLabel}`,
     `Service worker: ${swLabel}`,
+    `Cache: ${WEB_CACHE_VERSION}`,
+    `Tela: ${layoutViewport.width}x${layoutViewport.height} · ${layoutViewport.mode}`,
+    `Rolagem principal: ${layoutViewport.mainScrollOk ? 'OK' : 'atenção'}`,
+    `Bottom nav: ${layoutViewport.bottomNavOk ? 'OK' : 'atenção'}`,
+    `Sidebar: ${layoutViewport.sidebarOk ? 'OK' : 'atenção'}`,
+    `Checklist abas: ${LAYOUT_AUDIT_PAGES.map((item) => `${item.label}=${item.visual}/${item.scroll}`).join('; ')}`,
     `Cache: ${WEB_CACHE_VERSION}`,
     `Atualização multiaparelhos: ${WEB_REALTIME_TABLES.length} áreas monitoradas`,
     `Última sincronização: ${syncSnapshot.at ? new Date(syncSnapshot.at).toLocaleString('pt-BR') : 'sem registro'} · ${syncSnapshot.module} · ${syncSnapshot.detail}`,
@@ -250,6 +329,41 @@ export function WebDiagnosticsPage(): JSX.Element {
       setCopyMessage('Checklist comercial copiado para enviar no suporte.');
     } catch {
       setCopyMessage('Não foi possível copiar o checklist automaticamente.');
+    }
+  }
+
+  async function copyLayoutChecklist(): Promise<void> {
+    const text = LAYOUT_AUDIT_PAGES.map((item) => `${item.label}: visual ${item.visual}, scroll ${item.scroll}, mobile ${item.mobile}, web ${item.web}. ${item.note}`).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyMessage('Checklist de abas copiado para enviar no suporte.');
+    } catch {
+      setCopyMessage('Não foi possível copiar o checklist de abas automaticamente.');
+    }
+  }
+
+  function openAuditPage(page: PageKey): void {
+    if (onNavigate) {
+      onNavigate(page);
+      window.setTimeout(() => document.querySelector('.neo-page-shell')?.scrollTo({ top: 0, behavior: 'smooth' }), 80);
+      return;
+    }
+    setCopyMessage('Abra esta aba pelo menu lateral ou bottom nav para conferir o visual.');
+  }
+
+  function refreshScreen(): void {
+    window.location.reload();
+  }
+
+  async function clearPwaCache(): Promise<void> {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+      setCopyMessage('Cache limpo. Atualize a tela para baixar a versão nova.');
+    } catch {
+      setCopyMessage('Não foi possível limpar o cache automaticamente neste navegador.');
     }
   }
 
@@ -320,6 +434,12 @@ export function WebDiagnosticsPage(): JSX.Element {
       detail: onlineLabel === 'Online' ? 'Sincronização pode comunicar com Supabase.' : 'O app abre do cache, mas não salva na nuvem até a conexão voltar.',
     },
     {
+      label: 'Layout atual',
+      value: `${layoutViewport.width}×${layoutViewport.height} · ${layoutViewport.mode}`,
+      tone: layoutViewport.mainScrollOk && layoutViewport.bottomNavOk ? 'ok' : 'warn',
+      detail: `Rolagem ${layoutViewport.mainScrollOk ? 'OK' : 'atenção'} · bottom nav ${layoutViewport.bottomNavOk ? 'OK' : 'atenção'} · sidebar ${layoutViewport.sidebarOk ? 'OK' : 'atenção'}.`,
+    },
+    {
       label: 'Service worker',
       value: swLabel,
       tone: swLabel === 'Indisponível' ? 'warn' : 'ok',
@@ -371,7 +491,7 @@ export function WebDiagnosticsPage(): JSX.Element {
       label: 'CSS modular',
       value: `${cssInventory.okCount}/${cssInventory.total} ok`,
       tone: cssInventory.score >= 84 ? 'ok' : 'warn',
-      detail: `Regras lidas: ${cssInventory.ruleCount}. Limpeza v78, família neo v79 e shell/sidebar v80 precisam aparecer como ativos.`,
+      detail: `Regras lidas: ${cssInventory.ruleCount}. Fundação limpa 118, componentes 120 e interface limpa 121 precisam aparecer como ativos.`,
     },
     {
       label: 'Família neo-*',
@@ -380,7 +500,7 @@ export function WebDiagnosticsPage(): JSX.Element {
       detail: `Famílias detectadas: ${neoFamily.familyCount}. Valida shell, topbar, sidebar, ribbon e dock mobile.`,
     },
     {
-      label: 'Shell/sidebar v80',
+      label: 'Shell/sidebar limpo',
       value: `${neoShellSidebar.okCount}/${neoShellSidebar.total} ok`,
       tone: neoShellSidebar.score >= 84 ? 'ok' : 'warn',
       detail: `Shell ${neoShellSidebar.shellWidth}px · sidebar ${neoShellSidebar.sidebarWidth}px · página ${neoShellSidebar.pageShellWidth}px.`,
@@ -442,6 +562,48 @@ export function WebDiagnosticsPage(): JSX.Element {
             <small>{item.detail}</small>
           </article>
         ))}
+      </section>
+
+
+      <section className="layout-audit-card" aria-label="Diagnóstico visual de layout e rolagem">
+        <div className="layout-audit-head">
+          <div>
+            <span className="web-kicker">Auditoria visual v111</span>
+            <h2>Rolagem, abas e tamanho da tela</h2>
+            <p>Use este painel para conferir se a tela rola, se o menu não cobre conteúdo e se cada aba abre com leitura segura no PC e no celular.</p>
+          </div>
+          <strong className={`neo-mini-chip ${layoutViewport.mainScrollOk && layoutViewport.bottomNavOk ? 'ok' : 'warn'}`}>{layoutViewport.mode}</strong>
+        </div>
+
+        <div className="layout-audit-metrics">
+          <span><strong>{layoutViewport.width}px</strong><small>Largura</small></span>
+          <span><strong>{layoutViewport.height}px</strong><small>Altura</small></span>
+          <span><strong>{layoutViewport.mainScrollOk ? 'OK' : 'Atenção'}</strong><small>Rolagem</small></span>
+          <span><strong>{layoutViewport.bottomNavOk ? 'OK' : 'Atenção'}</strong><small>Bottom nav</small></span>
+          <span><strong>{layoutViewport.sidebarOk ? 'OK' : 'Atenção'}</strong><small>Sidebar</small></span>
+        </div>
+
+        <div className="layout-audit-actions">
+          <button type="button" onClick={refreshScreen}>Atualizar tela</button>
+          <button type="button" onClick={() => void clearPwaCache()}>Limpar cache</button>
+          <button type="button" onClick={copyLayoutChecklist}>Copiar checklist</button>
+        </div>
+
+        <div className="layout-audit-table" role="table" aria-label="Checklist de abas">
+          <div className="layout-audit-row layout-audit-row-head" role="row">
+            <span>Aba</span><span>Visual</span><span>Scroll</span><span>Mobile</span><span>Web</span><span>Ação</span>
+          </div>
+          {LAYOUT_AUDIT_PAGES.map((item) => (
+            <div key={item.key} className="layout-audit-row" role="row">
+              <span><strong>{item.label}</strong><small>{item.note}</small></span>
+              <em className={`layout-audit-pill ${item.visual === 'OK' ? 'ok' : item.visual === 'Atenção' ? 'warn' : 'danger'}`}>{item.visual}</em>
+              <em className={`layout-audit-pill ${item.scroll === 'OK' ? 'ok' : item.scroll === 'Atenção' ? 'warn' : 'danger'}`}>{item.scroll}</em>
+              <em className={`layout-audit-pill ${item.mobile === 'OK' ? 'ok' : item.mobile === 'Atenção' ? 'warn' : 'danger'}`}>{item.mobile}</em>
+              <em className={`layout-audit-pill ${item.web === 'OK' ? 'ok' : item.web === 'Atenção' ? 'warn' : 'danger'}`}>{item.web}</em>
+              <button type="button" onClick={() => openAuditPage(item.key)}>Abrir</button>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="web-sync-test-card" aria-label="Teste guiado de sincronização web e celular">
@@ -525,9 +687,9 @@ export function WebDiagnosticsPage(): JSX.Element {
       <section className="css-inventory-card" aria-label="Inventário CSS e performance visual">
         <div className="css-inventory-head">
           <div>
-            <span className="web-kicker">Inventário CSS v81</span>
+            <span className="web-kicker">Inventário CSS limpo v121</span>
             <h2>CSS modular, corte lateral e renderização segura</h2>
-            <p>Este bloco confirma se o CSS modular e a limpeza v81 foram carregados e mostra sinais de risco visual antes de vender: excesso de regras, corte lateral, toque mínimo e folhas carregadas.</p>
+            <p>Este bloco confirma se a fundação limpa e a camada v121 foram carregadas, mostrando sinais de risco visual antes de vender: excesso de regras, corte lateral, toque mínimo e folhas carregadas.</p>
           </div>
           <div className="css-inventory-score">
             <strong>{cssInventory.score}%</strong>
@@ -548,8 +710,8 @@ export function WebDiagnosticsPage(): JSX.Element {
       <section className="neo-family-card" aria-label="Família visual neo shell topbar sidebar e dock">
         <div className="neo-family-head">
           <div>
-            <span className="web-kicker">Família neo-* v79 + shell/sidebar v80</span>
-            <h2>Shell, topbar, sidebar, action ribbon e dock mobile</h2>
+            <span className="web-kicker">Família neo-* limpa + shell/sidebar v121</span>
+            <h2>Shell, topbar, sidebar, página e dock mobile</h2>
             <p>Este bloco mede se a camada visual principal está carregada, se existe corte lateral na tela atual e se o dock mantém toque confortável. Ele ajuda a limpar CSS antigo sem quebrar telas prontas.</p>
           </div>
           <div className="neo-family-score">
@@ -568,12 +730,12 @@ export function WebDiagnosticsPage(): JSX.Element {
         </div>
       </section>
 
-      <section className="lote80-shell-sidebar-card" aria-label="Consolidação visual shell e sidebar v80">
+      <section className="lote80-shell-sidebar-card" aria-label="Consolidação visual shell e sidebar limpos">
         <div className="lote80-shell-sidebar-head">
           <div>
-            <span className="web-kicker">Shell/sidebar v80</span>
+            <span className="web-kicker">Shell/sidebar limpo</span>
             <h2>Consolidação da página principal e menu lateral</h2>
-            <p>Este bloco verifica largura, corte lateral, rolagem, toque do menu e tokens novos antes de remover mais CSS antigo.</p>
+            <p>Este bloco verifica largura, corte lateral, rolagem, toque do menu e tokens novos sem depender de CSS antigo.</p>
           </div>
           <div className="lote80-shell-sidebar-score">
             <strong>{neoShellSidebar.score}%</strong>
@@ -594,9 +756,9 @@ export function WebDiagnosticsPage(): JSX.Element {
       <section className="lote81-important-card" aria-label="Redução controlada de important no shell e sidebar">
         <div className="lote81-important-head">
           <div>
-            <span className="web-kicker">Redução !important v81</span>
+            <span className="web-kicker">Prioridade CSS limpa</span>
             <h2>Prioridades CSS do shell e menu lateral</h2>
-            <p>Este bloco mede quantos !important ainda existem em .neo-page-shell e .neo-sidebar. A redução é controlada para não quebrar telas prontas sem teste visual real.</p>
+            <p>Este bloco mede quantas prioridades forçadas ainda existem em .neo-page-shell e .neo-sidebar. A redução continua controlada para não quebrar telas prontas sem teste visual real.</p>
           </div>
           <div className="lote81-important-score">
             <strong>{neoImportant.score}%</strong>

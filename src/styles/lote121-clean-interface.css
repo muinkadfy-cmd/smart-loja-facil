@@ -1,0 +1,330 @@
+:root {
+  --lote121-clean-interface: active;
+  --lote121-clean-shell: active;
+  --lote121-important-budget: 140;
+  --slf-clean-bg: #f3f6fa;
+  --slf-clean-bg-soft: #f8fafc;
+  --slf-clean-surface: #ffffff;
+  --slf-clean-surface-2: #fbfdff;
+  --slf-clean-border: #d9e3ee;
+  --slf-clean-border-strong: #c7d5e5;
+  --slf-clean-ink: #102033;
+  --slf-clean-text: #243247;
+  --slf-clean-muted: #64748b;
+  --slf-clean-primary: #1769d2;
+  --slf-clean-primary-soft: #edf5ff;
+  --slf-clean-success: #158a45;
+  --slf-clean-warning: #d88a00;
+  --slf-clean-danger: #d9342b;
+  --slf-clean-radius: 20px;
+  --slf-clean-radius-sm: 14px;
+  --slf-clean-shadow: 0 16px 42px rgba(16, 32, 53, .075);
+  --slf-clean-shadow-soft: 0 8px 22px rgba(16, 32, 53, .05);
+  --slf-clean-page-max: 1240px;
+  --slf-clean-page-gap: clamp(14px, 2vw, 24px);
+  --slf-clean-safe-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  --touch-target-min: 44px;
+
+  /* Aliases usados pelo diagnóstico de design system, sem reativar CSS antigo. */
+  --bg: var(--slf-clean-bg);
+  --panel: var(--slf-clean-surface);
+  --panel-2: var(--slf-clean-surface-2);
+  --line: var(--slf-clean-border);
+  --text: var(--slf-clean-text);
+  --muted: var(--slf-clean-muted);
+  --blue: var(--slf-clean-primary);
+  --green: var(--slf-clean-success);
+  --red: var(--slf-clean-danger);
+  --radius: var(--slf-clean-radius);
+
+  /* Tokens compatíveis para diagnósticos antigos já migrados. */
+  --neo-shell-safe-gap: var(--slf-clean-page-gap);
+  --neo-touch-target-safe: var(--touch-target-min);
+  --lote121-page-bottom-safe: var(--slf-clean-safe-bottom);
+  --lote121-shell-inline-safe: min(100%, var(--slf-clean-page-max));
+}
+
+/* Lote 121: camada final limpa. Não reativa lote77–117, não usa master-ui e evita nova guerra de prioridade forçada. */
+.lote121-clean-interface body {
+  background: linear-gradient(180deg, #f9fbfe 0%, var(--slf-clean-bg) 100%);
+}
+
+.lote121-clean-interface .neo-shell {
+  background: linear-gradient(180deg, #f9fbfe 0%, var(--slf-clean-bg) 100%);
+}
+
+.lote121-clean-interface .neo-main {
+  background:
+    radial-gradient(circle at top right, rgba(23, 105, 210, .065), transparent 30rem),
+    linear-gradient(180deg, #fbfdff 0%, var(--slf-clean-bg) 100%);
+}
+
+.lote121-clean-interface .neo-page-shell {
+  width: min(100%, var(--slf-clean-page-max));
+  max-width: var(--slf-clean-page-max);
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+}
+
+.lote121-clean-interface .neo-page-content {
+  gap: var(--slf-clean-page-gap);
+}
+
+.lote121-clean-interface .neo-topbar {
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(14px);
+}
+
+.lote121-clean-interface .neo-sidebar {
+  scrollbar-gutter: stable;
+}
+
+.lote121-clean-interface .neo-sidebar-backdrop {
+  border: 0;
+  padding: 0;
+}
+
+.lote121-clean-interface .neo-sidebar-brand-copy strong,
+.lote121-clean-interface .neo-nav-item-label,
+.lote121-clean-interface .neo-store-switch strong,
+.lote121-clean-interface .neo-page-meta h1,
+.lote121-clean-interface .neo-section-head h2,
+.lote121-clean-interface .classic-panel-header h2,
+.lote121-clean-interface .classic-sales-section-title h2 {
+  text-wrap: balance;
+}
+
+.lote121-clean-interface .neo-page-meta p,
+.lote121-clean-interface .neo-section-head p,
+.lote121-clean-interface .classic-panel-header p,
+.lote121-clean-interface .empty-state-card,
+.lote121-clean-interface .data-empty-state {
+  overflow-wrap: anywhere;
+}
+
+.lote121-clean-interface .neo-surface,
+.lote121-clean-interface .neo-context-surface,
+.lote121-clean-interface .neo-quick-surface,
+.lote121-clean-interface .neo-chart-surface,
+.lote121-clean-interface .neo-system-surface,
+.lote121-clean-interface .neo-trust-strip,
+.lote121-clean-interface .classic-panel,
+.lote121-clean-interface .panel,
+.lote121-clean-interface .form-panel,
+.lote121-clean-interface .data-table-shell,
+.lote121-clean-interface .web-card,
+.lote121-clean-interface .mobile-safe-card,
+.lote121-clean-interface .empty-state-panel {
+  border-color: var(--slf-clean-border);
+  background: var(--slf-clean-surface);
+  box-shadow: var(--slf-clean-shadow-soft);
+}
+
+.lote121-clean-interface .neo-surface:hover,
+.lote121-clean-interface .neo-context-card:hover,
+.lote121-clean-interface .neo-quick-card:hover,
+.lote121-clean-interface .classic-panel:hover,
+.lote121-clean-interface .web-card:hover {
+  border-color: var(--slf-clean-border-strong);
+}
+
+.lote121-clean-interface .primary-btn,
+.lote121-clean-interface .secondary-btn,
+.lote121-clean-interface .danger-btn,
+.lote121-clean-interface button,
+.lote121-clean-interface [role="button"] {
+  min-height: var(--touch-target-min);
+  touch-action: manipulation;
+}
+
+.lote121-clean-interface .primary-btn:focus-visible,
+.lote121-clean-interface .secondary-btn:focus-visible,
+.lote121-clean-interface .danger-btn:focus-visible,
+.lote121-clean-interface button:focus-visible,
+.lote121-clean-interface a:focus-visible,
+.lote121-clean-interface input:focus,
+.lote121-clean-interface select:focus,
+.lote121-clean-interface textarea:focus {
+  outline: 3px solid rgba(23, 105, 210, .22);
+  outline-offset: 2px;
+}
+
+.lote121-clean-interface .secondary-btn {
+  background: #ffffff;
+}
+
+.lote121-clean-interface .danger-btn {
+  background: #fff5f4;
+}
+
+.lote121-clean-interface input,
+.lote121-clean-interface select,
+.lote121-clean-interface textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.lote121-clean-interface .table-wrap,
+.lote121-clean-interface .responsive-table,
+.lote121-clean-interface .data-table-shell {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.lote121-clean-interface table {
+  min-width: 720px;
+}
+
+.lote121-clean-interface .neo-mini-chip,
+.lote121-clean-interface .chip,
+.lote121-clean-interface .badge,
+.lote121-clean-interface .status-chip,
+.lote121-clean-interface mark {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.lote121-clean-interface .neo-alert-center,
+.lote121-clean-interface .modal,
+.lote121-clean-interface .dialog,
+.lote121-clean-interface [role="dialog"] {
+  max-width: min(96vw, 760px);
+}
+
+.lote121-clean-interface .app-svg-icon {
+  max-width: var(--app-icon-size, 1em);
+  max-height: var(--app-icon-size, 1em);
+}
+
+@media (min-width: 861px) {
+  .lote121-clean-interface .neo-page-shell {
+    padding-left: clamp(20px, 2.4vw, 34px);
+    padding-right: clamp(20px, 2.4vw, 34px);
+  }
+
+  .lote121-clean-interface .neo-dashboard-grid {
+    grid-template-columns: minmax(250px, .9fr) minmax(360px, 1.45fr) minmax(250px, .85fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .lote121-clean-interface .neo-topbar {
+    position: sticky;
+    top: 0;
+  }
+
+  .lote121-clean-interface .neo-page-shell {
+    width: 100%;
+    padding-bottom: var(--slf-clean-safe-bottom);
+  }
+
+  .lote121-clean-interface .neo-page-meta,
+  .lote121-clean-interface .neo-section-head,
+  .lote121-clean-interface .classic-panel-header,
+  .lote121-clean-interface .classic-sales-section-title {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .lote121-clean-interface .neo-page-meta-status,
+  .lote121-clean-interface .neo-period-switcher,
+  .lote121-clean-interface .neo-topbar-actions {
+    justify-content: flex-start;
+  }
+
+  .lote121-clean-interface .neo-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(15, 23, 42, .45);
+  }
+
+  .lote121-clean-interface .neo-mobile-dock {
+    max-width: 520px;
+    margin-inline: auto;
+  }
+
+  .lote121-clean-interface .neo-context-grid,
+  .lote121-clean-interface .neo-quick-grid,
+  .lote121-clean-interface .neo-dashboard-grid,
+  .lote121-clean-interface .web-health-grid,
+  .lote121-clean-interface .web-module-grid,
+  .lote121-clean-interface .classic-action-grid,
+  .lote121-clean-interface .reports-grid,
+  .lote121-clean-interface .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lote121-clean-interface .neo-context-card,
+  .lote121-clean-interface .neo-system-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .lote121-clean-interface .neo-context-card mark,
+  .lote121-clean-interface .neo-system-row strong {
+    grid-column: 1 / -1;
+    justify-self: start;
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .lote121-clean-interface .neo-chart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .lote121-clean-interface .neo-chart-y-axis {
+    display: none;
+  }
+
+  .lote121-clean-interface table {
+    min-width: 640px;
+  }
+}
+
+@media (max-width: 430px) {
+  .lote121-clean-interface .neo-page-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .lote121-clean-interface .neo-topbar {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .lote121-clean-interface .neo-page-meta-title {
+    align-items: flex-start;
+  }
+
+  .lote121-clean-interface .neo-page-meta-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .lote121-clean-interface .neo-page-meta h1 {
+    font-size: clamp(1.32rem, 7vw, 1.72rem);
+    line-height: 1.08;
+  }
+
+  .lote121-clean-interface .neo-page-meta p,
+  .lote121-clean-interface .neo-section-head p,
+  .lote121-clean-interface .classic-panel-header p {
+    font-size: .9rem;
+  }
+
+  .lote121-clean-interface .neo-mobile-dock {
+    left: 8px;
+    right: 8px;
+    gap: 4px;
+    padding: 7px;
+  }
+
+  .lote121-clean-interface .neo-mobile-dock button {
+    min-height: 52px;
+    border-radius: 16px;
+    font-size: .68rem;
+  }
+}

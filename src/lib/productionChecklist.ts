@@ -47,7 +47,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Release técnico',
     title: 'CSS legado consolidado sem quebra visual',
     detail: 'Rodar css_audit, conferir Dashboard, PDV, Produtos, Clientes, Caixa, Crediário, Relatórios, Backup e Configurações depois do Lote 95.',
-    expected: 'Menos !important em styles.css/master-ui.css, módulo v95 ativo no diagnóstico e telas críticas preservadas.',
+    expected: 'Sem master-ui ativo, CSS limpo v121 no diagnóstico e telas críticas preservadas.',
     tone: 'mobile',
   },
   {
@@ -208,7 +208,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v97, cache v97, família neo v79, shell/sidebar v80, redução !important v81, login premium v82, dashboard premium v83, refinamento mobile v84, PDV premium v85, Pedidos premium v86 e Produtos premium v87, Fotos Storage v88, Clientes premium v89, Caixa premium v90, Crediário premium v91 e Relatórios premium v92 e Backup/Configurações premium v93 e release técnico v95 e consolidação CSS v95 e validação comercial v96 e sync multiaparelhos v97 aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v121-clean-interface, cache v121, fundação limpa, componentes comerciais, interface limpa, Supabase e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
@@ -246,9 +246,9 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   {
     id: 'neo-family-critical-shell',
     group: 'CSS e telas',
-    title: 'Família neo-* validada sem corte',
+    title: 'Família neo-* limpa validada sem corte',
     detail: 'Abrir Dashboard, Produtos, Vendas e Crediário e conferir shell, topbar, sidebar, action ribbon e dock mobile.',
-    expected: 'Diagnóstico mostra família neo v79, shell/sidebar v80, redução !important v81, dashboard premium v83 e refinamento mobile v84 ativos, sem corte lateral e com toque confortável no menu/dock.',
+    expected: 'Diagnóstico mostra família neo limpa, shell/sidebar v121 e interface limpa ativos, sem corte lateral e com toque confortável no menu/dock.',
     tone: 'mobile',
   },
   {
@@ -256,7 +256,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'CSS modular e checklist visual por tela validados',
     detail: 'Abrir o Diagnóstico Web depois do deploy e conferir o bloco Inventário CSS + Checklist visual por módulo.',
-    expected: 'CSS modular v77 + limpeza v78 + família neo v79 + shell/sidebar v80 + redução !important v81 + login premium v82 + dashboard premium v83 + refinamento mobile v84 + PDV premium v85 + Pedidos premium v86 + Produtos premium v87 + Fotos Storage v88 + Clientes premium v89 + Caixa premium v90 + Crediário premium v91 + Relatórios premium v92 ativos e telas críticas marcadas só depois de conferência real.',
+    expected: 'Fundação limpa 118, ícones/login 119, componentes comerciais 120 e interface limpa 121 ativos; telas críticas marcadas só depois de conferência real.',
     tone: 'mobile',
   },
 ];

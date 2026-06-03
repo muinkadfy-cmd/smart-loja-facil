@@ -22,8 +22,8 @@ const NEO_SELECTORS = [
   '.neo-sidebar',
   '.neo-topbar',
   '.neo-header-grid',
-  '.neo-action-ribbon',
   '.neo-page-shell',
+  '.neo-page-content',
   '.neo-mobile-dock',
 ];
 
@@ -54,7 +54,9 @@ function getDockMinTouch(): number {
   if (!canUseDom()) return 0;
   const buttons = Array.from(document.querySelectorAll<HTMLElement>('.neo-mobile-dock button'));
   if (buttons.length === 0) return 0;
-  return Math.round(Math.min(...buttons.map((button) => button.getBoundingClientRect().height).filter((height) => height > 0)));
+  const heights = buttons.map((button) => button.getBoundingClientRect().height).filter((height) => height > 0);
+  if (heights.length === 0) return 0;
+  return Math.round(Math.min(...heights));
 }
 
 function getReadableMaxWidth(): number {
@@ -65,7 +67,7 @@ function getReadableMaxWidth(): number {
 }
 
 export function getNeoFamilyReport(): NeoFamilyReport {
-  const token = getRootToken('--lote79-neo-family');
+  const token = getRootToken('--lote121-clean-interface');
   const safeGap = getRootToken('--neo-shell-safe-gap');
   const touchToken = getRootToken('--neo-touch-target-safe');
   const matchedFamilies = NEO_SELECTORS.filter((selector) => countMatches(selector) > 0);
@@ -73,13 +75,14 @@ export function getNeoFamilyReport(): NeoFamilyReport {
   const dockMinTouch = getDockMinTouch();
   const readableWidth = getReadableMaxWidth();
   const isSmallViewport = canUseDom() && window.innerWidth <= 760;
+  const minExpectedWidth = canUseDom() ? Math.min(window.innerWidth - 4, 320) : 0;
 
   const items: NeoFamilyItem[] = [
     {
       id: 'token',
-      label: 'Módulo neo v79',
-      value: token === 'active' ? 'Ativo' : 'Não detectado',
-      detail: token === 'active' ? 'A camada final da família neo-* está carregada depois do CSS legado.' : 'Confira o import de src/styles/lote79-neo-family.css no main.tsx.',
+      label: 'Interface limpa v121',
+      value: token === 'active' ? 'Ativa' : 'Não detectada',
+      detail: token === 'active' ? 'A família neo-* está estabilizada pela camada limpa atual, sem depender dos lotes antigos.' : 'Confira o import de src/styles/lote121-clean-interface.css no main.tsx.',
       tone: token === 'active' ? 'ok' : 'warn',
       ok: token === 'active',
     },
@@ -87,15 +90,15 @@ export function getNeoFamilyReport(): NeoFamilyReport {
       id: 'families',
       label: 'Famílias encontradas',
       value: `${matchedFamilies.length}/${NEO_SELECTORS.length}`,
-      detail: matchedFamilies.length > 0 ? `Detectado: ${matchedFamilies.join(', ')}.` : 'Nenhuma família neo-* detectada na tela atual; abra Dashboard ou uma tela interna para conferir.',
+      detail: matchedFamilies.length > 0 ? `Detectado: ${matchedFamilies.join(', ')}.` : 'Nenhuma família neo-* detectada nesta tela; abra Dashboard ou uma tela interna para conferir.',
       tone: matchedFamilies.length >= 4 ? 'ok' : 'info',
       ok: matchedFamilies.length >= 4 || matchedFamilies.length === 0,
     },
     {
       id: 'overflow',
-      label: 'Estouro lateral neo',
+      label: 'Estouro lateral',
       value: overflowPx <= 1 ? 'Sem corte' : `${overflowPx}px`,
-      detail: overflowPx <= 1 ? 'A família neo-* não gerou largura sobrando detectável nesta tela.' : 'Existe estouro horizontal; revisar header, action ribbon, tabela ou dock nesta tela.',
+      detail: overflowPx <= 1 ? 'A interface não gerou largura sobrando detectável nesta tela.' : 'Existe estouro horizontal; revisar header, tabela, card ou dock nesta tela.',
       tone: overflowPx <= 1 ? 'ok' : 'warn',
       ok: overflowPx <= 1,
     },
@@ -111,15 +114,15 @@ export function getNeoFamilyReport(): NeoFamilyReport {
       id: 'readable-width',
       label: 'Largura útil',
       value: readableWidth > 0 ? `${readableWidth}px` : 'não detectada',
-      detail: readableWidth > 0 ? 'Shell principal medido para evitar web vazio demais ou mobile espremido.' : 'Abra uma tela interna com .neo-page-shell para medir largura útil.',
+      detail: readableWidth > 0 ? 'Área principal medida para evitar web vazio demais ou mobile espremido.' : 'Abra uma tela interna com .neo-page-shell para medir largura útil.',
       tone: readableWidth > 0 || !isSmallViewport ? 'info' : 'warn',
-      ok: readableWidth === 0 || readableWidth >= Math.min(window.innerWidth - 4, 320),
+      ok: readableWidth === 0 || readableWidth >= minExpectedWidth,
     },
     {
       id: 'safe-gap',
       label: 'Espaçamento seguro',
       value: safeGap || 'não definido',
-      detail: safeGap ? 'Token de espaçamento v79 disponível para estabilizar header, cards e ribbon.' : 'Token de espaçamento v79 não carregado.',
+      detail: safeGap ? 'Token de espaçamento atual disponível para header, cards e telas internas.' : 'Token de espaçamento atual não carregado.',
       tone: safeGap ? 'ok' : 'warn',
       ok: Boolean(safeGap),
     },
@@ -137,7 +140,7 @@ export function getNeoFamilyReport(): NeoFamilyReport {
 
 export function buildNeoFamilyText(report: NeoFamilyReport): string {
   return [
-    `Família neo-* v79: ${report.okCount}/${report.total} (${report.score}%)`,
+    `Família neo-* limpa: ${report.okCount}/${report.total} (${report.score}%)`,
     `Famílias detectadas na tela: ${report.familyCount}`,
     ...report.items.map((item) => `${item.ok ? '[OK]' : '[ATENÇÃO]'} ${item.label}: ${item.value} · ${item.detail}`),
   ].join('\n');

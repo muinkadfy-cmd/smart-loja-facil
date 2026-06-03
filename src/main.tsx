@@ -2,41 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
-import './master-ui.css';
-import './styles/lote77-design-system.css';
-import './styles/lote78-css-cleanup.css';
-import './styles/lote79-neo-family.css';
-import './styles/lote80-neo-shell-sidebar.css';
-import './styles/lote81-neo-important-reduction.css';
-import './styles/lote82-login-premium.css';
-import './styles/lote83-dashboard-premium.css';
-import './styles/lote84-mobile-dashboard-refine.css';
-import './styles/lote85-sales-pdv-premium.css';
-import './styles/lote86-orders-premium.css';
-import './styles/lote87-products-premium.css';
-import './styles/lote88-product-photos-storage.css';
-import './styles/lote89-customers-premium.css';
-import './styles/lote90-cash-premium.css';
-import './styles/lote91-credits-premium.css';
-import './styles/lote92-reports-premium.css';
-import './styles/lote93-backup-settings-premium.css';
-import './styles/lote95-css-consolidation.css';
-import './styles/lote96-commercial-validation.css';
-import './styles/lote97-realtime-sync.css';
-import './styles/lote98-pwa-commercial-pdv-sync.css';
-import './styles/lote99-commercial-final.css';
-import './styles/lote100-reference-clean-interface.css';
-import './styles/lote101-ultra-clean.css';
-import './styles/lote102-centered-login.css';
-import './styles/lote103-clean-internal-mobile.css';
-import './styles/lote103-scroll-abas-hotfix.css';
-import './styles/lote103-scroll-mobile-hotfix2.css';
-import './styles/lote104-mobile-photo-map.css';
-import './styles/lote105-universal-responsive.css';
-import './styles/lote106-dashboard-reference-alerts.css';
-import './styles/lote107-dashboard-mobile-pixel.css';
+import './styles/lote118-foundation-final.css';
+import './styles/lote119-icon-login-rescue.css';
+import './styles/lote120-commercial-components.css';
+import './styles/lote121-clean-interface.css';
 
-document.documentElement.classList.add('lote77-touch-guard', 'lote78-css-dedupe', 'lote79-neo-family', 'lote80-neo-shell-sidebar', 'lote81-neo-important-reduction', 'lote82-login-premium', 'lote83-dashboard-premium', 'lote84-mobile-dashboard-refine', 'lote85-sales-pdv-premium', 'lote86-orders-premium', 'lote87-products-premium', 'lote88-product-photos-storage', 'lote89-customers-premium', 'lote90-cash-premium', 'lote91-credits-premium', 'lote92-reports-premium', 'lote93-backup-settings-premium', 'lote95-css-consolidation', 'lote96-commercial-validation', 'lote97-realtime-sync', 'lote98-pwa-commercial-pdv-sync', 'lote99-commercial-final', 'lote100-reference-clean-interface', 'lote101-ultra-clean', 'lote102-centered-login', 'lote103-clean-internal-mobile', 'lote103-scroll-abas-hotfix', 'lote103-scroll-mobile-hotfix2', 'lote104-mobile-photo-map', 'lote105-universal-responsive', 'lote106-dashboard-reference-alerts', 'lote107-dashboard-mobile-pixel');
+document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

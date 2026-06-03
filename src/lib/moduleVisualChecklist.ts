@@ -86,7 +86,7 @@ export const MODULE_VISUAL_CHECKLIST: ModuleVisualItem[] = [
     title: 'Família neo-* sem corte lateral',
     area: 'Shell/Topbar/Dock',
     detail: 'Conferir sidebar, topbar, header grid, action ribbon, página principal e dock mobile em web e celular.',
-    expected: 'Diagnóstico mostra família neo v79 + shell/sidebar v80 + redução !important v81 ativos, sem estouro lateral e com menu/toque confortável.',
+    expected: 'Diagnóstico mostra família neo limpa + shell/sidebar v121 ativos, sem estouro lateral e com menu/toque confortável.',
     tone: 'warn',
   },
   {
@@ -94,7 +94,7 @@ export const MODULE_VISUAL_CHECKLIST: ModuleVisualItem[] = [
     title: 'Diagnóstico, CSS e PWA',
     area: 'Diagnóstico',
     detail: 'Abrir diagnóstico depois do deploy e conferir versão, cache, CSS e checklist.',
-    expected: 'Versão v81, cache v81, limpeza CSS v78, família neo v79 e shell/sidebar v80 + redução !important v81 aparecem no diagnóstico.',
+    expected: 'Versão/cache v121, fundação limpa, componentes comerciais e interface limpa aparecem no diagnóstico.',
     tone: 'info',
   },
 ];

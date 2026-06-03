@@ -50,6 +50,27 @@ function countImportantForSelector(target: string): number {
   return count;
 }
 
+function countAllImportant(): number {
+  if (!hasDom()) return 0;
+  let count = 0;
+  Array.from(document.styleSheets).forEach((sheet) => {
+    let rules: CSSRuleList | undefined;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      return;
+    }
+    Array.from(rules).forEach((rule) => {
+      if (!(rule instanceof CSSStyleRule)) return;
+      for (let index = 0; index < rule.style.length; index += 1) {
+        const property = rule.style.item(index);
+        if (rule.style.getPropertyPriority(property) === 'important') count += 1;
+      }
+    });
+  });
+  return count;
+}
+
 function horizontalOverflowPx(): number {
   if (!hasDom()) return 0;
   return Math.max(0, Math.round(document.documentElement.scrollWidth - window.innerWidth));
@@ -73,25 +94,26 @@ export function getNeoImportantReport(): NeoImportantReport {
       tone: 'info',
       ok: true,
     }];
-    return { score: 100, okCount: 1, total: 1, pageShellImportant: 0, sidebarImportant: 0, safeImportantBudget: 420, items };
+    return { score: 100, okCount: 1, total: 1, pageShellImportant: 0, sidebarImportant: 0, safeImportantBudget: 140, items };
   }
 
-  const tokenLoaded = getRootVar('--lote81-neo-important-reduction') === 'active';
-  const pageBottomSafe = getRootVar('--lote81-page-bottom-safe');
-  const shellInlineSafe = getRootVar('--lote81-shell-inline-safe');
+  const tokenLoaded = getRootVar('--lote121-clean-interface') === 'active';
+  const pageBottomSafe = getRootVar('--lote121-page-bottom-safe');
+  const shellInlineSafe = getRootVar('--lote121-shell-inline-safe');
   const pageShellImportant = countImportantForSelector('.neo-page-shell');
   const sidebarImportant = countImportantForSelector('.neo-sidebar');
   const totalImportant = pageShellImportant + sidebarImportant;
-  const safeImportantBudget = 420;
+  const allImportant = countAllImportant();
+  const safeImportantBudget = Number.parseInt(getRootVar('--lote121-important-budget') || '140', 10);
   const overflowPx = horizontalOverflowPx();
   const clipSafe = pageShellHasClipFallback();
 
   const items: NeoImportantItem[] = [
     {
       id: 'token',
-      label: 'Módulo v81',
-      value: tokenLoaded ? 'Ativo' : 'Ausente',
-      detail: tokenLoaded ? 'Camada de redução controlada de !important carregada depois do CSS legado.' : 'O CSS v81 não carregou; confira import no main.tsx.',
+      label: 'Camada limpa v121',
+      value: tokenLoaded ? 'Ativa' : 'Ausente',
+      detail: tokenLoaded ? 'A camada atual foi carregada sem reativar master-ui ou lotes antigos.' : 'O CSS v121 não carregou; confira import no main.tsx.',
       tone: tokenLoaded ? 'ok' : 'warn',
       ok: tokenLoaded,
     },
@@ -99,25 +121,33 @@ export function getNeoImportantReport(): NeoImportantReport {
       id: 'important-budget',
       label: '!important shell/sidebar',
       value: `${totalImportant}`,
-      detail: totalImportant <= safeImportantBudget ? 'Dentro do orçamento legado temporário. Próximo lote pode reduzir por tela.' : 'Ainda existe excesso legado; reduzir somente com validação visual real.',
+      detail: totalImportant <= safeImportantBudget ? 'Dentro do orçamento atual; master-ui pesado foi aposentado.' : 'Ainda existe excesso em shell/sidebar; reduzir somente com validação visual real.',
       tone: totalImportant <= safeImportantBudget ? 'ok' : 'warn',
       ok: totalImportant <= safeImportantBudget,
+    },
+    {
+      id: 'all-important',
+      label: '!important total',
+      value: `${allImportant}`,
+      detail: allImportant <= 180 ? 'Total aceitável para a base atual; maior parte fica isolada em ícones/login.' : 'Total alto; revisar CSS ativo antes de vender para cliente final.',
+      tone: allImportant <= 180 ? 'ok' : 'warn',
+      ok: allImportant <= 180,
     },
     {
       id: 'page-shell-important',
       label: '.neo-page-shell',
       value: `${pageShellImportant} !important`,
-      detail: pageShellImportant <= 140 ? 'Página principal abaixo do limite inicial v81.' : 'A página principal ainda carrega muitas prioridades forçadas.',
-      tone: pageShellImportant <= 140 ? 'ok' : 'warn',
-      ok: pageShellImportant <= 140,
+      detail: pageShellImportant <= 20 ? 'Página principal limpa, sem prioridade forçada excessiva.' : 'A página principal ainda carrega prioridades forçadas.',
+      tone: pageShellImportant <= 20 ? 'ok' : 'warn',
+      ok: pageShellImportant <= 20,
     },
     {
       id: 'sidebar-important',
       label: '.neo-sidebar',
       value: `${sidebarImportant} !important`,
-      detail: sidebarImportant <= 280 ? 'Sidebar abaixo do limite inicial v81.' : 'Sidebar ainda precisa limpeza por bloco após abrir o app real.',
-      tone: sidebarImportant <= 280 ? 'ok' : 'warn',
-      ok: sidebarImportant <= 280,
+      detail: sidebarImportant <= 40 ? 'Sidebar abaixo do limite da base limpa.' : 'Sidebar ainda precisa limpeza por bloco após abrir o app real.',
+      tone: sidebarImportant <= 40 ? 'ok' : 'warn',
+      ok: sidebarImportant <= 40,
     },
     {
       id: 'overflow',
@@ -139,7 +169,7 @@ export function getNeoImportantReport(): NeoImportantReport {
       id: 'bottom-safe',
       label: 'Espaço mobile',
       value: pageBottomSafe || 'não definido',
-      detail: pageBottomSafe ? 'Token v81 reserva área para dock/menu inferior em celular.' : 'Token de espaço inferior v81 não carregado.',
+      detail: pageBottomSafe ? 'Token reserva área para dock/menu inferior em celular.' : 'Token de espaço inferior não carregado.',
       tone: pageBottomSafe ? 'ok' : 'warn',
       ok: Boolean(pageBottomSafe),
     },
@@ -147,7 +177,7 @@ export function getNeoImportantReport(): NeoImportantReport {
       id: 'inline-safe',
       label: 'Largura segura',
       value: shellInlineSafe || 'não definida',
-      detail: shellInlineSafe ? 'Token v81 limita shell principal ao viewport sem cortar conteúdo.' : 'Token de largura v81 não carregado.',
+      detail: shellInlineSafe ? 'Token limita shell principal ao viewport sem cortar conteúdo.' : 'Token de largura não carregado.',
       tone: shellInlineSafe ? 'ok' : 'warn',
       ok: Boolean(shellInlineSafe),
     },
@@ -167,8 +197,8 @@ export function getNeoImportantReport(): NeoImportantReport {
 
 export function buildNeoImportantText(report: NeoImportantReport): string {
   return [
-    `Redução !important v81: ${report.okCount}/${report.total} (${report.score}%)`,
-    `.neo-page-shell: ${report.pageShellImportant} !important · .neo-sidebar: ${report.sidebarImportant} !important · orçamento temporário: ${report.safeImportantBudget}`,
+    `Prioridade CSS limpa: ${report.okCount}/${report.total} (${report.score}%)`,
+    `.neo-page-shell: ${report.pageShellImportant} !important · .neo-sidebar: ${report.sidebarImportant} !important · orçamento atual: ${report.safeImportantBudget}`,
     ...report.items.map((item) => `- ${item.label}: ${item.value} — ${item.detail}`),
   ].join('\n');
 }

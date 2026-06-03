@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v107-dashboard-mobile-pixel';
-const currentCache = 'smart-loja-pwa-supabase-v107-dashboard-mobile-pixel';
+const currentVersion = 'pwa-supabase-v121-clean-interface';
+const currentCache = 'smart-loja-pwa-supabase-v121-clean-interface';
 const currentOutbox = 'smart-loja:web-outbox-v107';
 
 const requiredCore = [
@@ -31,7 +31,6 @@ const optionalPwaCommercialFiles = [
   'src/lib/productionChecklist.ts',
   'src/lib/useWebPermissions.ts',
   'src/styles.css',
-  'src/master-ui.css',
   'docs/MANUAL_USO.md',
   'docs/RELATORIO_TECNICO.md',
   'docs/CHECKLIST_TESTE_OFFLINE.md',
@@ -115,7 +114,7 @@ for (const file of optionalPwaCommercialFiles) {
 }
 
 if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v107 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v121 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
 }
 
 if (process.exitCode) {
@@ -134,9 +133,9 @@ for (const script of ['lint', 'release:commercial:check', 'release:commercial:pr
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v107 dashboard mobile pixel PWA/mobile.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v121 clean interface PWA/mobile.');
 if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v107.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v107 dashboard mobile pixel PWA/mobile.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v121 clean interface PWA/mobile.');
 
 function publicAssetExists(url) {
   if (!url || !url.startsWith('/')) return true;
@@ -167,10 +166,18 @@ else {
   }
 }
 
-const requiredCssModules = exists('src/styles')
-  ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })).map((name) => `src/styles/${name}`)
-  : [];
 const mainSource = read('src/main.tsx');
+if (mainSource.includes('./master-ui.css')) fail('main.tsx não deve carregar master-ui.css na fundação limpa; use apenas styles.css + módulos ativos em src/styles.');
+for (let n = 77; n <= 117; n += 1) {
+  if (mainSource.includes(`lote${n}-`)) fail(`main.tsx ainda carrega herança antiga lote${n}.`);
+}
+const activeCssModules = Array.from(mainSource.matchAll(/import ['"]\.\/(styles\/[^'"]+\.css)['"];?/g), (match) => `src/${match[1]}`);
+const requiredCssModules = [
+  'src/styles/lote118-foundation-final.css',
+  'src/styles/lote119-icon-login-rescue.css',
+  'src/styles/lote120-commercial-components.css',
+  'src/styles/lote121-clean-interface.css',
+];
 for (const cssFile of requiredCssModules) {
   const importPath = `./${cssFile.replace('src/', '')}`;
   if (!mainSource.includes(importPath)) fail(`main.tsx precisa importar ${importPath}.`);
@@ -181,12 +188,16 @@ for (const cssFile of requiredCssModules) {
     if (!tokenPattern.test(cssSource)) fail(`${cssFile} precisa expor token ativo do lote ${loteMatch[1]}.`);
   }
 }
+const dormantCssModules = exists('src/styles')
+  ? fs.readdirSync(path.join(root, 'src/styles')).filter((name) => name.endsWith('.css')).map((name) => `src/styles/${name}`).filter((rel) => !activeCssModules.includes(rel))
+  : [];
+if (dormantCssModules.length > 0) warn(`${dormantCssModules.length} CSS antigos permanecem no repositório, mas estão fora do main.tsx e não interferem no layout.`);
 
 const productPhotoStorageSource = readIf('src/lib/productPhotoStorage.ts');
 if (productPhotoStorageSource && !productPhotoStorageSource.includes('PRODUCT_PHOTO_BUCKET')) fail('Utilitário de Storage de fotos precisa declarar PRODUCT_PHOTO_BUCKET.');
 if (exists('src/lib/neoShellSidebarReadiness.ts') && !read('src/lib/neoShellSidebarReadiness.ts').includes('getNeoShellSidebarReport')) fail('Diagnóstico shell/sidebar precisa existir.');
 if (exists('src/lib/neoImportantReadiness.ts') && !read('src/lib/neoImportantReadiness.ts').includes('getNeoImportantReport')) fail('Diagnóstico important precisa existir.');
-if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v95')) fail('css_audit.js precisa estar atualizado para auditoria real v95.');
+if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v121')) fail('css_audit.js precisa estar atualizado para auditoria real v121.');
 if (exists('scripts/commercial_package_check.js') && !read('scripts/commercial_package_check.js').includes('Commercial package check v97')) fail('commercial_package_check.js precisa estar em v97.');
 if (exists('scripts/commercial_release_package.js') && !read('scripts/commercial_release_package.js').includes('Commercial release package v97')) fail('commercial_release_package.js precisa estar em v97.');
 
@@ -277,4 +288,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v107 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v121 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
