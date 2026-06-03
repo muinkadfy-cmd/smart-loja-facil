@@ -56,8 +56,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v134';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v135';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -155,7 +155,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v134 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v135 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -287,6 +287,32 @@ interface CommercialTourState {
   updatedAt: string;
 }
 
+interface CommercialProposalPlan {
+  id: 'starter' | 'standard' | 'premium';
+  name: string;
+  tag: string;
+  monthly: string;
+  setup: string;
+  idealFor: string;
+  promise: string;
+  benefits: string[];
+  delivery: string[];
+  support: string;
+}
+
+interface CommercialProposalState {
+  selectedPlanId: CommercialProposalPlan['id'];
+  clientName: string;
+  monthlyPrice: string;
+  setupPrice: string;
+  validUntil: string;
+  nextStep: string;
+  discountNote: string;
+  notes: string;
+  doneIds: string[];
+  updatedAt: string;
+}
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
@@ -296,8 +322,8 @@ const DEMO_MODE_STEPS: DemoModeStep[] = [
 ];
 
 
-const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v134';
-const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v133'];
+const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v135';
+const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
 
 const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
   {
@@ -406,6 +432,59 @@ const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
   },
 ];
 
+
+const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v135';
+const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v134'];
+
+const COMMERCIAL_PROPOSAL_PLANS: CommercialProposalPlan[] = [
+  {
+    id: 'starter',
+    name: 'Essencial',
+    tag: 'Entrada segura',
+    monthly: 'R$ 79 a R$ 99/mês',
+    setup: 'R$ 149 a R$ 299 implantação',
+    idealFor: 'Loja pequena começando a controlar vendas, produtos e clientes pelo celular.',
+    promise: 'Começar organizado sem planilha solta e com comprovante simples.',
+    benefits: ['PDV mobile', 'Produtos e clientes', 'Comprovantes', 'Backup orientado', 'Suporte inicial'],
+    delivery: ['Instalação PWA', 'Configuração da loja', 'Treino do primeiro caixa', 'Checklist do primeiro dia'],
+    support: 'Suporte assistido na implantação e ajustes pequenos combinados.',
+  },
+  {
+    id: 'standard',
+    name: 'Profissional',
+    tag: 'Mais vendido',
+    monthly: 'R$ 119 a R$ 159/mês',
+    setup: 'R$ 299 a R$ 499 implantação',
+    idealFor: 'Loja que já vende todo dia e precisa de caixa, crediário, pedidos e relatórios.',
+    promise: 'Controlar operação diária com menos erro de venda, caixa e cobrança.',
+    benefits: ['PDV + caixa', 'Crediário', 'Pedidos', 'Relatórios', 'Multiaparelho guiado'],
+    delivery: ['Tour comercial', 'Migração inicial manual', 'Treino com dono/operador', 'Validação em 2 aparelhos'],
+    support: 'Suporte de implantação + acompanhamento no primeiro dia real.',
+  },
+  {
+    id: 'premium',
+    name: 'Premium Assistido',
+    tag: 'Venda assistida',
+    monthly: 'R$ 179 a R$ 249/mês',
+    setup: 'R$ 499 a R$ 899 implantação',
+    idealFor: 'Loja que quer acompanhamento mais próximo, impressão, backup e validação comercial completa.',
+    promise: 'Entrar em operação com teste real, evidência, aceite e suporte mais próximo.',
+    benefits: ['Tudo do Profissional', 'Impressão 58/80/A4', 'Aceite final', 'Roteiro multiaparelho', 'Suporte prioritário inicial'],
+    delivery: ['Demo separada', 'Teste comercial', 'Permissões por papel', 'Evidência final', 'Plano pós-teste'],
+    support: 'Suporte assistido com revisão pós-primeiro dia e correções prioritárias combinadas.',
+  },
+];
+
+const COMMERCIAL_PROPOSAL_CHECKLIST = [
+  { id: 'proposal-client', label: 'Cliente/loja preenchido', detail: 'Nome do cliente ou loja aparece na proposta.' },
+  { id: 'proposal-plan', label: 'Plano escolhido', detail: 'Plano, mensalidade e implantação definidos sem promessa vaga.' },
+  { id: 'proposal-benefits', label: 'Benefícios explicados', detail: 'Cliente entendeu PDV, caixa, crediário, comprovante, backup e suporte.' },
+  { id: 'proposal-setup', label: 'Implantação combinada', detail: 'Ficou claro quem instala, treina, testa impressão e acompanha primeiro dia.' },
+  { id: 'proposal-limits', label: 'Limites honestos falados', detail: 'Foi explicado que precisa internet, teste em 2 aparelhos e validação de impressora.' },
+  { id: 'proposal-next-step', label: 'Próximo passo definido', detail: 'Cliente sabe se vai testar, fechar piloto, enviar dados ou agendar instalação.' },
+  { id: 'proposal-copy', label: 'Proposta copiada/enviada', detail: 'Texto copiado sem senha, sem chave privada e sem dados técnicos crus.' },
+];
+
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
   { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
   { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
@@ -415,18 +494,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v134';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v135';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v134';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v135';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v134';
-const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v135';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v134 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v135 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -438,12 +517,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v134-real',
+    id: 'deploy-cache-v135-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v134',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v134.',
+    title: 'Deploy aplicado e PWA abriu v135',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v135.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v134.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v135.',
     critical: true,
   },
   {
@@ -568,7 +647,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v134-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' ? 'deploy-cache-v135-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -849,7 +928,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v134',
+    'Smart Loja Fácil — fechamento comercial / aceite final v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -943,7 +1022,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v134',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -1036,7 +1115,7 @@ function buildCommercialTourText(params: {
     `Prova: ${step.proof}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — tour de apresentação comercial v134',
+    'Smart Loja Fácil — tour de apresentação comercial v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
     `Cliente/público: ${params.state.audience || 'não informado'}`,
@@ -1056,6 +1135,123 @@ function buildCommercialTourText(params: {
     '',
     'Fechamento seguro: se o cliente quiser usar de verdade, desative a demo, rode teste comercial, valide dois aparelhos e registre o aceite final.',
   ].join('\n');
+}
+
+
+function emptyCommercialProposalState(): CommercialProposalState {
+  return {
+    selectedPlanId: 'standard',
+    clientName: '',
+    monthlyPrice: COMMERCIAL_PROPOSAL_PLANS.find((plan) => plan.id === 'standard')?.monthly ?? '',
+    setupPrice: COMMERCIAL_PROPOSAL_PLANS.find((plan) => plan.id === 'standard')?.setup ?? '',
+    validUntil: '',
+    nextStep: 'Agendar instalação assistida e teste em dois aparelhos.',
+    discountNote: '',
+    notes: '',
+    doneIds: [],
+    updatedAt: '',
+  };
+}
+
+function normalizeCommercialProposalState(value: unknown): CommercialProposalState {
+  const source = value && typeof value === 'object' ? value as Partial<CommercialProposalState> : {};
+  const allowedPlanIds = new Set(COMMERCIAL_PROPOSAL_PLANS.map((plan) => plan.id));
+  const selectedPlanId = typeof source.selectedPlanId === 'string' && allowedPlanIds.has(source.selectedPlanId as CommercialProposalPlan['id'])
+    ? source.selectedPlanId as CommercialProposalPlan['id']
+    : 'standard';
+  const plan = COMMERCIAL_PROPOSAL_PLANS.find((item) => item.id === selectedPlanId) ?? COMMERCIAL_PROPOSAL_PLANS[1];
+  const allowedDone = new Set(COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => item.id));
+  const doneIds = Array.from(new Set((Array.isArray(source.doneIds) ? source.doneIds : []).filter((id): id is string => typeof id === 'string' && allowedDone.has(id))));
+  return {
+    selectedPlanId,
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 120) : '',
+    monthlyPrice: typeof source.monthlyPrice === 'string' && source.monthlyPrice.trim() ? source.monthlyPrice.slice(0, 80) : plan.monthly,
+    setupPrice: typeof source.setupPrice === 'string' && source.setupPrice.trim() ? source.setupPrice.slice(0, 80) : plan.setup,
+    validUntil: typeof source.validUntil === 'string' ? source.validUntil.slice(0, 80) : '',
+    nextStep: typeof source.nextStep === 'string' && source.nextStep.trim() ? source.nextStep.slice(0, 180) : 'Agendar instalação assistida e teste em dois aparelhos.',
+    discountNote: typeof source.discountNote === 'string' ? source.discountNote.slice(0, 220) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1200) : '',
+    doneIds,
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readCommercialProposalState(): CommercialProposalState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyCommercialProposalState();
+  try {
+    const current = normalizeCommercialProposalState(JSON.parse(window.localStorage.getItem(COMMERCIAL_PROPOSAL_KEY) || '{}'));
+    if (current.clientName || current.notes || current.doneIds.length || current.updatedAt) return current;
+    for (const key of LEGACY_COMMERCIAL_PROPOSAL_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeCommercialProposalState(JSON.parse(raw));
+      if (legacy.clientName || legacy.notes || legacy.doneIds.length || legacy.updatedAt) {
+        window.localStorage.setItem(COMMERCIAL_PROPOSAL_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyCommercialProposalState();
+  }
+  return emptyCommercialProposalState();
+}
+
+function saveCommercialProposalState(state: CommercialProposalState): CommercialProposalState {
+  const normalized = normalizeCommercialProposalState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(COMMERCIAL_PROPOSAL_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function buildCommercialProposalText(params: {
+  state: CommercialProposalState;
+  plan: CommercialProposalPlan;
+  gate: FinalSellGate;
+  tourPercent: number;
+  onboardingPercent: number;
+  report: WebCommercialValidationReport | null;
+  roleState: RoleState;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const done = new Set(params.state.doneIds);
+  const rows = COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} ${item.label} — ${item.detail}`);
+  return [
+    'Smart Loja Fácil — proposta comercial / planos e benefícios v135',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
+    `Plano sugerido: ${params.plan.name} (${params.plan.tag})`,
+    `Mensalidade: ${params.state.monthlyPrice}`,
+    `Implantação: ${params.state.setupPrice}`,
+    params.state.validUntil ? `Validade da proposta: ${params.state.validUntil}` : 'Validade da proposta: combinar antes de enviar',
+    params.state.discountNote ? `Condição/observação comercial: ${params.state.discountNote}` : 'Condição/observação comercial: sem desconto especial registrado',
+    `Indicado para: ${params.plan.idealFor}`,
+    `Promessa principal: ${params.plan.promise}`,
+    `Suporte: ${params.plan.support}`,
+    `Fechamento técnico: ${params.gate.title} — ${params.gate.score}/10 ${params.gate.stars}`,
+    `Tour comercial: ${params.tourPercent}%`,
+    `Onboarding primeiro cliente: ${params.onboardingPercent}%`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    '',
+    'Benefícios incluídos:',
+    ...params.plan.benefits.map((item) => `- ${item}`),
+    '',
+    'Implantação combinada:',
+    ...params.plan.delivery.map((item) => `- ${item}`),
+    '',
+    'Checklist comercial:',
+    ...rows,
+    '',
+    'Próximo passo:',
+    params.state.nextStep || 'Agendar instalação assistida e teste em dois aparelhos.',
+    params.state.notes ? `\nObservações: ${params.state.notes}` : '',
+    '',
+    'Aviso honesto: proposta não substitui teste real. Antes de venda final, validar Supabase, dois aparelhos, permissões, impressão e aceite final.',
+  ].filter(Boolean).join('\n');
 }
 
 function buildTriageText(params: {
@@ -1078,7 +1274,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v134',
+    'Smart Loja Fácil — plano de correção aceite v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -1116,7 +1312,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v134',
+    'Smart Loja Fácil — execução real assistida v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -1190,7 +1386,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v134',
+    'Smart Loja Fácil — roteiro guiado comercial v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -1243,7 +1439,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v134',
+    'Smart Loja Fácil — modo treinamento seguro v135',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -1270,7 +1466,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v134',
+    'Smart Loja Fácil — teste comercial v135',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -1304,6 +1500,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
   const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
   const [tourState, setTourState] = useState<CommercialTourState>(() => readCommercialTourState());
+  const [proposalState, setProposalState] = useState<CommercialProposalState>(() => readCommercialProposalState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -1402,6 +1599,10 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const tourDoneCount = tourState.doneIds.length;
   const tourPercent = Math.round((tourDoneCount / COMMERCIAL_TOUR_STEPS.length) * 100);
   const currentTourStep = useMemo(() => COMMERCIAL_TOUR_STEPS.find((step) => step.id === tourState.currentId) ?? COMMERCIAL_TOUR_STEPS[0], [tourState.currentId]);
+  const currentProposalPlan = useMemo(() => COMMERCIAL_PROPOSAL_PLANS.find((plan) => plan.id === proposalState.selectedPlanId) ?? COMMERCIAL_PROPOSAL_PLANS[1], [proposalState.selectedPlanId]);
+  const proposalDoneSet = useMemo(() => new Set(proposalState.doneIds), [proposalState.doneIds]);
+  const proposalDoneCount = proposalState.doneIds.length;
+  const proposalPercent = Math.round((proposalDoneCount / COMMERCIAL_PROPOSAL_CHECKLIST.length) * 100);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -1624,7 +1825,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — tour comercial guiado v134',
+      'Smart Loja Fácil — tour comercial guiado v135',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
@@ -1691,6 +1892,54 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Tour comercial copiado sem senha, sem chave privada e sem dados reais.' });
   }
 
+
+  function patchProposalState(patch: Partial<CommercialProposalState>): void {
+    setProposalState((current) => saveCommercialProposalState({ ...current, ...patch }));
+  }
+
+  function selectProposalPlan(plan: CommercialProposalPlan): void {
+    setProposalState((current) => saveCommercialProposalState({
+      ...current,
+      selectedPlanId: plan.id,
+      monthlyPrice: current.monthlyPrice && current.selectedPlanId === plan.id ? current.monthlyPrice : plan.monthly,
+      setupPrice: current.setupPrice && current.selectedPlanId === plan.id ? current.setupPrice : plan.setup,
+    }));
+    setFeedback({ tone: 'info', text: `Plano ${plan.name} selecionado. Ajuste preço, implantação e próximo passo antes de copiar.` });
+  }
+
+  function toggleProposalItem(id: string): void {
+    const done = new Set(proposalState.doneIds);
+    if (done.has(id)) done.delete(id);
+    else done.add(id);
+    setProposalState((current) => saveCommercialProposalState({ ...current, doneIds: Array.from(done) }));
+  }
+
+  function resetCommercialProposal(): void {
+    const ok = window.confirm('Zerar a proposta comercial deste aparelho? Isso não apaga dados da loja, demo, tour ou aceite.');
+    if (!ok) return;
+    setProposalState(saveCommercialProposalState(emptyCommercialProposalState()));
+    setFeedback({ tone: 'info', text: 'Proposta comercial zerada neste aparelho. Dados da loja preservados.' });
+  }
+
+  async function copyCommercialProposal(): Promise<void> {
+    const text = buildCommercialProposalText({ state: proposalState, plan: currentProposalPlan, gate: finalGate, tourPercent, onboardingPercent, report, roleState, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Proposta comercial copiada sem senha, sem chave privada e sem termos técnicos crus.' });
+  }
+
+  function prepareProposalDemo(): void {
+    const next = setWebDemoModeEnabled(true, {
+      scenario: 'Proposta comercial com dados fictícios e tour guiado',
+      storeName: demoMode.storeName || proposalState.clientName || tourState.audience || 'Loja Demonstração Fácil',
+      responsible: tourState.presenter || proposalState.clientName || roleState.email || '',
+      note: 'Demo preparada para proposta comercial: mostrar benefícios e planos sem gravar venda, caixa, estoque ou crediário real.',
+    });
+    setDemoMode(next);
+    setTrainingMode(readWebTrainingMode());
+    setFeedback({ tone: 'info', text: 'Demo preparada para apresentar a proposta. Dados fictícios ativos e gravações reais bloqueadas.' });
+    onRefresh();
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -1700,6 +1949,8 @@ ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, repor
 ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}
 
 ${buildCommercialTourText({ state: tourState, demoMode, trainingMode, roleState, report, gate: finalGate, online, snapshot })}
+
+${buildCommercialProposalText({ state: proposalState, plan: currentProposalPlan, gate: finalGate, tourPercent, onboardingPercent, report, roleState, online, snapshot })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -1717,6 +1968,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Modo treinamento: ${trainingMode.enabled ? 'ativo - gravações reais bloqueadas' : 'desativado'}`,
           `Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`,
           `Tour comercial: ${tourDoneCount}/${COMMERCIAL_TOUR_STEPS.length} (${tourPercent}%)`,
+          `Proposta comercial: ${proposalDoneCount}/${COMMERCIAL_PROPOSAL_CHECKLIST.length} (${proposalPercent}%)`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -1824,6 +2076,76 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           })}
         </div>
         <small className="mapp-final-honesty">Tour não substitui teste real. Para vender de verdade: saia da demo, rode teste comercial, valide dois aparelhos, permissões, impressão e aceite final.</small>
+      </section>
+
+
+      <section className="mapp-section-block mapp-proposal-panel">
+        <div className="mapp-section-title"><h2>Proposta comercial / planos</h2><button type="button" onClick={() => void copyCommercialProposal()}>Copiar proposta</button></div>
+        <div className="mapp-proposal-hero">
+          <div>
+            <span>Fechamento de venda</span>
+            <strong>{currentProposalPlan.name} · {proposalPercent}% pronto</strong>
+            <p>Monte uma proposta clara com plano, benefícios, implantação, suporte e próximo passo para o cliente não ficar perdido depois do tour.</p>
+          </div>
+          <b className={proposalPercent >= 85 ? 'ok' : proposalPercent >= 50 ? 'warn' : 'danger'}>{currentProposalPlan.tag}</b>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso da proposta comercial ${proposalPercent}%`}><span style={{ width: `${proposalPercent}%` }} /></div>
+        <div className="mapp-proposal-plans">
+          {COMMERCIAL_PROPOSAL_PLANS.map((plan) => {
+            const active = plan.id === proposalState.selectedPlanId;
+            return (
+              <article key={plan.id} className={`mapp-proposal-plan ${active ? 'active' : ''}`}>
+                <button type="button" onClick={() => selectProposalPlan(plan)}>
+                  <span>{plan.tag}</span>
+                  <strong>{plan.name}</strong>
+                  <p>{plan.idealFor}</p>
+                  <small>{plan.monthly} · {plan.setup}</small>
+                </button>
+              </article>
+            );
+          })}
+        </div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja da proposta<input value={proposalState.clientName} onChange={(event) => patchProposalState({ clientName: event.target.value })} placeholder="Ex.: Jaque Confecções" /></label>
+          <label>Mensalidade<input value={proposalState.monthlyPrice} onChange={(event) => patchProposalState({ monthlyPrice: event.target.value })} placeholder="Ex.: R$ 129/mês" /></label>
+          <label>Implantação<input value={proposalState.setupPrice} onChange={(event) => patchProposalState({ setupPrice: event.target.value })} placeholder="Ex.: R$ 399 implantação" /></label>
+          <label>Validade da proposta<input value={proposalState.validUntil} onChange={(event) => patchProposalState({ validUntil: event.target.value })} placeholder="Ex.: válida até 15/06/2026" /></label>
+          <label>Próximo passo<input value={proposalState.nextStep} onChange={(event) => patchProposalState({ nextStep: event.target.value })} placeholder="Ex.: agendar instalação amanhã às 14h" /></label>
+          <label>Condição/observação comercial<input value={proposalState.discountNote} onChange={(event) => patchProposalState({ discountNote: event.target.value })} placeholder="Ex.: primeira mensalidade após implantação" /></label>
+          <label>Observações da negociação<textarea value={proposalState.notes} onChange={(event) => patchProposalState({ notes: event.target.value })} placeholder="Anote dúvidas, objeções, preço combinado, impressora do cliente e suporte prometido." rows={3} /></label>
+        </div>
+        <div className="mapp-proposal-benefits">
+          <article>
+            <span>Benefícios</span>
+            {currentProposalPlan.benefits.map((item) => <p key={item}>✓ {item}</p>)}
+          </article>
+          <article>
+            <span>Implantação</span>
+            {currentProposalPlan.delivery.map((item) => <p key={item}>✓ {item}</p>)}
+          </article>
+          <article>
+            <span>Promessa honesta</span>
+            <p>{currentProposalPlan.promise}</p>
+            <small>{currentProposalPlan.support}</small>
+          </article>
+        </div>
+        <div className="mapp-proposal-checklist">
+          {COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => {
+            const done = proposalDoneSet.has(item.id);
+            return (
+              <button key={item.id} type="button" className={done ? 'done' : ''} onClick={() => toggleProposalItem(item.id)}>
+                <span>{done ? '✓' : ''}</span>
+                <div><strong>{item.label}</strong><p>{item.detail}</p></div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={() => void copyCommercialProposal()}>Copiar proposta</button>
+          <button type="button" className="mapp-secondary-button" onClick={prepareProposalDemo}>Preparar demo da proposta</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetCommercialProposal}>Zerar proposta</button>
+        </div>
+        <small className="mapp-final-honesty">Proposta é apoio comercial, não contrato automático. Antes de vender como final, valide dois aparelhos, permissões, impressão, Supabase e aceite final.</small>
       </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
@@ -2122,7 +2444,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v134 tour</strong></span>
+          <span><b>Cache</b><strong>v135 proposta</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -2170,7 +2492,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v134 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a proposta comercial v135, a execução real assistida e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

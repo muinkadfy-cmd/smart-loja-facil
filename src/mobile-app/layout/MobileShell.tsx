@@ -88,7 +88,7 @@ export function MobileShell({
           <span>Ambiente</span>
           <strong>{demoMode.enabled ? 'Demo' : trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v134 tour'}</strong>
+          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v135 proposta'}</strong>
         </div>
       </aside>
 
