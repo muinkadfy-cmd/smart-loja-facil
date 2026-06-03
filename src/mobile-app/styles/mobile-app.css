@@ -2971,3 +2971,118 @@ img, svg { max-width: 100%; }
   .mapp-training-hero b { min-height: 44px; }
   .mapp-training-banner { align-items: flex-start; }
 }
+
+/* Mega Lote 133 — Ambiente demo com dados fictícios separados */
+.mapp-demo-banner,
+.mapp-demo-panel {
+  border: 1px solid rgba(155, 159, 184, 0.35);
+  background: linear-gradient(135deg, rgba(63, 43, 18, 0.08), rgba(155, 159, 184, 0.14));
+}
+
+.mapp-demo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  margin-bottom: 12px;
+}
+
+.mapp-demo-banner strong,
+.mapp-demo-panel strong {
+  color: var(--mapp-text-strong, #2b201b);
+}
+
+.mapp-demo-banner p {
+  margin: 3px 0 0;
+  font-size: 0.84rem;
+  color: var(--mapp-text-soft, #685f59);
+}
+
+.mapp-demo-banner button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-weight: 800;
+  background: rgba(63, 43, 18, 0.14);
+  color: #3f2b12;
+}
+
+.mapp-demo-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(63, 43, 18, 0.08);
+}
+
+.mapp-demo-hero span,
+.mapp-demo-steps span {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  background: rgba(155, 159, 184, 0.16);
+  color: #3f2b12;
+}
+
+.mapp-demo-hero p {
+  margin: 8px 0 0;
+  color: var(--mapp-text-soft, #685f59);
+  line-height: 1.45;
+}
+
+.mapp-demo-hero b {
+  flex: 0 0 auto;
+  min-width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 950;
+  background: rgba(203, 124, 118, 0.12);
+  color: #8a3e37;
+}
+
+.mapp-demo-hero b.ok {
+  background: rgba(63, 43, 18, 0.12);
+  color: #3f2b12;
+}
+
+.mapp-demo-steps {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.mapp-demo-steps article {
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(155, 159, 184, 0.22);
+}
+
+.mapp-demo-steps strong {
+  display: block;
+  margin-top: 8px;
+}
+
+.mapp-demo-steps p {
+  margin: 5px 0 0;
+  line-height: 1.42;
+  color: var(--mapp-text-soft, #685f59);
+}
+
+@media (min-width: 820px) {
+  .mapp-demo-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -4,7 +4,7 @@ import { getMobileRoute, MOBILE_ROUTES } from '../mobileAppRoutes';
 import { InlineIcon } from '../components/InlineIcon';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
-import { readWebTrainingMode, type WebTrainingModeState } from '../../lib/webApi';
+import { readWebDemoMode, readWebTrainingMode, type WebDemoModeState, type WebTrainingModeState } from '../../lib/webApi';
 
 interface MobileShellProps {
   activePage: PageKey;
@@ -37,17 +37,23 @@ export function MobileShell({
 }: MobileShellProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
+  const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
   const pageRef = useRef<HTMLElement | null>(null);
   const route = getMobileRoute(activePage);
   const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil Web').replace(/\s+Web$/i, '');
   const online = Boolean(status?.sqlite_ok);
 
   useEffect(() => {
-    const syncTrainingMode = () => setTrainingMode(readWebTrainingMode());
+    const syncTrainingMode = () => {
+      setTrainingMode(readWebTrainingMode());
+      setDemoMode(readWebDemoMode());
+    };
     window.addEventListener('smart-loja:web-training-mode-change', syncTrainingMode);
+    window.addEventListener('smart-loja:web-demo-mode-change', syncTrainingMode);
     window.addEventListener('storage', syncTrainingMode);
     return () => {
       window.removeEventListener('smart-loja:web-training-mode-change', syncTrainingMode);
+      window.removeEventListener('smart-loja:web-demo-mode-change', syncTrainingMode);
       window.removeEventListener('storage', syncTrainingMode);
     };
   }, []);
@@ -80,9 +86,9 @@ export function MobileShell({
         </div>
         <div className="mapp-side-footer">
           <span>Ambiente</span>
-          <strong>{trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
+          <strong>{demoMode.enabled ? 'Demo' : trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v132 treino'}</strong>
+          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v133 demo'}</strong>
         </div>
       </aside>
 
@@ -115,6 +121,17 @@ export function MobileShell({
                 <p>Atualize para usar a versão mais nova neste aparelho.</p>
               </div>
               <button type="button" onClick={onInstallUpdate}>Atualizar</button>
+            </section>
+          ) : null}
+
+
+          {demoMode.enabled ? (
+            <section className="mapp-demo-banner">
+              <div>
+                <strong>Ambiente demo ativo</strong>
+                <p>Dados fictícios separados da loja real. Use para apresentar o sistema sem expor clientes, vendas ou estoque verdadeiro.</p>
+              </div>
+              <button type="button" onClick={() => onNavigate('diagnostics')}>Ver</button>
             </section>
           ) : null}
 

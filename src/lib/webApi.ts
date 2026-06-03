@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v132-modo-treinamento-seguro';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v132-modo-treinamento-seguro';
+export const WEB_APP_VERSION = 'pwa-supabase-v133-ambiente-demo-separado';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v133-ambiente-demo-separado';
 
 
 export interface WebTrainingModeState {
@@ -68,8 +68,8 @@ export interface WebTrainingModeState {
   updatedAt: string;
 }
 
-export const WEB_TRAINING_MODE_KEY = 'smart-loja:training-mode-safe-v132';
-const LEGACY_WEB_TRAINING_MODE_KEYS = ['smart-loja:training-mode-safe-v131'];
+export const WEB_TRAINING_MODE_KEY = 'smart-loja:training-mode-safe-v133';
+const LEGACY_WEB_TRAINING_MODE_KEYS = ['smart-loja:training-mode-safe-v132', 'smart-loja:training-mode-safe-v131'];
 
 function emptyWebTrainingMode(): WebTrainingModeState {
   return { enabled: false, scenario: '', responsible: '', note: '', startedAt: '', updatedAt: '' };
@@ -132,6 +132,282 @@ export function assertWebTrainingModeAllowsWrite(action: string): void {
   const training = readWebTrainingMode();
   if (!training.enabled) return;
   throw new Error(`Modo treinamento seguro ativo: ${action} não foi gravado na loja real. Desative o modo treinamento para fazer alteração real.`);
+}
+
+export interface WebDemoModeState {
+  enabled: boolean;
+  scenario: string;
+  storeName: string;
+  responsible: string;
+  note: string;
+  startedAt: string;
+  updatedAt: string;
+}
+
+export const WEB_DEMO_MODE_KEY = 'smart-loja:demo-mode-safe-v133';
+const LEGACY_WEB_DEMO_MODE_KEYS = ['smart-loja:demo-mode-safe-v132'];
+
+function emptyWebDemoMode(): WebDemoModeState {
+  return { enabled: false, scenario: '', storeName: '', responsible: '', note: '', startedAt: '', updatedAt: '' };
+}
+
+function normalizeWebDemoMode(value: unknown): WebDemoModeState {
+  const source = value && typeof value === 'object' ? value as Partial<WebDemoModeState> : {};
+  return {
+    enabled: Boolean(source.enabled),
+    scenario: typeof source.scenario === 'string' ? source.scenario.slice(0, 140) : '',
+    storeName: typeof source.storeName === 'string' ? source.storeName.slice(0, 100) : '',
+    responsible: typeof source.responsible === 'string' ? source.responsible.slice(0, 80) : '',
+    note: typeof source.note === 'string' ? source.note.slice(0, 1000) : '',
+    startedAt: typeof source.startedAt === 'string' ? source.startedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+export function readWebDemoMode(): WebDemoModeState {
+  if (!canUseBrowserStorage()) return emptyWebDemoMode();
+  try {
+    const current = normalizeWebDemoMode(JSON.parse(window.localStorage.getItem(WEB_DEMO_MODE_KEY) || '{}'));
+    if (current.enabled || current.updatedAt || current.startedAt || current.scenario || current.storeName || current.responsible || current.note) return current;
+    for (const key of LEGACY_WEB_DEMO_MODE_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeWebDemoMode(JSON.parse(raw));
+      if (legacy.enabled || legacy.updatedAt || legacy.startedAt || legacy.scenario || legacy.storeName || legacy.responsible || legacy.note) {
+        window.localStorage.setItem(WEB_DEMO_MODE_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyWebDemoMode();
+  }
+  return emptyWebDemoMode();
+}
+
+export function saveWebDemoMode(input: Partial<WebDemoModeState>): WebDemoModeState {
+  const previous = readWebDemoMode();
+  const now = new Date().toISOString();
+  const next = normalizeWebDemoMode({
+    ...previous,
+    ...input,
+    startedAt: input.enabled && !previous.startedAt ? now : (input.startedAt ?? previous.startedAt),
+    updatedAt: now,
+  });
+  if (!next.enabled) next.startedAt = '';
+  if (canUseBrowserStorage()) {
+    window.localStorage.setItem(WEB_DEMO_MODE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('smart-loja:web-demo-mode-change', { detail: next }));
+  }
+  return next;
+}
+
+export function setWebDemoModeEnabled(enabled: boolean, patch: Partial<WebDemoModeState> = {}): WebDemoModeState {
+  const next = saveWebDemoMode({ ...patch, enabled });
+  if (enabled) {
+    setWebTrainingModeEnabled(true, {
+      scenario: patch.scenario || next.scenario || 'Demonstração com dados fictícios separados',
+      responsible: patch.responsible || next.responsible || '',
+      note: patch.note || next.note || 'Ambiente demo ativo: leituras usam dados fictícios e gravações reais ficam bloqueadas.',
+    });
+  }
+  return next;
+}
+
+export function isWebDemoModeActive(): boolean {
+  return readWebDemoMode().enabled;
+}
+
+export function assertWebDemoModeAllowsWrite(action: string): void {
+  const demo = readWebDemoMode();
+  if (!demo.enabled) return;
+  throw new Error(`Ambiente demo ativo: ${action} não foi gravado. Os dados exibidos são fictícios e separados da loja real.`);
+}
+
+const DEMO_NOW = '2026-06-03T12:00:00.000Z';
+const DEMO_YESTERDAY = '2026-06-02T15:40:00.000Z';
+const DEMO_OLDER = '2026-06-01T09:15:00.000Z';
+
+function demoClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function demoStoreName(): string {
+  const demo = readWebDemoMode();
+  return demo.storeName.trim() || 'Loja Demonstração Fácil';
+}
+
+function demoSettings(): Settings {
+  return {
+    store_name: demoStoreName(),
+    owner_name: 'Cliente Demonstração',
+    phone: '(43) 99999-0000',
+    whatsapp: '5543999990000',
+    address: 'Rua Exemplo, 123 — Centro',
+    receipt_message: 'Obrigado pela preferência. Este comprovante é uma amostra do ambiente demo.',
+    low_stock_limit: 3,
+    slow_mode: false,
+    admin_password_enabled: false,
+    receipt_width_mm: 80,
+    updated_at: DEMO_NOW,
+  };
+}
+
+const DEMO_CUSTOMERS: Customer[] = [
+  { id: 'demo-customer-1', name: 'Ana Cliente Demo', phone: '(43) 98888-1001', whatsapp: '5543988881001', address: 'Centro', credit_limit: 450, status: 'ativo', notes: 'Cliente fictício para treinamento.', created_at: DEMO_OLDER, updated_at: DEMO_NOW },
+  { id: 'demo-customer-2', name: 'Bruno Atacado Demo', phone: '(43) 98888-1002', whatsapp: '5543988881002', address: 'Jardim Europa', credit_limit: 800, status: 'ativo', notes: 'Compra roupas e presentes.', created_at: DEMO_OLDER, updated_at: DEMO_YESTERDAY },
+  { id: 'demo-customer-3', name: 'Carla Presente Demo', phone: '(43) 98888-1003', whatsapp: '5543988881003', address: 'Vila Oliveira', credit_limit: 250, status: 'ativo', notes: 'Prefere WhatsApp.', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
+];
+
+const DEMO_PRODUCTS: Product[] = [
+  { id: 'demo-product-1', name: 'Vestido floral demo', category: 'Roupas femininas', price: 119.9, promo_price: 99.9, stock: 8, unit: 'un', size: 'M', color: 'Rosa', internal_code: 'DEMO-001', barcode: '789000000001', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_NOW },
+  { id: 'demo-product-2', name: 'Camiseta masculina demo', category: 'Roupas masculinas', price: 59.9, promo_price: null, stock: 12, unit: 'un', size: 'G', color: 'Preta', internal_code: 'DEMO-002', barcode: '789000000002', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_YESTERDAY },
+  { id: 'demo-product-3', name: 'Kit presente demo', category: 'Presentes', price: 79.9, promo_price: 69.9, stock: 2, unit: 'un', size: 'Único', color: 'Sortido', internal_code: 'DEMO-003', barcode: '789000000003', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
+  { id: 'demo-product-4', name: 'Lingerie básica demo', category: 'Lingeries', price: 39.9, promo_price: null, stock: 5, unit: 'un', size: 'P/M/G', color: 'Variada', internal_code: 'DEMO-004', barcode: '789000000004', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
+];
+
+const DEMO_SALES: SaleSummary[] = [
+  { id: 'demo-sale-1', number: 101, customer_name: 'Ana Cliente Demo', payment_method: 'pix', total: 169.8, status: 'finalizada', created_at: DEMO_NOW },
+  { id: 'demo-sale-2', number: 100, customer_name: 'Consumidor', payment_method: 'dinheiro', total: 59.9, status: 'finalizada', created_at: DEMO_YESTERDAY },
+  { id: 'demo-sale-3', number: 99, customer_name: 'Bruno Atacado Demo', payment_method: 'crediario', total: 239.7, status: 'finalizada', created_at: DEMO_OLDER },
+];
+
+const DEMO_ORDERS: OrderSummary[] = [
+  { id: 'demo-order-1', number: 44, customer_name: 'Carla Presente Demo', total: 149.8, status: 'aberto', created_at: DEMO_NOW },
+  { id: 'demo-order-2', number: 43, customer_name: 'Ana Cliente Demo', total: 99.9, status: 'separado', created_at: DEMO_YESTERDAY },
+  { id: 'demo-order-3', number: 42, customer_name: 'Bruno Atacado Demo', total: 239.7, status: 'entregue', created_at: DEMO_OLDER },
+];
+
+const DEMO_RECEIPTS: ReceiptSummary[] = [
+  { id: 'demo-receipt-1', sale_id: 'demo-sale-1', sale_number: 101, customer_name: 'Ana Cliente Demo', customer_whatsapp: '5543988881001', receipt_type: '80mm', total: 169.8, status: 'emitido', created_at: DEMO_NOW, content: '<h1>Loja Demonstração Fácil</h1><p>Comprovante demo #0101</p><p>Total R$ 169,80</p><small>Dados fictícios. Não é venda real.</small>' },
+  { id: 'demo-receipt-2', sale_id: 'demo-sale-2', sale_number: 100, customer_name: 'Consumidor', customer_whatsapp: '', receipt_type: 'A4', total: 59.9, status: 'emitido', created_at: DEMO_YESTERDAY, content: '<h1>Comprovante demo A4</h1><p>Total R$ 59,90</p><small>Dados fictícios para treinamento.</small>' },
+];
+
+const DEMO_CREDITS: CreditSummary[] = [
+  {
+    id: 'demo-credit-1', customer_name: 'Bruno Atacado Demo', customer_phone: '(43) 98888-1002', customer_whatsapp: '5543988881002', sale_id: 'demo-sale-3', sale_number: 99, total: 239.7, balance: 159.8, status: 'aberto', created_at: DEMO_OLDER,
+    installments: [
+      { id: 'demo-installment-1', number: 1, amount: 79.9, paid_amount: 79.9, due_date: '2026-06-05', paid_at: DEMO_YESTERDAY, status: 'pago', payment_method: 'pix' },
+      { id: 'demo-installment-2', number: 2, amount: 79.9, paid_amount: 0, due_date: '2026-07-05', paid_at: null, status: 'aberto', payment_method: null },
+      { id: 'demo-installment-3', number: 3, amount: 79.9, paid_amount: 0, due_date: '2026-08-05', paid_at: null, status: 'aberto', payment_method: null },
+    ],
+  },
+];
+
+const DEMO_CASH: CashSummary = {
+  open_cash: { id: 'demo-cash-open', opened_at: DEMO_NOW, closed_at: null, opening_amount: 100, closing_amount: null, status: 'aberto', notes: 'Caixa fictício do ambiente demo.' },
+  today_in: 309.7,
+  today_out: 25,
+  expected_total: 384.7,
+  movements: [
+    { id: 'demo-cash-mov-1', type: 'entrada', method: 'pix', amount: 169.8, reason: 'Venda demo #0101', created_at: DEMO_NOW },
+    { id: 'demo-cash-mov-2', type: 'entrada', method: 'dinheiro', amount: 139.9, reason: 'Recebimento demo', created_at: DEMO_YESTERDAY },
+    { id: 'demo-cash-mov-3', type: 'saida', method: 'dinheiro', amount: 25, reason: 'Despesa fictícia', created_at: DEMO_YESTERDAY },
+  ],
+};
+
+const DEMO_BACKUPS: BackupInfo[] = [
+  { id: 'demo-backup-1', file_name: 'backup-demo-smart-loja.json', file_path: 'demo://backup-smart-loja.json', size_bytes: 18432, integrity_ok: true, created_at: DEMO_NOW },
+];
+
+export function webDemoSettings(): Settings { return demoSettings(); }
+export function webDemoCustomers(): Customer[] { return demoClone(DEMO_CUSTOMERS); }
+export function webDemoProducts(): Product[] { return demoClone(DEMO_PRODUCTS); }
+export function webDemoSales(): SaleSummary[] { return demoClone(DEMO_SALES); }
+export function webDemoOrders(): OrderSummary[] { return demoClone(DEMO_ORDERS); }
+export function webDemoReceipts(): ReceiptSummary[] { return demoClone(DEMO_RECEIPTS); }
+export function webDemoCredits(): CreditSummary[] { return demoClone(DEMO_CREDITS); }
+export function webDemoCashSummary(): CashSummary { return demoClone(DEMO_CASH); }
+export function webDemoBackups(): BackupInfo[] { return demoClone(DEMO_BACKUPS); }
+
+export function webDemoDashboard(): DashboardData {
+  const payment_today: PaymentSummary[] = [
+    { method: 'pix', total: 169.8, count: 1 },
+    { method: 'dinheiro', total: 59.9, count: 1 },
+    { method: 'crediario', total: 239.7, count: 1 },
+  ];
+  return {
+    today_sales_total: 309.7,
+    today_sales_count: 2,
+    customers_total: DEMO_CUSTOMERS.length,
+    products_total: DEMO_PRODUCTS.length,
+    orders_open: DEMO_ORDERS.filter((order) => order.status === 'aberto' || order.status === 'separado').length,
+    credits_open_total: 159.8,
+    credits_active_customers: 1,
+    low_stock_count: DEMO_PRODUCTS.filter((product) => product.stock <= 3).length,
+    payment_today,
+    recent_sales: demoClone(DEMO_SALES),
+  };
+}
+
+export function webDemoAppStatus(): AppStatus {
+  return {
+    db_path: 'ambiente-demo-dados-ficticios',
+    sqlite_ok: true,
+    offline_ready: true,
+    version: WEB_APP_VERSION,
+    settings: webDemoSettings(),
+    dashboard: webDemoDashboard(),
+  };
+}
+
+export function webDemoDashboardSalesSeries(period: string): DashboardSalesPoint[] {
+  const labels = period === 'today' ? ['08h', '10h', '12h', '14h', '16h'] : ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  return labels.map((label, index) => ({ label, total: [0, 59.9, 169.8, 239.7, 309.7, 389.6, 459.5][index] ?? 0 }));
+}
+
+export function webDemoReportData(report: string, from: string, to: string): ReportData {
+  const generated = new Date().toISOString();
+  if (report === 'caixa') {
+    return {
+      report: 'caixa', title: 'Caixa demo', description: `Período ${from} até ${to} com dados fictícios.`, empty_message: 'Sem caixa demo no período.', generated_at: generated, total_rows: DEMO_CASH.movements.length,
+      summary: [
+        { label: 'Entradas', value: 'R$ 309,70', detail: 'fictício', tone: 'green' },
+        { label: 'Saídas', value: 'R$ 25,00', detail: 'fictício', tone: 'orange' },
+      ],
+      columns: [{ key: 'data', label: 'Data' }, { key: 'tipo', label: 'Tipo' }, { key: 'valor', label: 'Valor', align: 'right' }],
+      rows: DEMO_CASH.movements.map((movement) => ({ data: movement.created_at.slice(0, 10), tipo: `${movement.type} · ${movement.reason}`, valor: `R$ ${movement.amount.toFixed(2).replace('.', ',')}` })),
+    };
+  }
+  if (report === 'crediario') {
+    return {
+      report: 'crediario', title: 'Crediário demo', description: `Período ${from} até ${to} com dados fictícios.`, empty_message: 'Sem crediário demo no período.', generated_at: generated, total_rows: DEMO_CREDITS.length,
+      summary: [{ label: 'Em aberto', value: 'R$ 159,80', detail: 'fictício', tone: 'orange' }],
+      columns: [{ key: 'cliente', label: 'Cliente' }, { key: 'saldo', label: 'Saldo', align: 'right' }],
+      rows: DEMO_CREDITS.map((credit) => ({ cliente: credit.customer_name, saldo: `R$ ${credit.balance.toFixed(2).replace('.', ',')}` })),
+    };
+  }
+  if (report === 'estoque_baixo') {
+    const low = DEMO_PRODUCTS.filter((product) => product.stock <= 3);
+    return {
+      report: 'estoque_baixo', title: 'Estoque baixo demo', description: 'Produtos fictícios abaixo do limite.', empty_message: 'Sem estoque baixo demo.', generated_at: generated, total_rows: low.length,
+      summary: [{ label: 'Itens baixos', value: String(low.length), detail: 'fictício', tone: 'orange' }],
+      columns: [{ key: 'produto', label: 'Produto' }, { key: 'estoque', label: 'Estoque', align: 'right' }],
+      rows: low.map((product) => ({ produto: product.name, estoque: String(product.stock) })),
+    };
+  }
+  return {
+    report: 'vendas', title: 'Vendas demo', description: `Período ${from} até ${to} com dados fictícios.`, empty_message: 'Sem vendas demo no período.', generated_at: generated, total_rows: DEMO_SALES.length,
+    summary: [
+      { label: 'Total vendido', value: 'R$ 469,40', detail: 'fictício', tone: 'green' },
+      { label: 'Vendas', value: String(DEMO_SALES.length), detail: 'fictício', tone: 'blue' },
+    ],
+    columns: [{ key: 'numero', label: 'Venda' }, { key: 'cliente', label: 'Cliente' }, { key: 'valor', label: 'Valor', align: 'right' }],
+    rows: DEMO_SALES.map((sale) => ({ numero: `#${sale.number}`, cliente: sale.customer_name || 'Consumidor', valor: `R$ ${sale.total.toFixed(2).replace('.', ',')}` })),
+  };
+}
+
+export function webDemoReportsCsv(report: string, from: string, to: string): string {
+  const data = webDemoReportData(report, from, to);
+  const header = data.columns.map((column) => column.label).join(';');
+  const rows = data.rows.map((row) => data.columns.map((column) => String(row[column.key] ?? '')).join(';'));
+  return [data.title, data.description, header, ...rows].join('\n');
+}
+
+export function webDemoAudit(): AuditEvent[] {
+  return [
+    { id: 'demo-audit-1', entity: 'demo', entity_id: 'demo', action: 'ambiente_demo', details: 'Dados fictícios carregados sem acessar a loja real.', created_at: DEMO_NOW },
+    { id: 'demo-audit-2', entity: 'treinamento', entity_id: 'demo', action: 'bloqueio_gravacao', details: 'Gravações reais bloqueadas no ambiente demo.', created_at: DEMO_YESTERDAY },
+  ];
 }
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
@@ -430,7 +706,7 @@ export function enqueueWebOutbox(module: string, action: WebOutboxAction, payloa
 export function shouldQueueWebError(error: unknown): boolean {
   const raw = error instanceof Error ? error.message : String(error);
   const lower = raw.toLowerCase();
-  if (lower.includes('modo treinamento seguro ativo')) return false;
+  if (lower.includes('modo treinamento seguro ativo') || lower.includes('ambiente demo ativo')) return false;
   return lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline') || lower.includes('internet') || (typeof navigator !== 'undefined' && !navigator.onLine);
 }
 
@@ -439,7 +715,7 @@ export function humanizeWebError(error: unknown): string {
   const lower = raw.toLowerCase();
   if (lower.includes('row-level security') || lower.includes('rls')) return `Permissão insuficiente no Supabase/RLS. ${raw}`;
   if (lower.includes('jwt') || lower.includes('session') || lower.includes('login') || lower.includes('auth')) return `Login pendente ou sessão expirada. ${raw}`;
-  if (lower.includes('modo treinamento seguro ativo')) return raw;
+  if (lower.includes('modo treinamento seguro ativo') || lower.includes('ambiente demo ativo')) return raw;
   if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline')) return `Não foi possível sincronizar. Verifique a internet deste aparelho. ${raw}`;
   if (lower.includes('supabase') && lower.includes('config')) return `Supabase não configurado. ${raw}`;
   return raw;
@@ -2567,7 +2843,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
   const total = 11;
   if (typeof window === 'undefined' || !window.localStorage) return { done: 0, total, percent: 0 };
   try {
-    const keys = ['smart-loja:guided-commercial-test-v132', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+    const keys = ['smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
     for (const key of keys) {
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
@@ -2588,7 +2864,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
 function readAssistedCommercialProgress(): { passed: number; failed: number; blocked: number; total: number; percent: number; criticalProblems: number } {
   const total = 12;
   const criticalIds = new Set([
-    'deploy-cache-v132-real',
+    'deploy-cache-v133-real',
     'owner-auto-test-no-danger',
     'device-a-create-core-records',
     'device-b-sees-core-records',
@@ -2599,7 +2875,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
     'offline-real-retry-no-duplicate',
     'final-sell-decision',
   ]);
-  const keys = ['smart-loja:assisted-commercial-run-v132', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+  const keys = ['smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
   if (typeof window === 'undefined' || !window.localStorage) return { passed: 0, failed: 0, blocked: 0, total, percent: 0, criticalProblems: 0 };
   try {
     for (const key of keys) {
@@ -2612,7 +2888,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
       let blocked = 0;
       let criticalProblems = 0;
       for (const [id, result] of Object.entries(results)) {
-        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v132-real' : id;
+        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v133-real' : id;
         if (result === 'passed') passed += 1;
         if (result === 'failed') failed += 1;
         if (result === 'blocked') blocked += 1;
@@ -2628,7 +2904,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
 
 
 function readFinalCommercialAcceptanceStatus(): { signed: boolean; responsible: string; acceptedAt: string; key: string } {
-  const keys = ['smart-loja:final-commercial-acceptance-v132', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+  const keys = ['smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
   if (typeof window === 'undefined' || !window.localStorage) return { signed: false, responsible: '', acceptedAt: '', key: keys[0] };
   try {
     for (const key of keys) {
@@ -2729,11 +3005,19 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
   });
 
   const trainingMode = readWebTrainingMode();
+  const demoMode = readWebDemoMode();
   pushCommercialCheck(checks, {
-    id: 'training-mode-safe-v132', area: 'Treinamento', title: 'Modo treinamento seguro',
+    id: 'training-mode-safe-v133', area: 'Treinamento', title: 'Modo treinamento seguro',
     detail: trainingMode.enabled ? 'Treinamento ativo: gravações reais estão bloqueadas para demonstração segura.' : 'Treinamento desativado: operação real liberada conforme papel do usuário.',
     level: trainingMode.enabled ? 'warn' : 'ok',
-    evidence: trainingMode.enabled ? `responsavel=${trainingMode.responsible || 'não informado'}; cenario=${trainingMode.scenario || 'não informado'}` : 'smart-loja:training-mode-safe-v132 desligado',
+    evidence: trainingMode.enabled ? `responsavel=${trainingMode.responsible || 'não informado'}; cenario=${trainingMode.scenario || 'não informado'}` : 'smart-loja:training-mode-safe-v133 desligado',
+  });
+
+  pushCommercialCheck(checks, {
+    id: 'demo-mode-separated-v133', area: 'Treinamento', title: 'Ambiente demo separado',
+    detail: demoMode.enabled ? 'Demo ativa: telas usam dados fictícios separados da loja real. Desative antes da venda verdadeira.' : 'Demo desativada: telas usam dados reais conforme login e permissão.',
+    level: demoMode.enabled ? 'warn' : 'ok',
+    evidence: demoMode.enabled ? `lojaDemo=${demoMode.storeName || 'Loja Demonstração Fácil'}; responsavel=${demoMode.responsible || 'não informado'}` : 'smart-loja:demo-mode-safe-v133 desligado',
   });
 
   pushCommercialCheck(checks, {
@@ -2745,40 +3029,40 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v132 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v133 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });
 
   const guidedProgress = readGuidedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'guided-commercial-v132', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
+    id: 'guided-commercial-v133', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
     detail: guidedProgress.done >= guidedProgress.total ? 'Roteiro guiado marcado como concluído neste aparelho.' : `Roteiro guiado ainda incompleto: ${guidedProgress.done}/${guidedProgress.total} passo(s).`,
     level: guidedProgress.done >= guidedProgress.total ? 'ok' : guidedProgress.done >= 6 ? 'warn' : 'warn',
-    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v132`,
+    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v133`,
   });
 
   const assistedProgress = readAssistedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'assisted-execution-v132', area: 'Teste real', title: 'Execução real assistida',
+    id: 'assisted-execution-v133', area: 'Teste real', title: 'Execução real assistida',
     detail: assistedProgress.criticalProblems
       ? `${assistedProgress.criticalProblems} falha(s) ou bloqueio(s) crítico(s) foram registrados. Não vender ainda.`
       : assistedProgress.passed >= assistedProgress.total
         ? 'Execução assistida concluída sem falha crítica registrada neste aparelho.'
         : `Execução assistida em andamento: ${assistedProgress.passed}/${assistedProgress.total} passo(s) passaram.`,
     level: assistedProgress.criticalProblems ? 'danger' : assistedProgress.passed >= assistedProgress.total ? 'ok' : 'warn',
-    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v132`,
+    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v133`,
   });
 
 
   const finalAcceptance = readFinalCommercialAcceptanceStatus();
   pushCommercialCheck(checks, {
-    id: 'final-commercial-acceptance-v132', area: 'Teste real', title: 'Aceite final de venda',
+    id: 'final-commercial-acceptance-v133', area: 'Teste real', title: 'Aceite final de venda',
     detail: finalAcceptance.signed
       ? `Aceite final registrado por ${finalAcceptance.responsible || 'responsável não informado'} em ${new Date(finalAcceptance.acceptedAt).toLocaleString('pt-BR')}.`
       : 'Aceite final ainda não registrado. Só assine depois de zerar P0/P1, concluir dois aparelhos, permissões, impressão e backup controlado.',
     level: finalAcceptance.signed ? 'ok' : 'warn',
-    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v132 sem aceite registrado',
+    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v133 sem aceite registrado',
   });
 
   pushCommercialCheck(checks, {

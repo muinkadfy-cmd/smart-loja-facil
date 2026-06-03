@@ -11,14 +11,18 @@ import {
   getWebRoleCapabilities,
   webCommercialValidation,
   webPrintTestReceipt,
+  readWebDemoMode,
   readWebTrainingMode,
+  saveWebDemoMode,
   saveWebTrainingMode,
+  setWebDemoModeEnabled,
   setWebTrainingModeEnabled,
   type WebCommercialCheckItem,
   type WebCommercialValidationReport,
   type WebOutboxStats,
   type WebSyncSnapshot,
   type WebStoreRole,
+  type WebDemoModeState,
   type WebTrainingModeState,
 } from '../../lib/webApi';
 import type { AppStatus } from '../../types';
@@ -51,7 +55,7 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v132';
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v133';
 const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
@@ -150,7 +154,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v132 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v133 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -251,6 +255,21 @@ interface TrainingDemoStep {
   protectedArea: string;
 }
 
+interface DemoModeStep {
+  id: string;
+  title: string;
+  detail: string;
+  area: string;
+}
+
+const DEMO_MODE_STEPS: DemoModeStep[] = [
+  { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
+  { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
+  { id: 'demo-sales', title: 'Simular venda sem finalizar', detail: 'Cliente entende o fluxo de PDV usando clientes/produtos demo. Finalizar venda real continua bloqueado.', area: 'Vendas' },
+  { id: 'demo-receipts', title: 'Mostrar comprovantes de amostra', detail: 'Comprovantes demo podem ser abertos/impresso como modelo visual sem mexer no caixa.', area: 'Comprovantes' },
+  { id: 'demo-exit', title: 'Sair da demo antes da operação real', detail: 'Antes da primeira venda verdadeira, desative a demo, confira login/Supabase e rode o teste comercial.', area: 'Segurança' },
+];
+
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
   { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
   { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
@@ -260,18 +279,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v132';
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v133';
 const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v132';
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v133';
 const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v132';
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v133';
 const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v132 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v133 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -283,12 +302,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v132-real',
+    id: 'deploy-cache-v133-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v132',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v132.',
+    title: 'Deploy aplicado e PWA abriu v133',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v133.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v132.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v133.',
     critical: true,
   },
   {
@@ -413,7 +432,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v132-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v133-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -694,7 +713,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v132',
+    'Smart Loja Fácil — fechamento comercial / aceite final v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -788,7 +807,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v132',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -828,7 +847,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v132',
+    'Smart Loja Fácil — plano de correção aceite v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -866,7 +885,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v132',
+    'Smart Loja Fácil — execução real assistida v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -940,7 +959,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v132',
+    'Smart Loja Fácil — roteiro guiado comercial v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -993,7 +1012,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v132',
+    'Smart Loja Fácil — modo treinamento seguro v133',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -1020,7 +1039,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v132',
+    'Smart Loja Fácil — teste comercial v133',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -1052,11 +1071,13 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [finalAcceptance, setFinalAcceptance] = useState<FinalAcceptanceState>(() => readFinalAcceptanceState());
   const [onboardingState, setOnboardingState] = useState<FirstClientOnboardingState>(() => readOnboardingState());
   const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
+  const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
     setOutbox(getWebOutboxStats());
     setTrainingMode(readWebTrainingMode());
+    setDemoMode(readWebDemoMode());
   };
 
   const loadRole = async () => {
@@ -1074,11 +1095,15 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     const handler = () => refreshLocal();
     window.addEventListener('smart-loja:web-sync-status', handler);
     window.addEventListener('smart-loja:web-outbox-change', handler);
+    window.addEventListener('smart-loja:web-demo-mode-change', handler);
+    window.addEventListener('smart-loja:web-training-mode-change', handler);
     window.addEventListener('online', handler);
     window.addEventListener('offline', handler);
     return () => {
       window.removeEventListener('smart-loja:web-sync-status', handler);
       window.removeEventListener('smart-loja:web-outbox-change', handler);
+      window.removeEventListener('smart-loja:web-demo-mode-change', handler);
+      window.removeEventListener('smart-loja:web-training-mode-change', handler);
       window.removeEventListener('online', handler);
       window.removeEventListener('offline', handler);
     };
@@ -1087,6 +1112,8 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const capabilities = useMemo(() => getWebRoleCapabilities(roleState.role), [roleState.role]);
   const pendingItems = useMemo(() => readWebOutbox().slice(0, 6), [outbox.total]);
   const online = typeof navigator === 'undefined' ? true : navigator.onLine;
+  const demoActive = demoMode.enabled;
+  const demoStatusLabel = demoActive ? 'Demo separada' : 'Dados reais';
   const groupedChecks = useMemo(() => {
     const groups = new Map<string, WebCommercialCheckItem[]>();
     for (const check of report?.checks ?? []) {
@@ -1333,6 +1360,53 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: 'success', text: 'Orientação do modo treinamento copiada sem senha e sem chave privada.' });
   }
 
+  function patchDemoMode(patch: Partial<WebDemoModeState>): void {
+    setDemoMode(saveWebDemoMode({ ...demoMode, ...patch }));
+  }
+
+  function activateDemoMode(): void {
+    const next = setWebDemoModeEnabled(true, {
+      scenario: demoMode.scenario || 'Demonstração comercial com dados fictícios',
+      storeName: demoMode.storeName || 'Loja Demonstração Fácil',
+      responsible: demoMode.responsible || roleState.email || '',
+      note: demoMode.note || 'Use este ambiente para apresentar telas sem expor clientes, vendas, caixa ou estoque real.',
+    });
+    setDemoMode(next);
+    setTrainingMode(readWebTrainingMode());
+    setFeedback({ tone: 'info', text: 'Ambiente demo ativado. O app usa dados fictícios e bloqueia gravações reais.' });
+    onRefresh();
+  }
+
+  function deactivateDemoMode(): void {
+    const ok = window.confirm('Sair do ambiente demo e voltar a ler os dados reais da loja? O modo treinamento pode continuar ativo para proteger gravações.');
+    if (!ok) return;
+    const next = setWebDemoModeEnabled(false, { note: demoMode.note });
+    setDemoMode(next);
+    setFeedback({ tone: 'success', text: 'Ambiente demo desativado. Toque em Puxar dados para carregar a loja real e confirme Supabase antes de vender.' });
+    onRefresh();
+  }
+
+  async function copyDemoMode(): Promise<void> {
+    const lines = [
+      'Smart Loja Fácil — ambiente demo separado v133',
+      `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
+      `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
+      `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
+      `Responsável: ${demoMode.responsible || roleState.email || 'não informado'}`,
+      `Modo treinamento: ${trainingMode.enabled ? 'ativo' : 'desativado'}`,
+      `Dados reais: ${demoMode.enabled ? 'não usados nas listas enquanto a demo estiver ativa' : 'visíveis conforme login/permissão'}`,
+      `Pendências locais: ${outbox.total}`,
+      `Observação: ${demoMode.note || 'sem observação'}`,
+      '',
+      'Regra de segurança:',
+      '- Demo ativa mostra clientes, produtos, vendas, caixa e comprovantes fictícios.',
+      '- Demo ativa bloqueia gravações reais e não altera estoque/caixa/crediário.',
+      '- Para venda verdadeira, desative a demo, confira login/Supabase e rode o teste comercial.',
+    ];
+    await navigator.clipboard?.writeText(lines.join('\n')).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Resumo do ambiente demo copiado sem dados reais, senha ou chave privada.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -1341,7 +1415,9 @@ ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, repor
 
 ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}
 
-${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}`
+${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
+
+Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -1353,6 +1429,7 @@ ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, o
           `Nuvem: ${status?.sqlite_ok ? 'conectada' : 'verificar login/configuração'}`,
           `Pendências: ${outbox.total}`,
           `Modo treinamento: ${trainingMode.enabled ? 'ativo - gravações reais bloqueadas' : 'desativado'}`,
+          `Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -1367,10 +1444,43 @@ ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, o
         <StatCard label="Nuvem" value={status?.sqlite_ok ? 'Online' : 'Verificar'} detail={online ? 'internet ativa' : 'sem internet'} icon="bloqueio_seguro" tone={status?.sqlite_ok ? 'green' : 'orange'} />
         <StatCard label="Sincronização" value={snapshotLabel(snapshot)} detail={snapshot.module} icon="atualizar" tone={statusTone(snapshot)} />
         <StatCard label="Pendências" value={formatNumber(outbox.total)} detail={outbox.total ? 'neste aparelho' : 'fila limpa'} icon="offline_local" tone={outbox.total ? 'orange' : 'green'} />
-        <StatCard label="Comercial" value={report ? `${report.score}/10` : 'Testar'} detail={readyText(report)} icon="relatorios" tone={report?.readyLabel === 'nao' ? 'orange' : report?.readyLabel === 'piloto' ? 'green' : 'blue'} />
+        <StatCard label="Ambiente" value={demoStatusLabel} detail={demoActive ? 'dados fictícios' : 'loja real'} icon="bloqueio_seguro" tone={demoActive ? 'purple' : 'blue'} />
       </section>
 
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
+
+      <section className={`mapp-section-block mapp-demo-panel ${demoActive ? 'is-active' : ''}`}>
+        <div className="mapp-section-title"><h2>Ambiente demo separado</h2><button type="button" onClick={() => void copyDemoMode()}>Copiar resumo</button></div>
+        <div className="mapp-demo-hero">
+          <div>
+            <span>{demoActive ? 'Dados fictícios ativos' : 'Usando loja real'}</span>
+            <strong>{demoActive ? 'Seguro para apresentar cliente' : 'Ative antes de demonstrar'}</strong>
+            <p>Quando ativo, as listas usam clientes, produtos, vendas, caixa e comprovantes fictícios. A loja real não é lida nas telas e gravações reais ficam bloqueadas.</p>
+          </div>
+          <b className={demoActive ? 'ok' : 'warn'}>{demoActive ? 'DEMO' : 'REAL'}</b>
+        </div>
+        <div className="mapp-final-release-grid">
+          <label>Nome da loja demo<input value={demoMode.storeName} onChange={(event) => patchDemoMode({ storeName: event.target.value })} placeholder="Ex.: Loja Demonstração Fácil" /></label>
+          <label>Responsável pela apresentação<input value={demoMode.responsible} onChange={(event) => patchDemoMode({ responsible: event.target.value })} placeholder="Ex.: João / suporte" /></label>
+          <label>Cenário da demonstração<input value={demoMode.scenario} onChange={(event) => patchDemoMode({ scenario: event.target.value })} placeholder="Ex.: Apresentação para cliente novo" /></label>
+          <label>Observação<textarea value={demoMode.note} onChange={(event) => patchDemoMode({ note: event.target.value })} placeholder="Anote o cliente, aparelho usado e o que precisa confirmar depois na loja real." rows={3} /></label>
+        </div>
+        <div className="mapp-demo-steps">
+          {DEMO_MODE_STEPS.map((step) => (
+            <article key={step.id}>
+              <span>{step.area}</span>
+              <strong>{step.title}</strong>
+              <p>{step.detail}</p>
+            </article>
+          ))}
+        </div>
+        <div className="mapp-button-grid">
+          <button type="button" className="mapp-primary-button" onClick={activateDemoMode} disabled={demoActive}>Ativar demo segura</button>
+          <button type="button" className="mapp-secondary-button" onClick={deactivateDemoMode} disabled={!demoActive}>Voltar para loja real</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyDemoMode()}>Copiar resumo</button>
+        </div>
+        <small className="mapp-final-honesty">Demo ativa não substitui teste real. Antes de vender de verdade, saia da demo, confira login/Supabase, rode o teste comercial e valide dois aparelhos.</small>
+      </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
         <div className="mapp-section-title"><h2>Modo treinamento seguro</h2><button type="button" onClick={() => void copyTrainingMode()}>Copiar orientação</button></div>
@@ -1668,7 +1778,7 @@ ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, o
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v132 treinamento</strong></span>
+          <span><b>Cache</b><strong>v133 demo</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -1716,7 +1826,7 @@ ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, o
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v132 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v133 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

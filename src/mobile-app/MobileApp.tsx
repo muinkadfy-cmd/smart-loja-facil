@@ -11,7 +11,7 @@ import { ReceiptsScreen } from './screens/ReceiptsScreen';
 import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScreens';
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
-import { readWebTrainingMode } from '../lib/webApi';
+import { readWebDemoMode, readWebTrainingMode } from '../lib/webApi';
 
 interface MobileAppProps {
   activePage: PageKey;
@@ -28,6 +28,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [trainingModeActive, setTrainingModeActive] = useState(() => readWebTrainingMode().enabled);
+  const [demoModeActive, setDemoModeActive] = useState(() => readWebDemoMode().enabled);
 
   useEffect(() => {
     const handler = () => setUpdateAvailable(true);
@@ -36,11 +37,16 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
   }, []);
 
   useEffect(() => {
-    const handler = () => setTrainingModeActive(readWebTrainingMode().enabled);
+    const handler = () => {
+      setTrainingModeActive(readWebTrainingMode().enabled);
+      setDemoModeActive(readWebDemoMode().enabled);
+    };
     window.addEventListener('smart-loja:web-training-mode-change', handler);
+    window.addEventListener('smart-loja:web-demo-mode-change', handler);
     window.addEventListener('storage', handler);
     return () => {
       window.removeEventListener('smart-loja:web-training-mode-change', handler);
+      window.removeEventListener('smart-loja:web-demo-mode-change', handler);
       window.removeEventListener('storage', handler);
     };
   }, []);
@@ -52,9 +58,10 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     if ((dashboard?.low_stock_count ?? 0) > 0) items.push({ title: 'Estoque baixo', detail: `${dashboard?.low_stock_count ?? 0} produto(s) precisam de reposição.`, action: 'Ver produtos', page: 'products' });
     if ((dashboard?.today_sales_count ?? 0) === 0) items.push({ title: 'Nenhuma venda hoje', detail: 'Abra o PDV para registrar a primeira venda.', action: 'Abrir PDV', page: 'sales' });
     if (updateAvailable) items.push({ title: 'Nova versão disponível', detail: 'Atualize o PWA neste aparelho.', action: 'Atualizar', page: 'diagnostics' });
+    if (demoModeActive) items.push({ title: 'Ambiente demo ativo', detail: 'O app está usando dados fictícios separados da loja real.', action: 'Ver demo', page: 'diagnostics' });
     if (trainingModeActive) items.push({ title: 'Modo treinamento ativo', detail: 'Gravações reais estão bloqueadas para demonstração segura.', action: 'Ver modo', page: 'diagnostics' });
     return items.length ? items : [{ title: 'Tudo certo', detail: 'Nenhum alerta crítico agora.', action: 'Dashboard', page: 'dashboard' as PageKey }];
-  }, [status, updateAvailable, trainingModeActive]);
+  }, [status, updateAvailable, demoModeActive, trainingModeActive]);
 
   const navigate = useCallback((page: PageKey) => {
     onNavigate(page);
