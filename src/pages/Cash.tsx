@@ -165,7 +165,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
         </section>
       ) : (
         <section className="panel classic-panel form-panel classic-legacy-form-panel">
-          <div className="panel-head"><h2>Fechar caixa</h2><span className="pill">Diferenca {money(difference)}</span></div>
+          <div className="panel-head"><h2>Fechar caixa</h2><span className="pill">Diferença {money(difference)}</span></div>
           <form className="form-grid compact" onSubmit={close}>
             <label>Valor contado<input type="number" min="0" step="0.01" value={closingAmount} onChange={(event) => setClosingAmount(Number(event.target.value))} /></label>
             <label className="span-2">Observação<input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Ex.: conferido no fim do dia" /></label>
@@ -183,7 +183,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           <label>Tipo<select value={movementType} onChange={(event) => setMovementType(event.target.value as 'entrada' | 'saida')}><option value="entrada">Entrada</option><option value="saida">Saída</option></select></label>
           <label>Forma<select value={movementMethod} onChange={(event) => setMovementMethod(event.target.value)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartão</option><option value="ajuste">Ajuste</option></select></label>
           <label>Valor<input type="number" min="0.01" step="0.01" value={movementAmount} onChange={(event) => setMovementAmount(Number(event.target.value))} /></label>
-          <label className="span-2">Motivo<input value={movementReason} onChange={(event) => setMovementReason(event.target.value)} placeholder="Ex.: sangria, troco, reforco de caixa" /></label>
+          <label className="span-2">Motivo<input value={movementReason} onChange={(event) => setMovementReason(event.target.value)} placeholder="Ex.: sangria, troco, reforço de caixa" /></label>
           <button className="secondary-btn" disabled={busy}>{busy ? 'Lançando...' : 'Lançar movimento'}</button>
         </form>
       </section>
@@ -193,7 +193,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
         <TableFilters
           query={query}
           onQueryChange={setQuery}
-          queryPlaceholder="Buscar por motivo, forma, tipo ou horario"
+          queryPlaceholder="Buscar por motivo, forma, tipo ou horário"
           summary={`${filteredMovements.length} de ${(summary?.movements ?? []).length} movimentos visíveis`}
           selects={[
             {

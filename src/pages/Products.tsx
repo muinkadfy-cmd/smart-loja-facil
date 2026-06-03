@@ -104,7 +104,7 @@ function productDetailLines(product: Product): string[] {
 
 function productWhatsappText(product: Product): string {
   return [
-    'Ola! Segue a descricao completa do produto:',
+    'Olá! Segue a descrição completa do produto:',
     '',
     ...productDetailLines(product),
     '',
@@ -268,7 +268,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       const editing = Boolean(form.id);
       resetForm();
       await reload();
-      setMessage(editing ? 'Produto atualizado com sucesso.' : 'Produto salvo com codigo interno automatico.');
+      setMessage(editing ? 'Produto atualizado com sucesso.' : 'Produto salvo com código interno automático.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -299,7 +299,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             product.color ? `Cor: ${product.color}` : '',
             product.size ? `Tamanho: ${product.size}` : '',
             product.internal_code ? `Código: ${product.internal_code}` : '',
-          ].filter(Boolean).join('\n') || 'Produto sem cor, tamanho ou codigo cadastrado.'
+          ].filter(Boolean).join('\n') || 'Produto sem cor, tamanho ou código cadastrado.'
         : productCopyText(product);
     const copied = await copyTextToClipboard(text);
     setError('');
@@ -324,7 +324,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     await copyTextToClipboard(fullText);
     try {
       await api.openExternalUrl(whatsappChatUrl(whatsapp, fullText));
-      setMessage(`WhatsApp aberto direto para ${selectedCustomer.name}. Confirme que esse numero existe no WhatsApp antes de enviar.`);
+      setMessage(`WhatsApp aberto direto para ${selectedCustomer.name}. Confirme que esse número existe no WhatsApp antes de enviar.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -397,7 +397,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       <TableFilters
         query={query}
         onQueryChange={setQuery}
-        queryPlaceholder="Buscar por produto, codigo, categoria, cor ou tamanho"
+        queryPlaceholder="Buscar por produto, código, categoria, cor ou tamanho"
         summary={`${filteredRows.length} de ${rows.length} produtos visíveis`}
         selects={[
           {
@@ -423,11 +423,11 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       />
 
       <section className="stats-grid classic-stats-grid">
-        <div className="stat-card tone-yellow"><div className="stat-icon"><AppIcon name="produtos" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Total de Produtos</span><strong>{summary.totalProducts}</strong><small>produtos cadastrados</small></div></div>
+        <div className="stat-card tone-yellow"><div className="stat-icon"><AppIcon name="produtos" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Total de produtos</span><strong>{summary.totalProducts}</strong><small>produtos cadastrados</small></div></div>
         <div className="stat-card tone-green"><div className="stat-icon"><AppIcon name="categorias" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Ativos</span><strong>{summary.activeProducts}</strong><small>produtos ativos</small></div></div>
-        <div className="stat-card tone-purple"><div className="stat-icon"><AppIcon name="manutencao_ajuste" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Estoque Total</span><strong>{summary.totalStock}</strong><small>unidades em estoque</small></div></div>
-        <div className="stat-card tone-red"><div className="stat-icon"><AppIcon name="estoque_baixo" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Estoque Baixo</span><strong>{summary.lowStock}</strong><small>produtos criticos</small></div></div>
-        <div className="stat-card tone-blue"><div className="stat-icon"><AppIcon name="arquivo_banco_sqlite" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Valor Estoque</span><strong>{money(summary.totalValue)}</strong><small>valor de venda total</small></div></div>
+        <div className="stat-card tone-purple"><div className="stat-icon"><AppIcon name="manutencao_ajuste" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Estoque total</span><strong>{summary.totalStock}</strong><small>unidades em estoque</small></div></div>
+        <div className="stat-card tone-red"><div className="stat-icon"><AppIcon name="estoque_baixo" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Estoque baixo</span><strong>{summary.lowStock}</strong><small>produtos críticos</small></div></div>
+        <div className="stat-card tone-blue"><div className="stat-icon"><AppIcon name="arquivo_banco_sqlite" size={48} className="app-icon-stat" /></div><div><span className="muted micro-label">Valor em estoque</span><strong>{money(summary.totalValue)}</strong><small>valor de venda total</small></div></div>
       </section>
 
       {error && <div className="error-box">{error}</div>}
@@ -453,16 +453,16 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             onRowClick={(row) => setSelectedProductId(row.id)}
             columns={[
               { key: 'code', label: 'Código', render: (row) => row.internal_code || row.barcode || '-' },
-              { key: 'name', label: 'Nome do Produto', render: (row) => row.name },
+              { key: 'name', label: 'Nome do produto', render: (row) => row.name },
               { key: 'category', label: 'Categoria', render: (row) => row.category || '-' },
               { key: 'stock', label: 'Estoque', align: 'right', render: (row) => row.stock },
               { key: 'price', label: 'Preço venda', align: 'right', render: (row) => money(row.promo_price ?? row.price) },
-              { key: 'status', label: 'Status', render: (row) => <span className={row.stock <= 5 ? 'classic-low-stock' : 'classic-ok-stock'}>{row.stock <= 5 ? 'Estoque Baixo' : row.status}</span> },
+              { key: 'status', label: 'Status', render: (row) => <span className={row.stock <= 5 ? 'classic-low-stock' : 'classic-ok-stock'}>{row.stock <= 5 ? 'Estoque baixo' : row.status}</span> },
             ]}
           />
 
           <div className="classic-table-footer">
-            <span>Pagina: 1</span>
+            <span>Página: 1</span>
             <span>Exibindo 1 a {filteredRows.length} de {rows.length} registros</span>
           </div>
         </article>
@@ -472,10 +472,10 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <h2>Ações</h2>
           </div>
           <div className="classic-action-grid">
-            <button type="button" onClick={() => { resetForm(); setSelectedProductId(null); }}><AppIcon name="produtos" size={24} className="app-icon-button-inline" />Novo Produto</button>
-            <button type="button" onClick={() => selectedProduct && setAdjust((current) => ({ ...current, productId: selectedProduct.id }))}><AppIcon name="manutencao_ajuste" size={24} className="app-icon-button-inline" />Ajustar Estoque</button>
-            <button type="button" onClick={() => selectedProduct && setDetails(selectedProduct)} disabled={!selectedProduct}><AppIcon name="buscar" size={24} className="app-icon-button-inline" />Abrir Produto</button>
-            <button type="button" onClick={() => selectedProduct && void saveProductPhoto(selectedProduct, true)} disabled={!selectedProduct || !selectedProduct.image_data}><AppIcon name="imprimir" size={24} className="app-icon-button-inline" />Salvar Foto</button>
+            <button type="button" onClick={() => { resetForm(); setSelectedProductId(null); }}><AppIcon name="produtos" size={24} className="app-icon-button-inline" />Novo produto</button>
+            <button type="button" onClick={() => selectedProduct && setAdjust((current) => ({ ...current, productId: selectedProduct.id }))}><AppIcon name="manutencao_ajuste" size={24} className="app-icon-button-inline" />Ajustar estoque</button>
+            <button type="button" onClick={() => selectedProduct && setDetails(selectedProduct)} disabled={!selectedProduct}><AppIcon name="buscar" size={24} className="app-icon-button-inline" />Abrir produto</button>
+            <button type="button" onClick={() => selectedProduct && void saveProductPhoto(selectedProduct, true)} disabled={!selectedProduct || !selectedProduct.image_data}><AppIcon name="imprimir" size={24} className="app-icon-button-inline" />Salvar foto</button>
             <button type="button" onClick={() => selectedProduct && void shareProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />Enviar WhatsApp</button>
             <button type="button" onClick={() => void openWhatsappOnly()}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />WhatsApp Web</button>
             <button type="button" onClick={() => void reload()}><AppIcon name="relatorios" size={24} className="app-icon-button-inline" />Relatório de produtos</button>
@@ -528,7 +528,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
         <section className="panel classic-panel form-panel">
           <div className="classic-panel-header">
-            <h2>Ajuste de Estoque</h2>
+            <h2>Ajuste de estoque</h2>
           </div>
           <form onSubmit={adjustStock} className="form-grid compact adjust-grid">
             <label>Produto<select value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
@@ -549,7 +549,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             </div>
             <div className="product-detail-info">
               <div className="product-detail-title">
-                <small>Descricao para copiar</small>
+                <small>Descrição para copiar</small>
                 <strong>{details.name}</strong>
                 <span>{details.category || 'Sem categoria'} - {productDisplayPrice(details)}</span>
               </div>
@@ -567,15 +567,15 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
                   <option value="">Selecione um cliente com WhatsApp</option>
                   {customers.map((customer) => <option key={customer.id} value={customer.id}>{customerLabel(customer)}</option>)}
                 </select>
-                <small>O numero precisa existir no WhatsApp. Use o campo WhatsApp do cadastro do cliente, ou telefone se for WhatsApp.</small>
+                <small>O número precisa existir no WhatsApp. Use o campo WhatsApp do cadastro do cliente, ou telefone se for WhatsApp.</small>
               </label>
               <textarea className="product-copy-text" value={productCopyText(details)} readOnly />
               <div className="product-detail-actions">
-                <button type="button" className="primary-btn" onClick={() => void shareProduct(details)}>Enviar descricao para cliente</button>
+                <button type="button" className="primary-btn" onClick={() => void shareProduct(details)}>Enviar descrição para cliente</button>
                 <button type="button" className="secondary-btn" onClick={() => void copyProductText(details)}>Copiar tudo</button>
                 {details.image_data && <button type="button" className="secondary-btn" onClick={() => void sendPhotoSeparately(details)}>Salvar foto separada</button>}
                 {details.image_data && <button type="button" className="ghost-btn" onClick={() => void saveProductPhoto(details, true)}>Salvar/abrir foto</button>}
-                <button type="button" className="ghost-btn" onClick={() => void copyProductText(details, 'price')}>Copiar preco</button>
+                <button type="button" className="ghost-btn" onClick={() => void copyProductText(details, 'price')}>Copiar preço</button>
                 <button type="button" className="ghost-btn" onClick={() => void copyProductText(details, 'color')}>Copiar cor/tamanho</button>
               </div>
             </div>

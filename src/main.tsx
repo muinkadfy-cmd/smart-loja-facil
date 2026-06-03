@@ -9,8 +9,9 @@ import './styles/lote121-clean-interface.css';
 import './styles/lote122-clean-alerts.css';
 import './styles/lote123-dashboard-supreme.css';
 import './styles/lote124-master-ui-10.css';
+import './styles/lote125-internal-tabs-premium.css';
 
-document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface', 'lote122-clean-alerts', 'lote123-dashboard-supreme', 'lote124-master-ui-10');
+document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface', 'lote122-clean-alerts', 'lote123-dashboard-supreme', 'lote124-master-ui-10', 'lote125-internal-tabs-premium');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

@@ -117,8 +117,8 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
           <p>Veja só os números principais do período, de forma simples e objetiva.</p>
         </div>
         <div className="hero-status reports-hero-status">
-          <span className="status-chip"><AppIcon name="relatorios" size={16} className="app-icon-button-inline" />Numeros na tela</span>
-          <span className="status-chip"><AppIcon name="buscar" size={16} className="app-icon-button-inline" />Consulta rapida</span>
+          <span className="status-chip"><AppIcon name="relatorios" size={16} className="app-icon-button-inline" />Números na tela</span>
+          <span className="status-chip"><AppIcon name="buscar" size={16} className="app-icon-button-inline" />Consulta rápida</span>
         </div>
       </div>
 
@@ -130,9 +130,9 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
             <p>Visual na tela com tabela detalhada.</p>
           </article>
           <article className="mini-insight-card tone-purple">
-            <small>Periodo</small>
+            <small>Período</small>
             <strong>{periodLabel}</strong>
-            <p>Filtro atual para os numeros exibidos.</p>
+            <p>Filtro atual para os números exibidos.</p>
           </article>
           <article className={`mini-insight-card tone-${activeReport.accent}`}>
             <small>Registros</small>
@@ -145,20 +145,20 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
       <section className="panel form-panel reports-panel">
         <div className="panel-head panel-head-tight">
           <div>
-            <h2>Filtro do relatorio</h2>
+            <h2>Filtro do relatório</h2>
             <p>Escolha o tipo e o período para atualizar os números.</p>
           </div>
           <div className="preset-row">
             <button type="button" className="secondary-btn small" onClick={() => applyPreset('today')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Hoje</button>
-            <button type="button" className="secondary-btn small" onClick={() => applyPreset('last7')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Ultimos 7 dias</button>
-            <button type="button" className="secondary-btn small" onClick={() => applyPreset('month')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Este mes</button>
+            <button type="button" className="secondary-btn small" onClick={() => applyPreset('last7')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Últimos 7 dias</button>
+            <button type="button" className="secondary-btn small" onClick={() => applyPreset('month')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Este mês</button>
           </div>
         </div>
         <form className="form-grid compact reports-form-grid" onSubmit={submit}>
           <label>Relatório<select value={form.report} onChange={(e) => setForm({ ...form, report: e.target.value as ReportKind })}>{reportOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           <label>De<input type="date" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} /></label>
           <label>Até<input type="date" value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} /></label>
-          <button className="primary-btn" disabled={loading}><AppIcon name="atualizar" size={16} className="app-icon-button-inline" />{loading ? 'Atualizando...' : 'Atualizar numeros'}</button>
+          <button className="primary-btn" disabled={loading}><AppIcon name="atualizar" size={16} className="app-icon-button-inline" />{loading ? 'Atualizando...' : 'Atualizar números'}</button>
         </form>
       </section>
 
@@ -212,8 +212,8 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
           <section className="panel empty-state-panel">
             <div className="empty-state-icon"><AppIcon name="relatorios" size={32} className="app-icon-page" /></div>
             <div>
-              <strong>Nenhum relatorio carregado ainda</strong>
-              <p>Escolha o filtro e clique em Atualizar numeros.</p>
+              <strong>Nenhum relatório carregado ainda</strong>
+              <p>Escolha o filtro e clique em Atualizar números.</p>
             </div>
           </section>
         )
