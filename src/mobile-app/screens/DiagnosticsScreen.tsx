@@ -47,7 +47,7 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v130';
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v131';
 const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
@@ -146,7 +146,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v130 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v131 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -222,20 +222,53 @@ interface FinalSellGate {
   warnings: string[];
 }
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v130';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v129'];
+interface FirstClientOnboardingStep {
+  id: string;
+  phase: string;
+  title: string;
+  action: string;
+  expected: string;
+  owner: string;
+  priority: 'P1' | 'P2';
+}
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v130';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+interface FirstClientOnboardingState {
+  doneIds: string[];
+  clientName: string;
+  contactName: string;
+  supportNote: string;
+  updatedAt: string;
+}
+
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v131';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v131';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v131';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS: string[] = [];
+
+const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
+  { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v131 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
+  { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
+  { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
+  { id: 'credit-order-practice', phase: '6. Treino guiado', title: 'Crediário e pedido treinados sem risco', action: 'Fazer um teste controlado de crediário/pedido e apagar/cancelar conforme regra da loja.', expected: 'Cliente entende diferença entre venda, pedido, crediário e comprovante.', owner: 'Suporte', priority: 'P2' },
+  { id: 'receipt-print-share', phase: '7. Comprovante', title: 'Comprovante impresso ou compartilhado', action: 'Testar 80mm/A4/PDF/WhatsApp conforme equipamento real do cliente.', expected: 'Nome, total, forma de pagamento e dados da loja ficam visíveis.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'backup-support', phase: '8. Segurança', title: 'Backup e suporte combinados', action: 'Explicar backup, restauração com cuidado, quem chamar no suporte e como copiar diagnóstico.', expected: 'Cliente sabe copiar diagnóstico e não restaura backup real sem orientação.', owner: 'Você / suporte', priority: 'P1' },
+  { id: 'first-day-review', phase: '9. Fechamento do primeiro dia', title: 'Revisão do primeiro dia feita', action: 'Conferir vendas, caixa, clientes, produtos, pendências, relatório e dúvidas do cliente.', expected: 'Sem P0/P1 aberto e com lista curta do que ajustar no próximo lote.', owner: 'Você / cliente', priority: 'P1' },
+];
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v130-real',
+    id: 'deploy-cache-v131-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v130',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v130.',
+    title: 'Deploy aplicado e PWA abriu v131',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v131.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v130.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v131.',
     critical: true,
   },
   {
@@ -360,7 +393,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' ? 'deploy-cache-v130-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' ? 'deploy-cache-v131-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -641,7 +674,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v130',
+    'Smart Loja Fácil — fechamento comercial / aceite final v131',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -667,6 +700,94 @@ function buildFinalAcceptanceText(params: {
   ].join('\n');
 }
 
+
+function emptyOnboardingState(): FirstClientOnboardingState {
+  return { doneIds: [], clientName: '', contactName: '', supportNote: '', updatedAt: '' };
+}
+
+function normalizeOnboardingState(value: unknown): FirstClientOnboardingState {
+  const source = value && typeof value === 'object' ? value as Partial<FirstClientOnboardingState> : {};
+  const allowed = new Set(FIRST_CLIENT_ONBOARDING_STEPS.map((step) => step.id));
+  const rawDone = Array.isArray(source.doneIds) ? source.doneIds : [];
+  const doneIds = Array.from(new Set(rawDone.filter((id): id is string => typeof id === 'string' && allowed.has(id))));
+  return {
+    doneIds,
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 120) : '',
+    contactName: typeof source.contactName === 'string' ? source.contactName.slice(0, 100) : '',
+    supportNote: typeof source.supportNote === 'string' ? source.supportNote.slice(0, 1200) : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readOnboardingState(): FirstClientOnboardingState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyOnboardingState();
+  try {
+    const current = normalizeOnboardingState(JSON.parse(window.localStorage.getItem(FIRST_CLIENT_ONBOARDING_KEY) || '{}'));
+    if (current.doneIds.length || current.clientName || current.contactName || current.supportNote) return current;
+    for (const key of LEGACY_FIRST_CLIENT_ONBOARDING_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeOnboardingState(JSON.parse(raw));
+      if (legacy.doneIds.length || legacy.clientName || legacy.contactName || legacy.supportNote) {
+        window.localStorage.setItem(FIRST_CLIENT_ONBOARDING_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyOnboardingState();
+  }
+  return emptyOnboardingState();
+}
+
+function saveOnboardingState(state: FirstClientOnboardingState): FirstClientOnboardingState {
+  const normalized = normalizeOnboardingState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(FIRST_CLIENT_ONBOARDING_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function buildFirstClientOnboardingText(params: {
+  state: FirstClientOnboardingState;
+  gate: FinalSellGate;
+  roleState: RoleState;
+  report: WebCommercialValidationReport | null;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const done = new Set(params.state.doneIds);
+  const total = FIRST_CLIENT_ONBOARDING_STEPS.length;
+  const doneCount = params.state.doneIds.length;
+  const percent = total ? Math.round((doneCount / total) * 100) : 0;
+  const rows = FIRST_CLIENT_ONBOARDING_STEPS.map((step) => [
+    done.has(step.id) ? '[OK]' : '[PENDENTE]',
+    step.priority,
+    step.phase,
+    step.title,
+    `Responsável: ${step.owner}`,
+    `Esperado: ${step.expected}`,
+  ].join(' · '));
+  return [
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v131',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
+    `Contato/responsável: ${params.state.contactName || 'não informado'}`,
+    `Progresso onboarding: ${doneCount}/${total} (${percent}%)`,
+    `Fechamento comercial: ${params.gate.title} — ${params.gate.score}/10 ${params.gate.stars}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.state.supportNote ? `Observações de suporte: ${params.state.supportNote}` : 'Observações de suporte: nenhuma',
+    '',
+    'Passos de entrega:',
+    ...rows,
+    '',
+    'Mensagem curta para o cliente:',
+    `Olá! Seu Smart Loja Fácil foi preparado para ${params.state.clientName || 'sua loja'}. No primeiro dia, use o app com acompanhamento: cadastre produtos/clientes, faça uma venda pequena, confira caixa/comprovante e me envie o diagnóstico se aparecer qualquer aviso.`,
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -687,7 +808,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v130',
+    'Smart Loja Fácil — plano de correção aceite v131',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -725,7 +846,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v130',
+    'Smart Loja Fácil — execução real assistida v131',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -799,7 +920,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v130',
+    'Smart Loja Fácil — roteiro guiado comercial v131',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -845,7 +966,7 @@ function readyText(report: WebCommercialValidationReport | null): string {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v130',
+    'Smart Loja Fácil — teste comercial v131',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -875,6 +996,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [guidedDoneIds, setGuidedDoneIds] = useState<string[]>(() => readGuidedDoneIds());
   const [assistedState, setAssistedState] = useState<AssistedRealState>(() => readAssistedState());
   const [finalAcceptance, setFinalAcceptance] = useState<FinalAcceptanceState>(() => readFinalAcceptanceState());
+  const [onboardingState, setOnboardingState] = useState<FirstClientOnboardingState>(() => readOnboardingState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -944,6 +1066,19 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const triageItems = useMemo(() => buildCommercialTriageItems({ state: assistedState, report, outbox, online, snapshot }), [assistedState, report, outbox, online, snapshot]);
   const triageSummary = useMemo(() => summarizeTriage(triageItems), [triageItems]);
   const finalGate = useMemo(() => buildFinalSellGate({ report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, outbox, online, roleState, acceptance: finalAcceptance }), [report, triageSummary, assistedSummary, guidedDoneCount, outbox, online, roleState, finalAcceptance]);
+
+  const onboardingDoneSet = useMemo(() => new Set(onboardingState.doneIds), [onboardingState.doneIds]);
+  const onboardingDoneCount = onboardingState.doneIds.length;
+  const onboardingPercent = Math.round((onboardingDoneCount / FIRST_CLIENT_ONBOARDING_STEPS.length) * 100);
+  const onboardingGroups = useMemo(() => {
+    const groups = new Map<string, FirstClientOnboardingStep[]>();
+    for (const step of FIRST_CLIENT_ONBOARDING_STEPS) {
+      const rows = groups.get(step.phase) ?? [];
+      rows.push(step);
+      groups.set(step.phase, rows);
+    }
+    return Array.from(groups.entries());
+  }, []);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -1058,11 +1193,65 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: triageSummary.p0 ? 'error' : triageSummary.p1 ? 'info' : 'success', text: 'Plano de correção aceite copiado sem senha e sem chave privada.' });
   }
 
+  function patchFinalAcceptance(patch: Partial<FinalAcceptanceState>): void {
+    setFinalAcceptance((current) => saveFinalAcceptanceState({ ...current, ...patch }));
+  }
+
+  function registerFinalAcceptance(): void {
+    if (finalGate.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Aceite bloqueado: ainda existe P0/P1, teste incompleto, pendência ou falha marcada.' });
+      return;
+    }
+    const responsible = finalAcceptance.responsible.trim() || roleState.email || 'responsável não informado';
+    const next = saveFinalAcceptanceState({ ...finalAcceptance, responsible, acceptedBy: roleState.email || responsible, acceptedAt: new Date().toISOString() });
+    setFinalAcceptance(next);
+    setFeedback({ tone: 'success', text: 'Aceite final registrado neste aparelho. Copie o parecer e guarde com as evidências.' });
+  }
+
+  function clearFinalAcceptance(): void {
+    const ok = window.confirm('Limpar o aceite final salvo neste aparelho? Isso não apaga dados da loja.');
+    if (!ok) return;
+    setFinalAcceptance(saveFinalAcceptanceState(emptyFinalAcceptanceState()));
+    setFeedback({ tone: 'info', text: 'Aceite final limpo neste aparelho. Dados da loja preservados.' });
+  }
+
+  async function copyFinalAcceptance(): Promise<void> {
+    const text = buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: finalGate.decision === 'blocked' ? 'error' : 'success', text: 'Parecer final copiado sem senha e sem chave privada.' });
+  }
+
+  function toggleOnboardingStep(id: string): void {
+    const done = new Set(onboardingState.doneIds);
+    if (done.has(id)) done.delete(id);
+    else done.add(id);
+    setOnboardingState((current) => saveOnboardingState({ ...current, doneIds: Array.from(done) }));
+  }
+
+  function patchOnboardingState(patch: Partial<FirstClientOnboardingState>): void {
+    setOnboardingState((current) => saveOnboardingState({ ...current, ...patch }));
+  }
+
+  function resetOnboarding(): void {
+    const ok = window.confirm('Zerar o checklist de onboarding deste aparelho? Isso não apaga clientes, vendas ou produtos.');
+    if (!ok) return;
+    setOnboardingState(saveOnboardingState(emptyOnboardingState()));
+    setFeedback({ tone: 'info', text: 'Checklist de onboarding zerado neste aparelho. Dados da loja preservados.' });
+  }
+
+  async function copyOnboardingKit(): Promise<void> {
+    const text = buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Kit do primeiro cliente copiado. Pode enviar para instalação, treinamento e suporte.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
 
-${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online })}`
+${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online })}
+
+${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -1261,6 +1450,77 @@ ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, repor
         )}
       </section>
 
+      <section className={`mapp-section-block mapp-final-release-panel ${finalGate.tone}`}>
+        <div className="mapp-section-title"><h2>Fechamento comercial</h2><button type="button" onClick={() => void copyFinalAcceptance()}>Copiar parecer</button></div>
+        <div className="mapp-final-release-hero">
+          <div>
+            <span>{finalGate.decision === 'ready' ? 'Venda assistida' : finalGate.decision === 'pending' ? 'Aceite pendente' : 'Bloqueado'}</span>
+            <strong>{finalGate.title}</strong>
+            <p>{finalGate.subtitle}</p>
+          </div>
+          <div className="mapp-final-release-score"><strong>{finalGate.score}/10</strong><small>{finalGate.stars}</small></div>
+        </div>
+        <div className="mapp-final-release-grid">
+          <label>Responsável pelo aceite<input value={finalAcceptance.responsible} onChange={(event) => patchFinalAcceptance({ responsible: event.target.value })} placeholder="Ex.: João / suporte / dono" /></label>
+          <label>Loja ou cliente testado<input value={finalAcceptance.storeOrClient} onChange={(event) => patchFinalAcceptance({ storeOrClient: event.target.value })} placeholder="Ex.: Jaque Confecções — piloto" /></label>
+          <label>Evidência curta<textarea value={finalAcceptance.note} onChange={(event) => patchFinalAcceptance({ note: event.target.value })} placeholder="Ex.: 2 aparelhos, impressão 80mm, owner/admin/operator/viewer, backup controlado." rows={3} /></label>
+        </div>
+        {finalGate.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios antes de vender</strong>{finalGate.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : (
+          <div className="mapp-final-alert-list"><strong>Sem bloqueio P0/P1 neste aparelho</strong><p>Ainda mantenha suporte próximo no primeiro cliente real.</p></div>
+        )}
+        {finalGate.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos para revisar</strong>{finalGate.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid">
+          <button type="button" className="mapp-primary-button" onClick={registerFinalAcceptance} disabled={finalGate.decision === 'blocked'}>Registrar aceite final</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyFinalAcceptance()}>Copiar parecer final</button>
+          <button type="button" className="mapp-secondary-button" onClick={clearFinalAcceptance}>Limpar aceite</button>
+        </div>
+        <small className="mapp-final-honesty">Aceite registrado: {finalAcceptance.acceptedAt ? formatDateTime(finalAcceptance.acceptedAt) : 'não registrado'}. Isso não promete 100%; apenas documenta a conferência feita neste aparelho.</small>
+      </section>
+
+      <section className="mapp-section-block mapp-onboarding-panel">
+        <div className="mapp-section-title"><h2>Kit do primeiro cliente</h2><button type="button" onClick={() => void copyOnboardingKit()}>Copiar kit</button></div>
+        <div className="mapp-onboarding-hero">
+          <div>
+            <span>Entrega guiada</span>
+            <strong>{onboardingDoneCount}/{FIRST_CLIENT_ONBOARDING_STEPS.length} etapas feitas</strong>
+            <p>Use este checklist para instalar, treinar e acompanhar o primeiro dia do cliente sem pular passos importantes.</p>
+          </div>
+          <b className={onboardingPercent >= 90 ? 'ok' : onboardingPercent >= 60 ? 'warn' : 'danger'}>{onboardingPercent}%</b>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do onboarding ${onboardingPercent}%`}><span style={{ width: `${onboardingPercent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Nome do cliente/loja<input value={onboardingState.clientName} onChange={(event) => patchOnboardingState({ clientName: event.target.value })} placeholder="Ex.: Jaque Confecções" /></label>
+          <label>Contato responsável<input value={onboardingState.contactName} onChange={(event) => patchOnboardingState({ contactName: event.target.value })} placeholder="Ex.: Jaqueline / WhatsApp" /></label>
+          <label>Observações de suporte<textarea value={onboardingState.supportNote} onChange={(event) => patchOnboardingState({ supportNote: event.target.value })} placeholder="Anote pendências pequenas, impressora usada, aparelho do cliente e dúvidas do primeiro dia." rows={3} /></label>
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyOnboardingKit()}>Copiar mensagem/checklist</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetOnboarding}>Zerar onboarding</button>
+        </div>
+        <div className="mapp-onboarding-groups">
+          {onboardingGroups.map(([phase, steps]) => (
+            <article key={phase} className="mapp-onboarding-group">
+              <header><strong>{phase}</strong><small>{steps.filter((step) => onboardingDoneSet.has(step.id)).length}/{steps.length}</small></header>
+              {steps.map((step) => {
+                const done = onboardingDoneSet.has(step.id);
+                return (
+                  <button key={step.id} type="button" className={`mapp-onboarding-step ${done ? 'done' : ''} priority-${step.priority.toLowerCase()}`} onClick={() => toggleOnboardingStep(step.id)}>
+                    <span>{done ? '✓' : ''}</span>
+                    <div>
+                      <strong>{step.title}</strong>
+                      <p>{step.action}</p>
+                      <small>{step.owner} · {step.priority} · Esperado: {step.expected}</small>
+                    </div>
+                  </button>
+                );
+              })}
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="mapp-form-panel mapp-print-test-panel">
         <div className="mapp-form-head">
           <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
@@ -1282,7 +1542,7 @@ ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, repor
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v130 aceite</strong></span>
+          <span><b>Cache</b><strong>v131 onboarding</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -1330,7 +1590,7 @@ ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, repor
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v130 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v131 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

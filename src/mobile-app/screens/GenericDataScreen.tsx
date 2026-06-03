@@ -474,7 +474,7 @@ function PlaceholderScreen({ page, status, onNavigate, onRefresh }: PlaceholderP
       <EmptyState icon={route.icon} title={`${route.label} pronto para conectar`} detail="Esta tela já tem layout novo. A função completa pode ser migrada no próximo lote sem herdar CSS antigo." actionLabel="Voltar ao Dashboard" actionPage="dashboard" onNavigate={onNavigate} />
       <section className="mapp-version-card">
         <strong>Versão atual</strong>
-        <span>{status?.version ?? 'pwa-supabase-v130-aceite-final-venda'}</span>
+        <span>{status?.version ?? 'pwa-supabase-v131-kit-onboarding-cliente'}</span>
       </section>
     </div>
   );
@@ -496,7 +496,7 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
       `Versão: ${status?.version ?? 'sem versão'}`,
       `Supabase: ${status?.sqlite_ok ? 'online' : 'verificar'}`,
       `Loja: ${status?.settings.store_name ?? 'sem loja'}`,
-      `Cache: smart-loja-pwa-supabase-v130-aceite-final-venda`,
+      `Cache: smart-loja-pwa-supabase-v131-kit-onboarding-cliente`,
       `Largura: ${window.innerWidth}px`,
       `Altura: ${window.innerHeight}px`,
     ].join('\n');
@@ -508,9 +508,9 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
         <div className="mapp-section-title"><h2>Diagnóstico simples</h2><button type="button" onClick={onRefresh}>Atualizar</button></div>
         <div className="mapp-diagnostic-grid">
           <span><b>Supabase</b><strong>{status?.sqlite_ok ? 'Online' : 'Verificar login'}</strong></span>
-          <span><b>Versão</b><strong>{status?.version ?? 'v130'}</strong></span>
+          <span><b>Versão</b><strong>{status?.version ?? 'v131'}</strong></span>
           <span><b>Mobile</b><strong>{window.innerWidth <= 860 ? 'Sim' : 'Desktop'}</strong></span>
-          <span><b>Cache</b><strong>v130 aceite</strong></span>
+          <span><b>Cache</b><strong>v131 aceite</strong></span>
         </div>
       </section>
       <section className="mapp-button-grid">
