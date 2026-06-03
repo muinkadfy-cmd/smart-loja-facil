@@ -59,7 +59,7 @@ async function fileToDataUrl(file: File): Promise<string> {
   return await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.onerror = () => reject(new Error('Nao foi possivel ler a foto selecionada.'));
+    reader.onerror = () => reject(new Error('Não foi possível ler a foto selecionada.'));
     reader.readAsDataURL(file);
   });
 }
@@ -89,16 +89,16 @@ function productDetailLines(product: Product): string[] {
   const lines = [
     `Produto: ${product.name}`,
     `Categoria: ${product.category || '-'}`,
-    `Preco: ${productDisplayPrice(product)}`,
+    `Preço: ${productDisplayPrice(product)}`,
   ];
   if (product.promo_price && product.promo_price < product.price) {
-    lines.push(`Preco original: ${money(product.price)}`);
+    lines.push(`Preço original: ${money(product.price)}`);
   }
   if (product.color) lines.push(`Cor: ${product.color}`);
   if (product.size) lines.push(`Tamanho: ${product.size}`);
   if (product.stock > 0) lines.push('Estoque: disponivel');
-  if (product.internal_code) lines.push(`Codigo: ${product.internal_code}`);
-  if (product.barcode) lines.push(`Codigo de barras: ${product.barcode}`);
+  if (product.internal_code) lines.push(`Código: ${product.internal_code}`);
+  if (product.barcode) lines.push(`Código de barras: ${product.barcode}`);
   return lines;
 }
 
@@ -293,17 +293,17 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
   async function copyProductText(product: Product, mode: 'all' | 'price' | 'color' = 'all') {
     const text = mode === 'price'
-      ? `Preco de ${product.name}: ${productDisplayPrice(product)}`
+      ? `Preço de ${product.name}: ${productDisplayPrice(product)}`
       : mode === 'color'
         ? [
             product.color ? `Cor: ${product.color}` : '',
             product.size ? `Tamanho: ${product.size}` : '',
-            product.internal_code ? `Codigo: ${product.internal_code}` : '',
+            product.internal_code ? `Código: ${product.internal_code}` : '',
           ].filter(Boolean).join('\n') || 'Produto sem cor, tamanho ou codigo cadastrado.'
         : productCopyText(product);
     const copied = await copyTextToClipboard(text);
     setError('');
-    setMessage(copied ? 'Informacao copiada para colar no WhatsApp ou mensagem.' : 'Nao foi possivel copiar automaticamente.');
+    setMessage(copied ? 'Informação copiada para colar no WhatsApp ou mensagem.' : 'Não foi possível copiar automaticamente.');
   }
 
   async function shareProduct(product: Product) {
@@ -316,7 +316,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     }
     const whatsapp = normalizeWhatsapp(customerContact(selectedCustomer));
     if (!whatsapp) {
-      setError('Esse cliente nao tem WhatsApp/telefone cadastrado. Cadastre o numero antes de enviar.');
+      setError('Esse cliente não tem WhatsApp/telefone cadastrado. Cadastre o número antes de enviar.');
       return;
     }
     setError('');
@@ -343,7 +343,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
   async function saveProductPhoto(product: Product, openAfter = true): Promise<string | null> {
     if (!product.image_data) {
-      setError('Esse produto nao tem foto cadastrada.');
+      setError('Esse produto não tem foto cadastrada.');
       setMessage('');
       return null;
     }
@@ -398,7 +398,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
         query={query}
         onQueryChange={setQuery}
         queryPlaceholder="Buscar por produto, codigo, categoria, cor ou tamanho"
-        summary={`${filteredRows.length} de ${rows.length} produtos visiveis`}
+        summary={`${filteredRows.length} de ${rows.length} produtos visíveis`}
         selects={[
           {
             label: 'Categoria',
@@ -452,11 +452,11 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             selectedRowKey={selectedProductId}
             onRowClick={(row) => setSelectedProductId(row.id)}
             columns={[
-              { key: 'code', label: 'Codigo', render: (row) => row.internal_code || row.barcode || '-' },
+              { key: 'code', label: 'Código', render: (row) => row.internal_code || row.barcode || '-' },
               { key: 'name', label: 'Nome do Produto', render: (row) => row.name },
               { key: 'category', label: 'Categoria', render: (row) => row.category || '-' },
               { key: 'stock', label: 'Estoque', align: 'right', render: (row) => row.stock },
-              { key: 'price', label: 'Preco Venda', align: 'right', render: (row) => money(row.promo_price ?? row.price) },
+              { key: 'price', label: 'Preço venda', align: 'right', render: (row) => money(row.promo_price ?? row.price) },
               { key: 'status', label: 'Status', render: (row) => <span className={row.stock <= 5 ? 'classic-low-stock' : 'classic-ok-stock'}>{row.stock <= 5 ? 'Estoque Baixo' : row.status}</span> },
             ]}
           />
@@ -469,7 +469,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
         <aside className="panel classic-panel classic-action-sidebar">
           <div className="classic-panel-header">
-            <h2>Acoes</h2>
+            <h2>Ações</h2>
           </div>
           <div className="classic-action-grid">
             <button type="button" onClick={() => { resetForm(); setSelectedProductId(null); }}><AppIcon name="produtos" size={24} className="app-icon-button-inline" />Novo Produto</button>
@@ -478,7 +478,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <button type="button" onClick={() => selectedProduct && void saveProductPhoto(selectedProduct, true)} disabled={!selectedProduct || !selectedProduct.image_data}><AppIcon name="imprimir" size={24} className="app-icon-button-inline" />Salvar Foto</button>
             <button type="button" onClick={() => selectedProduct && void shareProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />Enviar WhatsApp</button>
             <button type="button" onClick={() => void openWhatsappOnly()}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />WhatsApp Web</button>
-            <button type="button" onClick={() => void reload()}><AppIcon name="relatorios" size={24} className="app-icon-button-inline" />Relatorio de Produtos</button>
+            <button type="button" onClick={() => void reload()}><AppIcon name="relatorios" size={24} className="app-icon-button-inline" />Relatório de produtos</button>
           </div>
         </aside>
       </section>
@@ -486,12 +486,12 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       <section className="classic-products-bottom">
         <section className="panel classic-panel form-panel">
           <div className="classic-panel-header">
-            <h2>Cadastro / Edicao</h2>
+            <h2>Cadastro / Edição</h2>
           </div>
           <form onSubmit={submit} className="product-form-grid">
             <div className="product-photo-card">
               <div className="product-photo-frame">
-                {form.image_data ? <img src={form.image_data} alt="Previa do produto" className="product-photo-preview" /> : <div className="product-photo-empty"><strong>Sem foto</strong><span>PNG, JPG ou WEBP ate 2 MB</span></div>}
+                {form.image_data ? <img src={form.image_data} alt="Prévia do produto" className="product-photo-preview" /> : <div className="product-photo-empty"><strong>Sem foto</strong><span>PNG, JPG ou WEBP até 2 MB</span></div>}
               </div>
               <label className="photo-upload-btn">
                 <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onImageSelected} />
@@ -509,18 +509,18 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
                   {presetCategories.map((category) => <option key={category} value={category} />)}
                 </datalist>
               </label>
-              <label>Preco<input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: Number(event.target.value) })} /></label>
-              <label>Preco promocional<input type="number" min="0" step="0.01" value={form.promo_price ?? ''} onChange={(event) => setForm({ ...form, promo_price: event.target.value === '' ? null : Number(event.target.value) })} /></label>
+              <label>Preço<input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: Number(event.target.value) })} /></label>
+              <label>Preço promocional<input type="number" min="0" step="0.01" value={form.promo_price ?? ''} onChange={(event) => setForm({ ...form, promo_price: event.target.value === '' ? null : Number(event.target.value) })} /></label>
               <label>Estoque<input type="number" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: Number(event.target.value) })} /></label>
               <label>Unidade<input value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })} /></label>
               <label>Tamanho<input value={form.size} onChange={(event) => setForm({ ...form, size: event.target.value })} /></label>
               <label>Cor<input value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} /></label>
-              <label>Codigo interno<input value={form.internal_code} readOnly placeholder="Gerado automaticamente ao salvar" /></label>
-              <label>Codigo de barras<input value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} /></label>
+              <label>Código interno<input value={form.internal_code} readOnly placeholder="Gerado automaticamente ao salvar" /></label>
+              <label>Código de barras<input value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} /></label>
               <label>Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as Product['status'] })}><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></label>
               <div className="table-actions">
-                <button className="primary-btn" disabled={saving}>{saving ? 'Salvando...' : form.id ? 'Salvar alteracoes' : 'Cadastrar produto'}</button>
-                {form.id && <button type="button" className="ghost-btn" onClick={resetForm}>Cancelar edicao</button>}
+                <button className="primary-btn" disabled={saving}>{saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Cadastrar produto'}</button>
+                {form.id && <button type="button" className="ghost-btn" onClick={resetForm}>Cancelar edição</button>}
               </div>
             </div>
           </form>
@@ -533,7 +533,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
           <form onSubmit={adjustStock} className="form-grid compact adjust-grid">
             <label>Produto<select value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
             <label>Quantidade (+/-)<input type="number" step="1" value={adjust.delta} onChange={(event) => setAdjust({ ...adjust, delta: Number(event.target.value) })} /></label>
-            <label className="span-2">Motivo obrigatorio<input value={adjust.reason} onChange={(event) => setAdjust({ ...adjust, reason: event.target.value })} placeholder="Ex: contagem manual, perda, entrada de mercadoria" /></label>
+            <label className="span-2">Motivo obrigatório<input value={adjust.reason} onChange={(event) => setAdjust({ ...adjust, reason: event.target.value })} placeholder="Ex: contagem manual, perda, entrada de mercadoria" /></label>
             <button className="secondary-btn">Ajustar estoque</button>
           </form>
         </section>
@@ -545,7 +545,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <div className="product-detail-photo">
               {details.image_data
                 ? <button type="button" className="product-detail-photo-btn" onClick={() => setPreview({ src: details.image_data, title: details.name })}><img src={details.image_data} alt={details.name} /></button>
-                : <div className="product-photo-empty"><strong>Sem foto</strong><span>Foto local apenas para visualizacao do produto.</span></div>}
+                : <div className="product-photo-empty"><strong>Sem foto</strong><span>Foto local apenas para visualização do produto.</span></div>}
             </div>
             <div className="product-detail-info">
               <div className="product-detail-title">
@@ -554,12 +554,12 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
                 <span>{details.category || 'Sem categoria'} - {productDisplayPrice(details)}</span>
               </div>
               <div className="product-detail-grid">
-                <div><span>Preco</span><strong>{productDisplayPrice(details)}</strong></div>
-                {details.promo_price && details.promo_price < details.price && <div><span>Preco original</span><strong>{money(details.price)}</strong></div>}
+                <div><span>Preço</span><strong>{productDisplayPrice(details)}</strong></div>
+                {details.promo_price && details.promo_price < details.price && <div><span>Preço original</span><strong>{money(details.price)}</strong></div>}
                 {details.color && <div><span>Cor</span><strong>{details.color}</strong></div>}
                 {details.size && <div><span>Tamanho</span><strong>{details.size}</strong></div>}
                 <div><span>Estoque</span><strong>{details.stock}</strong></div>
-                {(details.internal_code || details.barcode) && <div><span>Codigo</span><strong>{details.internal_code || details.barcode}</strong></div>}
+                {(details.internal_code || details.barcode) && <div><span>Código</span><strong>{details.internal_code || details.barcode}</strong></div>}
               </div>
               <label className="product-whatsapp-customer">
                 Cliente para WhatsApp direto

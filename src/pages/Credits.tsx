@@ -528,7 +528,7 @@ function buildInstallmentHtml(settings: Settings | null, credit: CreditSummary, 
             <tbody>
               <tr>
                 <td class="qty">1</td>
-                <td class="product">Parcela #${installment.number} - crediario</td>
+                <td class="product">Parcela #${installment.number} - crediário</td>
                 <td class="money">${printedValue}</td>
                 <td class="money">${printedValue}</td>
               </tr>
@@ -553,7 +553,7 @@ function buildInstallmentHtml(settings: Settings | null, credit: CreditSummary, 
           <section class="notes">
             <strong>Anotações:</strong>
             <p>${notes}</p>
-            <p>Saldo total do crediario: ${money(credit.balance)}</p>
+            <p>Saldo total do crediário: ${money(credit.balance)}</p>
           </section>
         </div>
       </main>
@@ -563,7 +563,7 @@ function buildInstallmentHtml(settings: Settings | null, credit: CreditSummary, 
 
 function buildInstallmentWhatsapp(credit: CreditSummary, installment: CreditInstallment, pdfPath: string): string {
   return [
-    `Parcela #${installment.number} do crediario`,
+    `Parcela #${installment.number} do crediário`,
     `Cliente: ${credit.customer_name}`,
     `Venda: #${credit.sale_number || '-'}`,
     `Status: ${installmentStatusLabel(installment)}`,
@@ -634,8 +634,8 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
       await reload();
       setReceiving(null);
       setMessage(redistribute
-        ? 'Parcela recebida com redistribuicao automatica entre as proximas.'
-        : 'Recebimento lancado no crediario.');
+        ? 'Parcela recebida com redistribuição automática entre as próximas.'
+        : 'Recebimento lançado no crediário.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -680,7 +680,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   async function sendWhatsapp(credit: CreditSummary, installment: CreditInstallment) {
     const whatsapp = normalizeWhatsapp(credit.customer_whatsapp);
     if (!whatsapp) {
-      setError('Esse cliente nao tem WhatsApp cadastrado.');
+      setError('Esse cliente não tem WhatsApp cadastrado.');
       return;
     }
     setError('');
@@ -723,8 +723,8 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
     <div className="stack classic-legacy-page">
       <div className="page-title classic-legacy-title">
         <div>
-          <h1>Crediario</h1>
-          <p>Parcelas, cobranca, PDF por parcela e redistribuicao inteligente.</p>
+          <h1>Crediário</h1>
+          <p>Parcelas, cobrança, PDF por parcela e redistribuição inteligente.</p>
         </div>
       </div>
 
@@ -746,7 +746,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
       <section className="panel classic-panel classic-legacy-table-panel">
         <div className="panel-head panel-head-tight">
           <div>
-            <h2>Resumo do crediario</h2>
+            <h2>Resumo do crediário</h2>
           </div>
         </div>
         <TableFilters
@@ -769,7 +769,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
         />
         <DataTable<CreditSummary>
           rows={filteredCredits}
-          empty="Nenhum crediario em aberto. Venda no crediario para gerar parcelas."
+          empty="Nenhum crediário em aberto. Venda no crediário para gerar parcelas."
           columns={[
             { key: 'customer', label: 'Cliente', render: (row) => row.customer_name },
             { key: 'sale', label: 'Venda', render: (row) => row.sale_number ? `#${row.sale_number}` : '-' },
@@ -801,7 +801,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
               { key: 'status', label: 'Status', render: (row) => <span className={installmentStatusClass(row)}>{installmentStatusLabel(row)}</span> },
               {
                 key: 'action',
-                label: 'Acao',
+                label: 'Ação',
                 align: 'right',
                 render: (row) => (
                   <div className="table-actions">
@@ -824,18 +824,18 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             <label>Cliente<input value={receiving.credit.customer_name} readOnly /></label>
             <label>Parcela<input value={`#${receiving.installment.number} · vence ${dateOnly(receiving.installment.due_date)}`} readOnly /></label>
             <label>Valor recebido<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(Number(e.target.value))} /></label>
-            <label>Forma<select value={method} onChange={(e) => setMethod(e.target.value as Exclude<PaymentMethod, 'crediario'>)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartao</option></select></label>
+            <label>Forma<select value={method} onChange={(e) => setMethod(e.target.value as Exclude<PaymentMethod, 'crediario'>)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartão</option></select></label>
             <label className="span-2 check-row">
               <input type="checkbox" checked={redistribute} onChange={(e) => setRedistribute(e.target.checked)} />
-              Fechar esta parcela e jogar a diferenca para as proximas parcelas
+              Fechar esta parcela e jogar a diferença para as próximas parcelas
             </label>
             <div className="notice span-2">
               {redistribute
-                ? 'Se pagar menos, a diferenca soma na proxima parcela. Se pagar mais, reduz as proximas.'
-                : 'Sem redistribuicao, o valor fica como parcial nesta propria parcela.'}
+                ? 'Se pagar menos, a diferença soma na próxima parcela. Se pagar mais, reduz as próximas.'
+                : 'Sem redistribuição, o valor fica como parcial nesta própria parcela.'}
             </div>
             <div className="table-actions span-2">
-              <button className="primary-btn" disabled={saving}>{saving ? 'Lancando...' : 'Confirmar recebimento'}</button>
+              <button className="primary-btn" disabled={saving}>{saving ? 'Lançando...' : 'Confirmar recebimento'}</button>
             </div>
           </form>
         )}

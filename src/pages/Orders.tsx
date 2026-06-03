@@ -229,7 +229,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           empty="Nenhum pedido criado."
           columns={[
             { key: 'number', label: 'Pedido', render: (row) => `#${row.number}` },
-            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcao' },
+            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcão' },
             { key: 'total', label: 'Total', align: 'right', render: (row) => money(row.total) },
             { key: 'status', label: 'Status', render: (row) => <span className={orderStatusClass(row.status)}>{orderStatusLabel(row.status)}</span> },
             {

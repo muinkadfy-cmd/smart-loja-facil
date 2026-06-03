@@ -14,9 +14,9 @@ function dateOffset(days: number): string {
 }
 
 const reportOptions: Array<{ value: ReportKind; label: string; accent: 'blue' | 'green' | 'pink' | 'orange' }> = [
-  { value: 'vendas', label: 'Vendas por periodo', accent: 'blue' },
-  { value: 'caixa', label: 'Caixa por periodo', accent: 'green' },
-  { value: 'crediario', label: 'Crediario em aberto', accent: 'pink' },
+  { value: 'vendas', label: 'Vendas por período', accent: 'blue' },
+  { value: 'caixa', label: 'Caixa por período', accent: 'green' },
+  { value: 'crediario', label: 'Crediário em aberto', accent: 'pink' },
   { value: 'estoque_baixo', label: 'Estoque baixo', accent: 'orange' },
 ];
 
@@ -47,7 +47,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
   const [exporting, setExporting] = useState(false);
 
   const activeReport = useMemo(() => reportOptions.find((item) => item.value === form.report) ?? reportOptions[0], [form.report]);
-  const periodLabel = form.from === form.to ? 'Hoje' : `${form.from.split('-').reverse().join('/')} ate ${form.to.split('-').reverse().join('/')}`;
+  const periodLabel = form.from === form.to ? 'Hoje' : `${form.from.split('-').reverse().join('/')} até ${form.to.split('-').reverse().join('/')}`;
   const tableColumns = useMemo(() => dynamicColumn(data?.columns ?? []), [data?.columns]);
 
   function applyPreset(type: 'today' | 'last7' | 'month') {
@@ -66,7 +66,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
 
   async function loadReport(nextForm = form) {
     if (nextForm.from > nextForm.to) {
-      setError('A data inicial nao pode ser maior que a data final.');
+      setError('A data inicial não pode ser maior que a data final.');
       return;
     }
     setLoading(true);
@@ -87,7 +87,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
 
   async function exportCsv() {
     if (form.from > form.to || exporting) {
-      if (form.from > form.to) setError('A data inicial nao pode ser maior que a data final.');
+      if (form.from > form.to) setError('A data inicial não pode ser maior que a data final.');
       return;
     }
     setExporting(true);
@@ -113,8 +113,8 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
     <div className="stack">
       <div className="page-title">
         <div>
-          <h1>Relatorios</h1>
-          <p>Veja so os numeros principais do periodo, de forma simples e objetiva.</p>
+          <h1>Relatórios</h1>
+          <p>Veja só os números principais do período, de forma simples e objetiva.</p>
         </div>
         <div className="hero-status reports-hero-status">
           <span className="status-chip"><AppIcon name="relatorios" size={16} className="app-icon-button-inline" />Numeros na tela</span>
@@ -125,7 +125,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
       <section className="panel reports-hero-panel">
         <div className="reports-summary-grid">
           <article className="mini-insight-card tone-blue">
-            <small>Relatorio</small>
+            <small>Relatório</small>
             <strong>{activeReport.label}</strong>
             <p>Visual na tela com tabela detalhada.</p>
           </article>
@@ -146,7 +146,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
         <div className="panel-head panel-head-tight">
           <div>
             <h2>Filtro do relatorio</h2>
-            <p>Escolha o tipo e o periodo para atualizar os numeros.</p>
+            <p>Escolha o tipo e o período para atualizar os números.</p>
           </div>
           <div className="preset-row">
             <button type="button" className="secondary-btn small" onClick={() => applyPreset('today')}><AppIcon name="calendario_data" size={16} className="app-icon-button-inline" />Hoje</button>
@@ -155,9 +155,9 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
           </div>
         </div>
         <form className="form-grid compact reports-form-grid" onSubmit={submit}>
-          <label>Relatorio<select value={form.report} onChange={(e) => setForm({ ...form, report: e.target.value as ReportKind })}>{reportOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          <label>Relatório<select value={form.report} onChange={(e) => setForm({ ...form, report: e.target.value as ReportKind })}>{reportOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           <label>De<input type="date" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })} /></label>
-          <label>Ate<input type="date" value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} /></label>
+          <label>Até<input type="date" value={form.to} onChange={(e) => setForm({ ...form, to: e.target.value })} /></label>
           <button className="primary-btn" disabled={loading}><AppIcon name="atualizar" size={16} className="app-icon-button-inline" />{loading ? 'Atualizando...' : 'Atualizar numeros'}</button>
         </form>
       </section>

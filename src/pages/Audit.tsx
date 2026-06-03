@@ -28,17 +28,17 @@ export function AuditPage({ refreshToken }: PageProps): JSX.Element {
 
   return (
     <div className="stack">
-      <div className="page-title"><h1>Auditoria / Logs</h1><p>Historico local das acoes criticas.</p></div>
+      <div className="page-title"><h1>Auditoria / Logs</h1><p>Histórico local das ações críticas.</p></div>
       <div className="hero-status">
-        <span className="status-chip"><AppIcon name="auditoria_logs" size={16} className="app-icon-button-inline" />Historico local</span>
-        <span className="status-chip"><AppIcon name="bloqueio_seguro" size={16} className="app-icon-button-inline" />Acoes criticas</span>
+        <span className="status-chip"><AppIcon name="auditoria_logs" size={16} className="app-icon-button-inline" />Histórico local</span>
+        <span className="status-chip"><AppIcon name="bloqueio_seguro" size={16} className="app-icon-button-inline" />Ações críticas</span>
       </div>
       <section className="panel">
         <TableFilters
           query={query}
           onQueryChange={setQuery}
-          queryPlaceholder="Buscar por entidade, acao, detalhe ou data"
-          summary={`${filteredRows.length} de ${rows.length} eventos visiveis`}
+          queryPlaceholder="Buscar por entidade, ação, detalhe ou data"
+          summary={`${filteredRows.length} de ${rows.length} eventos visíveis`}
           selects={[
             {
               label: 'Entidade',
@@ -50,11 +50,11 @@ export function AuditPage({ refreshToken }: PageProps): JSX.Element {
         />
         <DataTable<AuditEvent>
           rows={filteredRows}
-          empty="Nenhuma acao auditada ainda."
+          empty="Nenhuma ação auditada ainda."
           columns={[
             { key: 'date', label: 'Data', render: (row) => dateTime(row.created_at) },
             { key: 'entity', label: 'Entidade', render: (row) => row.entity },
-            { key: 'action', label: 'Acao', render: (row) => row.action },
+            { key: 'action', label: 'Ação', render: (row) => row.action },
             { key: 'details', label: 'Detalhes', render: (row) => row.details },
           ]}
         />

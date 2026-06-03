@@ -37,7 +37,7 @@ function receiptStatusClass(status: string): string {
 function buildWhatsappText(receipt: ReceiptSummary): string {
   return [
     `Comprovante da venda #${receipt.sale_number || receipt.sale_id.slice(0, 8)}`,
-    `Cliente: ${receipt.customer_name || 'Balcao'}`,
+    `Cliente: ${receipt.customer_name || 'Balcão'}`,
     `Total: ${money(receipt.total)}`,
     `Status: ${receiptStatusLabel(receipt.status)}`,
     `Data: ${dateTime(receipt.created_at)}`,
@@ -106,7 +106,7 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
     const whatsapp = normalizeWhatsapp(receipt.customer_whatsapp);
     if (!whatsapp) {
       setMessage('');
-      setError('Esse cliente nao tem WhatsApp cadastrado.');
+      setError('Esse cliente não tem WhatsApp cadastrado.');
       return;
     }
     try {
@@ -128,7 +128,7 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por cliente, venda, tipo ou data"
-          summary={`${filteredRows.length} de ${rows.length} comprovantes visiveis`}
+          summary={`${filteredRows.length} de ${rows.length} comprovantes visíveis`}
           selects={[
             {
               label: 'Tipo',
@@ -144,13 +144,13 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
           columns={[
             { key: 'type', label: 'Tipo', render: (row) => row.receipt_type },
             { key: 'sale', label: 'Venda', render: (row) => row.sale_number ? `#${row.sale_number}` : row.sale_id.slice(0, 8) },
-            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcao' },
+            { key: 'customer', label: 'Cliente', render: (row) => row.customer_name || 'Balcão' },
             { key: 'total', label: 'Total', align: 'right', render: (row) => money(row.total) },
             { key: 'status', label: 'Status', render: (row) => <span className={receiptStatusClass(row.status)}>{receiptStatusLabel(row.status)}</span> },
             { key: 'date', label: 'Data', render: (row) => dateTime(row.created_at) },
             {
               key: 'action',
-              label: 'Acao',
+              label: 'Ação',
               align: 'right',
               render: (row) => (
                 <div className="table-actions">

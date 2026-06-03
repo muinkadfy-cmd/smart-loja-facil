@@ -118,7 +118,7 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
       <div className="page-title classic-legacy-title">
         <div>
           <h1>Clientes</h1>
-          <p>Cadastro local com limite de crediario, WhatsApp e status controlado.</p>
+          <p>Cadastro local com limite de crediário, WhatsApp e status controlado.</p>
         </div>
       </div>
       <section className="panel classic-panel form-panel classic-legacy-form-panel">
@@ -126,13 +126,13 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
           <label>Nome<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
           <label>Telefone<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
           <label>WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
-          <label>Limite crediario<input type="number" min="0" step="0.01" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: Number(e.target.value) })} /></label>
+          <label>Limite crediário<input type="number" min="0" step="0.01" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: Number(e.target.value) })} /></label>
           <label>Status<select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Customer['status'] })}><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></label>
-          <label className="span-2">Endereco<input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
-          <label className="span-2">Observacoes<input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
+          <label className="span-2">Endereço<input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></label>
+          <label className="span-2">Observações<input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
           <div className="table-actions">
-            <button className="primary-btn" disabled={saving}>{saving ? 'Salvando...' : form.id ? 'Salvar alteracoes' : 'Cadastrar cliente'}</button>
-            {form.id && <button type="button" className="ghost-btn" onClick={resetForm}>Cancelar edicao</button>}
+            <button className="primary-btn" disabled={saving}>{saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Cadastrar cliente'}</button>
+            {form.id && <button type="button" className="ghost-btn" onClick={resetForm}>Cancelar edição</button>}
           </div>
         </form>
       </section>
@@ -173,7 +173,7 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
             { key: 'status', label: 'Status', render: (row) => <span className="pill">{row.status}</span> },
             {
               key: 'action',
-              label: 'Acao',
+              label: 'Ação',
               align: 'right',
               render: (row) => (
                 <div className="table-actions">

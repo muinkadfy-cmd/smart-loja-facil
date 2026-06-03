@@ -1,0 +1,936 @@
+:root {
+  --lote124-master-ui-10: active;
+  --slf124-bg: #f4f7fb;
+  --slf124-surface: #ffffff;
+  --slf124-soft: #f8fbff;
+  --slf124-border: #d6e2ef;
+  --slf124-border-strong: #bdcfe4;
+  --slf124-ink: #102033;
+  --slf124-text: #24364d;
+  --slf124-muted: #62728a;
+  --slf124-primary: #1769d2;
+  --slf124-primary-dark: #0f55ad;
+  --slf124-success: #16884a;
+  --slf124-warning: #c97900;
+  --slf124-danger: #cf332b;
+  --slf124-violet: #7357c8;
+  --slf124-radius: 18px;
+  --slf124-radius-sm: 12px;
+  --slf124-shadow: 0 14px 34px rgba(16, 32, 53, .08);
+  --slf124-shadow-soft: 0 8px 22px rgba(16, 32, 53, .055);
+  --slf124-focus: 0 0 0 4px rgba(23, 105, 210, .14);
+}
+
+/* Comando Mestre 10/10: camada final de polimento visual e responsivo. */
+.lote124-master-ui-10,
+.lote124-master-ui-10 * {
+  letter-spacing: 0;
+}
+
+.lote124-master-ui-10 body {
+  background: var(--slf124-bg);
+  color: var(--slf124-text);
+}
+
+.lote124-master-ui-10 .neo-main {
+  background:
+    linear-gradient(90deg, rgba(23, 105, 210, .035), transparent 34%),
+    linear-gradient(180deg, #fbfdff 0%, var(--slf124-bg) 100%);
+}
+
+.lote124-master-ui-10 .neo-page-shell {
+  max-width: 1216px;
+  padding-top: clamp(22px, 2.7vw, 34px);
+}
+
+.lote124-master-ui-10 .neo-page-content,
+.lote124-master-ui-10 .stack,
+.lote124-master-ui-10 .classic-sales-stack {
+  display: grid;
+  gap: clamp(14px, 1.8vw, 20px);
+}
+
+.lote124-master-ui-10 .neo-topbar {
+  border-bottom-color: rgba(189, 207, 228, .72);
+  box-shadow: 0 10px 28px rgba(16, 32, 53, .052);
+}
+
+.lote124-master-ui-10 .neo-command-search {
+  min-height: 50px;
+  max-width: 430px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid var(--slf124-border);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--slf124-shadow-soft);
+}
+
+.lote124-master-ui-10 .neo-command-search input {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  color: var(--slf124-ink);
+}
+
+.lote124-master-ui-10 .neo-command-search button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #dbe6f3;
+  border-radius: 11px;
+  background: #f7faff;
+  color: #53657c;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.lote124-master-ui-10 .neo-icon-tool,
+.lote124-master-ui-10 .neo-bell-tool,
+.lote124-master-ui-10 .neo-notify-btn,
+.lote124-master-ui-10 .neo-store-switch {
+  border-color: var(--slf124-border);
+  box-shadow: var(--slf124-shadow-soft);
+}
+
+.lote124-master-ui-10 .neo-store-switch:hover,
+.lote124-master-ui-10 .neo-icon-tool:hover,
+.lote124-master-ui-10 .neo-bell-tool:hover,
+.lote124-master-ui-10 .neo-notify-btn:hover {
+  border-color: #b7d3f5;
+  background: #fbfdff;
+}
+
+.lote124-master-ui-10 .neo-sidebar {
+  padding: 18px 14px 16px;
+  background: linear-gradient(180deg, #172233 0%, #111827 100%);
+}
+
+.lote124-master-ui-10 .neo-sidebar-brand {
+  min-height: 58px;
+  padding-bottom: 14px;
+}
+
+.lote124-master-ui-10 .neo-sidebar-brand-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.lote124-master-ui-10 .neo-sidebar-close {
+  width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .96);
+  color: #111827;
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.lote124-master-ui-10 .neo-nav {
+  gap: 7px;
+  padding-right: 4px;
+}
+
+.lote124-master-ui-10 .neo-nav::-webkit-scrollbar,
+.lote124-master-ui-10 .neo-main::-webkit-scrollbar {
+  width: 10px;
+}
+
+.lote124-master-ui-10 .neo-nav::-webkit-scrollbar-thumb,
+.lote124-master-ui-10 .neo-main::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+  background-color: rgba(100, 116, 139, .52);
+}
+
+.lote124-master-ui-10 .neo-nav-item {
+  min-height: 48px;
+  padding: 8px 10px;
+  border-radius: 15px;
+  color: rgba(255, 255, 255, .83);
+}
+
+.lote124-master-ui-10 .neo-nav-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.lote124-master-ui-10 .neo-nav-item:hover {
+  background: rgba(255, 255, 255, .075);
+  color: #fff;
+}
+
+.lote124-master-ui-10 .neo-nav-item.active {
+  background: #fff;
+  color: #0f1f35;
+  border-color: rgba(255, 255, 255, .56);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, .18);
+}
+
+.lote124-master-ui-10 .neo-sidebar-footer {
+  padding: 13px;
+  border-radius: 17px;
+  background: rgba(255, 255, 255, .07);
+}
+
+.lote124-master-ui-10 .neo-version-block button {
+  width: 100%;
+  min-height: 36px;
+  border-radius: 12px;
+}
+
+.lote124-master-ui-10 .neo-page-meta {
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.lote124-master-ui-10 .neo-page-meta h1,
+.lote124-master-ui-10 .page-title h1,
+.lote124-master-ui-10 .neo-section-head h2,
+.lote124-master-ui-10 .classic-panel-header h2 {
+  color: var(--slf124-ink);
+}
+
+.lote124-master-ui-10 .neo-page-meta h1 {
+  font-size: clamp(2rem, 3.1vw, 2.55rem);
+  line-height: 1.04;
+}
+
+.lote124-master-ui-10 .neo-page-meta p,
+.lote124-master-ui-10 .page-title p,
+.lote124-master-ui-10 .neo-section-head p,
+.lote124-master-ui-10 .classic-panel-header p {
+  color: var(--slf124-muted);
+  line-height: 1.45;
+}
+
+.lote124-master-ui-10 .neo-page-meta-icon,
+.lote124-master-ui-10 .neo-kpi-icon,
+.lote124-master-ui-10 .neo-context-card-icon,
+.lote124-master-ui-10 .neo-quick-icon,
+.lote124-master-ui-10 .empty-state-icon {
+  background: #eef6ff;
+  border: 1px solid #d6e8ff;
+}
+
+.lote124-master-ui-10 .neo-surface,
+.lote124-master-ui-10 .classic-panel,
+.lote124-master-ui-10 .panel,
+.lote124-master-ui-10 .form-panel,
+.lote124-master-ui-10 .data-table-shell,
+.lote124-master-ui-10 .neo-kpi-card,
+.lote124-master-ui-10 .neo-context-card,
+.lote124-master-ui-10 .neo-quick-card,
+.lote124-master-ui-10 .neo-system-row,
+.lote124-master-ui-10 .neo-trust-strip {
+  border-color: var(--slf124-border);
+  background: var(--slf124-surface);
+  box-shadow: var(--slf124-shadow-soft);
+}
+
+.lote124-master-ui-10 .classic-panel,
+.lote124-master-ui-10 .panel,
+.lote124-master-ui-10 .form-panel,
+.lote124-master-ui-10 .data-table-shell {
+  padding: clamp(16px, 2vw, 20px);
+  border-radius: var(--slf124-radius);
+}
+
+.lote124-master-ui-10 .neo-kpi-card {
+  min-height: 116px;
+  padding: 15px;
+  transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+
+.lote124-master-ui-10 .neo-kpi-card:hover,
+.lote124-master-ui-10 .neo-context-card:hover,
+.lote124-master-ui-10 .neo-quick-card:hover {
+  border-color: #b7d3f5;
+  box-shadow: var(--slf124-shadow);
+  transform: translateY(-1px);
+}
+
+.lote124-master-ui-10 .neo-kpi-card strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.lote124-master-ui-10 .neo-dashboard-insight,
+.lote124-master-ui-10 .neo-dashboard-state,
+.lote124-master-ui-10 .neo-page-alert,
+.lote124-master-ui-10 .neo-alert-center {
+  border-color: var(--slf124-border);
+  box-shadow: var(--slf124-shadow);
+}
+
+.lote124-master-ui-10 .neo-dashboard-insight-actions button,
+.lote124-master-ui-10 .neo-alert-actions button,
+.lote124-master-ui-10 .neo-inline-action,
+.lote124-master-ui-10 .primary-btn,
+.lote124-master-ui-10 .secondary-btn,
+.lote124-master-ui-10 .ghost-btn,
+.lote124-master-ui-10 .danger-btn {
+  min-height: 44px;
+  border-radius: 13px;
+  font-weight: 900;
+}
+
+.lote124-master-ui-10 .primary-btn,
+.lote124-master-ui-10 .neo-dashboard-primary-action {
+  border-color: var(--slf124-primary);
+  background: linear-gradient(180deg, #2478df 0%, var(--slf124-primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(23, 105, 210, .18);
+}
+
+.lote124-master-ui-10 .secondary-btn,
+.lote124-master-ui-10 .ghost-btn {
+  border: 1px solid var(--slf124-border);
+  background: #fff;
+  color: #15345a;
+}
+
+.lote124-master-ui-10 .ghost-btn:disabled,
+.lote124-master-ui-10 .primary-btn:disabled,
+.lote124-master-ui-10 .secondary-btn:disabled {
+  background: #f2f5f9;
+  color: #9aa7b8;
+  border-color: #dde6f0;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.lote124-master-ui-10 button:focus-visible,
+.lote124-master-ui-10 input:focus,
+.lote124-master-ui-10 select:focus,
+.lote124-master-ui-10 textarea:focus {
+  outline: 0;
+  border-color: rgba(23, 105, 210, .58);
+  box-shadow: var(--slf124-focus);
+}
+
+.lote124-master-ui-10 input,
+.lote124-master-ui-10 select,
+.lote124-master-ui-10 textarea {
+  min-height: 46px;
+  border-color: var(--slf124-border);
+  border-radius: 13px;
+  color: var(--slf124-ink);
+  background: #fff;
+}
+
+.lote124-master-ui-10 label {
+  color: var(--slf124-ink);
+  font-weight: 750;
+}
+
+.lote124-master-ui-10 label > span,
+.lote124-master-ui-10 .classic-fieldset-title {
+  color: #31455e;
+  font-size: .83rem;
+  font-weight: 900;
+}
+
+.lote124-master-ui-10 .page-title {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.lote124-master-ui-10 .page-title h1 {
+  margin: 0;
+  font-size: clamp(1.58rem, 2.5vw, 2.1rem);
+  line-height: 1.08;
+}
+
+.lote124-master-ui-10 .page-title p {
+  margin: 0;
+}
+
+.lote124-master-ui-10 .form-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.lote124-master-ui-10 .form-grid .span-2 {
+  grid-column: span 2;
+}
+
+.lote124-master-ui-10 .neo-page-settings .form-grid .primary-btn {
+  min-height: 74px;
+  align-self: end;
+}
+
+.lote124-master-ui-10 .check-row {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+}
+
+.lote124-master-ui-10 input[type="checkbox"],
+.lote124-master-ui-10 input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  accent-color: var(--slf124-primary);
+}
+
+.lote124-master-ui-10 .light-section-note-v64,
+.lote124-master-ui-10 .sales-mobile-pdv-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  color: var(--slf124-text);
+  line-height: 1.45;
+}
+
+.lote124-master-ui-10 .light-section-note-v64 strong,
+.lote124-master-ui-10 .sales-mobile-pdv-guide strong {
+  color: var(--slf124-ink);
+}
+
+.lote124-master-ui-10 .sales-mobile-pdv-guide {
+  display: none;
+}
+
+.lote124-master-ui-10 .classic-sales-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.lote124-master-ui-10 .classic-sales-add-row {
+  grid-template-columns: minmax(150px, .8fr) minmax(240px, 1.35fr) minmax(130px, .72fr) minmax(150px, .82fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.lote124-master-ui-10 .classic-add-btn {
+  grid-column: 1 / span 2;
+  width: 100%;
+}
+
+.lote124-master-ui-10 .classic-sales-middle,
+.lote124-master-ui-10 .classic-sales-bottom {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, .98fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.lote124-master-ui-10 .classic-customer-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lote124-master-ui-10 .classic-customer-grid .span-2 {
+  grid-column: 1 / -1;
+}
+
+.lote124-master-ui-10 .classic-payment-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lote124-master-ui-10 .classic-payment-row-option {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-color: var(--slf124-border);
+  background: linear-gradient(180deg, #fbfdff 0%, #f6faff 100%);
+}
+
+.lote124-master-ui-10 .classic-payment-title {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 30px;
+}
+
+.lote124-master-ui-10 .classic-payment-title strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--slf124-ink);
+  line-height: 1.18;
+}
+
+.lote124-master-ui-10 .classic-sale-summary-grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.lote124-master-ui-10 .classic-sale-summary-grid > div,
+.lote124-master-ui-10 .classic-sale-total-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--slf124-border);
+  border-radius: 13px;
+  background: #f8fbff;
+}
+
+.lote124-master-ui-10 .classic-sale-summary-grid input {
+  max-width: 170px;
+}
+
+.lote124-master-ui-10 .classic-sale-total-box {
+  margin-top: 12px;
+  background: #eef6ff;
+  border-color: #bfd9ff;
+}
+
+.lote124-master-ui-10 .classic-sale-total-box strong {
+  color: var(--slf124-primary-dark);
+  font-size: 1.16rem;
+}
+
+.lote124-master-ui-10 .classic-sale-action-buttons,
+.lote124-master-ui-10 .classic-sales-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.lote124-master-ui-10 .classic-sale-action-buttons .big {
+  flex: 1 1 160px;
+}
+
+.lote124-master-ui-10 .data-table-shell {
+  display: block;
+  overflow: hidden;
+}
+
+.lote124-master-ui-10 .desktop-table-wrap {
+  display: block;
+  border: 1px solid var(--slf124-border);
+  border-radius: 16px;
+  overflow: auto;
+  background: #fff;
+}
+
+.lote124-master-ui-10 .mobile-data-list,
+.lote124-master-ui-10 .sales-mobile-cart-cards {
+  display: none;
+}
+
+.lote124-master-ui-10 .data-table {
+  min-width: 720px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.lote124-master-ui-10 .data-table th {
+  padding: 13px 14px;
+  background: #f6f9fd;
+  color: #67768d;
+  font-size: .75rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.lote124-master-ui-10 .data-table td {
+  padding: 13px 14px;
+  color: #26384f;
+}
+
+.lote124-master-ui-10 .data-row-clickable:hover {
+  background: #f7fbff;
+}
+
+.lote124-master-ui-10 .data-row-selected {
+  background: #eef6ff;
+}
+
+.lote124-master-ui-10 .empty-state-card {
+  min-height: 118px;
+  border-color: #c9d9ec;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.lote124-master-ui-10 .empty-state-card strong {
+  color: var(--slf124-ink);
+}
+
+.lote124-master-ui-10 .empty-state-card small {
+  max-width: 460px;
+  color: var(--slf124-muted);
+  line-height: 1.45;
+}
+
+.lote124-master-ui-10 .notice,
+.lote124-master-ui-10 .error-box,
+.lote124-master-ui-10 .web-readonly-module-note {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 15px;
+  border: 1px solid #c9edd8;
+  background: #effaf4;
+  color: #126c39;
+  font-weight: 850;
+}
+
+.lote124-master-ui-10 .error-box {
+  border-color: #f3c4c0;
+  background: #fff5f4;
+  color: var(--slf124-danger);
+}
+
+.lote124-master-ui-10 .app-svg-icon {
+  flex: 0 0 auto;
+}
+
+.lote124-master-ui-10 .neo-mobile-quick-access {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .lote124-master-ui-10 .neo-page-dashboard .neo-page-shell {
+    max-width: 1184px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .lote124-master-ui-10 .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lote124-master-ui-10 .classic-sales-add-row,
+  .lote124-master-ui-10 .classic-sales-middle,
+  .lote124-master-ui-10 .classic-sales-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .lote124-master-ui-10 .classic-add-btn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 860px) {
+  .lote124-master-ui-10 .neo-main {
+    background: var(--slf124-bg);
+  }
+
+  .lote124-master-ui-10 .neo-topbar {
+    position: sticky;
+    top: 0;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-quick-access {
+    display: flex;
+    gap: 8px;
+    margin: 2px 0 10px;
+    padding: 0 2px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-quick-access::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-quick-access button {
+    min-width: max-content;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid var(--slf124-border);
+    border-radius: 999px;
+    background: #fff;
+    color: #47566b;
+    font-size: .8rem;
+    font-weight: 900;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-quick-access button.active {
+    border-color: #b9d4f7;
+    background: #eef6ff;
+    color: var(--slf124-primary-dark);
+  }
+
+  .lote124-master-ui-10 .neo-command-search {
+    display: none;
+  }
+
+  .lote124-master-ui-10 .neo-store-switch {
+    min-height: 56px;
+  }
+
+  .lote124-master-ui-10 .neo-page-shell {
+    padding: 14px 12px calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .lote124-master-ui-10 .neo-page-meta {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .lote124-master-ui-10 .neo-page-meta-title {
+    align-items: flex-start;
+  }
+
+  .lote124-master-ui-10 .neo-page-meta h1 {
+    font-size: clamp(1.56rem, 7vw, 2rem);
+  }
+
+  .lote124-master-ui-10 .neo-page-meta p {
+    display: block;
+    margin-top: 6px;
+    font-size: .9rem;
+  }
+
+  .lote124-master-ui-10 .neo-page-meta-status {
+    justify-content: flex-start;
+  }
+
+  .lote124-master-ui-10 .neo-page-meta-status .neo-mini-chip:nth-child(n+2) {
+    display: inline-flex;
+  }
+
+  .lote124-master-ui-10 .neo-mini-chip {
+    min-height: 30px;
+    padding: 6px 10px;
+    font-size: .74rem;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-grid,
+  .lote124-master-ui-10 .neo-page-dashboard .neo-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card {
+    min-height: 106px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 9px;
+    padding: 11px;
+    border-radius: 16px;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card span {
+    font-size: .76rem;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card strong {
+    font-size: clamp(1.12rem, 5.8vw, 1.42rem);
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card small {
+    font-size: .72rem;
+    line-height: 1.25;
+  }
+
+  .lote124-master-ui-10 .form-grid,
+  .lote124-master-ui-10 .classic-sales-add-row,
+  .lote124-master-ui-10 .classic-customer-grid,
+  .lote124-master-ui-10 .classic-payment-options,
+  .lote124-master-ui-10 .classic-sale-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lote124-master-ui-10 .form-grid .span-2 {
+    grid-column: auto;
+  }
+
+  .lote124-master-ui-10 .neo-page-settings .form-grid .primary-btn {
+    min-height: 50px;
+  }
+
+  .lote124-master-ui-10 .classic-panel,
+  .lote124-master-ui-10 .panel,
+  .lote124-master-ui-10 .form-panel,
+  .lote124-master-ui-10 .data-table-shell {
+    padding: 14px;
+    border-radius: 17px;
+  }
+
+  .lote124-master-ui-10 .light-section-note-v64 {
+    padding: 11px 12px;
+    border: 1px solid #dfe8f3;
+    border-radius: 15px;
+    background: #fff;
+  }
+
+  .lote124-master-ui-10 .sales-mobile-pdv-guide {
+    display: flex;
+    padding: 11px 12px;
+    border: 1px solid #d8e6f8;
+    border-radius: 15px;
+    background: #eef6ff;
+  }
+
+  .lote124-master-ui-10 .desktop-table-wrap {
+    display: none;
+  }
+
+  .lote124-master-ui-10 .mobile-data-list,
+  .lote124-master-ui-10 .sales-mobile-cart-cards {
+    display: grid;
+    gap: 10px;
+  }
+
+  .lote124-master-ui-10 .mobile-data-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--slf124-muted);
+    font-size: .82rem;
+    font-weight: 900;
+  }
+
+  .lote124-master-ui-10 .mobile-data-list-head span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lote124-master-ui-10 .mobile-data-card,
+  .lote124-master-ui-10 .sales-mobile-cart-card {
+    width: 100%;
+    display: grid;
+    gap: 9px;
+    padding: 13px;
+    border: 1px solid var(--slf124-border);
+    border-radius: 15px;
+    background: #fff;
+    color: var(--slf124-text);
+    text-align: left;
+  }
+
+  .lote124-master-ui-10 .mobile-data-card-selected,
+  .lote124-master-ui-10 .sales-mobile-cart-card.selected {
+    border-color: #a9cdf8;
+    background: #eef6ff;
+  }
+
+  .lote124-master-ui-10 .mobile-data-card-topline,
+  .lote124-master-ui-10 .sales-mobile-cart-card-top,
+  .lote124-master-ui-10 .sales-mobile-cart-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--slf124-muted);
+  }
+
+  .lote124-master-ui-10 .mobile-data-field {
+    display: grid;
+    gap: 2px;
+  }
+
+  .lote124-master-ui-10 .mobile-data-field small {
+    color: var(--slf124-muted);
+    font-size: .72rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .lote124-master-ui-10 .mobile-data-field strong,
+  .lote124-master-ui-10 .sales-mobile-cart-card strong {
+    color: var(--slf124-ink);
+    font-size: .96rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .lote124-master-ui-10 .classic-sales-item-actions,
+  .lote124-master-ui-10 .classic-sale-action-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .lote124-master-ui-10 .classic-sale-summary-grid > div,
+  .lote124-master-ui-10 .classic-sale-total-box {
+    align-items: flex-start;
+  }
+
+  .lote124-master-ui-10 .classic-sale-summary-grid input {
+    max-width: none;
+  }
+
+  .lote124-master-ui-10 .neo-alert-center {
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: calc(100dvh - 92px - env(safe-area-inset-bottom, 0px));
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-dock {
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .lote124-master-ui-10 .neo-page-shell {
+    padding-inline: 10px;
+  }
+
+  .lote124-master-ui-10 .neo-page-dashboard .neo-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card {
+    min-height: 94px;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-dock {
+    left: 8px;
+    right: 8px;
+    padding: 7px;
+    gap: 4px;
+  }
+
+  .lote124-master-ui-10 .neo-mobile-dock button {
+    min-height: 52px;
+    font-size: .67rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lote124-master-ui-10 .neo-kpi-card,
+  .lote124-master-ui-10 .neo-context-card,
+  .lote124-master-ui-10 .neo-quick-card {
+    transition: none;
+  }
+
+  .lote124-master-ui-10 .neo-kpi-card:hover,
+  .lote124-master-ui-10 .neo-context-card:hover,
+  .lote124-master-ui-10 .neo-quick-card:hover {
+    transform: none;
+  }
+}

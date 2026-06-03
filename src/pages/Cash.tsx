@@ -68,7 +68,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     event.preventDefault();
     if (busy) return;
     if (openingAmount < 0) {
-      setError('O valor inicial nao pode ser negativo.');
+      setError('O valor inicial não pode ser negativo.');
       return;
     }
     setBusy(true);
@@ -91,7 +91,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     event.preventDefault();
     if (busy || !summary?.open_cash) return;
     if (closingAmount < 0) {
-      setError('O valor contado nao pode ser negativo.');
+      setError('O valor contado não pode ser negativo.');
       return;
     }
     const ok = window.confirm('Fechar o caixa de hoje? Confira o valor contado antes de confirmar.');
@@ -130,7 +130,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       setClosingAmount(payload.expected_total);
       setMovementAmount(0);
       setMovementReason('');
-      setMessage('Movimento manual lancado no caixa com auditoria.');
+      setMessage('Movimento manual lançado no caixa com auditoria.');
       onChanged();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -148,7 +148,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
         </div>
       </div>
       <section className="metric-grid cash-grid classic-cash-summary-grid">
-        <article className="metric-card"><span>Entradas hoje</span><strong>{money(summary?.today_in ?? 0)}</strong><small>Vendas e crediario recebido</small></article>
+        <article className="metric-card"><span>Entradas hoje</span><strong>{money(summary?.today_in ?? 0)}</strong><small>Vendas e crediário recebido</small></article>
         <article className="metric-card"><span>Saídas hoje</span><strong>{money(summary?.today_out ?? 0)}</strong><small>Movimentos de retirada e ajuste</small></article>
         <article className="metric-card"><span>Saldo esperado</span><strong>{money(summary?.expected_total ?? 0)}</strong><small>Baseado no caixa aberto</small></article>
         <article className="metric-card"><span>Status</span><strong>{summary?.open_cash ? 'Aberto' : 'Fechado'}</strong><small>{summary?.open_cash ? `Aberto em ${dateTime(summary.open_cash.opened_at)}` : 'Abra para iniciar o controle'}</small></article>
