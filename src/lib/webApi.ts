@@ -55,8 +55,84 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v131-kit-onboarding-cliente';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v131-kit-onboarding-cliente';
+export const WEB_APP_VERSION = 'pwa-supabase-v132-modo-treinamento-seguro';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v132-modo-treinamento-seguro';
+
+
+export interface WebTrainingModeState {
+  enabled: boolean;
+  scenario: string;
+  responsible: string;
+  note: string;
+  startedAt: string;
+  updatedAt: string;
+}
+
+export const WEB_TRAINING_MODE_KEY = 'smart-loja:training-mode-safe-v132';
+const LEGACY_WEB_TRAINING_MODE_KEYS = ['smart-loja:training-mode-safe-v131'];
+
+function emptyWebTrainingMode(): WebTrainingModeState {
+  return { enabled: false, scenario: '', responsible: '', note: '', startedAt: '', updatedAt: '' };
+}
+
+function normalizeWebTrainingMode(value: unknown): WebTrainingModeState {
+  const source = value && typeof value === 'object' ? value as Partial<WebTrainingModeState> : {};
+  return {
+    enabled: Boolean(source.enabled),
+    scenario: typeof source.scenario === 'string' ? source.scenario.slice(0, 140) : '',
+    responsible: typeof source.responsible === 'string' ? source.responsible.slice(0, 80) : '',
+    note: typeof source.note === 'string' ? source.note.slice(0, 1000) : '',
+    startedAt: typeof source.startedAt === 'string' ? source.startedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+export function readWebTrainingMode(): WebTrainingModeState {
+  if (!canUseBrowserStorage()) return emptyWebTrainingMode();
+  try {
+    const current = normalizeWebTrainingMode(JSON.parse(window.localStorage.getItem(WEB_TRAINING_MODE_KEY) || '{}'));
+    if (current.enabled || current.updatedAt || current.startedAt || current.scenario || current.responsible || current.note) return current;
+    for (const key of LEGACY_WEB_TRAINING_MODE_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeWebTrainingMode(JSON.parse(raw));
+      if (legacy.enabled || legacy.updatedAt || legacy.startedAt || legacy.scenario || legacy.responsible || legacy.note) {
+        window.localStorage.setItem(WEB_TRAINING_MODE_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyWebTrainingMode();
+  }
+  return emptyWebTrainingMode();
+}
+
+export function saveWebTrainingMode(input: Partial<WebTrainingModeState>): WebTrainingModeState {
+  const previous = readWebTrainingMode();
+  const now = new Date().toISOString();
+  const next = normalizeWebTrainingMode({
+    ...previous,
+    ...input,
+    startedAt: input.enabled && !previous.startedAt ? now : (input.startedAt ?? previous.startedAt),
+    updatedAt: now,
+  });
+  if (!next.enabled) next.startedAt = '';
+  if (canUseBrowserStorage()) {
+    window.localStorage.setItem(WEB_TRAINING_MODE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('smart-loja:web-training-mode-change', { detail: next }));
+  }
+  return next;
+}
+
+export function setWebTrainingModeEnabled(enabled: boolean, patch: Partial<WebTrainingModeState> = {}): WebTrainingModeState {
+  return saveWebTrainingMode({ ...patch, enabled });
+}
+
+export function assertWebTrainingModeAllowsWrite(action: string): void {
+  const training = readWebTrainingMode();
+  if (!training.enabled) return;
+  throw new Error(`Modo treinamento seguro ativo: ${action} não foi gravado na loja real. Desative o modo treinamento para fazer alteração real.`);
+}
 
 export type WebSyncStatus = 'idle' | 'syncing' | 'synced' | 'pending' | 'error';
 
@@ -354,6 +430,7 @@ export function enqueueWebOutbox(module: string, action: WebOutboxAction, payloa
 export function shouldQueueWebError(error: unknown): boolean {
   const raw = error instanceof Error ? error.message : String(error);
   const lower = raw.toLowerCase();
+  if (lower.includes('modo treinamento seguro ativo')) return false;
   return lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline') || lower.includes('internet') || (typeof navigator !== 'undefined' && !navigator.onLine);
 }
 
@@ -362,6 +439,7 @@ export function humanizeWebError(error: unknown): string {
   const lower = raw.toLowerCase();
   if (lower.includes('row-level security') || lower.includes('rls')) return `Permissão insuficiente no Supabase/RLS. ${raw}`;
   if (lower.includes('jwt') || lower.includes('session') || lower.includes('login') || lower.includes('auth')) return `Login pendente ou sessão expirada. ${raw}`;
+  if (lower.includes('modo treinamento seguro ativo')) return raw;
   if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline')) return `Não foi possível sincronizar. Verifique a internet deste aparelho. ${raw}`;
   if (lower.includes('supabase') && lower.includes('config')) return `Supabase não configurado. ${raw}`;
   return raw;
@@ -841,6 +919,7 @@ export async function webSettings(): Promise<Settings> {
 export async function webSaveSettings(settings: Settings): Promise<Settings> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'alterar configurações da loja');
+  assertWebTrainingModeAllowsWrite('alterar configurações da loja real');
   const client = await getClient();
   const { data, error } = await client
     .from('stores')
@@ -892,6 +971,7 @@ export async function webCustomers(): Promise<Customer[]> {
 export async function webSaveCustomer(customer: Partial<Customer>): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar clientes');
+  assertWebTrainingModeAllowsWrite('salvar cliente real');
   const client = await getClient();
   const name = String(customer.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do cliente antes de salvar.');
@@ -935,6 +1015,7 @@ export async function webSaveCustomer(customer: Partial<Customer>): Promise<Cust
 export async function webInactivateCustomer(customerId: string): Promise<Customer> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar clientes');
+  assertWebTrainingModeAllowsWrite('inativar cliente real');
   const client = await getClient();
   const { data, error } = await client
     .from('customers')
@@ -1023,6 +1104,7 @@ export async function webProducts(): Promise<Product[]> {
 export async function webSaveProduct(product: Partial<Product>): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar produtos');
+  assertWebTrainingModeAllowsWrite('salvar produto ou foto real');
   const client = await getClient();
   const name = String(product.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do produto antes de salvar.');
@@ -1109,6 +1191,7 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
 export async function webInactivateProduct(productId: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar produtos');
+  assertWebTrainingModeAllowsWrite('inativar produto real');
   const client = await getClient();
   const { data, error } = await client
     .from('products')
@@ -1125,6 +1208,7 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
 export async function webAdjustStock(productId: string, delta: number, reason: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
+  assertWebTrainingModeAllowsWrite('ajustar estoque real');
   const client = await getClient();
   if (!reason.trim()) throw new Error('Informe o motivo do ajuste de estoque.');
 
@@ -1397,6 +1481,7 @@ export async function webBackups(): Promise<BackupInfo[]> {
 export async function webCreateBackup(): Promise<BackupInfo> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'gerar backup web da loja');
+  assertWebTrainingModeAllowsWrite('registrar backup real');
   const client = await getClient();
   const { data: storeData, error: storeError } = await client
     .from('stores')
@@ -1474,6 +1559,7 @@ export async function webRestoreBackupContent(fileContent: string, confirmation:
   if (confirmation !== 'RESTAURAR') throw new Error('Confirmação inválida. Digite RESTAURAR para importar o backup web.');
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'restaurar backup web da loja');
+  assertWebTrainingModeAllowsWrite('restaurar backup na loja real');
 
   let snapshot: WebBackupSnapshot;
   try {
@@ -1744,6 +1830,7 @@ export async function webSales(): Promise<SaleSummary[]> {
 export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'finalizar vendas');
+  assertWebTrainingModeAllowsWrite('finalizar venda real');
   const client = await getClient();
   const salePayload = parseSalePayload(payload);
   const rpcPayload = { ...salePayload, store_id: context.store.id };
@@ -1757,6 +1844,7 @@ export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
 export async function webCancelSale(saleId: string, reason: string): Promise<SaleSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'cancelar vendas');
+  assertWebTrainingModeAllowsWrite('cancelar venda real');
   const client = await getClient();
   const cleanReason = reason.trim() || 'Cancelamento manual web';
   const { data, error } = await client.rpc('web_cancel_sale', { target_sale_id: saleId, cancel_reason_text: cleanReason });
@@ -1843,6 +1931,7 @@ export async function webCashSummary(): Promise<CashSummary> {
 export async function webOpenCash(openingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'abrir caixa');
+  assertWebTrainingModeAllowsWrite('abrir caixa real');
   const client = await getClient();
   if (openingAmount < 0) throw new Error('O valor inicial não pode ser negativo.');
   const alreadyOpen = await currentCashSessionId(context.store.id);
@@ -1856,6 +1945,7 @@ export async function webOpenCash(openingAmount: number, notes: string): Promise
 export async function webCloseCash(closingAmount: number, notes: string): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'fechar caixa');
+  assertWebTrainingModeAllowsWrite('fechar caixa real');
   const client = await getClient();
   if (closingAmount < 0) throw new Error('O valor contado não pode ser negativo.');
   const sessionId = await currentCashSessionId(context.store.id);
@@ -1874,6 +1964,7 @@ export async function webCloseCash(closingAmount: number, notes: string): Promis
 export async function webAddCashMovement(movementType: string, method: string, amount: number, reason: string, requestId = clientRequestId('cash')): Promise<CashSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'lançar movimento de caixa');
+  assertWebTrainingModeAllowsWrite('lançar movimento de caixa real');
   const client = await getClient();
   const cleanType = movementType === 'entrada' ? 'entrada' : 'saida';
   const cleanReason = reason.trim();
@@ -1987,6 +2078,7 @@ export async function webCredits(): Promise<CreditSummary[]> {
 export async function webReceiveInstallment(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'receber crediário');
+  assertWebTrainingModeAllowsWrite('receber crediário real');
   const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
   const creditId = stringValue(source.credit_id);
   const installmentId = stringValue(source.installment_id);
@@ -2028,6 +2120,7 @@ export async function webOrders(): Promise<OrderSummary[]> {
 export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'criar pedidos');
+  assertWebTrainingModeAllowsWrite('criar pedido real');
   const client = await getClient();
   const orderPayload = parseOrderPayload(payload);
   const existing = await client
@@ -2081,6 +2174,7 @@ export async function webCreateOrder(payload: unknown): Promise<OrderSummary> {
 export async function webSetOrderStatus(orderId: string, status: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'alterar status de pedidos');
+  assertWebTrainingModeAllowsWrite('alterar pedido real');
   const client = await getClient();
   const nextStatus = mapOrderStatusToCloud(status);
   if (nextStatus === 'delivered') {
@@ -2110,6 +2204,7 @@ export async function webSetOrderStatus(orderId: string, status: string): Promis
 export async function webCancelOrder(orderId: string, reason: string): Promise<OrderSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'cancelar pedidos');
+  assertWebTrainingModeAllowsWrite('cancelar pedido real');
   const client = await getClient();
   const { data, error } = await client
     .from('orders')
@@ -2345,6 +2440,7 @@ async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
 }
 
 export async function flushWebOutbox(): Promise<WebOutboxStats> {
+  assertWebTrainingModeAllowsWrite('reenviar pendências reais para a nuvem');
   const queue = readWebOutbox();
   if (queue.length === 0) {
     recordWebSyncSnapshot('synced', 'Sincronização', 'Nenhuma alteração pendente neste aparelho.');
@@ -2471,7 +2567,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
   const total = 11;
   if (typeof window === 'undefined' || !window.localStorage) return { done: 0, total, percent: 0 };
   try {
-    const keys = ['smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+    const keys = ['smart-loja:guided-commercial-test-v132', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
     for (const key of keys) {
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
@@ -2492,7 +2588,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
 function readAssistedCommercialProgress(): { passed: number; failed: number; blocked: number; total: number; percent: number; criticalProblems: number } {
   const total = 12;
   const criticalIds = new Set([
-    'deploy-cache-v131-real',
+    'deploy-cache-v132-real',
     'owner-auto-test-no-danger',
     'device-a-create-core-records',
     'device-b-sees-core-records',
@@ -2503,7 +2599,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
     'offline-real-retry-no-duplicate',
     'final-sell-decision',
   ]);
-  const keys = ['smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+  const keys = ['smart-loja:assisted-commercial-run-v132', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
   if (typeof window === 'undefined' || !window.localStorage) return { passed: 0, failed: 0, blocked: 0, total, percent: 0, criticalProblems: 0 };
   try {
     for (const key of keys) {
@@ -2516,7 +2612,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
       let blocked = 0;
       let criticalProblems = 0;
       for (const [id, result] of Object.entries(results)) {
-        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' ? 'deploy-cache-v131-real' : id;
+        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v132-real' : id;
         if (result === 'passed') passed += 1;
         if (result === 'failed') failed += 1;
         if (result === 'blocked') blocked += 1;
@@ -2532,7 +2628,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
 
 
 function readFinalCommercialAcceptanceStatus(): { signed: boolean; responsible: string; acceptedAt: string; key: string } {
-  const keys = ['smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+  const keys = ['smart-loja:final-commercial-acceptance-v132', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
   if (typeof window === 'undefined' || !window.localStorage) return { signed: false, responsible: '', acceptedAt: '', key: keys[0] };
   try {
     for (const key of keys) {
@@ -2632,6 +2728,14 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
     evidence: `pending=${outbox.pending}; error=${outbox.error}; last=${outbox.lastError || snapshot.detail}`,
   });
 
+  const trainingMode = readWebTrainingMode();
+  pushCommercialCheck(checks, {
+    id: 'training-mode-safe-v132', area: 'Treinamento', title: 'Modo treinamento seguro',
+    detail: trainingMode.enabled ? 'Treinamento ativo: gravações reais estão bloqueadas para demonstração segura.' : 'Treinamento desativado: operação real liberada conforme papel do usuário.',
+    level: trainingMode.enabled ? 'warn' : 'ok',
+    evidence: trainingMode.enabled ? `responsavel=${trainingMode.responsible || 'não informado'}; cenario=${trainingMode.scenario || 'não informado'}` : 'smart-loja:training-mode-safe-v132 desligado',
+  });
+
   pushCommercialCheck(checks, {
     id: 'service-worker', area: 'PWA/cache', title: 'Instalação PWA/cache',
     detail: serviceWorkerReady ? 'Service worker registrado neste navegador.' : 'Service worker ainda não registrado. Depois do deploy, abra instalado no celular e teste de novo.',
@@ -2641,40 +2745,40 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v131 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v132 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });
 
   const guidedProgress = readGuidedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'guided-commercial-v131', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
+    id: 'guided-commercial-v132', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
     detail: guidedProgress.done >= guidedProgress.total ? 'Roteiro guiado marcado como concluído neste aparelho.' : `Roteiro guiado ainda incompleto: ${guidedProgress.done}/${guidedProgress.total} passo(s).`,
     level: guidedProgress.done >= guidedProgress.total ? 'ok' : guidedProgress.done >= 6 ? 'warn' : 'warn',
-    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v131`,
+    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v132`,
   });
 
   const assistedProgress = readAssistedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'assisted-execution-v131', area: 'Teste real', title: 'Execução real assistida',
+    id: 'assisted-execution-v132', area: 'Teste real', title: 'Execução real assistida',
     detail: assistedProgress.criticalProblems
       ? `${assistedProgress.criticalProblems} falha(s) ou bloqueio(s) crítico(s) foram registrados. Não vender ainda.`
       : assistedProgress.passed >= assistedProgress.total
         ? 'Execução assistida concluída sem falha crítica registrada neste aparelho.'
         : `Execução assistida em andamento: ${assistedProgress.passed}/${assistedProgress.total} passo(s) passaram.`,
     level: assistedProgress.criticalProblems ? 'danger' : assistedProgress.passed >= assistedProgress.total ? 'ok' : 'warn',
-    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v131`,
+    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v132`,
   });
 
 
   const finalAcceptance = readFinalCommercialAcceptanceStatus();
   pushCommercialCheck(checks, {
-    id: 'final-commercial-acceptance-v131', area: 'Teste real', title: 'Aceite final de venda',
+    id: 'final-commercial-acceptance-v132', area: 'Teste real', title: 'Aceite final de venda',
     detail: finalAcceptance.signed
       ? `Aceite final registrado por ${finalAcceptance.responsible || 'responsável não informado'} em ${new Date(finalAcceptance.acceptedAt).toLocaleString('pt-BR')}.`
       : 'Aceite final ainda não registrado. Só assine depois de zerar P0/P1, concluir dois aparelhos, permissões, impressão e backup controlado.',
     level: finalAcceptance.signed ? 'ok' : 'warn',
-    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v131 sem aceite registrado',
+    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v132 sem aceite registrado',
   });
 
   pushCommercialCheck(checks, {

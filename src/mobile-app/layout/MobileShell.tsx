@@ -4,6 +4,7 @@ import { getMobileRoute, MOBILE_ROUTES } from '../mobileAppRoutes';
 import { InlineIcon } from '../components/InlineIcon';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
+import { readWebTrainingMode, type WebTrainingModeState } from '../../lib/webApi';
 
 interface MobileShellProps {
   activePage: PageKey;
@@ -35,10 +36,21 @@ export function MobileShell({
   children,
 }: MobileShellProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
   const pageRef = useRef<HTMLElement | null>(null);
   const route = getMobileRoute(activePage);
   const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil Web').replace(/\s+Web$/i, '');
   const online = Boolean(status?.sqlite_ok);
+
+  useEffect(() => {
+    const syncTrainingMode = () => setTrainingMode(readWebTrainingMode());
+    window.addEventListener('smart-loja:web-training-mode-change', syncTrainingMode);
+    window.addEventListener('storage', syncTrainingMode);
+    return () => {
+      window.removeEventListener('smart-loja:web-training-mode-change', syncTrainingMode);
+      window.removeEventListener('storage', syncTrainingMode);
+    };
+  }, []);
 
   useEffect(() => {
     pageRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -68,9 +80,9 @@ export function MobileShell({
         </div>
         <div className="mapp-side-footer">
           <span>Ambiente</span>
-          <strong>Produção</strong>
+          <strong>{trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v131 aceite'}</strong>
+          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v132 treino'}</strong>
         </div>
       </aside>
 
@@ -103,6 +115,16 @@ export function MobileShell({
                 <p>Atualize para usar a versão mais nova neste aparelho.</p>
               </div>
               <button type="button" onClick={onInstallUpdate}>Atualizar</button>
+            </section>
+          ) : null}
+
+          {trainingMode.enabled ? (
+            <section className="mapp-training-banner">
+              <div>
+                <strong>Modo treinamento ativo</strong>
+                <p>Gravações reais estão bloqueadas. Desative no Diagnóstico Web antes da venda verdadeira.</p>
+              </div>
+              <button type="button" onClick={() => onNavigate('diagnostics')}>Ver</button>
             </section>
           ) : null}
 

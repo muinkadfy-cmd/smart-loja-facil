@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v131-kit-onboarding-cliente';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v132-modo-treinamento-seguro';
 const APP_SHELL = [
   '/',
   '/index.html',

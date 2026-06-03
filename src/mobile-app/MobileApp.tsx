@@ -11,6 +11,7 @@ import { ReceiptsScreen } from './screens/ReceiptsScreen';
 import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScreens';
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
+import { readWebTrainingMode } from '../lib/webApi';
 
 interface MobileAppProps {
   activePage: PageKey;
@@ -26,11 +27,22 @@ interface MobileAppProps {
 export function MobileApp({ activePage, status, settings, loading, error, refreshToken, onNavigate, onRefresh }: MobileAppProps): JSX.Element {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [trainingModeActive, setTrainingModeActive] = useState(() => readWebTrainingMode().enabled);
 
   useEffect(() => {
     const handler = () => setUpdateAvailable(true);
     window.addEventListener('smart-loja:pwa-update', handler);
     return () => window.removeEventListener('smart-loja:pwa-update', handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setTrainingModeActive(readWebTrainingMode().enabled);
+    window.addEventListener('smart-loja:web-training-mode-change', handler);
+    window.addEventListener('storage', handler);
+    return () => {
+      window.removeEventListener('smart-loja:web-training-mode-change', handler);
+      window.removeEventListener('storage', handler);
+    };
   }, []);
 
   const alerts = useMemo(() => {
@@ -40,8 +52,9 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     if ((dashboard?.low_stock_count ?? 0) > 0) items.push({ title: 'Estoque baixo', detail: `${dashboard?.low_stock_count ?? 0} produto(s) precisam de reposição.`, action: 'Ver produtos', page: 'products' });
     if ((dashboard?.today_sales_count ?? 0) === 0) items.push({ title: 'Nenhuma venda hoje', detail: 'Abra o PDV para registrar a primeira venda.', action: 'Abrir PDV', page: 'sales' });
     if (updateAvailable) items.push({ title: 'Nova versão disponível', detail: 'Atualize o PWA neste aparelho.', action: 'Atualizar', page: 'diagnostics' });
+    if (trainingModeActive) items.push({ title: 'Modo treinamento ativo', detail: 'Gravações reais estão bloqueadas para demonstração segura.', action: 'Ver modo', page: 'diagnostics' });
     return items.length ? items : [{ title: 'Tudo certo', detail: 'Nenhum alerta crítico agora.', action: 'Dashboard', page: 'dashboard' as PageKey }];
-  }, [status, updateAvailable]);
+  }, [status, updateAvailable, trainingModeActive]);
 
   const navigate = useCallback((page: PageKey) => {
     onNavigate(page);

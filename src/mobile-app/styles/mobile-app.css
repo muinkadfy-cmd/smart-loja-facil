@@ -2867,3 +2867,107 @@ img, svg { max-width: 100%; }
     min-width: 0;
   }
 }
+
+/* Mega Lote 132 — Modo treinamento seguro */
+.mapp-training-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(15, 23, 42, 0.72));
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+}
+.mapp-training-banner strong { display: block; font-size: 0.92rem; color: #fef3c7; }
+.mapp-training-banner p { margin: 2px 0 0; color: rgba(255,255,255,0.76); font-size: 0.78rem; line-height: 1.35; }
+.mapp-training-banner button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 14px;
+  font-weight: 900;
+  color: #3f2b12;
+  background: #fbbf24;
+}
+.mapp-training-panel {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.94));
+}
+.mapp-training-panel.is-active {
+  border-color: rgba(245, 158, 11, 0.42);
+  box-shadow: 0 22px 54px rgba(245, 158, 11, 0.15);
+}
+.mapp-training-hero {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(255,255,255,0.84);
+}
+.mapp-training-hero span {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #7c2d12;
+  background: rgba(251, 191, 36, 0.18);
+}
+.mapp-training-hero strong { display: block; margin-top: 8px; font-size: 1rem; color: #111827; }
+.mapp-training-hero p { margin: 5px 0 0; color: #64748b; font-size: 0.82rem; line-height: 1.45; }
+.mapp-training-hero b {
+  display: grid;
+  place-items: center;
+  min-width: 78px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+}
+.mapp-training-hero b.ok { color: #065f46; background: rgba(16, 185, 129, 0.15); }
+.mapp-training-hero b.warn { color: #92400e; background: rgba(245, 158, 11, 0.16); }
+.mapp-training-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mapp-training-chip-list span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(203, 124, 118, 0.32);
+  background: rgba(203, 124, 118, 0.1);
+  color: #7f1d1d;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+.mapp-training-steps {
+  display: grid;
+  gap: 10px;
+}
+.mapp-training-steps article {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(248,250,252,0.88);
+}
+.mapp-training-steps article span {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(113,101,95,0.1);
+  color: #71655f;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+.mapp-training-steps article strong { display: block; margin-top: 7px; color: #111827; font-size: 0.9rem; }
+.mapp-training-steps article p { margin: 4px 0 0; color: #64748b; font-size: 0.78rem; line-height: 1.42; }
+@media (max-width: 420px) {
+  .mapp-training-hero { flex-direction: column; }
+  .mapp-training-hero b { min-height: 44px; }
+  .mapp-training-banner { align-items: flex-start; }
+}

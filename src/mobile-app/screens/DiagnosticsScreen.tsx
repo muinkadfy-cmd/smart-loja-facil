@@ -11,11 +11,15 @@ import {
   getWebRoleCapabilities,
   webCommercialValidation,
   webPrintTestReceipt,
+  readWebTrainingMode,
+  saveWebTrainingMode,
+  setWebTrainingModeEnabled,
   type WebCommercialCheckItem,
   type WebCommercialValidationReport,
   type WebOutboxStats,
   type WebSyncSnapshot,
   type WebStoreRole,
+  type WebTrainingModeState,
 } from '../../lib/webApi';
 import type { AppStatus } from '../../types';
 import { InlineIcon } from '../components/InlineIcon';
@@ -47,8 +51,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v131';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v132';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -146,7 +150,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v131 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v132 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -240,18 +244,34 @@ interface FirstClientOnboardingState {
   updatedAt: string;
 }
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v131';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+interface TrainingDemoStep {
+  id: string;
+  title: string;
+  detail: string;
+  protectedArea: string;
+}
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v131';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
+  { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
+  { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
+  { id: 'simulate-sale', title: 'Simular venda sem finalizar', detail: 'Montar carrinho de exemplo e parar antes de Finalizar venda. A venda real fica bloqueada pelo modo treinamento.', protectedArea: 'Vendas/estoque' },
+  { id: 'print-sample', title: 'Imprimir amostra segura', detail: 'Usar Teste 58mm, Teste 80mm ou A4/PDF. A amostra não baixa estoque e não abre caixa.', protectedArea: 'Impressão' },
+  { id: 'disable-before-real', title: 'Desativar antes do uso real', detail: 'Antes da primeira venda verdadeira, desativar o modo e copiar a evidência do treinamento.', protectedArea: 'Operação real' },
+];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v131';
-const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS: string[] = [];
+
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v132';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v132';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v132';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v131 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v132 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -263,12 +283,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v131-real',
+    id: 'deploy-cache-v132-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v131',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v131.',
+    title: 'Deploy aplicado e PWA abriu v132',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v132.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v131.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v132.',
     critical: true,
   },
   {
@@ -393,7 +413,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' ? 'deploy-cache-v131-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' ? 'deploy-cache-v132-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -674,7 +694,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v131',
+    'Smart Loja Fácil — fechamento comercial / aceite final v132',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -768,7 +788,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v131',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v132',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -808,7 +828,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v131',
+    'Smart Loja Fácil — plano de correção aceite v132',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -846,7 +866,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v131',
+    'Smart Loja Fácil — execução real assistida v132',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -920,7 +940,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v131',
+    'Smart Loja Fácil — roteiro guiado comercial v132',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -964,9 +984,43 @@ function readyText(report: WebCommercialValidationReport | null): string {
   return 'Não vender ainda';
 }
 
+
+function buildTrainingModeText(params: {
+  training: WebTrainingModeState;
+  roleState: RoleState;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+  outbox: WebOutboxStats;
+}): string {
+  return [
+    'Smart Loja Fácil — modo treinamento seguro v132',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
+    `Responsável: ${params.training.responsible || 'não informado'}`,
+    `Cenário: ${params.training.scenario || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Pendências reais existentes: ${params.outbox.total}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.training.startedAt ? `Iniciado em: ${formatDateTime(params.training.startedAt)}` : 'Iniciado em: não registrado',
+    params.training.note ? `Observação: ${params.training.note}` : 'Observação: não preenchida',
+    '',
+    'Proteção ativada quando o modo está ligado:',
+    '- Bloqueia salvar cliente/produto real.',
+    '- Bloqueia finalizar/cancelar venda real.',
+    '- Bloqueia abrir/fechar caixa e lançar movimento real.',
+    '- Bloqueia criar/alterar/cancelar pedido real.',
+    '- Bloqueia receber crediário real.',
+    '- Bloqueia alteração de configuração, backup/restauração e reenvio de pendências reais.',
+    '- Permite navegação, leitura, diagnóstico e amostras de impressão.',
+    '',
+    'Para vender de verdade: desative o modo treinamento, rode Diagnóstico Web e confirme que não há P0/P1 aberto.',
+  ].join('\n');
+}
+
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v131',
+    'Smart Loja Fácil — teste comercial v132',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -997,10 +1051,12 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [assistedState, setAssistedState] = useState<AssistedRealState>(() => readAssistedState());
   const [finalAcceptance, setFinalAcceptance] = useState<FinalAcceptanceState>(() => readFinalAcceptanceState());
   const [onboardingState, setOnboardingState] = useState<FirstClientOnboardingState>(() => readOnboardingState());
+  const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
     setOutbox(getWebOutboxStats());
+    setTrainingMode(readWebTrainingMode());
   };
 
   const loadRole = async () => {
@@ -1079,6 +1135,10 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     }
     return Array.from(groups.entries());
   }, []);
+
+  const trainingActive = trainingMode.enabled;
+  const trainingProtectionLabel = trainingActive ? 'Treinamento ativo: gravações reais bloqueadas' : 'Treinamento desligado: operação real liberada conforme permissão';
+  const trainingBlockedAreas = ['Clientes', 'Produtos', 'Vendas', 'Caixa', 'Pedidos', 'Crediário', 'Configurações', 'Backup/Restauração', 'Reenvio de pendências'];
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -1245,13 +1305,43 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: 'success', text: 'Kit do primeiro cliente copiado. Pode enviar para instalação, treinamento e suporte.' });
   }
 
+  function patchTrainingMode(patch: Partial<WebTrainingModeState>): void {
+    setTrainingMode(saveWebTrainingMode({ ...trainingMode, ...patch }));
+  }
+
+  function activateTrainingMode(): void {
+    const next = setWebTrainingModeEnabled(true, {
+      scenario: trainingMode.scenario || 'Treinamento com cliente / demonstração segura',
+      responsible: trainingMode.responsible || roleState.email || '',
+      note: trainingMode.note,
+    });
+    setTrainingMode(next);
+    setFeedback({ tone: 'info', text: 'Modo treinamento ativado. Gravações reais ficam bloqueadas até desativar.' });
+  }
+
+  function deactivateTrainingMode(): void {
+    const ok = window.confirm('Desativar o modo treinamento e liberar gravações reais conforme permissão do usuário?');
+    if (!ok) return;
+    const next = setWebTrainingModeEnabled(false, { note: trainingMode.note });
+    setTrainingMode(next);
+    setFeedback({ tone: 'success', text: 'Modo treinamento desativado. Antes de vender de verdade, rode o teste comercial e confira P0/P1.' });
+  }
+
+  async function copyTrainingMode(): Promise<void> {
+    const text = buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Orientação do modo treinamento copiada sem senha e sem chave privada.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
 
 ${buildFinalAcceptanceText({ gate: finalGate, acceptance: finalAcceptance, report, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, snapshot, roleState, online })}
 
-${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}`
+${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, roleState, report, online, snapshot })}
+
+${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -1262,6 +1352,7 @@ ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, role
           `Conexão: ${online ? 'online' : 'offline'}`,
           `Nuvem: ${status?.sqlite_ok ? 'conectada' : 'verificar login/configuração'}`,
           `Pendências: ${outbox.total}`,
+          `Modo treinamento: ${trainingMode.enabled ? 'ativo - gravações reais bloqueadas' : 'desativado'}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -1280,6 +1371,41 @@ ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, role
       </section>
 
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
+
+      <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
+        <div className="mapp-section-title"><h2>Modo treinamento seguro</h2><button type="button" onClick={() => void copyTrainingMode()}>Copiar orientação</button></div>
+        <div className="mapp-training-hero">
+          <div>
+            <span>{trainingActive ? 'Ativo e protegido' : 'Desativado'}</span>
+            <strong>{trainingProtectionLabel}</strong>
+            <p>Use para demonstrar o sistema para cliente leigo sem misturar teste com venda, caixa, estoque, crediário ou backup real.</p>
+          </div>
+          <b className={trainingActive ? 'ok' : 'warn'}>{trainingActive ? 'SEGURO' : 'REAL'}</b>
+        </div>
+        <div className="mapp-final-release-grid">
+          <label>Responsável pelo treino<input value={trainingMode.responsible} onChange={(event) => patchTrainingMode({ responsible: event.target.value })} placeholder="Ex.: João / suporte" /></label>
+          <label>Cenário do treinamento<input value={trainingMode.scenario} onChange={(event) => patchTrainingMode({ scenario: event.target.value })} placeholder="Ex.: Demonstração para primeiro cliente" /></label>
+          <label>Observação<textarea value={trainingMode.note} onChange={(event) => patchTrainingMode({ note: event.target.value })} placeholder="Anote aparelho usado, cliente treinado e o que ainda precisa testar de verdade." rows={3} /></label>
+        </div>
+        <div className="mapp-training-chip-list" aria-label="Áreas protegidas no modo treinamento">
+          {trainingBlockedAreas.map((area) => <span key={area}>{area}</span>)}
+        </div>
+        <div className="mapp-training-steps">
+          {TRAINING_DEMO_STEPS.map((step) => (
+            <article key={step.id}>
+              <span>{step.protectedArea}</span>
+              <strong>{step.title}</strong>
+              <p>{step.detail}</p>
+            </article>
+          ))}
+        </div>
+        <div className="mapp-button-grid">
+          <button type="button" className="mapp-primary-button" onClick={activateTrainingMode} disabled={trainingActive}>Ativar treinamento</button>
+          <button type="button" className="mapp-secondary-button" onClick={deactivateTrainingMode} disabled={!trainingActive}>Desativar para uso real</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyTrainingMode()}>Copiar orientação</button>
+        </div>
+        <small className="mapp-final-honesty">Quando ativo, o app bloqueia gravações reais. Para vender de verdade, desative o treinamento, rode o teste comercial e confirme que não existe P0/P1.</small>
+      </section>
 
       <section className="mapp-form-panel mapp-commercial-panel">
         <div className="mapp-form-head">
@@ -1542,7 +1668,7 @@ ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, role
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v131 onboarding</strong></span>
+          <span><b>Cache</b><strong>v132 treinamento</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -1590,7 +1716,7 @@ ${buildFirstClientOnboardingText({ state: onboardingState, gate: finalGate, role
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a execução real assistida v131 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a execução real assistida v132 e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>
