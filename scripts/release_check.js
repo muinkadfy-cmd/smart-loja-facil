@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v127-teste-guiado-comercial';
-const currentCache = 'smart-loja-pwa-supabase-v127-teste-guiado-comercial';
+const currentVersion = 'pwa-supabase-v128-execucao-real-assistida';
+const currentCache = 'smart-loja-pwa-supabase-v128-execucao-real-assistida';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v127')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v127.');
+if (!mainSource.includes('smart-mobile-rebuild-v128')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v128.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,8 +82,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v127 teste guiado.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v127 teste guiado.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v128 execução real assistida.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v128 execução real assistida.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
@@ -96,7 +96,7 @@ try {
 }
 
 const css = read('src/mobile-app/styles/mobile-app.css');
-for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-guided-test-panel']) {
+for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
 
@@ -124,4 +124,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v127 PWA passou. Teste guiado multiaparelho, permissões por papel e Supabase preservado.');
+console.log('OK: release_check v128 PWA passou. Execução real assistida, teste guiado, permissões por papel e Supabase preservado.');

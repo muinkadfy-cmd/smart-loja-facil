@@ -47,8 +47,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v127';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v128';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -146,7 +146,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v127 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v128 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -162,6 +162,267 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     risk: 'baixo',
   },
 ];
+
+
+type AssistedRunResult = 'pending' | 'passed' | 'failed' | 'blocked';
+
+interface AssistedRealStep {
+  id: string;
+  phase: string;
+  title: string;
+  whatToDo: string;
+  expected: string;
+  evidence: string;
+  critical: boolean;
+}
+
+interface AssistedRealState {
+  results: Record<string, AssistedRunResult>;
+  tester: string;
+  deviceA: string;
+  deviceB: string;
+  notes: string;
+  updatedAt: string;
+}
+
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v128';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v127'];
+
+const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
+  {
+    id: 'deploy-cache-v128-real',
+    phase: '1. Deploy e atualização',
+    title: 'Deploy aplicado e PWA abriu v128',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v128.',
+    expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v128.',
+    critical: true,
+  },
+  {
+    id: 'owner-auto-test-no-danger',
+    phase: '2. Dono e teste automático',
+    title: 'Dono rodou teste comercial sem alerta vermelho',
+    whatToDo: 'Entrar como dono, tocar em Rodar teste comercial e revisar Segurança, Supabase/RLS, Sincronização e PWA/cache.',
+    expected: 'Sem alerta vermelho. Amarelo só pode ser teste manual ainda pendente.',
+    evidence: 'Relatório copiado pelo botão Copiar relatório.',
+    critical: true,
+  },
+  {
+    id: 'device-a-create-core-records',
+    phase: '3. Dados principais',
+    title: 'Aparelho 1 criou cliente, produto e venda controlada',
+    whatToDo: 'Criar cliente TESTE, produto TESTE com estoque pequeno e venda de valor baixo.',
+    expected: 'Cliente/produto/venda aparecem uma vez, com estoque e caixa coerentes.',
+    evidence: 'Nome do cliente/produto TESTE e número/horário da venda.',
+    critical: true,
+  },
+  {
+    id: 'device-b-sees-core-records',
+    phase: '3. Dados principais',
+    title: 'Aparelho 2 enxergou os mesmos dados',
+    whatToDo: 'No segundo aparelho, tocar em Puxar dados da nuvem e conferir o cliente, produto, venda e comprovante.',
+    expected: 'Dados aparecem no outro aparelho sem duplicar e sem precisar reinstalar o PWA.',
+    evidence: 'Print/lista do aparelho 2 com os dados TESTE.',
+    critical: true,
+  },
+  {
+    id: 'cash-real-open-move-close',
+    phase: '4. Caixa',
+    title: 'Caixa abriu, recebeu movimento e fechou corretamente',
+    whatToDo: 'Abrir caixa, lançar entrada/saída pequena, fazer venda controlada e conferir fechamento.',
+    expected: 'Saldo calculado bate com movimentos e venda; diferença aparece clara quando existir.',
+    evidence: 'Valor inicial, total de entradas/saídas, venda e saldo final.',
+    critical: true,
+  },
+  {
+    id: 'order-real-cycle',
+    phase: '5. Pedidos',
+    title: 'Pedido passou pelo ciclo real',
+    whatToDo: 'Criar pedido TESTE, mudar status para separado/entregue ou cancelar com motivo controlado.',
+    expected: 'Status aparece igual nos dois aparelhos e não gera venda duplicada.',
+    evidence: 'Código/nome do pedido e status final.',
+    critical: true,
+  },
+  {
+    id: 'credit-real-payment',
+    phase: '6. Crediário',
+    title: 'Crediário recebeu pagamento controlado',
+    whatToDo: 'Criar venda/crediário pequeno, receber parcela parcial ou total e conferir valor original, pago e restante.',
+    expected: 'Valor original não some, pago/restante ficam claros e comprovante pode ser aberto.',
+    evidence: 'Cliente, parcela, valor pago e restante.',
+    critical: true,
+  },
+  {
+    id: 'roles-real-blocks',
+    phase: '7. Permissões',
+    title: 'Admin, operador e leitor respeitaram limites',
+    whatToDo: 'Entrar como admin, operador e leitor. Tentar ações permitidas e bloqueadas em cada papel.',
+    expected: 'Admin não remove dono; operador não altera permissões; leitor não salva dados.',
+    evidence: 'Resumo dos três papéis testados.',
+    critical: true,
+  },
+  {
+    id: 'offline-real-retry-no-duplicate',
+    phase: '8. Internet fraca',
+    title: 'Pendência offline reenviou sem duplicar',
+    whatToDo: 'Desligar internet, fazer alteração segura, religar, reenviar pendências e conferir no outro aparelho.',
+    expected: 'A fila limpa ou mostra erro humano; o dado não aparece duplicado.',
+    evidence: 'Antes/depois da fila e confirmação no outro aparelho.',
+    critical: true,
+  },
+  {
+    id: 'print-real-paper',
+    phase: '9. Impressão',
+    title: 'Impressão 58mm, 80mm ou A4 conferida em papel/PDF',
+    whatToDo: 'Usar as amostras de impressão e uma venda real controlada na impressora ou PDF.',
+    expected: 'Comprovante não corta nome, total, cliente, forma de pagamento nem mensagem da loja.',
+    evidence: 'Foto do papel ou PDF salvo.',
+    critical: false,
+  },
+  {
+    id: 'backup-real-export-restore-safe',
+    phase: '10. Backup',
+    title: 'Backup exportado e restauração testada com segurança',
+    whatToDo: 'Baixar backup e testar restauração somente em loja vazia/ambiente de teste.',
+    expected: 'Backup baixa, restauração pede confirmação forte e não sobrescreve loja real por engano.',
+    evidence: 'Nome do arquivo e ambiente usado no teste.',
+    critical: false,
+  },
+  {
+    id: 'final-sell-decision',
+    phase: '11. Decisão comercial',
+    title: 'Decisão final registrada antes de vender',
+    whatToDo: 'Copiar a evidência assistida, listar falhas restantes e decidir piloto/venda/segurar.',
+    expected: 'Nenhum item crítico falhou; pendências ficam claras para o próximo lote.',
+    evidence: 'Texto copiado pelo botão Copiar execução.',
+    critical: true,
+  },
+];
+
+const ASSISTED_RESULT_LABEL: Record<AssistedRunResult, string> = {
+  pending: 'Pendente',
+  passed: 'Passou',
+  failed: 'Falhou',
+  blocked: 'Bloqueado',
+};
+
+function normalizeAssistedResult(value: unknown): AssistedRunResult {
+  return value === 'passed' || value === 'failed' || value === 'blocked' ? value : 'pending';
+}
+
+function emptyAssistedState(): AssistedRealState {
+  return { results: {}, tester: '', deviceA: '', deviceB: '', notes: '', updatedAt: '' };
+}
+
+function normalizeAssistedState(value: unknown): AssistedRealState {
+  const source = value && typeof value === 'object' ? value as Partial<AssistedRealState> : {};
+  const allowedIds = new Set(ASSISTED_REAL_STEPS.map((step) => step.id));
+  const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
+  const results: Record<string, AssistedRunResult> = {};
+  for (const [id, raw] of Object.entries(rawResults)) {
+    if (!allowedIds.has(id)) continue;
+    const normalized = normalizeAssistedResult(raw);
+    if (normalized !== 'pending') results[id] = normalized;
+  }
+  return {
+    results,
+    tester: typeof source.tester === 'string' ? source.tester.slice(0, 80) : '',
+    deviceA: typeof source.deviceA === 'string' ? source.deviceA.slice(0, 120) : '',
+    deviceB: typeof source.deviceB === 'string' ? source.deviceB.slice(0, 120) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1200) : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readAssistedState(): AssistedRealState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyAssistedState();
+  try {
+    const current = normalizeAssistedState(JSON.parse(window.localStorage.getItem(ASSISTED_RUN_KEY) || '{}'));
+    if (Object.keys(current.results).length || current.updatedAt) return current;
+    for (const key of LEGACY_ASSISTED_RUN_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeAssistedState(JSON.parse(raw));
+      if (Object.keys(legacy.results).length || legacy.updatedAt) {
+        window.localStorage.setItem(ASSISTED_RUN_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyAssistedState();
+  }
+  return emptyAssistedState();
+}
+
+function saveAssistedState(state: AssistedRealState): AssistedRealState {
+  const normalized = normalizeAssistedState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(ASSISTED_RUN_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function summarizeAssistedState(state: AssistedRealState): { passed: number; failed: number; blocked: number; pending: number; total: number; percent: number; criticalProblems: number } {
+  const total = ASSISTED_REAL_STEPS.length;
+  let passed = 0;
+  let failed = 0;
+  let blocked = 0;
+  let criticalProblems = 0;
+  for (const step of ASSISTED_REAL_STEPS) {
+    const result = normalizeAssistedResult(state.results[step.id]);
+    if (result === 'passed') passed += 1;
+    if (result === 'failed') failed += 1;
+    if (result === 'blocked') blocked += 1;
+    if (step.critical && (result === 'failed' || result === 'blocked')) criticalProblems += 1;
+  }
+  const pending = Math.max(0, total - passed - failed - blocked);
+  return { passed, failed, blocked, pending, total, percent: Math.round((passed / total) * 100), criticalProblems };
+}
+
+function assistedDecisionText(summary: ReturnType<typeof summarizeAssistedState>, report: WebCommercialValidationReport | null): string {
+  if (summary.criticalProblems > 0) return 'Não vender ainda: existe falha/bloqueio crítico.';
+  if (summary.passed === summary.total && report?.readyLabel === 'piloto') return 'Pronto para piloto forte, com evidência copiada.';
+  if (summary.passed >= Math.ceil(summary.total * 0.75) && !summary.failed && !summary.blocked) return 'Quase pronto: faltam poucos testes reais.';
+  return 'Em validação: conclua os passos críticos antes de vender.';
+}
+
+function buildAssistedExecutionText(params: {
+  state: AssistedRealState;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const summary = summarizeAssistedState(params.state);
+  const rows = ASSISTED_REAL_STEPS.map((step) => {
+    const result = normalizeAssistedResult(params.state.results[step.id]);
+    return [
+      `[${ASSISTED_RESULT_LABEL[result].toUpperCase()}]`,
+      step.critical ? 'CRÍTICO' : 'IMPORTANTE',
+      step.phase,
+      step.title,
+      `Esperado: ${step.expected}`,
+      `Evidência: ${step.evidence}`,
+    ].join(' · ');
+  });
+  return [
+    'Smart Loja Fácil — execução real assistida v128',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Responsável: ${params.state.tester || 'não informado'}`,
+    `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
+    `Aparelho 2: ${params.state.deviceB || 'não informado'}`,
+    `Resultado: ${summary.passed}/${summary.total} passou; ${summary.failed} falhou; ${summary.blocked} bloqueado; ${summary.pending} pendente`,
+    `Decisão: ${assistedDecisionText(summary, params.report)}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.state.notes ? `Observações/falhas: ${params.state.notes}` : 'Observações/falhas: nenhuma anotação registrada',
+    '',
+    'Passos assistidos:',
+    ...rows,
+  ].join('\n');
+}
 
 function normalizeGuidedDone(value: unknown): string[] {
   const allowed = new Set(GUIDED_COMMERCIAL_STEPS.map((step) => step.id));
@@ -219,7 +480,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v127',
+    'Smart Loja Fácil — roteiro guiado comercial v128',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -265,7 +526,7 @@ function readyText(report: WebCommercialValidationReport | null): string {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v127',
+    'Smart Loja Fácil — teste comercial v128',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -293,6 +554,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   const [printBusy, setPrintBusy] = useState<'58mm' | '80mm' | 'a4' | null>(null);
   const [report, setReport] = useState<WebCommercialValidationReport | null>(null);
   const [guidedDoneIds, setGuidedDoneIds] = useState<string[]>(() => readGuidedDoneIds());
+  const [assistedState, setAssistedState] = useState<AssistedRealState>(() => readAssistedState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -348,6 +610,17 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
   }, []);
   const guidedDoneCount = guidedDoneIds.length;
   const guidedPercent = Math.round((guidedDoneCount / GUIDED_COMMERCIAL_STEPS.length) * 100);
+  const assistedGroups = useMemo(() => {
+    const groups = new Map<string, AssistedRealStep[]>();
+    for (const step of ASSISTED_REAL_STEPS) {
+      const rows = groups.get(step.phase) ?? [];
+      rows.push(step);
+      groups.set(step.phase, rows);
+    }
+    return Array.from(groups.entries());
+  }, []);
+  const assistedSummary = useMemo(() => summarizeAssistedState(assistedState), [assistedState]);
+  const assistedDecision = assistedDecisionText(assistedSummary, report);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -430,9 +703,35 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
     setFeedback({ tone: 'success', text: 'Roteiro guiado copiado. Ele não mostra senha nem chave privada.' });
   }
 
+  function patchAssistedState(patch: Partial<AssistedRealState>): void {
+    setAssistedState((current) => saveAssistedState({ ...current, ...patch }));
+  }
+
+  function setAssistedResult(id: string, result: AssistedRunResult): void {
+    setAssistedState((current) => {
+      const results = { ...current.results };
+      if (result === 'pending') delete results[id];
+      else results[id] = result;
+      return saveAssistedState({ ...current, results });
+    });
+  }
+
+  function resetAssistedExecution(): void {
+    const ok = window.confirm('Zerar a execução assistida neste aparelho? Isso não apaga dados da loja.');
+    if (!ok) return;
+    setAssistedState(saveAssistedState(emptyAssistedState()));
+    setFeedback({ tone: 'info', text: 'Execução assistida zerada neste aparelho. Os dados da loja não foram alterados.' });
+  }
+
+  async function copyAssistedExecution(): Promise<void> {
+    const text = buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Execução assistida copiada. Guarde junto do deploy e dos prints dos aparelhos.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
-      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}`
+      ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}`
       : [
           `App: ${WEB_APP_VERSION}`,
           `Cache: ${WEB_CACHE_VERSION}`,
@@ -544,6 +843,63 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         </div>
       </section>
 
+      <section className="mapp-section-block mapp-assisted-execution-panel">
+        <div className="mapp-section-title"><h2>Execução real assistida</h2><button type="button" onClick={() => void copyAssistedExecution()}>Copiar execução</button></div>
+        <div className="mapp-assisted-summary">
+          <div>
+            <strong>{assistedSummary.passed}/{assistedSummary.total} passou</strong>
+            <p>{assistedDecision}</p>
+          </div>
+          <span className={assistedSummary.criticalProblems ? 'danger' : assistedSummary.percent >= 90 ? 'ok' : assistedSummary.percent >= 60 ? 'warn' : 'danger'}>{assistedSummary.percent}%</span>
+        </div>
+        <div className="mapp-assisted-counters" aria-label="Resumo da execução real">
+          <span><b>Falhou</b><strong>{assistedSummary.failed}</strong></span>
+          <span><b>Bloqueado</b><strong>{assistedSummary.blocked}</strong></span>
+          <span><b>Pendente</b><strong>{assistedSummary.pending}</strong></span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso da execução assistida ${assistedSummary.percent}%`}><span style={{ width: `${assistedSummary.percent}%` }} /></div>
+        <div className="mapp-assisted-fields">
+          <label>Responsável pelo teste<input value={assistedState.tester} onChange={(event) => patchAssistedState({ tester: event.target.value })} placeholder="Ex.: João / loja teste" /></label>
+          <label>Aparelho 1<input value={assistedState.deviceA} onChange={(event) => patchAssistedState({ deviceA: event.target.value })} placeholder="Ex.: PC Chrome / celular dono" /></label>
+          <label>Aparelho 2<input value={assistedState.deviceB} onChange={(event) => patchAssistedState({ deviceB: event.target.value })} placeholder="Ex.: Android instalado / navegador" /></label>
+          <label>Falhas ou observações<textarea value={assistedState.notes} onChange={(event) => patchAssistedState({ notes: event.target.value })} placeholder="Anote aqui o que falhou, aparelho, papel e print usado como prova." rows={3} /></label>
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyAssistedExecution()}>Copiar evidência assistida</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetAssistedExecution}>Zerar execução</button>
+        </div>
+        <div className="mapp-assisted-groups">
+          {assistedGroups.map(([phase, steps]) => (
+            <article key={phase} className="mapp-assisted-group">
+              <header><strong>{phase}</strong><small>{steps.filter((step) => assistedState.results[step.id] === 'passed').length}/{steps.length}</small></header>
+              {steps.map((step) => {
+                const result = normalizeAssistedResult(assistedState.results[step.id]);
+                return (
+                  <div key={step.id} className={`mapp-assisted-step result-${result} ${step.critical ? 'critical' : 'optional'}`}>
+                    <div className="mapp-assisted-step-main">
+                      <span>{result === 'passed' ? '✓' : result === 'failed' ? '×' : result === 'blocked' ? '!' : ''}</span>
+                      <div>
+                        <strong>{step.title}</strong>
+                        <p>{step.whatToDo}</p>
+                        <small>Esperado: {step.expected}</small>
+                        <small>Evidência: {step.evidence}</small>
+                      </div>
+                    </div>
+                    <div className="mapp-assisted-choice-row" aria-label={`Resultado do passo ${step.title}`}>
+                      <button type="button" className={result === 'passed' ? 'active ok' : ''} onClick={() => setAssistedResult(step.id, 'passed')}>Passou</button>
+                      <button type="button" className={result === 'failed' ? 'active danger' : ''} onClick={() => setAssistedResult(step.id, 'failed')}>Falhou</button>
+                      <button type="button" className={result === 'blocked' ? 'active warn' : ''} onClick={() => setAssistedResult(step.id, 'blocked')}>Bloqueado</button>
+                      <button type="button" onClick={() => setAssistedResult(step.id, 'pending')}>Limpar</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </article>
+          ))}
+        </div>
+      </section>
+
+
       <section className="mapp-form-panel mapp-print-test-panel">
         <div className="mapp-form-head">
           <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
@@ -565,7 +921,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v127 guiado</strong></span>
+          <span><b>Cache</b><strong>v128 assistido</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -613,7 +969,7 @@ export function DiagnosticsScreen({ status, onRefresh }: DiagnosticsScreenProps)
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Entre com dono, administrador, operador e leitor em dois aparelhos. Crie cliente/produto/venda/pedido, confira se aparece no outro aparelho e teste uma impressão real.</p>
+          <p>Use a execução real assistida v128 em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

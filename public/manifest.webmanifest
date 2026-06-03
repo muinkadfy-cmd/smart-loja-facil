@@ -1,7 +1,7 @@
 {
   "name": "Smart Loja Fácil Web",
   "short_name": "Smart Loja",
-  "description": "Smart Loja Fácil PWA mobile-first v127 com teste guiado multiaparelho, permissões por papel, validação comercial mobile, impressão segura e Supabase preservado.",
+  "description": "Smart Loja Fácil PWA mobile-first v128 com execução real assistida, evidência comercial, teste multiaparelho, impressão segura e Supabase preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
