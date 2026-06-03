@@ -64,7 +64,7 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
   const pageShellWidth = rectWidth('.neo-page-shell');
   const navItemHeight = minHeight('.neo-sidebar .neo-nav-item');
   const root = document.documentElement;
-  const tokenLoaded = getRootVar('--lote121-clean-shell') === 'active';
+  const tokenLoaded = getRootVar('--lote122-clean-shell') === 'active';
   const safePadding = getRootVar('--neo-shell-safe-gap');
   const viewportWidth = Math.round(window.innerWidth);
   const bodyOverflow = Math.max(document.body.scrollWidth, root.scrollWidth) - viewportWidth;
@@ -81,9 +81,9 @@ export function getNeoShellSidebarReport(): NeoShellSidebarReport {
   const items: NeoShellSidebarItem[] = [
     {
       id: 'token',
-      label: 'Shell limpo v121',
+      label: 'Shell limpo v122',
       value: tokenLoaded ? 'Ativo' : 'Ausente',
-      detail: tokenLoaded ? 'Shell/sidebar usam a camada limpa atual; diagnóstico não depende mais dos módulos antigos.' : 'O CSS v121 não carregou; confira import no main.tsx.',
+      detail: tokenLoaded ? 'Shell/sidebar usam a camada limpa atual; diagnóstico não depende mais dos módulos antigos.' : 'O CSS v122 não carregou; confira import no main.tsx.',
       tone: tokenLoaded ? 'ok' : 'warn',
       ok: tokenLoaded,
     },

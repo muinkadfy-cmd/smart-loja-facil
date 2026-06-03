@@ -491,7 +491,7 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
       label: 'CSS modular',
       value: `${cssInventory.okCount}/${cssInventory.total} ok`,
       tone: cssInventory.score >= 84 ? 'ok' : 'warn',
-      detail: `Regras lidas: ${cssInventory.ruleCount}. Fundação limpa 118, componentes 120 e interface limpa 121 precisam aparecer como ativos.`,
+      detail: `Regras lidas: ${cssInventory.ruleCount}. Fundação limpa 118, componentes 120 e alertas limpos 121 precisam aparecer como ativos.`,
     },
     {
       label: 'Família neo-*',
@@ -584,8 +584,8 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
         </div>
 
         <div className="layout-audit-actions">
-          <button type="button" onClick={refreshScreen}>Atualizar tela</button>
-          <button type="button" onClick={() => void clearPwaCache()}>Limpar cache</button>
+          <button type="button" onClick={refreshScreen}>Recarregar tela</button>
+          <button type="button" onClick={() => void clearPwaCache()}>Atualizar cache</button>
           <button type="button" onClick={copyLayoutChecklist}>Copiar checklist</button>
         </div>
 
@@ -687,9 +687,9 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
       <section className="css-inventory-card" aria-label="Inventário CSS e performance visual">
         <div className="css-inventory-head">
           <div>
-            <span className="web-kicker">Inventário CSS limpo v121</span>
+            <span className="web-kicker">Inventário CSS limpo v122</span>
             <h2>CSS modular, corte lateral e renderização segura</h2>
-            <p>Este bloco confirma se a fundação limpa e a camada v121 foram carregadas, mostrando sinais de risco visual antes de vender: excesso de regras, corte lateral, toque mínimo e folhas carregadas.</p>
+            <p>Este bloco confirma se a fundação limpa e a camada v122 foram carregadas, mostrando sinais de risco visual antes de vender: excesso de regras, corte lateral, toque mínimo e folhas carregadas.</p>
           </div>
           <div className="css-inventory-score">
             <strong>{cssInventory.score}%</strong>
@@ -710,7 +710,7 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
       <section className="neo-family-card" aria-label="Família visual neo shell topbar sidebar e dock">
         <div className="neo-family-head">
           <div>
-            <span className="web-kicker">Família neo-* limpa + shell/sidebar v121</span>
+            <span className="web-kicker">Família neo-* limpa + shell/sidebar v122</span>
             <h2>Shell, topbar, sidebar, página e dock mobile</h2>
             <p>Este bloco mede se a camada visual principal está carregada, se existe corte lateral na tela atual e se o dock mantém toque confortável. Ele ajuda a limpar CSS antigo sem quebrar telas prontas.</p>
           </div>
@@ -730,21 +730,21 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
         </div>
       </section>
 
-      <section className="lote80-shell-sidebar-card" aria-label="Consolidação visual shell e sidebar limpos">
-        <div className="lote80-shell-sidebar-head">
+      <section className="clean-shell-sidebar-card" aria-label="Consolidação visual shell e sidebar limpos">
+        <div className="clean-shell-sidebar-head">
           <div>
             <span className="web-kicker">Shell/sidebar limpo</span>
             <h2>Consolidação da página principal e menu lateral</h2>
             <p>Este bloco verifica largura, corte lateral, rolagem, toque do menu e tokens novos sem depender de CSS antigo.</p>
           </div>
-          <div className="lote80-shell-sidebar-score">
+          <div className="clean-shell-sidebar-score">
             <strong>{neoShellSidebar.score}%</strong>
             <span>{neoShellSidebar.okCount}/{neoShellSidebar.total} ok</span>
           </div>
         </div>
-        <div className="lote80-shell-sidebar-grid">
+        <div className="clean-shell-sidebar-grid">
           {neoShellSidebar.items.map((item) => (
-            <article key={item.id} className={`lote80-shell-sidebar-item lote80-shell-sidebar-${item.tone}`}>
+            <article key={item.id} className={`clean-shell-sidebar-item clean-shell-sidebar-${item.tone}`}>
               <span>{item.label}</span>
               <strong>{item.value}</strong>
               <small>{item.detail}</small>
@@ -753,21 +753,21 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
         </div>
       </section>
 
-      <section className="lote81-important-card" aria-label="Redução controlada de important no shell e sidebar">
-        <div className="lote81-important-head">
+      <section className="clean-important-card" aria-label="Redução controlada de important no shell e sidebar">
+        <div className="clean-important-head">
           <div>
             <span className="web-kicker">Prioridade CSS limpa</span>
             <h2>Prioridades CSS do shell e menu lateral</h2>
             <p>Este bloco mede quantas prioridades forçadas ainda existem em .neo-page-shell e .neo-sidebar. A redução continua controlada para não quebrar telas prontas sem teste visual real.</p>
           </div>
-          <div className="lote81-important-score">
+          <div className="clean-important-score">
             <strong>{neoImportant.score}%</strong>
             <span>{neoImportant.okCount}/{neoImportant.total} ok</span>
           </div>
         </div>
-        <div className="lote81-important-grid">
+        <div className="clean-important-grid">
           {neoImportant.items.map((item) => (
-            <article key={item.id} className={`lote81-important-item lote81-important-${item.tone}`}>
+            <article key={item.id} className={`clean-important-item clean-important-${item.tone}`}>
               <span>{item.label}</span>
               <strong>{item.value}</strong>
               <small>{item.detail}</small>

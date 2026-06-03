@@ -77,8 +77,8 @@ export function getCssInventoryReport(): CssInventoryReport {
   const foundationToken = getRootToken('--lote118-foundation-final');
   const iconLoginToken = getRootToken('--lote119-icon-login-rescue');
   const commercialToken = getRootToken('--lote120-commercial-components');
-  const cleanInterfaceToken = getRootToken('--lote121-clean-interface');
-  const cleanShellToken = getRootToken('--lote121-clean-shell');
+  const cleanInterfaceToken = getRootToken('--lote122-clean-alerts');
+  const cleanShellToken = getRootToken('--lote122-clean-shell');
   const touchMin = getRootToken('--touch-target-min');
   const pageBottomSafe = getRootToken('--lote121-page-bottom-safe');
   const shellInlineSafe = getRootToken('--lote121-shell-inline-safe');
@@ -115,15 +115,15 @@ export function getCssInventoryReport(): CssInventoryReport {
       ok: commercialToken === 'active',
     },
     {
-      id: 'clean-interface-121',
-      label: 'Interface limpa v121',
+      id: 'clean-alerts-122',
+      label: 'Alertas limpos v122',
       value: cleanInterfaceToken === 'active' ? 'Ativa' : 'Não detectada',
-      detail: cleanInterfaceToken === 'active' ? 'Camada final remove resíduos visuais, reforça mobile-first e padroniza tokens atuais.' : 'A camada v121 não carregou; conferir import no main.tsx.',
+      detail: cleanInterfaceToken === 'active' ? 'Camada atual remove botões crus, transforma alertas em componente premium e mantém mobile-first.' : 'A camada v122 não carregou; conferir import no main.tsx.',
       tone: cleanInterfaceToken === 'active' ? 'ok' : 'warn',
       ok: cleanInterfaceToken === 'active',
     },
     {
-      id: 'clean-shell-121',
+      id: 'clean-shell-122',
       label: 'Shell sem herança antiga',
       value: cleanShellToken === 'active' ? 'Ativo' : 'Não detectado',
       detail: cleanShellToken === 'active' ? 'Diagnóstico aponta shell limpo, sem depender dos módulos v77–v97.' : 'Token de shell limpo não encontrado.',
@@ -209,7 +209,7 @@ export function getCssInventoryReport(): CssInventoryReport {
 
 export function buildCssInventoryText(report: CssInventoryReport): string {
   return [
-    `CSS limpo v121: ${report.okCount}/${report.total} (${report.score}%)`,
+    `CSS limpo v122: ${report.okCount}/${report.total} (${report.score}%)`,
     `Folhas: ${report.sheetCount} · regras lidas: ${report.ruleCount}`,
     ...report.items.map((item) => `${item.ok ? '[OK]' : '[ATENÇÃO]'} ${item.label}: ${item.value} · ${item.detail}`),
   ].join('\n');

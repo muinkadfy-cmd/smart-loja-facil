@@ -75,6 +75,25 @@ function BellIcon({ className }: { className?: string }): JSX.Element {
   );
 }
 
+async function clearBrowserCaches(): Promise<number> {
+  if (!('caches' in window)) return 0;
+  const keys = await caches.keys();
+  await Promise.all(keys.map((key) => caches.delete(key)));
+  return keys.length;
+}
+
+async function askServiceWorkerToSkipWaiting(): Promise<boolean> {
+  if (!('serviceWorker' in navigator)) return false;
+  const registration = await navigator.serviceWorker.getRegistration();
+  const waiting = registration?.waiting;
+  if (!waiting) {
+    await registration?.update().catch(() => undefined);
+    return false;
+  }
+  waiting.postMessage({ type: 'SKIP_WAITING' });
+  return true;
+}
+
 function shortDbName(value: string | undefined): string {
   if (!value) return 'Banco local';
   return value.split(/[/\\]/).pop() || value;
@@ -97,6 +116,33 @@ function pageSubtitle(page: PageKey): string {
     diagnostics: 'Confira conexão, login, permissão, cache e sincronização.',
   };
   return subtitles[page];
+}
+
+
+function compactVersionLabel(value: string | undefined): string {
+  if (!value) return 'v2.4.7';
+  const compact = value.replace(/^pwa-supabase-/i, '').replace(/-/g, ' ').trim();
+  if (/^v\d+/i.test(compact)) return compact;
+  return value.length > 22 ? `${value.slice(0, 22)}…` : value;
+}
+
+function alertActionLabel(page: PageKey): string {
+  const labels: Record<PageKey, string> = {
+    dashboard: 'Ver painel',
+    products: 'Abrir produtos',
+    customers: 'Abrir clientes',
+    orders: 'Abrir pedidos',
+    sales: 'Abrir PDV',
+    cash: 'Abrir caixa',
+    credits: 'Abrir crediário',
+    receipts: 'Abrir comprovantes',
+    reports: 'Abrir relatórios',
+    backup: 'Abrir backup',
+    settings: 'Abrir configurações',
+    audit: 'Abrir logs',
+    diagnostics: 'Ver diagnóstico',
+  };
+  return labels[page];
 }
 
 function initialsFromSettings(settings: Settings | null): string {
@@ -124,9 +170,33 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const [syncSnapshot, setSyncSnapshot] = useState<WebSyncSnapshot>(() => readWebSyncSnapshot());
   const [outboxBusy, setOutboxBusy] = useState(false);
   const [quickSearch, setQuickSearch] = useState('');
+  const [pwaUpdateAvailable, setPwaUpdateAvailable] = useState(false);
+  const [cacheActionBusy, setCacheActionBusy] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState<string | null>(null);
   const prevAlertSignature = useRef('');
   const autoFlushAttemptedRef = useRef(false);
   const quickAccessRef = useRef<HTMLDivElement | null>(null);
+
+  function navigatePage(page: PageKey): void {
+    setSidebarOpen(false);
+    setAlertsOpen(false);
+    setQuickSearch('');
+    setActivePage(page);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.querySelector<HTMLElement>('.neo-main')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.querySelector<HTMLElement>('.neo-page-shell')?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  }
+
+  useEffect(() => {
+    const main = document.querySelector<HTMLElement>('.neo-main');
+    const pageShell = document.querySelector<HTMLElement>('.neo-page-shell');
+    window.requestAnimationFrame(() => {
+      main?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      pageShell?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  }, [activePage]);
 
 
   useEffect(() => {
@@ -223,12 +293,28 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
 
   useEffect(() => {
     setSidebarOpen(false);
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>('.neo-page-shell')?.scrollTo({ top: 0, behavior: 'smooth' });
+      document.querySelector<HTMLElement>('.neo-main')?.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }, [activePage]);
 
   useEffect(() => {
     const activeButton = quickAccessRef.current?.querySelector<HTMLButtonElement>('button[aria-current="page"]');
     activeButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }, [activePage]);
+
+
+  useEffect(() => {
+    if (!runtimeInfo.isWeb) return undefined;
+    const handleUpdate = () => {
+      setPwaUpdateAvailable(true);
+      setCacheMessage('Nova versão disponível. Toque para atualizar com segurança.');
+      if (soundsEnabled) playOperationSound('warning');
+    };
+    window.addEventListener('smart-loja:pwa-update', handleUpdate);
+    return () => window.removeEventListener('smart-loja:pwa-update', handleUpdate);
+  }, [runtimeInfo.isWeb, soundsEnabled]);
 
   const alerts = useMemo(() => buildAppAlerts(status, products, credits), [credits, products, status]);
 
@@ -256,11 +342,16 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   }, [alerts, notificationsEnabled]);
 
   const activeAlerts = alerts.filter((alert) => alert.page === activePage && alert.level !== 'ok');
-  const notificationCount = alerts.filter((alert) => alert.level !== 'ok').length;
+  const priorityAlerts = alerts.filter((alert) => alert.level !== 'ok');
+  const alertsToDisplay = priorityAlerts.length > 0 ? priorityAlerts : alerts;
+  const notificationCount = priorityAlerts.length;
+  const alertSummaryLabel = notificationCount > 0 ? `${notificationCount} atenção(ões)` : 'Nenhum alerta importante agora';
+  const primaryAlert = alertsToDisplay[0];
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
   const activePageTitle = activePage === 'dashboard' ? 'Painel da loja' : activePageMeta.label;
   const environmentLabel = runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Sem internet') : status?.offline_ready ? 'Local / Offline' : 'Verificando';
   const avatarInitials = initialsFromSettings(settings);
+  const sidebarVersionLabel = compactVersionLabel(status?.version);
   const cloudDataLabel = runtimeInfo.isWeb
     ? outboxStats.total > 0 ? `${outboxStats.total} pendente(s)` : !webEnv?.isConfigured ? 'Nuvem não configurada' : status?.sqlite_ok && networkOnline ? 'Dados sincronizados' : networkOnline ? 'Faça login' : 'Sem conexão'
     : 'SQLite ativo';
@@ -300,17 +391,17 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     event.preventDefault();
     const query = quickSearch.trim().toLowerCase();
     if (!query) return;
-    if (query.includes('produto') || query.includes('estoque') || query.includes('catálogo') || query.includes('catalogo')) setActivePage('products');
-    else if (query.includes('cliente') || query.includes('pessoa')) setActivePage('customers');
-    else if (query.includes('venda') || query.includes('pdv') || query.includes('receber')) setActivePage('sales');
-    else if (query.includes('pedido') || query.includes('entrega')) setActivePage('orders');
-    else if (query.includes('caixa') || query.includes('dinheiro')) setActivePage('cash');
-    else if (query.includes('credi') || query.includes('parcela')) setActivePage('credits');
-    else if (query.includes('relat') || query.includes('resultado')) setActivePage('reports');
-    else if (query.includes('backup') || query.includes('copia') || query.includes('cópia')) setActivePage('backup');
-    else if (query.includes('config') || query.includes('loja')) setActivePage('settings');
-    else if (query.includes('diagn') || query.includes('status') || query.includes('sync') || query.includes('supabase')) setActivePage('diagnostics');
-    else setActivePage('dashboard');
+    if (query.includes('produto') || query.includes('estoque') || query.includes('catálogo') || query.includes('catalogo')) navigatePage('products');
+    else if (query.includes('cliente') || query.includes('pessoa')) navigatePage('customers');
+    else if (query.includes('venda') || query.includes('pdv') || query.includes('receber')) navigatePage('sales');
+    else if (query.includes('pedido') || query.includes('entrega')) navigatePage('orders');
+    else if (query.includes('caixa') || query.includes('dinheiro')) navigatePage('cash');
+    else if (query.includes('credi') || query.includes('parcela')) navigatePage('credits');
+    else if (query.includes('relat') || query.includes('resultado')) navigatePage('reports');
+    else if (query.includes('backup') || query.includes('copia') || query.includes('cópia')) navigatePage('backup');
+    else if (query.includes('config') || query.includes('loja')) navigatePage('settings');
+    else if (query.includes('diagn') || query.includes('status') || query.includes('sync') || query.includes('supabase')) navigatePage('diagnostics');
+    else navigatePage('dashboard');
     setQuickSearch('');
   }
 
@@ -342,9 +433,52 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     }
   }
 
+
+
+  function refreshPageNow(): void {
+    setCacheMessage('Atualizando a tela...');
+    window.setTimeout(() => window.location.reload(), 120);
+  }
+
+  function installPwaUpdate(): void {
+    if (!runtimeInfo.isWeb || cacheActionBusy) return;
+    setCacheActionBusy(true);
+    setCacheMessage('Instalando nova versão...');
+    void askServiceWorkerToSkipWaiting()
+      .then((updated) => {
+        if (updated) {
+          setCacheMessage('Nova versão instalada. A tela será atualizada.');
+          window.setTimeout(() => window.location.reload(), 700);
+          return;
+        }
+        setCacheMessage('Conferindo atualização e recarregando...');
+        window.setTimeout(() => window.location.reload(), 700);
+      })
+      .catch(() => {
+        setCacheMessage('Não foi possível instalar agora. Recarregando a tela.');
+        window.setTimeout(() => window.location.reload(), 900);
+      })
+      .finally(() => setCacheActionBusy(false));
+  }
+
+  function clearCacheAndReload(): void {
+    if (!runtimeInfo.isWeb || cacheActionBusy) return;
+    setCacheActionBusy(true);
+    setCacheMessage('Limpando cache do sistema...');
+    void clearBrowserCaches()
+      .then((count) => {
+        setCacheMessage(count > 0 ? `Cache limpo (${count}). Abrindo versão nova...` : 'Cache conferido. Abrindo versão nova...');
+        window.setTimeout(() => window.location.reload(), 900);
+      })
+      .catch(() => {
+        setCacheMessage('Não deu para limpar tudo, mas vamos atualizar a tela.');
+        window.setTimeout(() => window.location.reload(), 900);
+      })
+      .finally(() => setCacheActionBusy(false));
+  }
+
   function openAlertPage(page: PageKey): void {
-    setActivePage(page);
-    setAlertsOpen(false);
+    navigatePage(page);
   }
 
   return (
@@ -383,7 +517,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   type="button"
                   key={page.key}
                   className={`neo-nav-item ${activePage === page.key ? 'active' : ''} ${pageAlert.level ? `is-${pageAlert.level}` : ''}`.trim()}
-                  onClick={() => setActivePage(page.key)}
+                  onClick={() => navigatePage(page.key)}
                   aria-current={activePage === page.key ? 'page' : undefined}
                 >
                   <span className="neo-nav-item-icon">
@@ -406,8 +540,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             </div>
             <div className="neo-version-block">
               <span>Versão</span>
-              <strong>{status?.version ?? 'v2.4.7'}</strong>
-              <button type="button" onClick={() => setActivePage('audit')}>Abrir diagnóstico</button>
+              <strong title={status?.version ?? sidebarVersionLabel}>{sidebarVersionLabel}</strong>
+              <button type="button" onClick={() => navigatePage('audit')}>Abrir diagnóstico</button>
             </div>
           </div>
         </aside>
@@ -423,8 +557,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               <div className="neo-mobile-branding">
                 <AppIcon name="app_logo_cadeado_carrinho" size={32} alt="Smart Loja Fácil" className="neo-mobile-brand-logo" />
                 <div>
-                  <strong>Smart Loja Fácil</strong>
-                  <small>Store Manager</small>
+                  <strong>Smart Loja</strong>
+                  <small>Fácil</small>
                 </div>
               </div>
               <div className="neo-mobile-tools">
@@ -441,7 +575,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   type="button"
                   key={page.key}
                   className={activePage === page.key ? 'active' : ''}
-                  onClick={() => setActivePage(page.key)}
+                  onClick={() => navigatePage(page.key)}
                   aria-current={activePage === page.key ? 'page' : undefined}
                 >
                   <AppIcon name={page.icon} size={16} className="app-icon-chip" />
@@ -463,7 +597,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </form>
 
               <section className="neo-topbar-actions" aria-label="Status e usuário">
-                <button type="button" className="neo-icon-tool" onClick={onRefresh} aria-label="Atualizar dados">
+                <button type="button" className="neo-icon-tool" onClick={onRefresh} aria-label="Sincronizar dados">
                   <AppIcon name="backup" size={24} className="app-icon-chip" />
                   <span className="neo-tool-ok" />
                 </button>
@@ -471,7 +605,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   <BellIcon className="neo-bell-inline-icon" />
                   {notificationCount > 0 ? <span className="neo-alert-count">{notificationCount}</span> : null}
                 </button>
-                <button type="button" className="neo-store-switch" onClick={() => setActivePage('settings')} aria-label="Loja ativa">
+                <button type="button" className="neo-store-switch" onClick={() => navigatePage('settings')} aria-label="Loja ativa">
                   <span className="neo-store-avatar">{avatarInitials}</span>
                   <span>
                     <small>Loja ativa</small>
@@ -483,47 +617,83 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             </div>
           </header>
 
-          {toast ? (
+          {toast && !alertsOpen ? (
             <button type="button" className={`neo-toast neo-toast-${toast.level}`} onClick={() => openAlertPage(toast.page)}>
               <strong>{toast.title}</strong>
               <span>{toast.detail}</span>
             </button>
           ) : null}
 
+          {runtimeInfo.isWeb && (pwaUpdateAvailable || cacheMessage) ? (
+            <section className={`neo-pwa-update-banner ${pwaUpdateAvailable ? 'has-update' : ''}`} aria-live="polite">
+              <div>
+                <strong>{pwaUpdateAvailable ? 'Nova versão disponível' : 'Atualização do sistema'}</strong>
+                <span>{cacheMessage || 'Existe uma atualização pronta para instalar neste aparelho.'}</span>
+              </div>
+              <div className="neo-pwa-update-actions">
+                <button type="button" onClick={installPwaUpdate} disabled={cacheActionBusy}>
+                  {cacheActionBusy ? 'Aguarde...' : 'Atualizar agora'}
+                </button>
+                <button type="button" onClick={clearCacheAndReload} disabled={cacheActionBusy}>Atualizar cache</button>
+              </div>
+            </section>
+          ) : null}
+
           {alertsOpen ? (
-            <section className="neo-alert-center" aria-label="Central de alertas da loja">
+            <section className="neo-alert-center" aria-label="Central de alertas da loja" aria-live="polite">
               <div className="neo-alert-center-head">
-                <div>
-                  <strong>Alertas da loja</strong>
-                  <small>{notificationCount > 0 ? `${notificationCount} atenção(ões)` : 'Tudo certo agora'}</small>
+                <div className="neo-alert-center-title">
+                  <span className={`neo-alert-center-icon ${notificationCount > 0 ? 'has-alert' : 'is-ok'}`}>
+                    <BellIcon className="neo-bell-inline-icon" />
+                  </span>
+                  <span>
+                    <strong>Alertas da loja</strong>
+                    <small>{alertSummaryLabel}</small>
+                  </span>
                 </div>
-                <button type="button" onClick={() => setAlertsOpen(false)} aria-label="Fechar alertas">×</button>
+                <button type="button" className="neo-alert-close" onClick={() => setAlertsOpen(false)} aria-label="Fechar alertas">×</button>
               </div>
 
-              <div className="neo-alert-preferences">
+              {primaryAlert ? (
+                <div className={`neo-alert-feature neo-alert-feature-${primaryAlert.level}`}>
+                  <span className="neo-alert-card-dot" />
+                  <span>
+                    <strong>{primaryAlert.title}</strong>
+                    <small>{primaryAlert.detail}</small>
+                  </span>
+                  <button type="button" onClick={() => openAlertPage(primaryAlert.page)}>{alertActionLabel(primaryAlert.page)}</button>
+                </div>
+              ) : null}
+
+              <div className="neo-alert-preferences" aria-label="Preferências de avisos">
                 <button type="button" className={soundsEnabled ? 'active' : ''} onClick={toggleSounds}>
-                  Som {soundsEnabled ? 'ligado' : 'desligado'}
+                  <span>Som do sistema</span>
+                  <strong>{soundsEnabled ? 'Ligado' : 'Desligado'}</strong>
                 </button>
                 <button type="button" className={notificationsEnabled ? 'active' : ''} onClick={toggleNotifications}>
-                  Notificações {notificationsEnabled ? 'ativas' : 'pausadas'}
+                  <span>Avisos do navegador</span>
+                  <strong>{notificationsEnabled ? 'Ativos' : 'Pausados'}</strong>
                 </button>
               </div>
 
               <div className="neo-alert-list">
-                {alerts.map((alert) => (
+                {alertsToDisplay.map((alert) => (
                   <button type="button" key={alert.id} className={`neo-alert-card neo-alert-card-${alert.level}`} onClick={() => openAlertPage(alert.page)}>
                     <span className="neo-alert-card-dot" />
                     <span>
                       <strong>{alert.title}</strong>
                       <small>{alert.detail}</small>
                     </span>
+                    <em>{alertActionLabel(alert.page)}</em>
                   </button>
                 ))}
               </div>
 
               <div className="neo-alert-actions">
-                <button type="button" onClick={onRefresh}>Atualizar</button>
-                <button type="button" onClick={() => openAlertPage('diagnostics')}>Diagnóstico</button>
+                <button type="button" onClick={onRefresh}>Sincronizar agora</button>
+                <button type="button" onClick={refreshPageNow}>Recarregar tela</button>
+                <button type="button" onClick={() => openAlertPage('diagnostics')}>Ver diagnóstico</button>
+                <button type="button" onClick={clearCacheAndReload} disabled={cacheActionBusy}>{cacheActionBusy ? 'Aguarde...' : 'Atualizar cache'}</button>
               </div>
             </section>
           ) : null}
@@ -546,30 +716,43 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
 
             {runtimeInfo.isWeb && !networkOnline ? (
               <div className="neo-page-alert neo-page-alert-warning neo-offline-banner">
-                <strong>Sem internet neste aparelho</strong>
-                <span>Você pode abrir telas em cache. Alterações feitas sem conexão ficam pendentes para reenvio quando voltar a internet.</span>
+                <span className="neo-page-alert-dot" />
+                <span>
+                  <strong>Sem internet neste aparelho</strong>
+                  <small>Você pode abrir telas em cache. Alterações feitas sem conexão ficam pendentes para reenvio quando voltar a internet.</small>
+                </span>
               </div>
             ) : null}
 
             {runtimeInfo.isWeb && outboxStats.total > 0 ? (
               <div className="neo-page-alert neo-page-alert-warning neo-sync-pending-banner">
-                <strong>{outboxStats.total} alteração(ões) pendente(s) neste aparelho</strong>
-                <span>{outboxStats.lastError || 'Assim que a conexão estiver boa, toque para reenviar e conferir se apareceu no outro aparelho.'}</span>
+                <span className="neo-page-alert-dot" />
+                <span>
+                  <strong>{outboxStats.total} alteração(ões) pendente(s) neste aparelho</strong>
+                  <small>{outboxStats.lastError || 'Assim que a conexão estiver boa, toque para reenviar e conferir se apareceu no outro aparelho.'}</small>
+                </span>
                 <button type="button" className="neo-inline-action" onClick={retryPendingSync} disabled={outboxBusy || !networkOnline}>{outboxBusy ? 'Enviando...' : 'Reenviar agora'}</button>
               </div>
             ) : null}
 
             {runtimeInfo.isWeb && webIdentity.role !== 'sem login' && !roleCapabilities.canOperate ? (
               <div className="neo-page-alert neo-page-alert-info neo-role-banner">
-                <strong>Perfil de leitura</strong>
-                <span>Você pode consultar dados, mas botões de salvar, excluir, receber ou alterar são bloqueados para proteger a loja.</span>
+                <span className="neo-page-alert-dot" />
+                <span>
+                  <strong>Perfil de leitura</strong>
+                  <small>Você pode consultar dados, mas botões de salvar, excluir, receber ou alterar são bloqueados para proteger a loja.</small>
+                </span>
               </div>
             ) : null}
 
-            {activeAlerts.length > 0 ? (
+            {activeAlerts.length > 0 && !alertsOpen && !toast ? (
               <div className={`neo-page-alert neo-page-alert-${activeAlerts[0].level}`}>
-                <strong>{activeAlerts[0].title}</strong>
-                <span>{activeAlerts[0].detail}</span>
+                <span className="neo-page-alert-dot" />
+                <span>
+                  <strong>{activeAlerts[0].title}</strong>
+                  <small>{activeAlerts[0].detail}</small>
+                </span>
+                <button type="button" className="neo-inline-action" onClick={() => openAlertPage(activeAlerts[0].page)}>{alertActionLabel(activeAlerts[0].page)}</button>
               </div>
             ) : null}
 
@@ -584,7 +767,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             type="button"
             key={page.key}
             className={activePage === page.key ? 'active' : ''}
-            onClick={() => setActivePage(page.key)}
+            onClick={() => navigatePage(page.key)}
             aria-current={activePage === page.key ? 'page' : undefined}
           >
             <AppIcon name={page.icon} size={24} className="app-icon-chip" />

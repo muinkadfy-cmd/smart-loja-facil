@@ -67,7 +67,7 @@ function getReadableMaxWidth(): number {
 }
 
 export function getNeoFamilyReport(): NeoFamilyReport {
-  const token = getRootToken('--lote121-clean-interface');
+  const token = getRootToken('--lote122-clean-alerts');
   const safeGap = getRootToken('--neo-shell-safe-gap');
   const touchToken = getRootToken('--neo-touch-target-safe');
   const matchedFamilies = NEO_SELECTORS.filter((selector) => countMatches(selector) > 0);
@@ -80,9 +80,9 @@ export function getNeoFamilyReport(): NeoFamilyReport {
   const items: NeoFamilyItem[] = [
     {
       id: 'token',
-      label: 'Interface limpa v121',
+      label: 'Alertas limpos v122',
       value: token === 'active' ? 'Ativa' : 'Não detectada',
-      detail: token === 'active' ? 'A família neo-* está estabilizada pela camada limpa atual, sem depender dos lotes antigos.' : 'Confira o import de src/styles/lote121-clean-interface.css no main.tsx.',
+      detail: token === 'active' ? 'A família neo-* está estabilizada pela camada limpa atual, sem depender dos lotes antigos.' : 'Confira o import de src/styles/lote122-clean-alerts.css no main.tsx.',
       tone: token === 'active' ? 'ok' : 'warn',
       ok: token === 'active',
     },

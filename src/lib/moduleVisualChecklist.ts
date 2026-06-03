@@ -21,8 +21,8 @@ export interface ModuleVisualSummary {
   percent: number;
 }
 
-const MODULE_VISUAL_KEY = 'smart-loja:lote81-module-visual-checklist';
-const LEGACY_MODULE_VISUAL_KEYS = ['smart-loja:lote80-module-visual-checklist', 'smart-loja:lote79-module-visual-checklist', 'smart-loja:lote78-module-visual-checklist', 'smart-loja:lote77-module-visual-checklist'];
+const MODULE_VISUAL_KEY = 'smart-loja:clean-module-visual-checklist-v122';
+const LEGACY_MODULE_VISUAL_KEYS: string[] = [];
 
 export const MODULE_VISUAL_CHECKLIST: ModuleVisualItem[] = [
   {
@@ -86,7 +86,7 @@ export const MODULE_VISUAL_CHECKLIST: ModuleVisualItem[] = [
     title: 'Família neo-* sem corte lateral',
     area: 'Shell/Topbar/Dock',
     detail: 'Conferir sidebar, topbar, header grid, action ribbon, página principal e dock mobile em web e celular.',
-    expected: 'Diagnóstico mostra família neo limpa + shell/sidebar v121 ativos, sem estouro lateral e com menu/toque confortável.',
+    expected: 'Diagnóstico mostra família neo limpa + shell/sidebar v122 ativos, sem estouro lateral e com menu/toque confortável.',
     tone: 'warn',
   },
   {
@@ -94,7 +94,7 @@ export const MODULE_VISUAL_CHECKLIST: ModuleVisualItem[] = [
     title: 'Diagnóstico, CSS e PWA',
     area: 'Diagnóstico',
     detail: 'Abrir diagnóstico depois do deploy e conferir versão, cache, CSS e checklist.',
-    expected: 'Versão/cache v121, fundação limpa, componentes comerciais e interface limpa aparecem no diagnóstico.',
+    expected: 'Versão/cache v122, fundação limpa, componentes comerciais e alertas limpos aparecem no diagnóstico.',
     tone: 'info',
   },
 ];

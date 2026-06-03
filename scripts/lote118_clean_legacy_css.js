@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const root = process.cwd();
 const stylesDir = path.join(root, 'src', 'styles');
-const keep = new Set(['lote118-foundation-final.css', 'lote119-icon-login-rescue.css', 'lote120-commercial-components.css', 'lote121-clean-interface.css']);
+const keep = new Set(['lote118-foundation-final.css', 'lote119-icon-login-rescue.css', 'lote120-commercial-components.css', 'lote121-clean-interface.css', 'lote122-clean-alerts.css']);
 const legacyPattern = /^lote(7[7-9]|8\d|9\d|10\d|11[0-7])-.*\.css$/;
 
 if (!fs.existsSync(stylesDir)) {

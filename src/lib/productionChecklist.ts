@@ -21,8 +21,8 @@ export interface ProductionCheckSummary {
   percent: number;
 }
 
-const CHECKLIST_KEY = 'smart-loja:lote97-production-checklist';
-const LEGACY_CHECKLIST_KEYS = ['smart-loja:lote96-production-checklist', 'smart-loja:lote95-production-checklist', 'smart-loja:lote94-production-checklist', 'smart-loja:lote93-production-checklist', 'smart-loja:lote92-production-checklist', 'smart-loja:lote91-production-checklist', 'smart-loja:lote90-production-checklist', 'smart-loja:lote89-production-checklist', 'smart-loja:lote88-production-checklist', 'smart-loja:lote87-production-checklist', 'smart-loja:lote86-production-checklist', 'smart-loja:lote85-production-checklist', 'smart-loja:lote84-production-checklist', 'smart-loja:lote83-production-checklist', 'smart-loja:lote82-production-checklist', 'smart-loja:lote81-production-checklist', 'smart-loja:lote80-production-checklist', 'smart-loja:lote79-production-checklist', 'smart-loja:lote78-production-checklist', 'smart-loja:lote77-production-checklist', 'smart-loja:lote76-production-checklist', 'smart-loja:lote75-production-checklist'];
+const CHECKLIST_KEY = 'smart-loja:production-checklist-v122';
+const LEGACY_CHECKLIST_KEYS: string[] = [];
 
 export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   {
@@ -47,7 +47,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Release técnico',
     title: 'CSS legado consolidado sem quebra visual',
     detail: 'Rodar css_audit, conferir Dashboard, PDV, Produtos, Clientes, Caixa, Crediário, Relatórios, Backup e Configurações depois do Lote 95.',
-    expected: 'Sem master-ui ativo, CSS limpo v121 no diagnóstico e telas críticas preservadas.',
+    expected: 'Sem master-ui ativo, CSS limpo v122 no diagnóstico e telas críticas preservadas.',
     tone: 'mobile',
   },
   {
@@ -208,7 +208,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v121-clean-interface, cache v121, fundação limpa, componentes comerciais, interface limpa, Supabase e atualização multiaparelhos aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v122-clean-interface, cache v122, fundação limpa, componentes comerciais, alertas limpos, Supabase e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
@@ -248,7 +248,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'Família neo-* limpa validada sem corte',
     detail: 'Abrir Dashboard, Produtos, Vendas e Crediário e conferir shell, topbar, sidebar, action ribbon e dock mobile.',
-    expected: 'Diagnóstico mostra família neo limpa, shell/sidebar v121 e interface limpa ativos, sem corte lateral e com toque confortável no menu/dock.',
+    expected: 'Diagnóstico mostra família neo limpa, shell/sidebar v122 e alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
     tone: 'mobile',
   },
   {
@@ -256,7 +256,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'CSS modular e checklist visual por tela validados',
     detail: 'Abrir o Diagnóstico Web depois do deploy e conferir o bloco Inventário CSS + Checklist visual por módulo.',
-    expected: 'Fundação limpa 118, ícones/login 119, componentes comerciais 120 e interface limpa 121 ativos; telas críticas marcadas só depois de conferência real.',
+    expected: 'Fundação limpa 118, ícones/login 119, componentes comerciais 120 e alertas limpos 121 ativos; telas críticas marcadas só depois de conferência real.',
     tone: 'mobile',
   },
 ];

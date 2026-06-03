@@ -97,23 +97,23 @@ export function getNeoImportantReport(): NeoImportantReport {
     return { score: 100, okCount: 1, total: 1, pageShellImportant: 0, sidebarImportant: 0, safeImportantBudget: 140, items };
   }
 
-  const tokenLoaded = getRootVar('--lote121-clean-interface') === 'active';
+  const tokenLoaded = getRootVar('--lote122-clean-alerts') === 'active';
   const pageBottomSafe = getRootVar('--lote121-page-bottom-safe');
   const shellInlineSafe = getRootVar('--lote121-shell-inline-safe');
   const pageShellImportant = countImportantForSelector('.neo-page-shell');
   const sidebarImportant = countImportantForSelector('.neo-sidebar');
   const totalImportant = pageShellImportant + sidebarImportant;
   const allImportant = countAllImportant();
-  const safeImportantBudget = Number.parseInt(getRootVar('--lote121-important-budget') || '140', 10);
+  const safeImportantBudget = Number.parseInt(getRootVar('--lote122-important-budget') || '140', 10);
   const overflowPx = horizontalOverflowPx();
   const clipSafe = pageShellHasClipFallback();
 
   const items: NeoImportantItem[] = [
     {
       id: 'token',
-      label: 'Camada limpa v121',
+      label: 'Camada limpa v122',
       value: tokenLoaded ? 'Ativa' : 'Ausente',
-      detail: tokenLoaded ? 'A camada atual foi carregada sem reativar master-ui ou lotes antigos.' : 'O CSS v121 não carregou; confira import no main.tsx.',
+      detail: tokenLoaded ? 'A camada atual foi carregada sem reativar master-ui ou lotes antigos.' : 'O CSS v122 não carregou; confira import no main.tsx.',
       tone: tokenLoaded ? 'ok' : 'warn',
       ok: tokenLoaded,
     },

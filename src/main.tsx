@@ -6,8 +6,9 @@ import './styles/lote118-foundation-final.css';
 import './styles/lote119-icon-login-rescue.css';
 import './styles/lote120-commercial-components.css';
 import './styles/lote121-clean-interface.css';
+import './styles/lote122-clean-alerts.css';
 
-document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface');
+document.documentElement.classList.add('lote118-foundation-final', 'lote119-icon-login-rescue', 'lote120-commercial-components', 'lote121-clean-interface', 'lote122-clean-alerts');
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
