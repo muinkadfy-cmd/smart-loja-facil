@@ -107,7 +107,7 @@ const duplicatedSelectors = Array.from(selectorCount.entries())
 const largestFiles = [...fileRows].sort((a, b) => b.bytes - a.bytes).slice(0, 8);
 const importantHotspots = [...fileRows].sort((a, b) => b.important - a.important).slice(0, 8);
 
-process.stdout.write('CSS audit v123 — Smart Loja Fácil\n');
+process.stdout.write('CSS audit v124 — Smart Loja Fácil\n');
 process.stdout.write(`Arquivos medidos: ${cssFiles.length}\n`);
 for (const row of fileRows) {
   process.stdout.write(`- ${row.file}: ${formatKb(row.bytes)}, ${row.selectors} seletores, ${row.important} !important, ${row.media} media queries, ${row.duplicateDeclarations} declarações idênticas repetidas, ${row.emptyRules} regras vazias\n`);
@@ -124,7 +124,7 @@ for (const [selector, count] of duplicatedSelectors) process.stdout.write(`- ${s
 const report = { generatedAt: new Date().toISOString(), files: fileRows, totals, duplicatedSelectors };
 const outDir = path.join(root, 'docs/generated');
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(path.join(outDir, 'css-audit-v123.json'), `${JSON.stringify(report, null, 2)}\n`);
+fs.writeFileSync(path.join(outDir, 'css-audit-v124.json'), `${JSON.stringify(report, null, 2)}\n`);
 
 if (totals.bytes > 700 * 1024) process.stdout.write('Aviso: CSS ativo acima de 700 KB. Próximo lote técnico deve consolidar por família visual.\n');
 if (totals.important > 7000) process.stdout.write('Aviso: uso de !important ainda alto. Reduzir primeiro os CSS ativos com validação visual.\n');

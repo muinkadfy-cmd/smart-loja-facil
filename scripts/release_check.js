@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v123-dashboard-supreme';
-const currentCache = 'smart-loja-pwa-supabase-v123-dashboard-supreme';
+const currentVersion = 'pwa-supabase-v124-commercial-security';
+const currentCache = 'smart-loja-pwa-supabase-v124-commercial-security';
 const currentOutbox = 'smart-loja:web-outbox-v107';
 
 const requiredCore = [
@@ -114,7 +114,7 @@ for (const file of optionalPwaCommercialFiles) {
 }
 
 if (exists('src-tauri')) {
-  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v123 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
+  warn('Pasta src-tauri encontrada como legado do projeto. Este release_check v124 é PWA web/mobile e não exige Tauri. Não suba bancos SQLite nem target/ no GitHub.');
 }
 
 if (process.exitCode) {
@@ -133,9 +133,9 @@ for (const script of ['lint', 'release:commercial:check', 'release:commercial:pr
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v123 dashboard supreme PWA/mobile.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v124 commercial security PWA/mobile.');
 if (!webApiSource.includes(currentOutbox)) fail('Fila local web precisa estar em smart-loja:web-outbox-v107.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v123 dashboard supreme PWA/mobile.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v124 commercial security PWA/mobile.');
 
 function publicAssetExists(url) {
   if (!url || !url.startsWith('/')) return true;
@@ -199,9 +199,17 @@ const productPhotoStorageSource = readIf('src/lib/productPhotoStorage.ts');
 if (productPhotoStorageSource && !productPhotoStorageSource.includes('PRODUCT_PHOTO_BUCKET')) fail('Utilitário de Storage de fotos precisa declarar PRODUCT_PHOTO_BUCKET.');
 if (exists('src/lib/neoShellSidebarReadiness.ts') && !read('src/lib/neoShellSidebarReadiness.ts').includes('getNeoShellSidebarReport')) fail('Diagnóstico shell/sidebar precisa existir.');
 if (exists('src/lib/neoImportantReadiness.ts') && !read('src/lib/neoImportantReadiness.ts').includes('getNeoImportantReport')) fail('Diagnóstico important precisa existir.');
-if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v123')) fail('css_audit.js precisa estar atualizado para auditoria real v122.');
-if (exists('scripts/commercial_package_check.js') && !read('scripts/commercial_package_check.js').includes('Commercial package check v97')) fail('commercial_package_check.js precisa estar em v97.');
-if (exists('scripts/commercial_release_package.js') && !read('scripts/commercial_release_package.js').includes('Commercial release package v97')) fail('commercial_release_package.js precisa estar em v97.');
+if (exists('scripts/css_audit.js') && !read('scripts/css_audit.js').includes('CSS audit v124')) fail('css_audit.js precisa estar atualizado para auditoria real v124.');
+if (exists('scripts/commercial_package_check.js') && !read('scripts/commercial_package_check.js').includes('Commercial package check v124')) fail('commercial_package_check.js precisa estar em v124.');
+if (exists('scripts/commercial_release_package.js') && !read('scripts/commercial_release_package.js').includes('Commercial release package v124')) fail('commercial_release_package.js precisa estar em v124.');
+
+const gitignore = readIf('.gitignore');
+for (const protectedEntry of ['.env', '.env.local', '.env.production', '.env.*.local', '.wrangler/', 'wrangler.toml']) {
+  if (!gitignore.includes(protectedEntry)) fail(`.gitignore precisa proteger ${protectedEntry}.`);
+}
+if (!readIf('.env.example').includes('VITE_SUPABASE_URL') || !readIf('.env.example').includes('VITE_SUPABASE_ANON_KEY')) fail('.env.example precisa documentar as variáveis públicas do Supabase sem segredo real.');
+if (!exists('public/brand/jaque-logo-premium.png')) fail('Logo premium do crediário precisa estar em public/brand/jaque-logo-premium.png para sair do TSX.');
+if (/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]{12000,}/.test(readIf('src/pages/Credits.tsx'))) fail('Credits.tsx ainda contém imagem base64 gigante; mova para public/brand.');
 
 const readme = read('README.md');
 if (!/Supabase/i.test(readme) || !/Cloudflare/i.test(readme) || !/PWA/i.test(readme)) warn('README ainda não descreve claramente PWA/Supabase/Cloudflare.');
@@ -290,4 +298,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v123 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');
+console.log('OK: release_check v124 PWA passou. Build web/mobile pronto para deploy Cloudflare; avisos comerciais não bloqueiam deploy.');

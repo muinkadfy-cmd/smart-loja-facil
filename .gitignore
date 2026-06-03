@@ -29,3 +29,14 @@ tools/**/obj/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Segredos locais: nunca versionar nem empacotar.
+.env
+.env.local
+.env.production
+.env.*.local
+.wrangler/
+wrangler.toml
+dist-codex-build/
+release-commercial/
+*.zip

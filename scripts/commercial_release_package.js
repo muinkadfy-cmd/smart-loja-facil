@@ -4,15 +4,19 @@ import path from 'node:path';
 const root = process.cwd();
 const outRoot = path.join(root, 'release-commercial');
 const packageDir = path.join(outRoot, 'smart-loja-facil-commercial-clean');
-const manifestPath = path.join(outRoot, 'commercial-release-manifest-v97.json');
+const manifestPath = path.join(outRoot, 'commercial-release-manifest-v124.json');
 
-const excludedDirs = new Set(['node_modules', 'dist', '.git', '.turbo', '.cache', 'release-commercial']);
+const excludedDirs = new Set(['node_modules', 'dist', 'dist-codex-build', '.git', '.turbo', '.cache', '.wrangler', 'release-commercial']);
 const excludedDirFragments = ['src-tauri/target', 'src-tauri/.cargo-check', 'tools/QaWorkflow/bin', 'tools/QaWorkflow/obj'];
-const excludedExtensions = new Set(['.sqlite3', '.sqlite', '.db', '.zip']);
-const excludedFileNames = new Set(['.env', '.env.local', '.env.production', '.DS_Store']);
+const excludedExtensions = new Set(['.sqlite3', '.sqlite', '.db', '.zip', '.log']);
+const excludedFileNames = new Set(['.env', '.env.local', '.env.production', '.DS_Store', 'wrangler.toml']);
 
 function relOf(full) {
   return path.relative(root, full).replace(/\\/g, '/');
+}
+
+function isEnvFile(full) {
+  return /^\.env(?:\..+)?$/.test(path.basename(full));
 }
 
 function shouldSkip(full, dirent) {
@@ -21,6 +25,7 @@ function shouldSkip(full, dirent) {
   if (excludedDirFragments.some((fragment) => rel === fragment || rel.startsWith(`${fragment}/`))) return true;
   if (dirent?.isDirectory() && excludedDirs.has(path.basename(full))) return true;
   if (dirent?.isFile()) {
+    if (isEnvFile(full) && path.basename(full) !== '.env.example') return true;
     if (excludedFileNames.has(path.basename(full))) return true;
     if (excludedExtensions.has(path.extname(full).toLowerCase())) return true;
   }
@@ -55,11 +60,14 @@ const { copied, skipped } = copyDir(root, packageDir);
 const riskyCopied = copied.filter((rel) => {
   if (/\.(sqlite3|sqlite|db)$/i.test(rel)) return true;
   if (rel === '.env.example') return false;
-  return /(^|\/)\.env($|\.)/.test(rel);
+  if (/(^|\/)\.env($|\.)/.test(rel)) return true;
+  if (/\.log$/i.test(rel)) return true;
+  if (/\.zip$/i.test(rel)) return true;
+  return false;
 });
 const manifest = {
   name: 'Smart Loja Fácil - pacote comercial limpo',
-  version: 'v97',
+  version: 'v124',
   generated_at: new Date().toISOString(),
   package_dir: path.relative(root, packageDir).replace(/\\/g, '/'),
   copied_files: copied.length,
@@ -78,7 +86,7 @@ const manifest = {
 };
 fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-process.stdout.write('Commercial release package v97 — Smart Loja Fácil\n');
+process.stdout.write('Commercial release package v124 — Smart Loja Fácil\n');
 process.stdout.write(`Pacote limpo gerado em: ${manifest.package_dir}\n`);
 process.stdout.write(`Arquivos copiados: ${copied.length}\n`);
 process.stdout.write(`Itens ignorados: ${skipped.length}\n`);
@@ -87,4 +95,4 @@ if (riskyCopied.length) {
   process.exit(1);
 }
 process.stdout.write(`Manifest: ${path.relative(root, manifestPath).replace(/\\/g, '/')}\n`);
-process.stdout.write('OK: pacote comercial preparado sem bancos de teste, ZIPs antigos, node_modules, dist ou .env real.\n');
+process.stdout.write('OK: pacote comercial preparado sem bancos de teste, ZIPs antigos, node_modules, dist, logs ou .env real.\n');
