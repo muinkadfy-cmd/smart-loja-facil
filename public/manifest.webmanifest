@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v135",
-  "short_name": "Smart Loja v135",
-  "description": "Smart Loja Fácil PWA mobile-first v135 com proposta comercial, planos e benefícios, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
+  "name": "Smart Loja Fácil PWA v136",
+  "short_name": "Smart Loja v136",
+  "description": "Smart Loja Fácil PWA mobile-first v136 com termo de implantação e aceite do cliente, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

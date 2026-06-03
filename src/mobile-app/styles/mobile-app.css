@@ -3498,3 +3498,137 @@ img, svg { max-width: 100%; }
     width: 100%;
   }
 }
+
+/* Mega Lote 136 — Termo de implantação e aceite do cliente */
+.mapp-term-panel {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(63, 43, 18, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(155, 159, 184, 0.12));
+}
+
+.mapp-term-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, #71655f, #3f2b12, #cb7c76);
+}
+
+.mapp-term-panel.is-accepted {
+  border-color: rgba(63, 127, 95, 0.34);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(63, 127, 95, 0.08));
+}
+
+.mapp-term-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid rgba(113, 101, 95, 0.18);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(113, 101, 95, 0.10), rgba(208, 209, 196, 0.34));
+}
+
+.mapp-term-hero span {
+  display: inline-flex;
+  color: #71655f;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.mapp-term-hero strong {
+  display: block;
+  margin-top: 3px;
+  color: #3f2b12;
+  font-size: 1.06rem;
+  font-weight: 950;
+}
+
+.mapp-term-hero p {
+  margin: 5px 0 0;
+  color: rgba(63, 43, 18, 0.72);
+  line-height: 1.36;
+}
+
+.mapp-term-hero b {
+  min-width: 84px;
+  padding: 10px 11px;
+  border-radius: 18px;
+  color: #fff;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+.mapp-term-hero b.ok { background: #3f7f5f; }
+.mapp-term-hero b.warn { background: #bc8346; }
+.mapp-term-hero b.danger { background: #cb7c76; }
+
+.mapp-term-checklist {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.mapp-term-checklist button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 11px;
+  align-items: center;
+  border: 1px solid rgba(113, 101, 95, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 11px;
+  text-align: left;
+  color: #3f2b12;
+}
+
+.mapp-term-checklist button.done {
+  border-color: rgba(63, 127, 95, 0.38);
+  background: rgba(63, 127, 95, 0.10);
+}
+
+.mapp-term-checklist button > span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: rgba(208, 209, 196, 0.42);
+  color: #3f2b12;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.mapp-term-checklist button.done > span {
+  background: rgba(63, 127, 95, 0.16);
+  color: #3f7f5f;
+}
+
+.mapp-term-checklist strong {
+  display: block;
+  color: #3f2b12;
+  font-size: 0.94rem;
+}
+
+.mapp-term-checklist p {
+  margin: 3px 0 0;
+  color: rgba(63, 43, 18, 0.68);
+  line-height: 1.28;
+}
+
+@media (max-width: 860px) {
+  .mapp-term-hero {
+    display: grid;
+  }
+
+  .mapp-term-hero b {
+    width: 100%;
+  }
+}
