@@ -614,6 +614,55 @@ interface DayTwoFollowUpSummary {
 
 
 
+type FirstClientCloseoutResult = 'pending' | 'passed' | 'failed' | 'blocked';
+type FirstClientCloseoutPriority = 'P0' | 'P1' | 'P2';
+type FirstClientCloseoutDecision = 'blocked' | 'attention' | 'replicable';
+
+interface FirstClientCloseoutStep {
+  id: string;
+  phase: string;
+  title: string;
+  action: string;
+  expected: string;
+  evidence: string;
+  priority: FirstClientCloseoutPriority;
+}
+
+interface FirstClientCloseoutState {
+  results: Record<string, FirstClientCloseoutResult>;
+  clientName: string;
+  closeOwner: string;
+  contact: string;
+  closeDate: string;
+  referencePermission: string;
+  replicationPlan: string;
+  nextClientChecklist: string;
+  evidenceNote: string;
+  notes: string;
+  approvedBy: string;
+  approvedAt: string;
+  updatedAt: string;
+}
+
+interface FirstClientCloseoutSummary {
+  passed: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  total: number;
+  percent: number;
+  criticalOpen: number;
+  decision: FirstClientCloseoutDecision;
+  title: string;
+  subtitle: string;
+  score: number;
+  stars: string;
+  blockers: string[];
+  warnings: string[];
+}
+
+
+
 const REGRESSION_AUDIT_KEY = 'smart-loja:regression-audit-v140';
 const LEGACY_REGRESSION_AUDIT_KEYS = ['smart-loja:regression-audit-v139'];
 
@@ -956,6 +1005,103 @@ const DAY_TWO_FOLLOW_UP_STEPS: DayTwoFollowUpStep[] = [
     priority: 'P2',
   },
 ];
+
+const FIRST_CLIENT_CLOSEOUT_KEY = 'smart-loja:first-client-closeout-v143';
+const LEGACY_FIRST_CLIENT_CLOSEOUT_KEYS = ['smart-loja:first-client-closeout-v143'];
+
+const FIRST_CLIENT_CLOSEOUT_STEPS: FirstClientCloseoutStep[] = [
+  {
+    id: 'closeout-proof-package-complete',
+    phase: '1. Evidência final',
+    title: 'Pasta de evidências do primeiro cliente completa',
+    action: 'Juntar proposta, termo, auditoria final, Dia 1, Dia 2, prints de PWA/cache, impressão e relatório de suporte.',
+    expected: 'Existe histórico suficiente para explicar o que foi vendido, testado, aceito e acompanhado.',
+    evidence: 'Links, prints ou arquivos anotados sem senha/chave privada.',
+    priority: 'P1',
+  },
+  {
+    id: 'closeout-day1-day2-accepted',
+    phase: '1. Evidência final',
+    title: 'Dia 1 e Dia 2 fechados sem bloqueio crítico',
+    action: 'Conferir se implantação Dia 1 e correção Dia 2 foram aprovadas com venda, caixa, sync, comprovante e suporte.',
+    expected: 'Não existe P0/P1 aberto que impeça o cliente de operar com acompanhamento combinado.',
+    evidence: 'Relatórios Dia 1 e Dia 2 copiados e guardados.',
+    priority: 'P0',
+  },
+  {
+    id: 'closeout-operation-stable',
+    phase: '2. Operação estável',
+    title: 'Venda, caixa, estoque e comprovante ficaram estáveis',
+    action: 'Confirmar que as rotinas principais usadas pelo cliente funcionaram no uso real, não apenas em demo.',
+    expected: 'Cliente vende, confere caixa, vê estoque e acessa comprovantes sem depender de suporte a cada clique.',
+    evidence: 'Resumo das operações reais conferidas.',
+    priority: 'P0',
+  },
+  {
+    id: 'closeout-support-feedback-clean',
+    phase: '2. Operação estável',
+    title: 'Pós-venda e feedback sem P0/P1 aberto',
+    action: 'Revisar chamados, feedback/NPS e melhorias abertas antes de usar o cliente como modelo comercial.',
+    expected: 'Nenhum P0/P1 fica solto em WhatsApp; tudo tem responsável, prazo ou está resolvido.',
+    evidence: 'Resumo de chamados/melhorias e status final.',
+    priority: 'P0',
+  },
+  {
+    id: 'closeout-client-reference-permission',
+    phase: '3. Uso como modelo',
+    title: 'Permissão para usar como referência definida',
+    action: 'Combinar se pode usar nome, print borrado, depoimento ou apenas caso anônimo em novas vendas.',
+    expected: 'Não expor dados do cliente sem autorização; se não autorizar, usar apenas aprendizado interno.',
+    evidence: 'Permissão anotada: autorizou, anônimo ou não autorizado.',
+    priority: 'P1',
+  },
+  {
+    id: 'closeout-replication-package-ready',
+    phase: '3. Uso como modelo',
+    title: 'Pacote para replicar em novo cliente pronto',
+    action: 'Separar roteiro de venda, checklist Dia 1, Dia 2, treinamento, demo, termo, proposta e suporte em ordem de uso.',
+    expected: 'Próximo cliente recebe processo mais rápido, com menos improviso e menos risco.',
+    evidence: 'Lista do pacote replicável e onde está guardado.',
+    priority: 'P1',
+  },
+  {
+    id: 'closeout-pricing-terms-final',
+    phase: '4. Comercial',
+    title: 'Preço, plano, suporte e limites ficaram claros',
+    action: 'Revisar se mensalidade, implantação, suporte, impressão, backup e limites honestos ficaram alinhados.',
+    expected: 'Não vender para o próximo cliente prometendo algo fora do que foi testado.',
+    evidence: 'Plano comercial final e limites anotados.',
+    priority: 'P1',
+  },
+  {
+    id: 'closeout-training-ready',
+    phase: '4. Comercial',
+    title: 'Treinamento do próximo cliente ficou pronto',
+    action: 'Ajustar fala, tour e modo demo com base nas dúvidas reais do primeiro cliente.',
+    expected: 'Demonstração fica mais simples para usuário leigo e evita confundir demo com venda real.',
+    evidence: 'Dúvidas frequentes e resposta curta registradas.',
+    priority: 'P2',
+  },
+  {
+    id: 'closeout-risk-register-zero',
+    phase: '5. Risco antes de escalar',
+    title: 'Riscos conhecidos foram classificados',
+    action: 'Listar qualquer pendência restante como P0/P1/P2 antes de buscar o próximo cliente.',
+    expected: 'Nada crítico fica escondido; se houver risco, ele entra no próximo lote antes de escalar.',
+    evidence: 'Plano de risco/pendência final preenchido.',
+    priority: 'P0',
+  },
+  {
+    id: 'closeout-next-client-checklist',
+    phase: '5. Risco antes de escalar',
+    title: 'Checklist do próximo cliente definido',
+    action: 'Registrar o passo a passo que será repetido no próximo cliente: venda, implantação, Dia 1, Dia 2 e pós-venda.',
+    expected: 'O processo deixa de ser improvisado e vira método comercial repetível.',
+    evidence: 'Checklist do próximo cliente copiado e guardado.',
+    priority: 'P1',
+  },
+];
+
 
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
@@ -3159,6 +3305,208 @@ function buildDayTwoFollowUpText(params: {
   ].join('\n');
 }
 
+function emptyFirstClientCloseoutState(): FirstClientCloseoutState {
+  return {
+    results: {},
+    clientName: '',
+    closeOwner: '',
+    contact: '',
+    closeDate: '',
+    referencePermission: '',
+    replicationPlan: '',
+    nextClientChecklist: '',
+    evidenceNote: '',
+    notes: '',
+    approvedBy: '',
+    approvedAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeFirstClientCloseoutResult(value: unknown): FirstClientCloseoutResult {
+  return value === 'passed' || value === 'failed' || value === 'blocked' ? value : 'pending';
+}
+
+function normalizeFirstClientCloseoutState(value: unknown): FirstClientCloseoutState {
+  const source = value && typeof value === 'object' ? value as Partial<FirstClientCloseoutState> : {};
+  const allowed = new Set(FIRST_CLIENT_CLOSEOUT_STEPS.map((step) => step.id));
+  const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
+  const results: Record<string, FirstClientCloseoutResult> = {};
+  for (const [id, result] of Object.entries(rawResults)) {
+    if (allowed.has(id)) results[id] = normalizeFirstClientCloseoutResult(result);
+  }
+  return {
+    results,
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 180) : '',
+    closeOwner: typeof source.closeOwner === 'string' ? source.closeOwner.slice(0, 160) : '',
+    contact: typeof source.contact === 'string' ? source.contact.slice(0, 160) : '',
+    closeDate: typeof source.closeDate === 'string' ? source.closeDate.slice(0, 160) : '',
+    referencePermission: typeof source.referencePermission === 'string' ? source.referencePermission.slice(0, 240) : '',
+    replicationPlan: typeof source.replicationPlan === 'string' ? source.replicationPlan.slice(0, 1800) : '',
+    nextClientChecklist: typeof source.nextClientChecklist === 'string' ? source.nextClientChecklist.slice(0, 1800) : '',
+    evidenceNote: typeof source.evidenceNote === 'string' ? source.evidenceNote.slice(0, 1800) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1800) : '',
+    approvedBy: typeof source.approvedBy === 'string' ? source.approvedBy.slice(0, 160) : '',
+    approvedAt: typeof source.approvedAt === 'string' ? source.approvedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readFirstClientCloseoutState(): FirstClientCloseoutState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyFirstClientCloseoutState();
+  try {
+    const current = normalizeFirstClientCloseoutState(JSON.parse(window.localStorage.getItem(FIRST_CLIENT_CLOSEOUT_KEY) || '{}'));
+    if (current.updatedAt || current.approvedAt || current.clientName || Object.keys(current.results).length) return current;
+    for (const key of LEGACY_FIRST_CLIENT_CLOSEOUT_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeFirstClientCloseoutState(JSON.parse(raw));
+      if (legacy.updatedAt || legacy.approvedAt || legacy.clientName || Object.keys(legacy.results).length) {
+        window.localStorage.setItem(FIRST_CLIENT_CLOSEOUT_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyFirstClientCloseoutState();
+  }
+  return emptyFirstClientCloseoutState();
+}
+
+function saveFirstClientCloseoutState(state: FirstClientCloseoutState): FirstClientCloseoutState {
+  const normalized = normalizeFirstClientCloseoutState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(FIRST_CLIENT_CLOSEOUT_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function firstClientCloseoutLabel(result: FirstClientCloseoutResult): string {
+  if (result === 'passed') return 'Passou';
+  if (result === 'failed') return 'Falhou';
+  if (result === 'blocked') return 'Bloqueado';
+  return 'Pendente';
+}
+
+function buildFirstClientCloseoutSummary(params: {
+  state: FirstClientCloseoutState;
+  report: WebCommercialValidationReport | null;
+  dayOne: DayOneImplantSummary;
+  dayTwo: DayTwoFollowUpSummary;
+  dayTwoState: DayTwoFollowUpState;
+  regression: RegressionAuditSummary;
+  executive: ExecutiveHealthSummary;
+  postSale: { total: number; open: number; solved: number; criticalOpen: number; percent: number };
+  feedback: { total: number; open: number; done: number; openP0P1: number; percent: number; npsLabel: string; tone: 'danger' | 'warn' | 'ok' };
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+}): FirstClientCloseoutSummary {
+  let passed = 0;
+  let failed = 0;
+  let blocked = 0;
+  let criticalOpen = 0;
+  for (const step of FIRST_CLIENT_CLOSEOUT_STEPS) {
+    const result = normalizeFirstClientCloseoutResult(params.state.results[step.id]);
+    if (result === 'passed') passed += 1;
+    if (result === 'failed') failed += 1;
+    if (result === 'blocked') blocked += 1;
+    if ((step.priority === 'P0' || step.priority === 'P1') && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+  }
+  const total = FIRST_CLIENT_CLOSEOUT_STEPS.length;
+  const pending = Math.max(0, total - passed - failed - blocked);
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const addBlocker = (condition: boolean, text: string) => { if (condition) blockers.push(text); };
+  const addWarning = (condition: boolean, text: string) => { if (condition) warnings.push(text); };
+  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do encerramento com Falhou/Bloqueado.`);
+  addBlocker(params.dayOne.decision === 'blocked', 'Dia 1 ainda está bloqueado.');
+  addBlocker(params.dayTwo.decision === 'blocked', 'Dia 2 ainda está bloqueado.');
+  addBlocker(!params.dayTwoState.approvedAt, 'Dia 2 ainda não foi aprovado com evidência neste aparelho.');
+  addBlocker(params.regression.blockers.length > 0, 'Auditoria final ainda possui bloqueio.');
+  addBlocker(params.executive.blockers.length > 0, 'Painel executivo ainda possui bloqueio.');
+  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 aberto(s) no pós-venda.`);
+  addBlocker(params.feedback.openP0P1 > 0, `${params.feedback.openP0P1} melhoria(s) P0/P1 aberta(s) no feedback/NPS.`);
+  addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes de replicar para outro cliente.`);
+  addBlocker(!params.online, 'Aparelho está offline agora.');
+  addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
+  addWarning(pending > 0, `${pending} item(ns) do encerramento ainda pendente(s).`);
+  addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
+  addWarning(params.dayOne.decision !== 'ready', 'Dia 1 não está marcado como pronto neste aparelho.');
+  addWarning(params.dayTwo.decision !== 'stable', 'Dia 2 ainda não está marcado como estabilizado.');
+  addWarning(params.roleState.role === 'viewer', 'Leitor não deve aprovar encerramento/replicação.');
+  addWarning(!params.state.clientName.trim(), 'Informe cliente/loja do primeiro cliente.');
+  addWarning(!params.state.closeOwner.trim(), 'Informe responsável pelo encerramento.');
+  addWarning(!params.state.referencePermission.trim(), 'Informe se o cliente autorizou uso como referência, caso anônimo ou apenas aprendizado interno.');
+  addWarning(!params.state.replicationPlan.trim(), 'Registre o plano para replicar no próximo cliente.');
+  addWarning(!params.state.nextClientChecklist.trim(), 'Registre checklist do próximo cliente.');
+  addWarning(!params.state.evidenceNote.trim(), 'Registre onde as evidências estão guardadas.');
+  const percent = Math.round((passed / total) * 100);
+  const penalty = blockers.length * 14 + warnings.length * 3 + failed * 9 + blocked * 11 + pending * 2;
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+  const decision: FirstClientCloseoutDecision = blockers.length ? 'blocked' : pending || warnings.length || !params.state.approvedAt ? 'attention' : 'replicable';
+  const title = decision === 'replicable' ? 'Primeiro cliente encerrado e pronto para replicar' : decision === 'attention' ? 'Quase pronto para replicar' : 'Não replicar ainda';
+  const subtitle = decision === 'replicable'
+    ? 'Implantação, pós-venda e aprendizado foram fechados com evidência. O processo pode virar modelo para o próximo cliente.'
+    : decision === 'attention'
+      ? 'Sem bloqueio crítico, mas ainda falta marcação, evidência, responsável, plano ou aceite final.'
+      : 'Existe bloqueio, P0/P1, pendência, offline ou risco antes de usar como modelo comercial.';
+  return { passed, failed, blocked, pending, total, percent, criticalOpen, decision, title, subtitle, score, stars: executiveStars(score), blockers, warnings };
+}
+
+function buildFirstClientCloseoutText(params: {
+  state: FirstClientCloseoutState;
+  summary: FirstClientCloseoutSummary;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+  dayOne: DayOneImplantSummary;
+  dayTwo: DayTwoFollowUpSummary;
+  executive: ExecutiveHealthSummary;
+  regression: RegressionAuditSummary;
+}): string {
+  const rows = FIRST_CLIENT_CLOSEOUT_STEPS.map((step) => {
+    const result = normalizeFirstClientCloseoutResult(params.state.results[step.id]);
+    return `[${firstClientCloseoutLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
+  });
+  return [
+    'Smart Loja Fácil — encerramento do primeiro cliente / pronto para replicar v143',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.summary.title}`,
+    `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
+    `Progresso: ${params.summary.passed}/${params.summary.total} passou; ${params.summary.failed} falhou; ${params.summary.blocked} bloqueado; ${params.summary.pending} pendente`,
+    `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
+    `Responsável encerramento: ${params.state.closeOwner || 'não informado'}`,
+    `Contato: ${params.state.contact || 'não informado'}`,
+    `Data/fechamento: ${params.state.closeDate || 'não informado'}`,
+    `Permissão de referência: ${params.state.referencePermission || 'não informado'}`,
+    `Plano de replicação: ${params.state.replicationPlan || 'não informado'}`,
+    `Checklist próximo cliente: ${params.state.nextClientChecklist || 'não informado'}`,
+    `Evidências guardadas: ${params.state.evidenceNote || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Dia 1: ${params.dayOne.score}/100 — ${params.dayOne.title}`,
+    `Dia 2: ${params.dayTwo.score}/100 — ${params.dayTwo.title}`,
+    `Auditoria final: ${params.regression.score}/100 — ${params.regression.title}`,
+    `Painel executivo: ${params.executive.score}/100 — ${params.executive.title}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    `Aprovado por: ${params.state.approvedBy || 'não aprovado'}${params.state.approvedAt ? ` em ${formatDateTime(params.state.approvedAt)}` : ''}`,
+    params.state.notes ? `Observações: ${params.state.notes}` : 'Observações: nenhuma',
+    '',
+    'Bloqueios:',
+    ...(params.summary.blockers.length ? params.summary.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio crítico registrado neste aparelho.']),
+    '',
+    'Avisos:',
+    ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
+    '',
+    'Checklist de encerramento:',
+    ...rows,
+    '',
+    'Regra honesta: só use o primeiro cliente como modelo quando Dia 1, Dia 2, suporte, feedback, evidências e riscos estiverem fechados sem P0/P1 aberto.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -3415,6 +3763,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [regressionAuditState, setRegressionAuditState] = useState<RegressionAuditState>(() => readRegressionAuditState());
   const [dayOneImplantState, setDayOneImplantState] = useState<DayOneImplantState>(() => readDayOneImplantState());
   const [dayTwoFollowUpState, setDayTwoFollowUpState] = useState<DayTwoFollowUpState>(() => readDayTwoFollowUpState());
+  const [firstClientCloseoutState, setFirstClientCloseoutState] = useState<FirstClientCloseoutState>(() => readFirstClientCloseoutState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -3529,6 +3878,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const regressionAuditSummary = useMemo(() => buildRegressionAuditSummary({ state: regressionAuditState, report, finalGate, triage: triageSummary, assisted: assistedSummary, executive: executiveHealthSummary, outbox, online, roleState }), [regressionAuditState, report, finalGate, triageSummary, assistedSummary, executiveHealthSummary, outbox, online, roleState]);
   const dayOneImplantSummary = useMemo(() => buildDayOneImplantSummary({ state: dayOneImplantState, report, finalGate, regression: regressionAuditSummary, executive: executiveHealthSummary, outbox, online, roleState }), [dayOneImplantState, report, finalGate, regressionAuditSummary, executiveHealthSummary, outbox, online, roleState]);
   const dayTwoFollowUpSummary = useMemo(() => buildDayTwoFollowUpSummary({ state: dayTwoFollowUpState, report, dayOne: dayOneImplantSummary, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState }), [dayTwoFollowUpState, report, dayOneImplantSummary, postSaleSummary, clientFeedbackSummary, outbox, online, roleState]);
+  const firstClientCloseoutSummary = useMemo(() => buildFirstClientCloseoutSummary({ state: firstClientCloseoutState, report, dayOne: dayOneImplantSummary, dayTwo: dayTwoFollowUpSummary, dayTwoState: dayTwoFollowUpState, regression: regressionAuditSummary, executive: executiveHealthSummary, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState }), [firstClientCloseoutState, report, dayOneImplantSummary, dayTwoFollowUpSummary, dayTwoFollowUpState, regressionAuditSummary, executiveHealthSummary, postSaleSummary, clientFeedbackSummary, outbox, online, roleState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -4219,6 +4569,56 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Relatório do Dia 2 copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+  function patchFirstClientCloseout(patch: Partial<FirstClientCloseoutState>): void {
+    setFirstClientCloseoutState((current) => saveFirstClientCloseoutState({ ...current, ...patch }));
+  }
+
+  function setFirstClientCloseoutResult(id: string, result: FirstClientCloseoutResult): void {
+    setFirstClientCloseoutState((current) => {
+      const nextResults = { ...current.results };
+      if (result === 'pending') delete nextResults[id];
+      else nextResults[id] = result;
+      return saveFirstClientCloseoutState({ ...current, results: nextResults, approvedAt: '', approvedBy: '' });
+    });
+  }
+
+  function approveFirstClientCloseout(): void {
+    if (firstClientCloseoutSummary.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Não dá para encerrar e replicar com P0/P1, Dia 2 bloqueado, pendência local, offline ou risco aberto.' });
+      return;
+    }
+    if (firstClientCloseoutSummary.pending > 0) {
+      setFeedback({ tone: 'info', text: 'Ainda existe item pendente no encerramento. Marque Passou/Falhou/Bloqueado com evidência antes de aprovar.' });
+      return;
+    }
+    if (roleState.role === 'viewer') {
+      setFeedback({ tone: 'error', text: 'Leitor não deve aprovar encerramento comercial. Use dono/admin/responsável autorizado.' });
+      return;
+    }
+    const approvedBy = firstClientCloseoutState.closeOwner.trim() || firstClientCloseoutState.contact.trim();
+    if (!approvedBy) {
+      setFeedback({ tone: 'info', text: 'Informe responsável pelo encerramento ou contato da loja antes de aprovar.' });
+      return;
+    }
+    const next = saveFirstClientCloseoutState({ ...firstClientCloseoutState, approvedBy, approvedAt: new Date().toISOString() });
+    setFirstClientCloseoutState(next);
+    setFeedback({ tone: firstClientCloseoutSummary.decision === 'replicable' ? 'success' : 'info', text: 'Encerramento do primeiro cliente registrado. Copie o relatório e use como modelo para o próximo cliente.' });
+  }
+
+  function resetFirstClientCloseout(): void {
+    const ok = window.confirm('Zerar encerramento do primeiro cliente neste aparelho? Isso não apaga venda, caixa, estoque, proposta, termo, Dia 1, Dia 2 ou dados reais.');
+    if (!ok) return;
+    const next = saveFirstClientCloseoutState(emptyFirstClientCloseoutState());
+    setFirstClientCloseoutState(next);
+    setFeedback({ tone: 'info', text: 'Encerramento do primeiro cliente zerado neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyFirstClientCloseout(): Promise<void> {
+    const text = buildFirstClientCloseoutText({ state: firstClientCloseoutState, summary: firstClientCloseoutSummary, report, snapshot, roleState, online, dayOne: dayOneImplantSummary, dayTwo: dayTwoFollowUpSummary, executive: executiveHealthSummary, regression: regressionAuditSummary });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Encerramento do primeiro cliente copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -4245,6 +4645,8 @@ ${buildDayOneImplantText({ state: dayOneImplantState, summary: dayOneImplantSumm
 
 ${buildDayTwoFollowUpText({ state: dayTwoFollowUpState, summary: dayTwoFollowUpSummary, report, snapshot, roleState, online, dayOne: dayOneImplantSummary })}
 
+${buildFirstClientCloseoutText({ state: firstClientCloseoutState, summary: firstClientCloseoutSummary, report, snapshot, roleState, online, dayOne: dayOneImplantSummary, dayTwo: dayTwoFollowUpSummary, executive: executiveHealthSummary, regression: regressionAuditSummary })}
+
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
 Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`
@@ -4269,6 +4671,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Auditoria final: ${regressionAuditSummary.score}/100 ${regressionAuditSummary.title}; pendente=${regressionAuditSummary.pending}; bloqueios=${regressionAuditSummary.blockers.length}`,
           `Implantação Dia 1: ${dayOneImplantSummary.score}/100 ${dayOneImplantSummary.title}; pendente=${dayOneImplantSummary.pending}; bloqueios=${dayOneImplantSummary.blockers.length}`,
           `Pós-implantação Dia 2: ${dayTwoFollowUpSummary.score}/100 ${dayTwoFollowUpSummary.title}; pendente=${dayTwoFollowUpSummary.pending}; bloqueios=${dayTwoFollowUpSummary.blockers.length}`,
+          `Encerramento primeiro cliente: ${firstClientCloseoutSummary.score}/100 ${firstClientCloseoutSummary.title}; pendente=${firstClientCloseoutSummary.pending}; bloqueios=${firstClientCloseoutSummary.blockers.length}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -4837,6 +5240,66 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={resetDayTwoFollowUp}>Zerar Dia 2</button>
         </div>
         <small className="mapp-final-honesty">Aprovado: {dayTwoFollowUpState.approvedAt ? `${dayTwoFollowUpState.approvedBy || 'responsável'} em ${formatDateTime(dayTwoFollowUpState.approvedAt)}` : 'não aprovado'}. Não trate cliente como estável com P0/P1 aberto, sync pendente, offline, caixa/impressão sem conferência ou dúvida crítica solta.</small>
+      </section>
+
+
+      <section className={`mapp-section-block mapp-day-one-panel tone-${firstClientCloseoutSummary.decision}`}>
+        <div className="mapp-section-title"><h2>Encerramento do primeiro cliente / pronto para replicar</h2><button type="button" onClick={() => void copyFirstClientCloseout()}>Copiar encerramento</button></div>
+        <div className="mapp-regression-hero">
+          <div>
+            <span>{firstClientCloseoutSummary.title}</span>
+            <strong>{firstClientCloseoutSummary.score}/100 · {firstClientCloseoutSummary.stars}</strong>
+            <p>{firstClientCloseoutSummary.subtitle}</p>
+          </div>
+          <b className={firstClientCloseoutSummary.decision}>{firstClientCloseoutSummary.decision === 'blocked' ? 'NÃO REPLICAR' : firstClientCloseoutSummary.decision === 'attention' ? 'REVISAR' : 'REPLICÁVEL'}</b>
+        </div>
+        <div className="mapp-regression-summary-grid">
+          <span><b>{firstClientCloseoutSummary.passed}</b> Passou</span>
+          <span><b>{firstClientCloseoutSummary.failed}</b> Falhou</span>
+          <span><b>{firstClientCloseoutSummary.blocked}</b> Bloqueado</span>
+          <span><b>{firstClientCloseoutSummary.pending}</b> Pendente</span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do encerramento ${firstClientCloseoutSummary.percent}%`}><span style={{ width: `${firstClientCloseoutSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={firstClientCloseoutState.clientName} onChange={(event) => patchFirstClientCloseout({ clientName: event.target.value })} placeholder={dayTwoFollowUpState.clientName || dayOneImplantState.clientName || roleState.storeName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Responsável encerramento<input value={firstClientCloseoutState.closeOwner} onChange={(event) => patchFirstClientCloseout({ closeOwner: event.target.value })} placeholder="Ex.: suporte / implantador / dono" /></label>
+          <label>Contato da loja<input value={firstClientCloseoutState.contact} onChange={(event) => patchFirstClientCloseout({ contact: event.target.value })} placeholder={dayTwoFollowUpState.contact || dayOneImplantState.storeContact || 'Ex.: responsável no balcão / WhatsApp'} /></label>
+          <label>Data/fechamento<input value={firstClientCloseoutState.closeDate} onChange={(event) => patchFirstClientCloseout({ closeDate: event.target.value })} placeholder="Ex.: após Dia 2 / revisão final" /></label>
+          <label>Permissão para usar como referência<input value={firstClientCloseoutState.referencePermission} onChange={(event) => patchFirstClientCloseout({ referencePermission: event.target.value })} placeholder="Ex.: autorizado com nome / somente anônimo / não autorizado" /></label>
+          <label>Plano para replicar<textarea value={firstClientCloseoutState.replicationPlan} onChange={(event) => patchFirstClientCloseout({ replicationPlan: event.target.value })} placeholder="Liste o que vira padrão para o próximo cliente: demo, proposta, termo, Dia 1, Dia 2, suporte e limites." rows={3} /></label>
+          <label>Checklist do próximo cliente<textarea value={firstClientCloseoutState.nextClientChecklist} onChange={(event) => patchFirstClientCloseout({ nextClientChecklist: event.target.value })} placeholder="Escreva o passo a passo que será repetido na próxima implantação." rows={3} /></label>
+          <label>Onde ficaram as evidências<textarea value={firstClientCloseoutState.evidenceNote} onChange={(event) => patchFirstClientCloseout({ evidenceNote: event.target.value })} placeholder="Ex.: pasta, Drive, WhatsApp, prints, relatório copiado. Não cole senha/chave privada." rows={3} /></label>
+          <label>Observações finais<textarea value={firstClientCloseoutState.notes} onChange={(event) => patchFirstClientCloseout({ notes: event.target.value })} placeholder="Pendências P2, aprendizados, melhorias futuras e cuidado antes de vender para o próximo cliente." rows={3} /></label>
+        </div>
+        <div className="mapp-regression-step-list">
+          {FIRST_CLIENT_CLOSEOUT_STEPS.map((step) => {
+            const result = normalizeFirstClientCloseoutResult(firstClientCloseoutState.results[step.id]);
+            return (
+              <article key={step.id} className={`mapp-regression-step priority-${step.priority.toLowerCase()} result-${result}`}>
+                <header><span>{step.priority}</span><strong>{step.phase}</strong></header>
+                <h3>{step.title}</h3>
+                <p><b>Fazer:</b> {step.action}</p>
+                <p><b>Esperado:</b> {step.expected}</p>
+                <small><b>Evidência:</b> {step.evidence}</small>
+                <div className="mapp-regression-buttons">
+                  {(['passed', 'failed', 'blocked', 'pending'] as FirstClientCloseoutResult[]).map((option) => (
+                    <button key={option} type="button" className={result === option ? 'is-active' : ''} onClick={() => setFirstClientCloseoutResult(step.id, option)}>{firstClientCloseoutLabel(option)}</button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {firstClientCloseoutSummary.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios para replicar</strong>{firstClientCloseoutSummary.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : <div className="mapp-final-alert-list"><strong>Sem bloqueio crítico para replicar</strong><p>Mesmo assim, só aprove com evidência guardada, autorização de referência definida e processo do próximo cliente documentado.</p></div>}
+        {firstClientCloseoutSummary.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos antes de replicar</strong>{firstClientCloseoutSummary.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={approveFirstClientCloseout} disabled={firstClientCloseoutSummary.decision === 'blocked'}>Aprovar para replicar</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyFirstClientCloseout()}>Copiar encerramento</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetFirstClientCloseout}>Zerar encerramento</button>
+        </div>
+        <small className="mapp-final-honesty">Aprovado: {firstClientCloseoutState.approvedAt ? `${firstClientCloseoutState.approvedBy || 'responsável'} em ${formatDateTime(firstClientCloseoutState.approvedAt)}` : 'não aprovado'}. Não use cliente como modelo se houver P0/P1 aberto, Dia 2 sem aceite, evidência solta, pendência local ou autorização de referência indefinida.</small>
       </section>
 
 

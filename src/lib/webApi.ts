@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v142-pos-implantacao-dia-2';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v142-pos-implantacao-dia-2';
+export const WEB_APP_VERSION = 'pwa-supabase-v143-primeiro-cliente-replicavel';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v143-primeiro-cliente-replicavel';
 
 
 export interface WebTrainingModeState {
@@ -3186,6 +3186,49 @@ function readDayTwoFollowUpProgress(): { passed: number; failed: number; blocked
 }
 
 
+function readFirstClientCloseoutProgress(): { passed: number; failed: number; blocked: number; pending: number; total: number; percent: number; criticalOpen: number; approved: boolean; active: boolean } {
+  const total = 10;
+  const criticalIds = new Set([
+    'closeout-day1-day2-accepted',
+    'closeout-operation-stable',
+    'closeout-support-feedback-clean',
+    'closeout-risk-register-zero',
+    'closeout-proof-package-complete',
+    'closeout-client-reference-permission',
+    'closeout-replication-package-ready',
+    'closeout-pricing-terms-final',
+    'closeout-next-client-checklist',
+  ]);
+  const keys = ['smart-loja:first-client-closeout-v143'];
+  if (!canUseBrowserStorage()) return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+  try {
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { results?: Record<string, unknown>; approvedAt?: unknown; clientName?: unknown; closeOwner?: unknown; updatedAt?: unknown };
+      const results = parsed && typeof parsed === 'object' && parsed.results && typeof parsed.results === 'object' ? parsed.results : {};
+      let passed = 0;
+      let failed = 0;
+      let blocked = 0;
+      let criticalOpen = 0;
+      for (const [id, result] of Object.entries(results)) {
+        if (result === 'passed') passed += 1;
+        if (result === 'failed') failed += 1;
+        if (result === 'blocked') blocked += 1;
+        if (criticalIds.has(id) && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+      }
+      const pending = Math.max(0, total - passed - failed - blocked);
+      const approved = typeof parsed.approvedAt === 'string' && parsed.approvedAt.length > 0;
+      const active = approved || passed > 0 || failed > 0 || blocked > 0 || typeof parsed.clientName === 'string' || typeof parsed.closeOwner === 'string' || typeof parsed.updatedAt === 'string';
+      return { passed, failed, blocked, pending, total, percent: Math.round((passed / total) * 100), criticalOpen, approved, active };
+    }
+  } catch {
+    return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+  }
+  return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+}
+
+
 function readExecutiveHealthProgress(): { active: boolean; approved: boolean; scoreHint: number; blockers: number; warnings: number } {
   const keys = ['smart-loja:executive-health-v139', 'smart-loja:executive-health-v138'];
   if (!canUseBrowserStorage()) return { active: false, approved: false, scoreHint: 0, blockers: 0, warnings: 0 };
@@ -3422,6 +3465,20 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
     evidence: `passou=${dayTwoProgress.passed}; falhou=${dayTwoProgress.failed}; bloqueado=${dayTwoProgress.blocked}; pendente=${dayTwoProgress.pending}; aprovado=${dayTwoProgress.approved ? 'sim' : 'não'}; chave=smart-loja:day-two-follow-up-v142`,
   });
 
+  const firstClientCloseoutProgress = readFirstClientCloseoutProgress();
+  pushCommercialCheck(checks, {
+    id: 'first-client-closeout-v143', area: 'Teste real', title: 'Encerramento do primeiro cliente / pronto para replicar',
+    detail: firstClientCloseoutProgress.criticalOpen
+      ? `${firstClientCloseoutProgress.criticalOpen} item(ns) P0/P1 do encerramento com Falhou/Bloqueado. Não replicar ainda.`
+      : firstClientCloseoutProgress.approved
+        ? 'Primeiro cliente encerrado neste aparelho com evidência e processo pronto para replicar.'
+        : firstClientCloseoutProgress.active
+          ? `Encerramento em andamento: ${firstClientCloseoutProgress.passed}/${firstClientCloseoutProgress.total} item(ns) passaram.`
+          : 'Encerramento do primeiro cliente ainda não iniciado. Use para transformar a implantação em processo repetível para novos clientes.',
+    level: firstClientCloseoutProgress.criticalOpen ? 'danger' : firstClientCloseoutProgress.approved ? 'ok' : 'warn',
+    evidence: `passou=${firstClientCloseoutProgress.passed}; falhou=${firstClientCloseoutProgress.failed}; bloqueado=${firstClientCloseoutProgress.blocked}; pendente=${firstClientCloseoutProgress.pending}; aprovado=${firstClientCloseoutProgress.approved ? 'sim' : 'não'}; chave=smart-loja:first-client-closeout-v143`,
+  });
+
 
   pushCommercialCheck(checks, {
     id: 'service-worker', area: 'PWA/cache', title: 'Instalação PWA/cache',
@@ -3432,7 +3489,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v142 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v143 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });
