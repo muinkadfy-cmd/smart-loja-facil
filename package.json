@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.137",
+  "version": "0.1.138",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil PWA mobile-first v137 com pós-venda, suporte/SLA, termo de implantação, aceite do cliente, proposta comercial, tour guiado, demo segura, onboarding, PWA/cache e validação mobile",
+  "description": "Smart Loja Fácil PWA mobile-first v138 com central de feedback do cliente, NPS, melhorias prioritárias, pós-venda/SLA, termo, proposta comercial, tour guiado, demo segura e validação mobile",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

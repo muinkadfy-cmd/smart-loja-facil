@@ -56,8 +56,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v137';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v138';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v137', 'smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -155,7 +155,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v137 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v138 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -382,6 +382,58 @@ interface PostSaleTicketDraft {
   owner: string;
 }
 
+
+type ClientFeedbackPriority = 'P0' | 'P1' | 'P2';
+type ClientFeedbackStatus = 'new' | 'planned' | 'in_progress' | 'done';
+type ClientSatisfaction = 'nao_informado' | 'ruim' | 'regular' | 'bom' | 'excelente';
+
+interface ClientFeedbackItem {
+  id: string;
+  title: string;
+  detail: string;
+  expected: string;
+  priority: ClientFeedbackPriority;
+}
+
+interface ClientImprovementItem {
+  id: string;
+  title: string;
+  area: string;
+  priority: ClientFeedbackPriority;
+  status: ClientFeedbackStatus;
+  impact: string;
+  owner: string;
+  due: string;
+  evidence: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ClientFeedbackState {
+  clientName: string;
+  contactName: string;
+  npsScore: number;
+  satisfaction: ClientSatisfaction;
+  mainPain: string;
+  suggestedImprovement: string;
+  priorityFocus: string;
+  testimonial: string;
+  nextAction: string;
+  doneIds: string[];
+  improvements: ClientImprovementItem[];
+  updatedAt: string;
+}
+
+interface ClientImprovementDraft {
+  title: string;
+  area: string;
+  priority: ClientFeedbackPriority;
+  impact: string;
+  owner: string;
+  due: string;
+}
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
@@ -391,8 +443,8 @@ const DEMO_MODE_STEPS: DemoModeStep[] = [
 ];
 
 
-const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v137';
-const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
+const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v138';
+const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v137', 'smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
 
 const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
   {
@@ -502,8 +554,8 @@ const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
 ];
 
 
-const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v137';
-const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
+const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v138';
+const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v137', 'smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
 
 const COMMERCIAL_PROPOSAL_PLANS: CommercialProposalPlan[] = [
   {
@@ -555,8 +607,8 @@ const COMMERCIAL_PROPOSAL_CHECKLIST = [
 ];
 
 
-const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v137';
-const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
+const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v138';
+const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v137', 'smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
 
 const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
   { id: 'term-proposal-approved', title: 'Proposta e plano conferidos', detail: 'Cliente sabe plano, mensalidade, implantação, validade e próximo passo combinado.', risk: 'P1' },
@@ -570,8 +622,8 @@ const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
 ];
 
 
-const POST_SALE_SUPPORT_KEY = 'smart-loja:post-sale-support-v137';
-const LEGACY_POST_SALE_SUPPORT_KEYS = ['smart-loja:post-sale-support-v136'];
+const POST_SALE_SUPPORT_KEY = 'smart-loja:post-sale-support-v138';
+const LEGACY_POST_SALE_SUPPORT_KEYS = ['smart-loja:post-sale-support-v137', 'smart-loja:post-sale-support-v136'];
 
 const POST_SALE_SUPPORT_ITEMS: PostSaleSupportItem[] = [
   { id: 'support-channel', title: 'Canal de suporte combinado', detail: 'Registrar WhatsApp, horário, responsável e como o cliente deve enviar print/diagnóstico.', expected: 'Cliente sabe onde pedir ajuda e não manda senha ou chave privada.', priority: 'P1' },
@@ -589,6 +641,34 @@ const POST_SALE_STATUS_LABEL: Record<PostSaleTicketStatus, string> = {
   solved: 'Resolvido',
 };
 
+
+const CLIENT_FEEDBACK_KEY = 'smart-loja:client-feedback-nps-v138';
+const LEGACY_CLIENT_FEEDBACK_KEYS = ['smart-loja:client-feedback-nps-v137'];
+
+const CLIENT_FEEDBACK_ITEMS: ClientFeedbackItem[] = [
+  { id: 'feedback-client-identified', title: 'Cliente e responsável identificados', detail: 'Registrar loja, contato e pessoa que deu a opinião depois do primeiro uso.', expected: 'Feedback não fica anônimo ou solto.', priority: 'P2' },
+  { id: 'feedback-nps-score', title: 'Nota NPS coletada', detail: 'Perguntar de 0 a 10 quanto o cliente indicaria o sistema para outra loja.', expected: 'Nota registrada sem pressionar cliente.', priority: 'P2' },
+  { id: 'feedback-main-pain', title: 'Dor principal registrada', detail: 'Anotar o que mais incomodou, confundiu ou atrasou o cliente no primeiro dia.', expected: 'Melhoria nasce de dor real, não de chute.', priority: 'P1' },
+  { id: 'feedback-improvement-prioritized', title: 'Melhoria prioritária criada', detail: 'Transformar dor/sugestão em melhoria P0/P1/P2 com responsável, prazo e evidência.', expected: 'Existe pelo menos uma ação clara quando houver reclamação.', priority: 'P1' },
+  { id: 'feedback-next-action', title: 'Próximo contato combinado', detail: 'Combinar retorno, correção ou revisão do cliente sem deixar promessa solta.', expected: 'Cliente sabe o próximo passo e prazo aproximado.', priority: 'P1' },
+  { id: 'feedback-copy-report', title: 'Relatório de feedback copiado', detail: 'Copiar o resumo sem senha, sem chave privada e sem dados técnicos crus.', expected: 'Feedback fica guardado junto do pós-venda.', priority: 'P2' },
+];
+
+const CLIENT_FEEDBACK_STATUS_LABEL: Record<ClientFeedbackStatus, string> = {
+  new: 'Novo',
+  planned: 'Planejado',
+  in_progress: 'Em execução',
+  done: 'Resolvido',
+};
+
+const CLIENT_SATISFACTION_LABEL: Record<ClientSatisfaction, string> = {
+  nao_informado: 'Não informado',
+  ruim: 'Ruim',
+  regular: 'Regular',
+  bom: 'Bom',
+  excelente: 'Excelente',
+};
+
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
   { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
   { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
@@ -598,18 +678,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v137';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v138';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v137', 'smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v137';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v138';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v137', 'smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v137';
-const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v136', 'smart-loja:first-client-onboarding-v135', 'smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v138';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v137', 'smart-loja:first-client-onboarding-v136', 'smart-loja:first-client-onboarding-v135', 'smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v137 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v138 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -621,12 +701,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v137-real',
+    id: 'deploy-cache-v138-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v137',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v137.',
+    title: 'Deploy aplicado e PWA abriu v138',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v138.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v137.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v138.',
     critical: true,
   },
   {
@@ -751,7 +831,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' ? 'deploy-cache-v137-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' || id === 'deploy-cache-v137-real' ? 'deploy-cache-v138-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -1032,7 +1112,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v137',
+    'Smart Loja Fácil — fechamento comercial / aceite final v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -1126,7 +1206,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v137',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -1219,7 +1299,7 @@ function buildCommercialTourText(params: {
     `Prova: ${step.proof}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — tour de apresentação comercial v137',
+    'Smart Loja Fácil — tour de apresentação comercial v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
     `Cliente/público: ${params.state.audience || 'não informado'}`,
@@ -1322,7 +1402,7 @@ function buildCommercialProposalText(params: {
   const done = new Set(params.state.doneIds);
   const rows = COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} ${item.label} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — proposta comercial / planos e benefícios v137',
+    'Smart Loja Fácil — proposta comercial / planos e benefícios v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
     `Plano sugerido: ${params.plan.name} (${params.plan.tag})`,
@@ -1444,7 +1524,7 @@ function buildImplementationTermText(params: {
   const done = new Set(params.state.doneIds);
   const rows = IMPLEMENTATION_TERM_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.risk}] ${item.title} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — termo simples de implantação e aceite v137',
+    'Smart Loja Fácil — termo simples de implantação e aceite v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável do cliente: ${params.state.responsibleName || 'não informado'}`,
@@ -1611,7 +1691,7 @@ function buildPostSaleSupportText(params: {
     ].filter(Boolean).join(' · '))
     : ['Nenhum chamado registrado ainda. Registre qualquer falha ou ajuste combinado no primeiro cliente.'];
   return [
-    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v137',
+    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável suporte: ${params.state.supportOwner || params.term.responsibleName || 'não informado'}`,
@@ -1636,6 +1716,187 @@ function buildPostSaleSupportText(params: {
   ].join('\n');
 }
 
+
+function emptyClientFeedbackState(): ClientFeedbackState {
+  return {
+    clientName: '',
+    contactName: '',
+    npsScore: 0,
+    satisfaction: 'nao_informado',
+    mainPain: '',
+    suggestedImprovement: '',
+    priorityFocus: '',
+    testimonial: '',
+    nextAction: '',
+    doneIds: [],
+    improvements: [],
+    updatedAt: '',
+  };
+}
+
+function emptyClientImprovementDraft(): ClientImprovementDraft {
+  return { title: '', area: 'Experiência do cliente', priority: 'P1', impact: '', owner: '', due: '' };
+}
+
+function normalizeClientFeedbackPriority(value: unknown): ClientFeedbackPriority {
+  return value === 'P0' || value === 'P2' ? value : 'P1';
+}
+
+function normalizeClientFeedbackStatus(value: unknown): ClientFeedbackStatus {
+  return value === 'planned' || value === 'in_progress' || value === 'done' ? value : 'new';
+}
+
+function normalizeClientSatisfaction(value: unknown): ClientSatisfaction {
+  return value === 'ruim' || value === 'regular' || value === 'bom' || value === 'excelente' ? value : 'nao_informado';
+}
+
+function normalizeNpsScore(value: unknown): number {
+  const parsed = typeof value === 'number' ? value : Number(value ?? 0);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.min(10, Math.round(parsed)));
+}
+
+function normalizeClientFeedbackState(value: unknown): ClientFeedbackState {
+  const source = value && typeof value === 'object' ? value as Partial<ClientFeedbackState> : {};
+  const allowedDone = new Set(CLIENT_FEEDBACK_ITEMS.map((item) => item.id));
+  const doneIds = Array.from(new Set((Array.isArray(source.doneIds) ? source.doneIds : []).filter((id): id is string => typeof id === 'string' && allowedDone.has(id))));
+  const rawImprovements = Array.isArray(source.improvements) ? source.improvements : [];
+  const improvements = rawImprovements
+    .map((item): ClientImprovementItem | null => {
+      const row = item && typeof item === 'object' ? item as Partial<ClientImprovementItem> : {};
+      const title = typeof row.title === 'string' ? row.title.trim().slice(0, 180) : '';
+      if (!title) return null;
+      const now = new Date().toISOString();
+      return {
+        id: typeof row.id === 'string' && row.id ? row.id : `feedback-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        title,
+        area: typeof row.area === 'string' ? row.area.slice(0, 90) : 'Experiência do cliente',
+        priority: normalizeClientFeedbackPriority(row.priority),
+        status: normalizeClientFeedbackStatus(row.status),
+        impact: typeof row.impact === 'string' ? row.impact.slice(0, 420) : '',
+        owner: typeof row.owner === 'string' ? row.owner.slice(0, 120) : '',
+        due: typeof row.due === 'string' ? row.due.slice(0, 100) : '',
+        evidence: typeof row.evidence === 'string' ? row.evidence.slice(0, 700) : '',
+        notes: typeof row.notes === 'string' ? row.notes.slice(0, 900) : '',
+        createdAt: typeof row.createdAt === 'string' ? row.createdAt : now,
+        updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : now,
+      };
+    })
+    .filter((item): item is ClientImprovementItem => Boolean(item));
+  return {
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 140) : '',
+    contactName: typeof source.contactName === 'string' ? source.contactName.slice(0, 140) : '',
+    npsScore: normalizeNpsScore(source.npsScore),
+    satisfaction: normalizeClientSatisfaction(source.satisfaction),
+    mainPain: typeof source.mainPain === 'string' ? source.mainPain.slice(0, 900) : '',
+    suggestedImprovement: typeof source.suggestedImprovement === 'string' ? source.suggestedImprovement.slice(0, 900) : '',
+    priorityFocus: typeof source.priorityFocus === 'string' ? source.priorityFocus.slice(0, 520) : '',
+    testimonial: typeof source.testimonial === 'string' ? source.testimonial.slice(0, 900) : '',
+    nextAction: typeof source.nextAction === 'string' ? source.nextAction.slice(0, 520) : '',
+    doneIds,
+    improvements,
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readClientFeedbackState(): ClientFeedbackState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyClientFeedbackState();
+  try {
+    const current = normalizeClientFeedbackState(JSON.parse(window.localStorage.getItem(CLIENT_FEEDBACK_KEY) || '{}'));
+    if (current.doneIds.length || current.improvements.length || current.clientName || current.mainPain || current.updatedAt) return current;
+    for (const key of LEGACY_CLIENT_FEEDBACK_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeClientFeedbackState(JSON.parse(raw));
+      if (legacy.doneIds.length || legacy.improvements.length || legacy.clientName || legacy.mainPain || legacy.updatedAt) {
+        window.localStorage.setItem(CLIENT_FEEDBACK_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyClientFeedbackState();
+  }
+  return emptyClientFeedbackState();
+}
+
+function saveClientFeedbackState(state: ClientFeedbackState): ClientFeedbackState {
+  const normalized = normalizeClientFeedbackState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(CLIENT_FEEDBACK_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function summarizeClientFeedback(state: ClientFeedbackState): { total: number; open: number; done: number; openP0P1: number; percent: number; npsLabel: string; tone: 'danger' | 'warn' | 'ok' } {
+  const total = state.improvements.length;
+  const done = state.improvements.filter((item) => item.status === 'done').length;
+  const open = total - done;
+  const openP0P1 = state.improvements.filter((item) => item.status !== 'done' && (item.priority === 'P0' || item.priority === 'P1')).length;
+  const checklistWeight = CLIENT_FEEDBACK_ITEMS.length;
+  const improvementWeight = total || 1;
+  const percent = Math.min(100, Math.round(((state.doneIds.length + done) / (checklistWeight + improvementWeight)) * 100));
+  const npsLabel = state.npsScore >= 9 ? 'Promotor' : state.npsScore >= 7 ? 'Neutro' : state.npsScore > 0 ? 'Detrator' : 'Sem nota';
+  const tone = openP0P1 || (state.npsScore > 0 && state.npsScore <= 6) ? 'danger' : open || state.npsScore < 9 ? 'warn' : 'ok';
+  return { total, open, done, openP0P1, percent, npsLabel, tone };
+}
+
+function buildClientFeedbackText(params: {
+  state: ClientFeedbackState;
+  summary: ReturnType<typeof summarizeClientFeedback>;
+  postSale: PostSaleSupportState;
+  term: ImplementationTermState;
+  proposal: CommercialProposalState;
+  gate: FinalSellGate;
+  report: WebCommercialValidationReport | null;
+  roleState: RoleState;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const done = new Set(params.state.doneIds);
+  const checklistRows = CLIENT_FEEDBACK_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.priority}] ${item.title} — ${item.detail}`);
+  const improvementRows = params.state.improvements.length
+    ? params.state.improvements.map((item) => [
+      `[${item.priority}]`,
+      CLIENT_FEEDBACK_STATUS_LABEL[item.status],
+      item.area,
+      item.title,
+      `Impacto: ${item.impact || 'não informado'}`,
+      `Responsável: ${item.owner || 'não informado'}`,
+      `Prazo: ${item.due || 'combinar'}`,
+      item.evidence ? `Evidência: ${item.evidence}` : 'Evidência: pendente',
+      item.notes ? `Nota: ${item.notes}` : '',
+    ].filter(Boolean).join(' · '))
+    : ['Nenhuma melhoria registrada ainda. Depois do primeiro dia, transforme dor real em ação P0/P1/P2.'];
+  return [
+    'Smart Loja Fácil — feedback do cliente / NPS e melhorias prioritárias v138',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Cliente/loja: ${params.state.clientName || params.postSale.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
+    `Contato/responsável: ${params.state.contactName || params.postSale.supportOwner || 'não informado'}`,
+    `NPS: ${params.state.npsScore}/10 — ${params.summary.npsLabel}`,
+    `Satisfação declarada: ${CLIENT_SATISFACTION_LABEL[params.state.satisfaction]}`,
+    `Dor principal: ${params.state.mainPain || 'não registrada'}`,
+    `Sugestão do cliente: ${params.state.suggestedImprovement || 'não registrada'}`,
+    `Foco prioritário: ${params.state.priorityFocus || 'não definido'}`,
+    `Próximo contato/ação: ${params.state.nextAction || 'não combinado'}`,
+    `Depoimento autorizado: ${params.state.testimonial || 'não informado'}`,
+    `Resumo melhorias: total=${params.summary.total}; abertas=${params.summary.open}; resolvidas=${params.summary.done}; P0/P1 abertas=${params.summary.openP0P1}`,
+    `Progresso feedback: ${params.summary.percent}%`,
+    `Fechamento comercial: ${params.gate.title} — ${params.gate.score}/10 ${params.gate.stars}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    '',
+    'Checklist de feedback:',
+    ...checklistRows,
+    '',
+    'Melhorias priorizadas:',
+    ...improvementRows,
+    '',
+    'Aviso honesto: NPS e feedback não substituem teste real. P0/P1 aberto deve entrar no próximo lote antes de prometer estabilidade total ao cliente.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -1656,7 +1917,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v137',
+    'Smart Loja Fácil — plano de correção aceite v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -1694,7 +1955,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v137',
+    'Smart Loja Fácil — execução real assistida v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -1768,7 +2029,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v137',
+    'Smart Loja Fácil — roteiro guiado comercial v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -1821,7 +2082,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v137',
+    'Smart Loja Fácil — modo treinamento seguro v138',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -1848,7 +2109,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v137',
+    'Smart Loja Fácil — teste comercial v138',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -1886,6 +2147,8 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [termState, setTermState] = useState<ImplementationTermState>(() => readImplementationTermState());
   const [postSaleState, setPostSaleState] = useState<PostSaleSupportState>(() => readPostSaleSupportState());
   const [ticketDraft, setTicketDraft] = useState<PostSaleTicketDraft>(() => emptyTicketDraft());
+  const [clientFeedbackState, setClientFeedbackState] = useState<ClientFeedbackState>(() => readClientFeedbackState());
+  const [clientImprovementDraft, setClientImprovementDraft] = useState<ClientImprovementDraft>(() => emptyClientImprovementDraft());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -1994,6 +2257,8 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const termAccepted = Boolean(termState.acceptedAt);
   const postSaleDoneSet = useMemo(() => new Set(postSaleState.doneIds), [postSaleState.doneIds]);
   const postSaleSummary = useMemo(() => summarizePostSaleSupport(postSaleState), [postSaleState]);
+  const clientFeedbackDoneSet = useMemo(() => new Set(clientFeedbackState.doneIds), [clientFeedbackState.doneIds]);
+  const clientFeedbackSummary = useMemo(() => summarizeClientFeedback(clientFeedbackState), [clientFeedbackState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -2216,7 +2481,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — tour comercial guiado v137',
+      'Smart Loja Fácil — tour comercial guiado v138',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
@@ -2439,6 +2704,71 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Plano de pós-venda copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+
+  function patchClientFeedback(patch: Partial<ClientFeedbackState>): void {
+    setClientFeedbackState((current) => saveClientFeedbackState({ ...current, ...patch }));
+  }
+
+  function toggleClientFeedbackItem(id: string): void {
+    setClientFeedbackState((current) => {
+      const done = new Set(current.doneIds);
+      if (done.has(id)) done.delete(id); else done.add(id);
+      return saveClientFeedbackState({ ...current, doneIds: Array.from(done) });
+    });
+  }
+
+  function addClientImprovement(): void {
+    const title = clientImprovementDraft.title.trim();
+    if (!title) {
+      setFeedback({ tone: 'error', text: 'Informe o título da melhoria antes de adicionar.' });
+      return;
+    }
+    const now = new Date().toISOString();
+    const item: ClientImprovementItem = {
+      id: `feedback-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      title,
+      area: clientImprovementDraft.area.trim() || 'Experiência do cliente',
+      priority: clientImprovementDraft.priority,
+      status: 'new',
+      impact: clientImprovementDraft.impact.trim(),
+      owner: clientImprovementDraft.owner.trim(),
+      due: clientImprovementDraft.due.trim(),
+      evidence: '',
+      notes: '',
+      createdAt: now,
+      updatedAt: now,
+    };
+    setClientFeedbackState((current) => saveClientFeedbackState({ ...current, improvements: [item, ...current.improvements] }));
+    setClientImprovementDraft(emptyClientImprovementDraft());
+    setFeedback({ tone: 'success', text: 'Melhoria do cliente registrada com prioridade. Dados reais da loja não foram alterados.' });
+  }
+
+  function updateClientImprovement(id: string, patch: Partial<ClientImprovementItem>): void {
+    setClientFeedbackState((current) => saveClientFeedbackState({
+      ...current,
+      improvements: current.improvements.map((item) => item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item),
+    }));
+  }
+
+  function deleteClientImprovement(id: string): void {
+    setClientFeedbackState((current) => saveClientFeedbackState({ ...current, improvements: current.improvements.filter((item) => item.id !== id) }));
+    setFeedback({ tone: 'info', text: 'Melhoria removida deste aparelho. Dados reais da loja não foram alterados.' });
+  }
+
+  function resetClientFeedback(): void {
+    const ok = window.confirm('Zerar feedback/NPS deste aparelho? Isso não apaga loja, venda, pós-venda, proposta, termo ou dados reais.');
+    if (!ok) return;
+    setClientFeedbackState(saveClientFeedbackState(emptyClientFeedbackState()));
+    setClientImprovementDraft(emptyClientImprovementDraft());
+    setFeedback({ tone: 'info', text: 'Feedback do cliente zerado neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyClientFeedback(): Promise<void> {
+    const text = buildClientFeedbackText({ state: clientFeedbackState, summary: clientFeedbackSummary, postSale: postSaleState, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Feedback/NPS copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -2454,6 +2784,8 @@ ${buildCommercialProposalText({ state: proposalState, plan: currentProposalPlan,
 ${buildImplementationTermText({ state: termState, proposal: proposalState, plan: currentProposalPlan, gate: finalGate, termPercent, proposalPercent, onboardingPercent, report, roleState, online, snapshot })}
 
 ${buildPostSaleSupportText({ state: postSaleState, summary: postSaleSummary, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
+
+${buildClientFeedbackText({ state: clientFeedbackState, summary: clientFeedbackSummary, postSale: postSaleState, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -2474,6 +2806,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Proposta comercial: ${proposalDoneCount}/${COMMERCIAL_PROPOSAL_CHECKLIST.length} (${proposalPercent}%)`,
           `Termo implantação: ${termDoneCount}/${IMPLEMENTATION_TERM_ITEMS.length} (${termPercent}%)${termAccepted ? ' aceito' : ''}`,
           `Pós-venda/SLA: ${postSaleSummary.solved}/${postSaleSummary.total} chamados resolvidos; críticos abertos=${postSaleSummary.criticalOpen}`,
+          `Feedback/NPS: ${clientFeedbackState.npsScore}/10 (${clientFeedbackSummary.npsLabel}); melhorias abertas=${clientFeedbackSummary.open}; P0/P1 abertas=${clientFeedbackSummary.openP0P1}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -2757,6 +3090,75 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={resetPostSaleSupport}>Zerar pós-venda</button>
         </div>
         <small className="mapp-final-honesty">P0/P1 aberto não impede navegar, mas impede dizer que o cliente está estável. Registre evidência antes de prometer correção.</small>
+      </section>
+
+
+      <section className={`mapp-section-block mapp-client-feedback-panel tone-${clientFeedbackSummary.tone}`}>
+        <div className="mapp-section-title"><h2>Feedback do cliente / NPS</h2><button type="button" onClick={() => void copyClientFeedback()}>Copiar feedback</button></div>
+        <div className="mapp-client-feedback-hero">
+          <div>
+            <span>{clientFeedbackSummary.npsLabel}</span>
+            <strong>NPS {clientFeedbackState.npsScore}/10 · {clientFeedbackSummary.open} melhoria(s) aberta(s)</strong>
+            <p>Depois do primeiro dia, registre a nota do cliente, dor principal, sugestões e transforme tudo em melhoria P0/P1/P2 com responsável, prazo e evidência.</p>
+          </div>
+          <b className={clientFeedbackSummary.tone}>{clientFeedbackSummary.percent}%</b>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do feedback do cliente ${clientFeedbackSummary.percent}%`}><span style={{ width: `${clientFeedbackSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={clientFeedbackState.clientName} onChange={(event) => patchClientFeedback({ clientName: event.target.value })} placeholder={postSaleState.clientName || termState.clientName || proposalState.clientName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Contato que avaliou<input value={clientFeedbackState.contactName} onChange={(event) => patchClientFeedback({ contactName: event.target.value })} placeholder="Ex.: Dona Jaque / operador do caixa" /></label>
+          <label>Nota NPS 0 a 10<input type="number" min={0} max={10} value={clientFeedbackState.npsScore} onChange={(event) => patchClientFeedback({ npsScore: normalizeNpsScore(event.target.value) })} /></label>
+          <label>Satisfação<select value={clientFeedbackState.satisfaction} onChange={(event) => patchClientFeedback({ satisfaction: event.target.value as ClientSatisfaction })}><option value="nao_informado">Não informado</option><option value="ruim">Ruim</option><option value="regular">Regular</option><option value="bom">Bom</option><option value="excelente">Excelente</option></select></label>
+          <label>Dor principal<textarea value={clientFeedbackState.mainPain} onChange={(event) => patchClientFeedback({ mainPain: event.target.value })} placeholder="Ex.: Cliente achou difícil localizar comprovante / impressão cortou / caixa confundiu." rows={3} /></label>
+          <label>Sugestão do cliente<textarea value={clientFeedbackState.suggestedImprovement} onChange={(event) => patchClientFeedback({ suggestedImprovement: event.target.value })} placeholder="Ex.: Queria botão maior, tutorial, relatório diferente, mensagem mais clara." rows={3} /></label>
+          <label>Foco prioritário<input value={clientFeedbackState.priorityFocus} onChange={(event) => patchClientFeedback({ priorityFocus: event.target.value })} placeholder="Ex.: impressão 80mm e treinamento do caixa" /></label>
+          <label>Próxima ação<input value={clientFeedbackState.nextAction} onChange={(event) => patchClientFeedback({ nextAction: event.target.value })} placeholder="Ex.: retornar amanhã às 18h com ajuste/teste" /></label>
+          <label>Depoimento autorizado<textarea value={clientFeedbackState.testimonial} onChange={(event) => patchClientFeedback({ testimonial: event.target.value })} placeholder="Opcional: frase do cliente autorizada para venda futura." rows={2} /></label>
+        </div>
+        <div className="mapp-feedback-checklist">
+          {CLIENT_FEEDBACK_ITEMS.map((item) => {
+            const done = clientFeedbackDoneSet.has(item.id);
+            return (
+              <button key={item.id} type="button" className={done ? 'done' : ''} onClick={() => toggleClientFeedbackItem(item.id)}>
+                <span>{done ? '✓' : item.priority}</span>
+                <div><strong>{item.title}</strong><p>{item.detail}</p><small>Esperado: {item.expected}</small></div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mapp-feedback-new-item">
+          <strong>Nova melhoria prioritária</strong>
+          <div className="mapp-final-release-grid">
+            <label>Título<input value={clientImprovementDraft.title} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Ex.: Deixar botão imprimir mais visível" /></label>
+            <label>Área<input value={clientImprovementDraft.area} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, area: event.target.value }))} placeholder="Ex.: Comprovantes / Caixa / Treinamento" /></label>
+            <label>Prioridade<select value={clientImprovementDraft.priority} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, priority: event.target.value as ClientFeedbackPriority }))}><option value="P0">P0 crítico</option><option value="P1">P1 alto</option><option value="P2">P2 melhoria</option></select></label>
+            <label>Impacto<input value={clientImprovementDraft.impact} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, impact: event.target.value }))} placeholder="Ex.: cliente não consegue fechar caixa sozinho" /></label>
+            <label>Responsável<input value={clientImprovementDraft.owner} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, owner: event.target.value }))} placeholder={postSaleState.supportOwner || 'Ex.: suporte'} /></label>
+            <label>Prazo<input value={clientImprovementDraft.due} onChange={(event) => setClientImprovementDraft((current) => ({ ...current, due: event.target.value }))} placeholder="Ex.: próximo lote / amanhã / 7 dias" /></label>
+          </div>
+          <button type="button" className="mapp-primary-button" onClick={addClientImprovement}>Adicionar melhoria</button>
+        </div>
+        <div className="mapp-feedback-list">
+          {clientFeedbackState.improvements.length ? clientFeedbackState.improvements.map((item) => (
+            <article key={item.id} className={`mapp-feedback-item priority-${item.priority.toLowerCase()} status-${item.status}`}>
+              <header><span>{item.priority}</span><strong>{item.title}</strong><select value={item.status} onChange={(event) => updateClientImprovement(item.id, { status: event.target.value as ClientFeedbackStatus })}><option value="new">Novo</option><option value="planned">Planejado</option><option value="in_progress">Em execução</option><option value="done">Resolvido</option></select></header>
+              <div className="mapp-final-release-grid">
+                <label>Área<input value={item.area} onChange={(event) => updateClientImprovement(item.id, { area: event.target.value })} /></label>
+                <label>Prazo<input value={item.due} onChange={(event) => updateClientImprovement(item.id, { due: event.target.value })} /></label>
+                <label>Responsável<input value={item.owner} onChange={(event) => updateClientImprovement(item.id, { owner: event.target.value })} /></label>
+                <label>Impacto<textarea value={item.impact} onChange={(event) => updateClientImprovement(item.id, { impact: event.target.value })} rows={2} /></label>
+                <label>Evidência<textarea value={item.evidence} onChange={(event) => updateClientImprovement(item.id, { evidence: event.target.value })} placeholder="Print, áudio/resumo do cliente, aparelho e tela afetada." rows={2} /></label>
+                <label>Observação<textarea value={item.notes} onChange={(event) => updateClientImprovement(item.id, { notes: event.target.value })} placeholder="O que foi combinado e próximo passo." rows={2} /></label>
+              </div>
+              <button type="button" className="mapp-secondary-button" onClick={() => deleteClientImprovement(item.id)}>Remover melhoria</button>
+            </article>
+          )) : <div className="mapp-success-card"><strong>Nenhuma melhoria registrada</strong><p>Depois de ouvir o cliente, registre aqui a dor, prioridade, responsável e evidência.</p></div>}
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyClientFeedback()}>Copiar relatório de feedback</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetClientFeedback}>Zerar feedback</button>
+        </div>
+        <small className="mapp-final-honesty">NPS baixo ou melhoria P0/P1 aberta não bloqueia navegar, mas deve virar próximo lote antes de prometer estabilidade total ao cliente.</small>
       </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
@@ -3055,7 +3457,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v137 suporte</strong></span>
+          <span><b>Cache</b><strong>v138 suporte</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -3103,7 +3505,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a proposta comercial v137, a execução real assistida e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use feedback/NPS v138, proposta comercial, execução real assistida e Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>
