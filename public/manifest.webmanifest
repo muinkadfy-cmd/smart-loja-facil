@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v159",
-  "short_name": "Smart Loja v159",
-  "description": "Smart Loja Fácil PWA mobile-first v159 com crediário expansível, comprovantes por nota e por parcela e impressão 58/80/A4.",
+  "name": "Smart Loja Fácil PWA v160",
+  "short_name": "Smart Loja v160",
+  "description": "Smart Loja Fácil PWA mobile-first v160 com comprovantes premium, logo, status forte e visualização para iPhone.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

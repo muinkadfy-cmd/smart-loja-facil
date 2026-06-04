@@ -22,6 +22,7 @@ export interface Settings {
   whatsapp: string;
   address: string;
   receipt_message: string;
+  logo_url?: string;
   low_stock_limit: number;
   slow_mode: boolean;
   admin_password_enabled: boolean;
@@ -69,7 +70,7 @@ export interface Product {
 }
 
 export interface SaleSummary {
-  id: string; number: number; customer_name: string; payment_method: PaymentMethod; total: number; status: string; created_at: string;
+  id: string; number: number; customer_name: string; payment_method: PaymentMethod; total: number; status: string; created_at: string; thumbnail_url?: string; first_product_name?: string; item_count?: number;
 }
 
 export interface CreditSummary {

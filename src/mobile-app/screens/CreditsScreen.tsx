@@ -9,7 +9,7 @@ import {
   type CreditPaymentMethod,
   type CreditPaymentReview,
 } from '../../lib/creditPaymentGuard';
-import type { AppStatus, CreditInstallment, CreditSummary, PageKey } from '../../types';
+import type { AppStatus, CreditInstallment, CreditSummary, PageKey, Settings } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
@@ -114,39 +114,104 @@ function creditPaidTotal(credit: CreditSummary): number {
   return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
 }
 
+type ReceiptStoreInfo = Pick<Settings, 'store_name' | 'phone' | 'whatsapp' | 'receipt_message'> & { logo_url?: string };
+
+type ReceiptStatusTone = 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' | 'neutral';
+
+function receiptInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? 'L';
+  const second = parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1];
+  return `${first ?? 'L'}${second ?? 'J'}`.toUpperCase();
+}
+
+function normalizeReceiptStore(settings: Settings | null | undefined): ReceiptStoreInfo {
+  const source = settings as (Settings & { logo_url?: string }) | null | undefined;
+  const name = source?.store_name?.trim() || 'Minha loja';
+  return {
+    store_name: name,
+    phone: source?.phone?.trim() || '',
+    whatsapp: source?.whatsapp?.trim() || '',
+    receipt_message: source?.receipt_message?.trim() || 'Obrigado pela preferência.',
+    logo_url: source?.logo_url?.trim() || '',
+  };
+}
+
+function dueDateLabel(installment: CreditInstallment): string {
+  const dueDate = new Date(`${installment.due_date}T00:00:00`);
+  if (Number.isNaN(dueDate.getTime())) return '';
+  const days = Math.floor((startOfToday().getTime() - dueDate.getTime()) / 86400000);
+  if (days > 0 && installmentStatusLabel(installment).toLowerCase().includes('venc')) return `Vencida há ${formatNumber(days)} dia(s)`;
+  return '';
+}
+
+function statusReceiptTone(label: string): ReceiptStatusTone {
+  const lower = label.toLowerCase();
+  if (lower.includes('paga') || lower.includes('quit')) return 'paid';
+  if (lower.includes('venc')) return 'overdue';
+  if (lower.includes('parcial')) return 'partial';
+  if (lower.includes('pend')) return 'pending';
+  if (lower.includes('cancel')) return 'danger';
+  return 'neutral';
+}
+
+function buildReceiptBrand(store: ReceiptStoreInfo): string {
+  const name = store.store_name || 'Minha loja';
+  const contact = [store.phone, store.whatsapp && store.whatsapp !== store.phone ? store.whatsapp : ''].filter(Boolean).join(' · ');
+  const logo = store.logo_url
+    ? `<img class="slf-logo-img" src="${escapeHtml(store.logo_url)}" alt="Logo da loja">`
+    : `<span class="slf-logo-initials">${escapeHtml(receiptInitials(name))}</span>`;
+  return `<div class="slf-brand">${logo}<div><div class="slf-title">${escapeHtml(name)}</div>${contact ? `<div class="slf-contact">${escapeHtml(contact)}</div>` : ''}</div></div>`;
+}
+
 function buildReceiptStyles(): string {
   return `
     <style>
       *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      :root{color-scheme:light}
       body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif}
-      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:18px;padding:18px;border:1px solid #e5e7eb;box-shadow:0 14px 36px rgba(15,23,42,.10)}
-      .slf-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:12px;margin-bottom:12px}
-      .slf-title{font-size:18px;font-weight:900}.slf-sub{font-size:12px;color:#64748b;margin-top:3px}.slf-badge{border-radius:999px;padding:7px 10px;background:#111827;color:#fff;font-size:12px;font-weight:900;white-space:nowrap}
-      .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.slf-info{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#f8fafc}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:14px;color:#111827;word-break:break-word}
-      table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border-bottom:1px solid #e5e7eb;padding:8px 6px;text-align:left;vertical-align:top}th{color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.02em}.num{text-align:right;white-space:nowrap}.status-ok{color:#047857;font-weight:900}.status-warn{color:#b45309;font-weight:900}.status-danger{color:#b91c1c;font-weight:900}.slf-note{margin-top:12px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;padding:10px;color:#9a3412;font-size:12px;line-height:1.4}.slf-total{display:flex;justify-content:space-between;gap:10px;border-radius:14px;background:#111827;color:#fff;padding:12px;margin-top:12px;font-weight:900}.slf-footer{margin-top:14px;color:#64748b;font-size:11px;text-align:center}
+      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12)}
+      .slf-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
+      .slf-brand{display:flex;gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;word-break:break-word}.slf-contact{font-size:11px;color:#64748b;margin-top:3px}.slf-sub{font-size:12px;color:#64748b;margin-top:4px}.slf-badge{border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:nowrap;border:1px solid #e2e8f0}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
+      .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;word-break:break-word}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
+      table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border-bottom:1px solid #e5e7eb;padding:9px 6px;text-align:left;vertical-align:top}th{color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.02em}.num{text-align:right;white-space:nowrap}.status-paid{color:#047857;font-weight:950}.status-partial{color:#b45309;font-weight:950}.status-pending{color:#1d4ed8;font-weight:950}.status-overdue,.status-danger{color:#b91c1c;font-weight:950}.slf-note{margin-top:12px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;padding:11px;color:#9a3412;font-size:12px;line-height:1.45}.slf-note.danger{background:#fef2f2;border-color:#fecaca;color:#991b1b}.slf-note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.slf-total{display:flex;justify-content:space-between;gap:10px;border-radius:14px;background:#111827;color:#fff;padding:12px;margin-top:10px;font-weight:950}.slf-footer{margin-top:14px;color:#64748b;font-size:11px;text-align:center}.slf-print-tip{margin-top:10px;border:1px dashed #cbd5e1;border-radius:12px;padding:9px;color:#475569;font-size:11px;text-align:center}
       @media print{body{background:#fff}.slf-receipt{box-shadow:none;border-radius:0;border:0}.no-print{display:none!important}}
-      @media (max-width:560px){.slf-receipt{border-radius:0;padding:14px}.slf-grid{grid-template-columns:1fr}.slf-head{align-items:flex-start}.slf-badge{font-size:11px;padding:6px 8px}table{font-size:11px}th,td{padding:7px 4px}}
+      @media (max-width:560px){.slf-receipt{border-radius:0;padding:14px}.slf-grid,.slf-kpis{grid-template-columns:1fr}.slf-head{align-items:flex-start}.slf-logo-img,.slf-logo-initials{width:44px;height:44px;border-radius:14px}.slf-title{font-size:17px}.slf-badge{font-size:11px;padding:7px 9px}table{font-size:11px}th,td{padding:7px 4px}}
     </style>`;
 }
 
-function buildInstallmentReceiptHtml(storeName: string, credit: CreditSummary, installment: CreditInstallment): string {
+function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary, installment: CreditInstallment): string {
   const paid = paidOf(installment);
   const rest = remainingOf(installment);
   const status = installmentStatusLabel(installment);
-  const tone = installmentStatusTone(installment);
+  const tone = statusReceiptTone(status);
   const paidDate = installment.paid_at ? formatDateTime(installment.paid_at) : 'Ainda não pago';
   const method = installment.payment_method ? creditPaymentMethodLabel(String(installment.payment_method)) : 'Não informado';
+  const dueHint = dueDateLabel(installment);
+  const noteClass = tone === 'paid' ? 'ok' : tone === 'overdue' ? 'danger' : '';
+  const noteText = tone === 'paid'
+    ? `Parcela quitada. Restante desta parcela: ${formatCurrency(0)}.`
+    : tone === 'partial'
+      ? `Pagamento parcial recebido. Ainda falta ${formatCurrency(rest)} nesta parcela.`
+      : tone === 'overdue'
+        ? `Atenção: esta parcela está atrasada. ${dueHint || 'Confira o vencimento e combine o recebimento com o cliente.'}`
+        : 'Esta parcela ainda está em aberto. Envie este comprovante para o cliente acompanhar vencimento e saldo.';
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Parcela ${installment.number}/${credit.installments.length}</title>${buildReceiptStyles()}</head><body>
     <main class="slf-receipt">
       <header class="slf-head">
-        <div><div class="slf-title">${escapeHtml(storeName || 'Smart Loja Fácil')}</div><div class="slf-sub">Comprovante de parcela do crediário</div></div>
-        <strong class="slf-badge">${escapeHtml(status.toUpperCase())}</strong>
+        <div>${buildReceiptBrand(store)}<div class="slf-sub">Comprovante individual da parcela do crediário</div></div>
+        <strong class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</strong>
       </header>
       <section class="slf-grid">
         <div class="slf-info"><span>Cliente</span><strong>${escapeHtml(credit.customer_name || 'Cliente')}</strong></div>
         <div class="slf-info"><span>Venda / nota</span><strong>#${String(credit.sale_number || 0).padStart(4, '0')}</strong></div>
         <div class="slf-info"><span>Parcela</span><strong>${installment.number}/${credit.installments.length}</strong></div>
-        <div class="slf-info"><span>Vencimento</span><strong>${escapeHtml(dateOnly(installment.due_date))}</strong></div>
+        <div class="slf-info"><span>Vencimento</span><strong>${escapeHtml(dateOnly(installment.due_date))}${dueHint ? ` · ${escapeHtml(dueHint)}` : ''}</strong></div>
+      </section>
+      <section class="slf-kpis">
+        <div class="slf-kpi light"><span>Valor original</span><strong>${formatCurrency(installment.amount)}</strong></div>
+        <div class="slf-kpi light"><span>Total já pago</span><strong>${formatCurrency(paid)}</strong></div>
+        <div class="slf-kpi"><span>Restante</span><strong>${formatCurrency(rest)}</strong></div>
       </section>
       <table aria-label="Resumo da parcela">
         <tbody>
@@ -158,50 +223,65 @@ function buildInstallmentReceiptHtml(storeName: string, credit: CreditSummary, i
           <tr><th>Data do pagamento</th><td class="num">${escapeHtml(paidDate)}</td></tr>
         </tbody>
       </table>
-      ${status.includes('Parcial') ? `<div class="slf-note">Pagamento parcial registrado. Ainda falta ${formatCurrency(rest)} nesta parcela.</div>` : ''}
-      ${status === 'Paga' ? `<div class="slf-note">Parcela quitada. Restante desta parcela: ${formatCurrency(0)}.</div>` : ''}
-      ${status === 'Pendente' || status === 'Vencida' ? `<div class="slf-note">Esta parcela ainda está em aberto. Envie este comprovante para o cliente acompanhar vencimento e saldo.</div>` : ''}
-      <div class="slf-footer">Gerado pelo Smart Loja Fácil · ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
+      <div class="slf-note ${noteClass}">${escapeHtml(noteText)}</div>
+      <div class="slf-print-tip">No iPhone, abra em tela cheia e tire print ou use Compartilhar. No Android/PC, use Imprimir / salvar PDF.</div>
+      <div class="slf-footer">${escapeHtml(store.receipt_message)}<br>Gerado por ${escapeHtml(store.store_name)} · ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
     </main></body></html>`;
 }
 
-function buildCreditGeneralReceiptHtml(storeName: string, credit: CreditSummary): string {
+function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary): string {
   const paid = creditPaidTotal(credit);
   const balance = Math.max(0, Number(credit.balance || 0));
-  const generalStatus = balance <= 0.009 ? 'Quitado' : paid > 0 ? 'Parcial' : 'Pendente';
+  const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const partialCount = credit.installments.filter((installment) => installmentStatusLabel(installment).includes('Parcial')).length;
+  const overdueCount = credit.installments.filter(isOverdue).length;
+  const nextOpen = creditOpenInstallments(credit)[0] ?? null;
+  const generalStatus = balance <= 0.009 ? 'Quitado' : overdueCount > 0 ? 'Atrasado' : paid > 0 ? 'Parcial' : 'Pendente';
+  const tone = statusReceiptTone(generalStatus);
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crediário venda ${credit.sale_number}</title>${buildReceiptStyles()}</head><body>
     <main class="slf-receipt">
       <header class="slf-head">
-        <div><div class="slf-title">${escapeHtml(storeName || 'Smart Loja Fácil')}</div><div class="slf-sub">Resumo geral do crediário / nota</div></div>
-        <strong class="slf-badge">${escapeHtml(generalStatus.toUpperCase())}</strong>
+        <div>${buildReceiptBrand(store)}<div class="slf-sub">Extrato completo do crediário / nota inteira</div></div>
+        <strong class="slf-badge ${tone}">${escapeHtml(generalStatus.toUpperCase())}</strong>
       </header>
       <section class="slf-grid">
         <div class="slf-info"><span>Cliente</span><strong>${escapeHtml(credit.customer_name || 'Cliente')}</strong></div>
         <div class="slf-info"><span>Venda / nota</span><strong>#${String(credit.sale_number || 0).padStart(4, '0')}</strong></div>
-        <div class="slf-info"><span>Valor original</span><strong>${formatCurrency(credit.total)}</strong></div>
-        <div class="slf-info"><span>Total restante</span><strong>${formatCurrency(balance)}</strong></div>
+        <div class="slf-info"><span>Quantidade de parcelas</span><strong>${credit.installments.length}</strong></div>
+        <div class="slf-info"><span>Próximo vencimento</span><strong>${nextOpen ? `${dateOnly(nextOpen.due_date)} · ${formatCurrency(remainingOf(nextOpen))}` : 'Sem parcelas em aberto'}</strong></div>
+      </section>
+      <section class="slf-kpis">
+        <div class="slf-kpi light"><span>Total da nota</span><strong>${formatCurrency(credit.total)}</strong></div>
+        <div class="slf-kpi light"><span>Total pago</span><strong>${formatCurrency(paid)}</strong></div>
+        <div class="slf-kpi"><span>Total restante</span><strong>${formatCurrency(balance)}</strong></div>
       </section>
       <table aria-label="Parcelas do crediário">
         <thead><tr><th>Parcela</th><th>Vencimento</th><th class="num">Original</th><th class="num">Pago</th><th class="num">Restante</th><th class="num">Status</th></tr></thead>
         <tbody>${credit.installments.map((installment) => {
-          const tone = installmentStatusTone(installment);
-          return `<tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td class="num">${formatCurrency(paidOf(installment))}</td><td class="num">${formatCurrency(remainingOf(installment))}</td><td class="num status-${tone}">${escapeHtml(installmentStatusLabel(installment))}</td></tr>`;
+          const label = installmentStatusLabel(installment);
+          const rowTone = statusReceiptTone(label);
+          return `<tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td class="num">${formatCurrency(paidOf(installment))}</td><td class="num">${formatCurrency(remainingOf(installment))}</td><td class="num status-${rowTone}">${escapeHtml(label)}</td></tr>`;
         }).join('')}</tbody>
       </table>
-      <div class="slf-total"><span>Total pago</span><strong>${formatCurrency(paid)}</strong></div>
-      <div class="slf-total"><span>Total restante</span><strong>${formatCurrency(balance)}</strong></div>
-      <div class="slf-note">Este comprovante mostra a situação da nota inteira. Para enviar só uma parcela, use o botão Enviar na linha da parcela.</div>
-      <div class="slf-footer">Gerado pelo Smart Loja Fácil · ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
+      <div class="slf-total"><span>Parcelas pagas</span><strong>${paidCount}/${credit.installments.length}</strong></div>
+      <div class="slf-total"><span>Parciais / atrasadas</span><strong>${partialCount} parcial · ${overdueCount} vencida(s)</strong></div>
+      <div class="slf-note">Este extrato mostra a nota inteira. Para enviar só uma parcela, use o botão Enviar na linha da parcela.</div>
+      <div class="slf-print-tip">No iPhone, use Visualizar/print para abrir a tela limpa e tirar print. No Android/PC, use Imprimir / salvar PDF.</div>
+      <div class="slf-footer">${escapeHtml(store.receipt_message)}<br>Gerado por ${escapeHtml(store.store_name)} · ${escapeHtml(formatDateTime(new Date().toISOString()))}</div>
     </main></body></html>`;
 }
 
 function creditGeneralShareText(credit: CreditSummary): string {
+  const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const overdueCount = credit.installments.filter(isOverdue).length;
   const lines = [
-    `Crediário · Venda #${String(credit.sale_number || 0).padStart(4, '0')}`,
+    `Extrato do crediário · Venda #${String(credit.sale_number || 0).padStart(4, '0')}`,
     `Cliente: ${credit.customer_name || 'Cliente'}`,
     `Valor original: ${formatCurrency(credit.total)}`,
     `Pago: ${formatCurrency(creditPaidTotal(credit))}`,
     `Restante: ${formatCurrency(credit.balance)}`,
+    `Parcelas pagas: ${paidCount}/${credit.installments.length}`,
+    overdueCount ? `Atenção: ${overdueCount} parcela(s) vencida(s).` : 'Sem parcela vencida neste extrato.',
     'Parcelas:',
     ...credit.installments.map((installment) => `- ${installment.number}/${credit.installments.length}: ${installmentStatusLabel(installment)} · original ${formatCurrency(installment.amount)} · pago ${formatCurrency(paidOf(installment))} · restante ${formatCurrency(remainingOf(installment))}`),
   ];
@@ -209,11 +289,12 @@ function creditGeneralShareText(credit: CreditSummary): string {
 }
 
 function installmentShareText(credit: CreditSummary, installment: CreditInstallment): string {
+  const dueHint = dueDateLabel(installment);
   return [
     `Comprovante de parcela ${installment.number}/${credit.installments.length}`,
     `Venda #${String(credit.sale_number || 0).padStart(4, '0')}`,
     `Cliente: ${credit.customer_name || 'Cliente'}`,
-    `Vencimento: ${dateOnly(installment.due_date)}`,
+    `Vencimento: ${dateOnly(installment.due_date)}${dueHint ? ` (${dueHint})` : ''}`,
     `Valor original: ${formatCurrency(installment.amount)}`,
     `Pago: ${formatCurrency(paidOf(installment))}`,
     `Restante: ${formatCurrency(remainingOf(installment))}`,
@@ -233,7 +314,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
 
-  const storeName = status?.settings.store_name || 'Smart Loja Fácil';
+  const receiptStore = useMemo(() => normalizeReceiptStore(status?.settings), [status?.settings]);
 
   const loadCredits = async () => {
     setLoading(true);
@@ -388,7 +469,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   async function exportCreditReceipt(credit: CreditSummary, format: CreditPrintFormat): Promise<void> {
     setSaving(true);
     try {
-      await api.exportHtmlPdf(buildCreditGeneralReceiptHtml(storeName, credit), `crediario-nota-${credit.sale_number || credit.id}`, true, undefined, format);
+      await api.exportHtmlPdf(buildCreditGeneralReceiptHtml(receiptStore, credit), `crediario-nota-${credit.sale_number || credit.id}`, true, undefined, format);
       setFeedback({ tone: 'success', text: `Comprovante geral ${format === 'a4' ? 'A4/PDF' : format} aberto para imprimir ou enviar.` });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -400,7 +481,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   async function exportInstallmentReceipt(credit: CreditSummary, installment: CreditInstallment, format: CreditPrintFormat): Promise<void> {
     setSaving(true);
     try {
-      await api.exportHtmlPdf(buildInstallmentReceiptHtml(storeName, credit, installment), `crediario-${credit.sale_number}-parcela-${installment.number}`, true, undefined, format);
+      await api.exportHtmlPdf(buildInstallmentReceiptHtml(receiptStore, credit, installment), `crediario-${credit.sale_number}-parcela-${installment.number}`, true, undefined, format);
       setFeedback({ tone: 'success', text: `Comprovante da parcela ${installment.number}/${credit.installments.length} aberto em ${format === 'a4' ? 'A4/PDF' : format}.` });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -430,13 +511,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   }
 
   async function shareCreditReceipt(credit: CreditSummary): Promise<void> {
-    const html = buildCreditGeneralReceiptHtml(storeName, credit);
+    const html = buildCreditGeneralReceiptHtml(receiptStore, credit);
     const text = `${creditGeneralShareText(credit)}\n\n${htmlToText(html).slice(0, 500)}`;
     await shareText(text, credit.customer_whatsapp || credit.customer_phone || '', `Crediário venda #${credit.sale_number}`);
   }
 
   async function shareInstallmentReceipt(credit: CreditSummary, installment: CreditInstallment): Promise<void> {
-    const html = buildInstallmentReceiptHtml(storeName, credit, installment);
+    const html = buildInstallmentReceiptHtml(receiptStore, credit, installment);
     const text = `${installmentShareText(credit, installment)}\n\n${htmlToText(html).slice(0, 400)}`;
     await shareText(text, credit.customer_whatsapp || credit.customer_phone || '', `Parcela ${installment.number}/${credit.installments.length}`);
   }
@@ -594,10 +675,11 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <div><span>Contato</span><strong>{credit.customer_whatsapp || credit.customer_phone || '-'}</strong></div>
                 </div>
                 <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, '58mm')} disabled={saving}>Nota 58mm</button>
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, '80mm')} disabled={saving}>Nota 80mm</button>
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Nota A4</button>
-                  <button type="button" onClick={() => void shareCreditReceipt(credit)} disabled={saving}>Enviar nota</button>
+                  <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Visualizar/print</button>
+                  <button type="button" onClick={() => void exportCreditReceipt(credit, '58mm')} disabled={saving}>Extrato 58mm</button>
+                  <button type="button" onClick={() => void exportCreditReceipt(credit, '80mm')} disabled={saving}>Extrato 80mm</button>
+                  <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Extrato A4</button>
+                  <button type="button" onClick={() => void shareCreditReceipt(credit)} disabled={saving}>Enviar extrato</button>
                 </div>
                 <div className="mapp-installment-list">
                   {visibleInstallments.map((installment) => {
@@ -617,6 +699,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                         <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                         <div className="mapp-installment-actions">
                           {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? <button type="button" onClick={() => openReceive(credit, installment)}>Receber</button> : null}
+                          <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>Ver/print</button>
                           <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, '58mm')} disabled={saving}>58</button>
                           <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, '80mm')} disabled={saving}>80</button>
                           <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>A4</button>
