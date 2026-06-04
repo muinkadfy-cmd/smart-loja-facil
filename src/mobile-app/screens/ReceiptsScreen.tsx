@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { creditPaymentMethodLabel, remainingInstallmentAmount } from '../../lib/creditPaymentGuard';
 import type { AppStatus, CreditInstallment, CreditSummary, PageKey, ReceiptSummary, Settings } from '../../types';
@@ -20,6 +20,8 @@ type ReceiptVisualTone = 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' |
 type ReceiptFilter = 'todos' | 'vendas' | 'crediario' | 'parcelas' | 'pedidos' | 'caixa' | 'cancelados';
 type ReceiptPreviewKind = 'salvo' | 'nota' | 'parcela';
 type ReceiptStoreInfo = Pick<Settings, 'store_name' | 'phone' | 'whatsapp' | 'receipt_message'> & { logo_url?: string };
+
+const DEFAULT_RECEIPT_LOGO_URL = '/brand/jaque-logo-premium.png';
 
 type ReceiptView = ReceiptSummary & {
   source_kind?: ReceiptFilter;
@@ -58,6 +60,10 @@ const receiptFilters: Array<{ key: ReceiptFilter; label: string }> = [
   { key: 'caixa', label: 'Caixa' },
   { key: 'cancelados', label: 'Cancelados' },
 ];
+
+const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
+
+type ReceiptFocusPayload = { sale_number?: number; credit_id?: string; created_at?: number };
 
 function receiptTitle(receipt: ReceiptView): string {
   if (receipt.source_kind === 'parcelas') return `Parcela ${receipt.installment_number || ''}/${receipt.installment_total || ''} · Venda #${String(receipt.sale_number || 0).padStart(4, '0')}`;
@@ -107,6 +113,178 @@ function escapeHtml(value: unknown): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function openHtmlDocument(html: string, fileStem: string): 'opened' | 'downloaded' {
+  const safeName = `${fileStem || 'comprovante'}.html`.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-');
+  const documentHtml = html || '<!doctype html><html lang="pt-BR"><body><p>Comprovante sem prévia HTML salva.</p></body></html>';
+  const blob = new Blob([documentHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const cleanup = () => window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+
+  const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  if (popup) {
+    cleanup();
+    window.setTimeout(() => { try { popup.focus(); } catch { /* sem ação */ } }, 80);
+    return 'opened';
+  }
+
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  anchor.download = safeName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  cleanup();
+  return 'downloaded';
+}
+
+function wrapPdfLines(text: string, max = 84): string[] {
+  const normalized = text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E\n]/g, ' ')
+    .replace(/[ 	]+/g, ' ')
+    .trim();
+  const lines: string[] = [];
+  for (const sourceLine of normalized.split(/\n+/)) {
+    let line = sourceLine.trim();
+    while (line.length > max) {
+      const cut = line.slice(0, max + 1).lastIndexOf(' ');
+      const index = cut > 24 ? cut : max;
+      lines.push(line.slice(0, index).trim());
+      line = line.slice(index).trim();
+    }
+    if (line) lines.push(line);
+  }
+  return lines.slice(0, 54);
+}
+
+function pdfEscape(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+const PDF_LOGO_JPEG_BASE64 = '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';
+const PDF_LOGO_SIZE = 96;
+
+function asciiBytes(value: string): Uint8Array {
+  const bytes = new Uint8Array(value.length);
+  for (let index = 0; index < value.length; index += 1) bytes[index] = value.charCodeAt(index) & 0xff;
+  return bytes;
+}
+
+function base64Bytes(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index) & 0xff;
+  return bytes;
+}
+
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const output = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    output.set(part, offset);
+    offset += part.length;
+  }
+  return output;
+}
+
+function downloadPreviewPdf(preview: ReceiptPreview): string {
+  const title = `${preview.title} - ${preview.customer}`;
+  const bodyText = htmlToText(preview.html);
+  const lines = wrapPdfLines([
+    title,
+    `Status: ${preview.status}`,
+    `Total: ${formatCurrency(preview.total)}`,
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    '',
+    bodyText,
+  ].join('\n'), 88);
+  const contentLines = [
+    'q',
+    '58 0 0 58 48 748 cm',
+    '/Logo Do',
+    'Q',
+    'BT',
+    '/F1 18 Tf',
+    '118 798 Td',
+    `(${pdfEscape('Smart Loja Facil')}) Tj`,
+    '/F1 10 Tf',
+    '0 -16 Td',
+    `(${pdfEscape('Comprovante / extrato em PDF')}) Tj`,
+    'ET',
+    'BT',
+    '/F1 11 Tf',
+    '48 718 Td',
+    '14 TL',
+  ];
+  for (const line of lines) contentLines.push(`(${pdfEscape(line)}) Tj`, 'T*');
+  contentLines.push('ET');
+  const stream = contentLines.join('\n');
+  const streamBytes = asciiBytes(stream);
+  const logoBytes = base64Bytes(PDF_LOGO_JPEG_BASE64);
+  const objects: Uint8Array[][] = [
+    [asciiBytes('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n')],
+    [asciiBytes('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n')],
+    [asciiBytes('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> /XObject << /Logo 6 0 R >> >> /Contents 5 0 R >>\nendobj\n')],
+    [asciiBytes('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n')],
+    [asciiBytes(`5 0 obj\n<< /Length ${streamBytes.length} >>\nstream\n`), streamBytes, asciiBytes('\nendstream\nendobj\n')],
+    [
+      asciiBytes(`6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PDF_LOGO_SIZE} /Height ${PDF_LOGO_SIZE} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`),
+      logoBytes,
+      asciiBytes('\nendstream\nendobj\n'),
+    ],
+  ];
+  const parts: Uint8Array[] = [asciiBytes('%PDF-1.4\n% Smart Loja Facil\n')];
+  const offsets = [0];
+  let currentLength = parts[0].length;
+  for (const objectParts of objects) {
+    offsets.push(currentLength);
+    for (const objectPart of objectParts) {
+      parts.push(objectPart);
+      currentLength += objectPart.length;
+    }
+  }
+  const xrefAt = currentLength;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index <= objects.length; index += 1) xref += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`;
+  parts.push(asciiBytes(xref));
+  const fileName = `${preview.fileStem || 'comprovante'}.pdf`.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-');
+  const pdfBytes = concatBytes(parts);
+  const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+  const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return fileName;
+}
+
+function readReceiptFocusPayload(): ReceiptFocusPayload | null {
+  try {
+    const raw = window.localStorage.getItem(RECEIPTS_FOCUS_SALE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ReceiptFocusPayload;
+    if (!parsed || typeof parsed !== 'object') return null;
+    const createdAt = Number(parsed.created_at || 0);
+    if (createdAt && Date.now() - createdAt > 10 * 60 * 1000) {
+      window.localStorage.removeItem(RECEIPTS_FOCUS_SALE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 function htmlToText(html: string): string {
@@ -199,15 +377,16 @@ function normalizeReceiptStore(settings: Settings | null | undefined): ReceiptSt
     phone: source?.phone?.trim() || '',
     whatsapp: source?.whatsapp?.trim() || '',
     receipt_message: source?.receipt_message?.trim() || 'Obrigado pela preferência.',
-    logo_url: source?.logo_url?.trim() || '',
+    logo_url: source?.logo_url?.trim() || DEFAULT_RECEIPT_LOGO_URL,
   };
 }
 
 function buildReceiptBrand(store: ReceiptStoreInfo): string {
   const name = store.store_name || 'Minha loja';
   const contact = [store.phone, store.whatsapp && store.whatsapp !== store.phone ? store.whatsapp : ''].filter(Boolean).join(' · ');
-  const logo = store.logo_url
-    ? `<img class="slf-logo-img" src="${escapeHtml(store.logo_url)}" alt="Logo da loja">`
+  const logoUrl = store.logo_url || DEFAULT_RECEIPT_LOGO_URL;
+  const logo = logoUrl
+    ? `<img class="slf-logo-img" src="${escapeHtml(logoUrl)}" alt="Logo da loja">`
     : `<span class="slf-logo-initials">${escapeHtml(customerInitials(name))}</span>`;
   return `<div class="slf-brand">${logo}<div><div class="slf-title">${escapeHtml(name)}</div>${contact ? `<div class="slf-contact">${escapeHtml(contact)}</div>` : ''}</div></div>`;
 }
@@ -221,7 +400,7 @@ function buildReceiptStyles(): string {
       .slf-mode-tip{margin:0 auto 12px;max-width:920px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:900;text-align:center;line-height:1.35}
       .slf-receipt{width:100%;max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12);overflow:hidden}
       .slf-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
-      .slf-brand{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;overflow-wrap:break-word;word-break:normal;hyphens:none}.slf-contact{font-size:11px;color:#64748b;margin-top:3px;overflow-wrap:anywhere}.slf-sub{font-size:12px;color:#64748b;margin-top:4px;line-height:1.35}.slf-badge{justify-self:end;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:normal;text-align:center;line-height:1.15;border:1px solid #e2e8f0;max-width:260px}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
+      .slf-brand{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:58px;height:58px;border-radius:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#fff1f8;border:1px solid #f9a8d4;color:#be185d;font-weight:900;object-fit:cover;padding:2px;box-shadow:0 10px 22px rgba(190,24,93,.16)}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;overflow-wrap:break-word;word-break:normal;hyphens:none}.slf-contact{font-size:11px;color:#64748b;margin-top:3px;overflow-wrap:anywhere}.slf-sub{font-size:12px;color:#64748b;margin-top:4px;line-height:1.35}.slf-badge{justify-self:end;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:normal;text-align:center;line-height:1.15;border:1px solid #e2e8f0;max-width:260px}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
       .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc;min-width:0}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;overflow-wrap:anywhere}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px;min-width:0}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
       table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border-bottom:1px solid #e5e7eb;padding:9px 6px;text-align:left;vertical-align:top}th{color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.02em}.num{text-align:right;white-space:nowrap}.status-paid{color:#047857;font-weight:950}.status-partial{color:#b45309;font-weight:950}.status-pending{color:#1d4ed8;font-weight:950}.status-overdue,.status-danger{color:#b91c1c;font-weight:950}.slf-note{margin-top:12px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;padding:11px;color:#9a3412;font-size:12px;line-height:1.45}.slf-note.danger{background:#fef2f2;border-color:#fecaca;color:#991b1b}.slf-note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.slf-total{display:flex;justify-content:space-between;gap:10px;border-radius:14px;background:#111827;color:#fff;padding:12px;margin-top:10px;font-weight:950}.slf-footer{margin-top:14px;color:#64748b;font-size:11px;text-align:center}.slf-print-tip{margin-top:10px;border:1px dashed #cbd5e1;border-radius:12px;padding:9px;color:#475569;font-size:11px;text-align:center}
       @media (max-width:720px){body{padding:0;background:#eef4fb}.slf-mode-tip{border-radius:0;margin:0;padding:10px 12px}.slf-receipt{border-radius:0;padding:14px;border-inline:0;box-shadow:none}.slf-head{grid-template-columns:1fr;gap:10px}.slf-brand{grid-template-columns:44px minmax(0,1fr);align-items:start}.slf-logo-img,.slf-logo-initials{width:44px;height:44px;border-radius:14px}.slf-title{font-size:17px;line-height:1.08}.slf-badge{justify-self:start;max-width:100%;font-size:11px;padding:8px 10px}.slf-grid,.slf-kpis{grid-template-columns:1fr}.slf-kpi strong{font-size:17px}table,thead,tbody,tr,th,td{display:block;width:100%}thead{display:none}tr{border:1px solid #e5e7eb;border-radius:14px;margin:8px 0;padding:6px;background:#fff}td{display:flex;justify-content:space-between;gap:12px;border:0;border-bottom:1px solid #eef2f7;padding:7px 4px;text-align:right;white-space:normal}td:last-child{border-bottom:0}td::before{content:attr(data-label);font-weight:900;color:#64748b;text-align:left;white-space:normal}.num{text-align:right;white-space:normal}}
@@ -281,6 +460,37 @@ function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSumm
       <div class="slf-note ${noteClass}">${escapeHtml(noteText)}</div>
       <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
       <div class="slf-print-tip">No iPhone, abra em tela cheia e tire print ou use Compartilhar. No Android/PC, use Imprimir / salvar PDF.</div>
+    </main></body></html>`;
+}
+
+function savedReceiptHtmlBody(html: string): string {
+  const source = html || '<p>Comprovante sem conteúdo salvo.</p>';
+  const match = source.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  return match?.[1] || source;
+}
+
+function buildSavedReceiptHtml(store: ReceiptStoreInfo, receipt: ReceiptView): string {
+  const status = receiptStatusLabel(receipt.status);
+  const tone = receiptStatusTone(status);
+  const body = savedReceiptHtmlBody(receipt.content || '').replace(/<script[\s\S]*?<\/script>/gi, '');
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(receiptTitle(receipt))}</title>${buildReceiptStyles()}</head><body>
+    <div class="slf-mode-tip">Comprovante de venda/caixa com logo, dados da loja, total e status.</div><main class="slf-receipt">
+      <header class="slf-head">
+        <div>${buildReceiptBrand(store)}<div class="slf-sub">Comprovante de venda / reimpressão</div></div>
+        <strong class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</strong>
+      </header>
+      <section class="slf-grid">
+        <div class="slf-info"><span>Cliente</span><strong>${escapeHtml(receipt.customer_name || 'Consumidor')}</strong></div>
+        <div class="slf-info"><span>Venda / nota</span><strong>#${String(receipt.sale_number || 0).padStart(4, '0')}</strong></div>
+        <div class="slf-info"><span>Data</span><strong>${escapeHtml(formatDateTime(receipt.created_at))}</strong></div>
+        <div class="slf-info"><span>Total</span><strong>${formatCurrency(receipt.total)}</strong></div>
+      </section>
+      <section class="slf-kpis">
+        <div class="slf-kpi"><span>Total do comprovante</span><strong>${formatCurrency(receipt.total)}</strong></div>
+      </section>
+      <div class="slf-note">${body}</div>
+      <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
+      <div class="slf-print-tip">Use Visualizar para abrir em tela limpa ou Baixar PDF para gerar o arquivo.</div>
     </main></body></html>`;
 }
 
@@ -394,6 +604,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [focusHandled, setFocusHandled] = useState(false);
+  const previewPanelRef = useRef<HTMLElement | null>(null);
 
   const receiptStore = useMemo(() => normalizeReceiptStore(status?.settings), [status?.settings]);
 
@@ -505,7 +717,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       createdAt: receipt.created_at,
       total: Number(receipt.total || 0),
       status: receiptStatusLabel(receipt.status),
-      html: receipt.content || `<section class="slf-receipt"><h1>${escapeHtml(receiptTitle(receipt))}</h1><p>${escapeHtml(receipt.customer_name || 'Consumidor')} - ${formatCurrency(receipt.total)}</p></section>`,
+      html: buildSavedReceiptHtml(receiptStore, receipt),
       phone: receipt.customer_whatsapp || '',
       fileStem: `comprovante-${receipt.sale_number || receipt.id}`,
     };
@@ -544,11 +756,60 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     };
   }
 
+  useEffect(() => {
+    if (focusHandled || !credits.length) return;
+    const focus = readReceiptFocusPayload();
+    if (!focus) {
+      setFocusHandled(true);
+      return;
+    }
+
+    const targetCredit = credits.find((credit) => (focus.credit_id && credit.id === focus.credit_id) || (focus.sale_number && Number(credit.sale_number) === Number(focus.sale_number)));
+    if (!targetCredit) {
+      setFocusHandled(true);
+      window.localStorage.removeItem(RECEIPTS_FOCUS_SALE_KEY);
+      setFeedback({ tone: 'info', text: 'Abri a aba Comprovantes, mas não encontrei essa nota. Use a busca pelo cliente ou número da venda.' });
+      return;
+    }
+
+    setFilter('crediario');
+    setQuery(String(targetCredit.sale_number || ''));
+    const customerName = targetCredit.customer_name?.trim() || 'Cliente sem nome';
+    const contact = targetCredit.customer_whatsapp || targetCredit.customer_phone || '';
+    const customerKey = `${customerName.toLowerCase()}|${contact}`;
+    setExpandedCustomers((current) => ({ ...current, [customerKey]: true }));
+    setExpandedCredits((current) => ({ ...current, [targetCredit.id]: true }));
+    selectPreview(creditPreview(targetCredit));
+    setFeedback({ tone: 'success', text: `Extrato da venda #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberto em Comprovantes. Toque em Visualizar ou Baixar PDF.` });
+    window.localStorage.removeItem(RECEIPTS_FOCUS_SALE_KEY);
+    setFocusHandled(true);
+  }, [credits, focusHandled, receiptStore]);
+
+  function scrollToPreviewPanel(): void {
+    window.setTimeout(() => previewPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  }
+
+  function selectPreview(preview: ReceiptPreview): void {
+    setSelected(preview);
+    scrollToPreviewPanel();
+  }
+
+  function selectAndOpenPreview(preview: ReceiptPreview): void {
+    selectPreview(preview);
+    openFullPreview(preview);
+  }
+
+  useEffect(() => {
+    if (selected) scrollToPreviewPanel();
+  }, [selected?.id]);
+
   async function exportPreview(preview: ReceiptPreview, printFormat: ReceiptPrintFormat = 'a4'): Promise<void> {
     setSaving(true);
     try {
+      selectPreview(preview);
+      const fileName = downloadPreviewPdf(preview);
       await api.exportHtmlPdf(preview.html, preview.fileStem, true, undefined, printFormat);
-      setFeedback({ tone: 'success', text: 'A4/PDF aberto. No iPhone, confira em tela cheia e tire print ou compartilhe.' });
+      setFeedback({ tone: 'success', text: `PDF baixado como ${fileName}. Também abri a prévia A4 para imprimir ou salvar pelo navegador.` });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -557,14 +818,13 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   }
 
   function openFullPreview(preview: ReceiptPreview): void {
-    const popup = window.open('', '_blank', 'noopener,noreferrer');
-    if (!popup) {
-      setFeedback({ tone: 'info', text: 'O navegador bloqueou a visualização. Use A4/PDF ou Compartilhar.' });
-      return;
-    }
-    popup.document.open();
-    popup.document.write(preview.html || '<p>Comprovante sem prévia HTML salva.</p>');
-    popup.document.close();
+    const result = openHtmlDocument(preview.html, `${preview.fileStem}-visualizar`);
+    setFeedback({
+      tone: result === 'opened' ? 'success' : 'info',
+      text: result === 'opened'
+        ? 'Visualização limpa aberta em nova tela. Funciona no iPhone e Android; use voltar para retornar.'
+        : 'Abri a visualização como arquivo. Se o navegador pedir, escolha Chrome ou Arquivos para visualizar.',
+    });
   }
 
   async function sharePreview(preview: ReceiptPreview): Promise<void> {
@@ -609,7 +869,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
       <section className="mapp-success-card">
         <strong>Comprovantes organizados por cliente, nota e parcela</strong>
-        <span>Agora esta aba concentra Visualizar, A4/PDF e Enviar. No iPhone, use Visualizar para abrir limpo e tirar print; 58mm/80mm foram removidos daqui para não confundir.</span>
+        <span>Agora esta aba concentra Visualizar, Baixar PDF e Enviar. O PDF baixa como arquivo .pdf e a visualização abre em iPhone e Android.</span>
       </section>
 
       <section className="mapp-filters-card mapp-receipts-filter-card">
@@ -627,7 +887,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       </section>
 
       {selected ? (
-        <section className="mapp-form-panel mapp-receipt-preview">
+        <section className="mapp-form-panel mapp-receipt-preview" ref={previewPanelRef}>
           <div className="mapp-form-head">
             <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
             <div>
@@ -647,8 +907,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
             srcDoc={selected.html || '<p>Comprovante sem prévia HTML salva.</p>'}
           />
           <div className="mapp-button-grid mapp-receipt-button-grid">
-            <button type="button" className="mapp-primary-button" onClick={() => openFullPreview(selected)}>Visualizar / print iPhone</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>A4 / PDF</button>
+            <button type="button" className="mapp-primary-button" onClick={() => openFullPreview(selected)}>Visualizar</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'Baixar PDF'}</button>
             <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected)}>Enviar / compartilhar</button>
             <button type="button" className="mapp-secondary-button" onClick={() => setSelected(null)}>Fechar prévia</button>
           </div>
@@ -706,8 +966,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                               <div><span>Parcelas</span><strong>{paidCount}/{credit.installments.length}</strong></div>
                             </div>
                             <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
-                              <button type="button" onClick={() => setSelected(creditReceipt)}>Visualizar</button>
-                              <button type="button" onClick={() => void exportPreview(creditReceipt, 'a4')} disabled={saving}>A4/PDF</button>
+                              <button type="button" onClick={() => selectAndOpenPreview(creditReceipt)}>Visualizar</button>
+                              <button type="button" onClick={() => void exportPreview(creditReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
                               <button type="button" onClick={() => void sharePreview(creditReceipt)} disabled={saving}>Enviar extrato</button>
                             </div>
                             {expanded ? (
@@ -729,8 +989,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                                       </div>
                                       <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                                       <div className="mapp-installment-actions mapp-installment-actions-slim">
-                                        <button type="button" onClick={() => setSelected(parcelReceipt)}>Visualizar</button>
-                                        <button type="button" onClick={() => void exportPreview(parcelReceipt, 'a4')} disabled={saving}>A4/PDF</button>
+                                        <button type="button" onClick={() => selectAndOpenPreview(parcelReceipt)}>Visualizar</button>
+                                        <button type="button" onClick={() => void exportPreview(parcelReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
                                         <button type="button" onClick={() => void sharePreview(parcelReceipt)} disabled={saving}>Enviar</button>
                                       </div>
                                     </div>
@@ -776,8 +1036,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                 <div className="mapp-crud-side">
                   <strong>{formatCurrency(receipt.total)}</strong>
                   <div className="mapp-receipt-actions">
-                    <button type="button" onClick={() => setSelected(preview)}>Ver</button>
-                    <button type="button" onClick={() => void exportPreview(preview, 'a4')} disabled={saving}>A4</button>
+                    <button type="button" onClick={() => selectAndOpenPreview(preview)}>Ver</button>
+                    <button type="button" onClick={() => void exportPreview(preview, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
                     <button type="button" onClick={() => void sharePreview(preview)}>Enviar</button>
                   </div>
                 </div>

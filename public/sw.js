@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v164-crediario-compacto-mobile';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v166-pdf-real-logo-mobile';
 const APP_SHELL = [
   '/',
   '/index.html',

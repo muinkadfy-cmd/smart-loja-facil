@@ -33,6 +33,8 @@ type ReceiveState = {
   redistribute: boolean;
 };
 
+const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
+
 function requestId(prefix: string): string {
   const random = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -195,6 +197,20 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   function toggleCreditExpanded(creditId: string): void {
     setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
+  }
+
+  function openReceiptsForCredit(credit: CreditSummary): void {
+    try {
+      window.localStorage.setItem(RECEIPTS_FOCUS_SALE_KEY, JSON.stringify({
+        sale_number: credit.sale_number,
+        credit_id: credit.id,
+        created_at: Date.now(),
+      }));
+    } catch {
+      // Sem ação: se o navegador bloquear storage, a aba Comprovantes ainda abre normalmente.
+    }
+    setFeedback({ tone: 'info', text: 'Abrindo o extrato desta nota na aba Comprovantes. Lá você consegue Visualizar, Baixar PDF e Enviar.' });
+    onNavigate('receipts');
   }
 
   function openReceive(credit: CreditSummary, installment: CreditInstallment): void {
@@ -494,7 +510,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                       Receber próxima parcela
                     </button>
                   ) : null}
-                  <button type="button" className="mapp-secondary-button" onClick={() => onNavigate('receipts')}>Abrir comprovantes desta nota</button>
+                  <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Visualizar extrato / PDF</button>
                 </div>
               </article>
             );
