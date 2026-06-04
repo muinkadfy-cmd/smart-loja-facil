@@ -5346,3 +5346,223 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
     display: none;
   }
 }
+
+/* Lote 154 — Fotos de produtos mobile + miniatura/ampliação + backup das imagens */
+.mapp-product-photo-field {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  border: 1px solid #dbe8f8;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  padding: 12px;
+}
+
+.mapp-product-photo-preview-wrap {
+  min-width: 0;
+}
+
+.mapp-product-photo-preview-button,
+.mapp-product-thumb {
+  border: 1px solid #dbe8f8;
+  background: #fff;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(15, 43, 85, 0.08);
+}
+
+.mapp-product-photo-preview-button {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+}
+
+.mapp-product-photo-preview-button img,
+.mapp-product-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.mapp-product-photo-placeholder {
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  border: 1px dashed #bdd3ef;
+  border-radius: 20px;
+  background: #eef6ff;
+  color: var(--mapp-blue);
+  text-align: center;
+  font-weight: 950;
+}
+
+.mapp-product-photo-placeholder strong {
+  color: #174276;
+  font-size: 0.82rem;
+}
+
+.mapp-product-photo-actions {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  align-content: center;
+}
+
+.mapp-product-photo-actions > strong {
+  color: var(--mapp-text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.mapp-product-photo-actions p {
+  margin: 0;
+  color: var(--mapp-muted);
+  font-size: 0.85rem;
+  line-height: 1.32;
+  font-weight: 760;
+}
+
+.mapp-photo-upload-button {
+  min-height: 44px;
+  width: fit-content;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  padding: 0 14px;
+  border: 1px solid #9fc3ff;
+  background: #eef6ff;
+  color: var(--mapp-blue);
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.mapp-photo-upload-button input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mapp-secondary-button.compact {
+  min-height: 40px;
+  width: fit-content;
+  padding: 0 13px;
+  border-radius: 14px;
+}
+
+.mapp-photo-status {
+  width: fit-content;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #ecfbf2;
+  color: #137d48 !important;
+  border: 1px solid #bdeccf;
+  padding: 0 10px;
+  font-size: 0.76rem !important;
+  font-weight: 950 !important;
+}
+
+.mapp-product-thumb {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  align-self: start;
+}
+
+.mapp-photo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom));
+  background: rgba(7, 20, 38, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.mapp-photo-modal-card {
+  width: min(520px, 100%);
+  max-height: calc(var(--mapp-vh, 1vh) * 92);
+  display: grid;
+  gap: 12px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: #fff;
+  padding: 14px;
+  box-shadow: 0 28px 80px rgba(7, 20, 38, 0.34);
+}
+
+.mapp-photo-modal-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mapp-photo-modal-head strong {
+  display: block;
+  color: var(--mapp-text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.mapp-photo-modal-head p {
+  margin: 2px 0 0;
+  color: var(--mapp-muted);
+  font-size: 0.82rem;
+  font-weight: 780;
+}
+
+.mapp-photo-modal-head button {
+  min-height: 40px;
+  border: 1px solid var(--mapp-line);
+  border-radius: 14px;
+  background: #fff;
+  color: #174276;
+  padding: 0 13px;
+  font-weight: 950;
+}
+
+.mapp-photo-modal-card > img {
+  width: 100%;
+  max-height: calc(var(--mapp-vh, 1vh) * 74);
+  object-fit: contain;
+  border-radius: 20px;
+  background: #f4f7fb;
+}
+
+@media (max-width: 520px) {
+  .mapp-product-photo-field {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 11px;
+    padding: 10px;
+  }
+
+  .mapp-product-photo-placeholder {
+    min-height: 88px;
+    border-radius: 18px;
+  }
+
+  .mapp-product-photo-actions p {
+    font-size: 0.8rem;
+  }
+
+  .mapp-photo-upload-button,
+  .mapp-secondary-button.compact {
+    width: 100%;
+  }
+
+  .mapp-product-thumb {
+    width: 54px;
+    height: 54px;
+  }
+}

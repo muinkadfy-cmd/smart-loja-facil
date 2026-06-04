@@ -148,7 +148,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <div className="mapp-check-list">
           <span>✓ Clientes, produtos, vendas, caixa e estoque</span>
           <span>✓ Crediário, pedidos, comprovantes e histórico de movimentações</span>
-          <span>✓ Fotos: salva o link/caminho; se estiver embutida no cadastro, entra no JSON</span>
+          <span>✓ Fotos: tenta salvar a imagem dentro do JSON; se não conseguir, mantém link/caminho da nuvem</span>
           <span>✓ Confirmação dupla para restaurar</span>
         </div>
         <div className="mapp-form-actions">
@@ -161,7 +161,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Restauração é ação crítica</strong>
-          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos salvas no Storage continuam no bucket product-photos; para migrar para outro projeto Supabase, copie também esse bucket.</p>
+          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos pequenas entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, copie também o bucket product-photos ao migrar de projeto.</p>
         </div>
         <button type="button" onClick={() => fileInputRef.current?.click()}>Importar</button>
       </section>

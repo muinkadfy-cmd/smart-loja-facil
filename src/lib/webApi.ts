@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v153-auto-ajuste-iphone-android';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v153-auto-ajuste-iphone-android';
+export const WEB_APP_VERSION = 'pwa-supabase-v154-fotos-produtos-backup';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v154-fotos-produtos-backup';
 
 
 export interface WebTrainingModeState {
@@ -1663,7 +1663,19 @@ type WebBackupPhotoSummary = {
   storage_or_public_url: number;
   storage_path: number;
   external_url: number;
+  backed_up_files?: number;
+  backup_failed?: number;
   note: string;
+};
+
+type WebBackupProductPhotoFile = {
+  product_id: string;
+  product_name: string;
+  source: string;
+  data_url: string;
+  mime_type: string;
+  size_bytes: number;
+  backed_up_at: string;
 };
 
 type WebBackupSnapshot = {
@@ -1676,6 +1688,7 @@ type WebBackupSnapshot = {
   counts: Record<string, number>;
   tables: Record<string, JsonRecord[]>;
   product_photo_summary?: WebBackupPhotoSummary;
+  product_photo_files?: WebBackupProductPhotoFile[];
 };
 
 function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhotoSummary {
@@ -1686,7 +1699,7 @@ function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhoto
     storage_or_public_url: 0,
     storage_path: 0,
     external_url: 0,
-    note: 'O backup web salva os cadastros e os links/caminhos das fotos. Arquivos físicos do Supabase Storage não são copiados para dentro do JSON.',
+    note: 'O backup web salva os cadastros e tenta embutir as fotos pequenas no JSON. Fotos que não puderem ser lidas ficam preservadas por link/caminho do Storage.',
   };
 
   for (const product of products) {
@@ -1705,6 +1718,109 @@ function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhoto
   }
 
   return summary;
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Não foi possível preparar a foto para o backup.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function photoSourceToBackupUrl(source: string): Promise<string> {
+  if (/^https?:\/\//i.test(source)) return source;
+  if (!source.startsWith('stores/')) return '';
+  const client = await getClient();
+  const { data } = client.storage.from(PRODUCT_PHOTO_BUCKET).getPublicUrl(source);
+  return data.publicUrl || '';
+}
+
+async function buildProductPhotoBackupFiles(products: JsonRecord[]): Promise<WebBackupProductPhotoFile[]> {
+  const files: WebBackupProductPhotoFile[] = [];
+  const backedUpAt = new Date().toISOString();
+
+  for (const product of products) {
+    const productId = stringValue(product.id);
+    const productName = stringValue(product.name, 'Produto');
+    const source = stringValue(product.image_url).trim();
+    if (!productId || !source) continue;
+
+    try {
+      if (isInlineProductImageData(source)) {
+        const parsed = productPhotoDataUrlToBlob(source);
+        if (parsed.bytes <= PRODUCT_PHOTO_MAX_BYTES) {
+          files.push({ product_id: productId, product_name: productName, source: 'inline', data_url: source, mime_type: parsed.mimeType, size_bytes: parsed.bytes, backed_up_at: backedUpAt });
+        }
+        continue;
+      }
+
+      const url = await photoSourceToBackupUrl(source);
+      if (!url) continue;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) continue;
+      const blob = await response.blob();
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(blob.type) || blob.size > PRODUCT_PHOTO_MAX_BYTES) continue;
+      files.push({
+        product_id: productId,
+        product_name: productName,
+        source,
+        data_url: await blobToDataUrl(blob),
+        mime_type: blob.type,
+        size_bytes: blob.size,
+        backed_up_at: backedUpAt,
+      });
+    } catch {
+      // Foto inacessível não deve travar o backup principal. O link/caminho continua salvo no cadastro do produto.
+    }
+  }
+
+  return files;
+}
+
+async function restoreProductPhotoFiles(files: WebBackupProductPhotoFile[] | undefined, context: WebStoreContext): Promise<{ restored: number; failed: number }> {
+  if (!Array.isArray(files) || files.length === 0) return { restored: 0, failed: 0 };
+  const client = await getClient();
+  let restored = 0;
+  let failed = 0;
+
+  for (const file of files) {
+    const productId = stringValue(file.product_id);
+    const dataUrl = stringValue(file.data_url);
+    if (!productId || !isInlineProductImageData(dataUrl)) {
+      failed += 1;
+      continue;
+    }
+
+    try {
+      const imageUrl = await uploadProductPhotoForWeb({
+        client,
+        storeId: context.store.id,
+        productId,
+        productName: stringValue(file.product_name, 'Produto restaurado'),
+        requestId: `restore-${Date.now()}`,
+        imageData: dataUrl,
+      });
+      const { error } = await client
+        .from('products')
+        .update({ image_url: imageUrl })
+        .eq('id', productId)
+        .eq('store_id', context.store.id);
+      if (error) throw error;
+      restored += 1;
+    } catch {
+      const { error } = await client
+        .from('products')
+        .update({ image_url: dataUrl })
+        .eq('id', productId)
+        .eq('store_id', context.store.id);
+      if (error) failed += 1;
+      else restored += 1;
+    }
+  }
+
+  return { restored, failed };
 }
 
 function readWebBackupHistory(): BackupInfo[] {
@@ -1845,6 +1961,9 @@ export async function webCreateBackup(): Promise<BackupInfo> {
     counts[table] = rows.length;
   }
   const productPhotoSummary = summarizeProductPhotosForBackup(tables.products ?? []);
+  const productPhotoFiles = await buildProductPhotoBackupFiles(tables.products ?? []);
+  productPhotoSummary.backed_up_files = productPhotoFiles.length;
+  productPhotoSummary.backup_failed = Math.max(0, productPhotoSummary.inline_embedded_in_json + productPhotoSummary.storage_or_public_url - productPhotoFiles.length);
 
   const createdAt = new Date().toISOString();
   const snapshot: WebBackupSnapshot = {
@@ -1857,6 +1976,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
     counts,
     tables,
     product_photo_summary: productPhotoSummary,
+    product_photo_files: productPhotoFiles,
   };
   const content = JSON.stringify(snapshot, null, 2);
   const fileName = `backup-smart-loja-web-${safeFileStamp(context.store.name)}-${createdAt.slice(0, 19).replace(/[:T]/g, '-')}.json`;
@@ -1886,6 +2006,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
         cache_version: WEB_CACHE_VERSION,
         counts,
         product_photo_summary: productPhotoSummary,
+        product_photo_files_count: productPhotoFiles.length,
         storage_note: productPhotoSummary.note,
         local_history_id: info.id,
       },
@@ -1968,11 +2089,13 @@ export async function webRestoreBackupContent(fileContent: string, confirmation:
   for (const table of importOrder) {
     imported[table] = await upsertRows(table, snapshotTables[table] ?? [], context.store.id);
   }
+  const restoredPhotos = await restoreProductPhotoFiles(snapshot.product_photo_files, context);
 
   await insertAudit(context.store.id, context.userId, 'stores', context.store.id, 'web_backup_imported', {
     source_created_at: snapshot.created_at,
     source_app_version: snapshot.app_version,
     imported,
+    restored_product_photos: restoredPhotos,
   });
   return webAppStatus();
 }
@@ -3599,7 +3722,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v153 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v154 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

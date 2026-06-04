@@ -158,7 +158,7 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
 
   const title = runtimeInfo.isWeb ? 'Backup Web/Nuvem' : 'Backup e Restauração';
   const description = runtimeInfo.isWeb
-    ? 'Exporte um JSON com os dados da loja na nuvem e importe com confirmação dupla. Fotos em Storage ficam como link/caminho; para migrar de projeto, copie também o bucket product-photos.'
+    ? 'Exporte um JSON com os dados da loja na nuvem e importe com confirmação dupla. O backup tenta embutir as fotos de produtos; se alguma ficar só por link/caminho, copie também o bucket product-photos ao migrar de projeto.'
     : 'Área crítica de proteção do banco local e dos arquivos externos do sistema, com fluxo seguro para usuário leigo.';
 
   return (

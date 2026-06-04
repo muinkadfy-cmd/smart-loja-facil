@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v153",
-  "short_name": "Smart Loja v153",
-  "description": "Smart Loja Fácil PWA mobile-first v153 com auto ajuste para iPhone/Android, safe-area, teclado, bottom nav, alertas leigos, backup auditável e histórico preservado.",
+  "name": "Smart Loja Fácil PWA v154",
+  "short_name": "Smart Loja v154",
+  "description": "Smart Loja Fácil PWA mobile-first v154 com foto de produto no mobile, miniatura, ampliação e backup auditável das imagens quando possível.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
