@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v163",
-  "short_name": "Smart Loja v163",
-  "description": "Smart Loja Fácil PWA mobile-first v163 com Comprovantes 10/10 mobile, status colorido e A4/PDF sem corte lateral.",
+  "name": "Smart Loja Fácil PWA v164",
+  "short_name": "Smart Loja v164",
+  "description": "Smart Loja Fácil PWA mobile-first v164 com Crediário mobile compacto, notas expansíveis e ações revisadas.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

@@ -23,6 +23,7 @@ interface CreditsScreenProps {
 }
 
 type CreditFilter = 'todos' | 'aberto' | 'vencidos' | 'quitado';
+type CreditStatusTone = 'ok' | 'warn' | 'danger' | 'neutral';
 
 type ReceiveState = {
   credit: CreditSummary;
@@ -73,7 +74,7 @@ function installmentStatusLabel(installment: CreditInstallment): string {
   return 'Pendente';
 }
 
-function installmentStatusTone(installment: CreditInstallment): 'ok' | 'warn' | 'danger' | 'neutral' {
+function installmentStatusTone(installment: CreditInstallment): CreditStatusTone {
   const label = installmentStatusLabel(installment).toLowerCase();
   if (label.includes('paga')) return 'ok';
   if (label.includes('venc')) return 'danger';
@@ -91,6 +92,32 @@ function creditPaidTotal(credit: CreditSummary): number {
   return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
 }
 
+function creditStatusInfo(credit: CreditSummary): { label: string; tone: CreditStatusTone; detail: string } {
+  const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+  const openCount = creditOpenInstallments(credit).length;
+  const overdueCount = credit.installments.filter(isOverdue).length;
+
+  if (credit.status === 'quitado' || Number(credit.balance || 0) <= 0.009) {
+    return { label: 'Quitado', tone: 'ok', detail: 'Todas as parcelas estão pagas.' };
+  }
+
+  if (overdueCount > 0) {
+    return { label: 'Vencido', tone: 'danger', detail: `${formatNumber(overdueCount)} parcela(s) vencida(s).` };
+  }
+
+  if (paidCount > 0) {
+    return { label: 'Parcial', tone: 'warn', detail: `${formatNumber(paidCount)}/${formatNumber(credit.installments.length)} parcela(s) pagas.` };
+  }
+
+  return { label: 'Aberto', tone: 'neutral', detail: `${formatNumber(openCount)} parcela(s) para receber.` };
+}
+
+function nextCreditActionLabel(credit: CreditSummary): string {
+  const next = creditOpenInstallments(credit)[0];
+  if (!next) return 'Nenhuma parcela em aberto';
+  return `${installmentStatusLabel(next)} · parcela ${formatNumber(next.number)}/${formatNumber(credit.installments.length)} · vence ${dateOnly(next.due_date)}`;
+}
+
 function customerInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const first = parts[0]?.[0] ?? 'C';
@@ -102,6 +129,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<CreditFilter>('aberto');
+  const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [receive, setReceive] = useState<ReceiveState | null>(null);
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +192,10 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       return matchesFilter && matchesTerm;
     });
   }, [credits, filter, query]);
+
+  function toggleCreditExpanded(creditId: string): void {
+    setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
+  }
 
   function openReceive(credit: CreditSummary, installment: CreditInstallment): void {
     if (installment.status === 'pago') {
@@ -391,25 +423,38 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             const openInstallments = creditOpenInstallments(credit);
             const nextInstallment = openInstallments[0] ?? credit.installments[0];
             const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+            const statusInfo = creditStatusInfo(credit);
+            const isExpanded = Boolean(expandedCredits[credit.id]);
+            const visibleInstallments = isExpanded ? credit.installments : (nextInstallment ? [nextInstallment] : []);
+            const hiddenInstallments = Math.max(0, credit.installments.length - visibleInstallments.length);
             return (
-              <article key={credit.id} className="mapp-credit-card mapp-credit-card-operations">
-                <div className="mapp-credit-note-head mapp-credit-note-head-static">
+              <article key={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'}`}>
+                <button
+                  type="button"
+                  className="mapp-credit-note-head mapp-credit-note-toggle"
+                  onClick={() => toggleCreditExpanded(credit.id)}
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? 'Recolher' : 'Abrir'} parcelas da venda ${String(credit.sale_number).padStart(4, '0')}`}
+                >
                   <span><InlineIcon name="crediario" size={24} /></span>
                   <div>
                     <strong>{credit.customer_name || 'Cliente sem nome'}</strong>
                     <small>Venda #{String(credit.sale_number).padStart(4, '0')} · {formatDateTime(credit.created_at)}</small>
-                    <small>{paidCount}/{credit.installments.length} parcela(s) pagas · comprovantes na aba Comprovantes</small>
+                    <small>{statusInfo.detail} · {nextCreditActionLabel(credit)}</small>
                   </div>
-                  <em className={credit.status === 'quitado' ? 'ok' : 'warn'}>{credit.status === 'quitado' ? 'Quitado' : 'Aberto'}</em>
-                </div>
-                <div className="mapp-credit-totals">
+                  <em className={statusInfo.tone}>{statusInfo.label}</em>
+                </button>
+                <div className="mapp-credit-totals mapp-credit-totals-compact">
                   <div><span>Total</span><strong>{formatCurrency(credit.total)}</strong></div>
                   <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
                   <div><span>Restante</span><strong>{formatCurrency(credit.balance)}</strong></div>
                   <div><span>Contato</span><strong>{credit.customer_whatsapp || credit.customer_phone || '-'}</strong></div>
                 </div>
+                <div className="mapp-credit-progress" aria-label={`${paidCount} de ${credit.installments.length} parcelas pagas`}>
+                  <span style={{ width: `${credit.installments.length ? Math.round((paidCount / credit.installments.length) * 100) : 0}%` }} />
+                </div>
                 <div className="mapp-installment-list">
-                  {credit.installments.map((installment) => {
+                  {visibleInstallments.map((installment) => {
                     const statusLabel = installmentStatusLabel(installment);
                     const tone = installmentStatusTone(installment);
                     return (
@@ -433,6 +478,16 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     );
                   })}
                 </div>
+                {hiddenInstallments ? (
+                  <button type="button" className="mapp-credit-expand-button" onClick={() => toggleCreditExpanded(credit.id)}>
+                    Ver todas as parcelas ({formatNumber(credit.installments.length)})
+                  </button>
+                ) : null}
+                {isExpanded && credit.installments.length > 1 ? (
+                  <button type="button" className="mapp-credit-collapse-button" onClick={() => toggleCreditExpanded(credit.id)}>
+                    Recolher parcelas e deixar compacto
+                  </button>
+                ) : null}
                 <div className="mapp-credit-note-actions mapp-credit-note-actions-muted" aria-label="Ações do crediário">
                   {nextInstallment && credit.status !== 'quitado' ? (
                     <button type="button" className="mapp-credit-primary-action" onClick={() => openReceive(credit, nextInstallment)}>
