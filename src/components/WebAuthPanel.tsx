@@ -134,18 +134,18 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   const statusLabel = !env.isConfigured
     ? 'Nuvem não configurada'
     : session
-      ? 'Conexão segura'
+      ? 'Conta conectada'
       : networkOnline
-        ? 'Login pendente'
+        ? 'Aguardando login'
         : 'Sem internet';
 
   if (!env.isConfigured) {
     return (
       <section className={`web-card web-auth-panel web-auth-panel-unconfigured ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
-        <span className="web-kicker">Login web</span>
+        <span className="web-kicker">Acesso da loja</span>
         <div className="web-auth-status-pill web-auth-status-warn">Nuvem não configurada</div>
-        <h2>Login pronto para ativar</h2>
-        <p>Configure somente variáveis públicas no Cloudflare para liberar login, celular e sincronização. Nunca use service_role no frontend.</p>
+        <h2>Falta configurar a nuvem</h2>
+        <p>Configure as variáveis públicas no deploy para liberar login e sincronização. Não coloque chave privada no app.</p>
         {env.securityWarnings.length > 0 ? (
           <div className="web-auth-alert">{env.securityWarnings.join(' ')}</div>
         ) : null}
@@ -161,11 +161,11 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
             <span>Senha</span>
             <div className="web-password-row web-input-row">
               <AppIcon name="bloqueio_seguro" size={24} className="web-input-icon" />
-              <input value="" type="password" placeholder="Digite sua senha" autoComplete="current-password" disabled readOnly />
+              <input value="" type="password" placeholder="Senha de acesso" autoComplete="current-password" disabled readOnly />
               <button type="button" className="secondary-btn" disabled>Ver</button>
             </div>
           </label>
-          <button type="button" className="primary-btn" disabled>Entrar pela nuvem</button>
+          <button type="button" className="primary-btn" disabled>Entrar no painel</button>
         </form>
         <div className="web-code-list">
           {env.missing.map((item) => <code key={item}>{item}</code>)}
@@ -177,9 +177,9 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   if (session) {
     return (
       <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
-        <span className="web-kicker">Login ativo</span>
+        <span className="web-kicker">Acesso confirmado</span>
         <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{statusLabel}</div>
-        <h2>{compact ? 'Tudo pronto' : session.email}</h2>
+        <h2>{compact ? 'Abrindo painel' : session.email}</h2>
         {compact ? <strong className="web-auth-compact-email">{session.email}</strong> : <p>Conta conectada. Os dados da loja podem sincronizar entre PC e celular.</p>}
         {!compact ? (
           <div className="web-auth-session-grid">
@@ -189,7 +189,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
         ) : null}
         <div className={`web-auth-session-actions ${compact ? 'web-auth-session-actions-compact' : ''}`}>
           {compact && onOpenPanel ? (
-            <button type="button" className="primary-btn" onClick={onOpenPanel} disabled={busy}>Abrir painel</button>
+            <button type="button" className="primary-btn" onClick={onOpenPanel} disabled={busy}>Abrir painel agora</button>
           ) : null}
           <button type="button" className="secondary-btn" onClick={signOut} disabled={busy}>Sair</button>
         </div>
@@ -200,23 +200,23 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
 
   return (
     <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
-      <span className="web-kicker">Login web</span>
+      <span className="web-kicker">Acesso da loja</span>
       <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{sessionLoading ? 'Verificando sessão...' : statusLabel}</div>
-      <h2>Entrar</h2>
-      {!compact ? <p>Use sua conta da loja para acessar.</p> : null}
+      <h2>Entrar no painel</h2>
+      <p className="web-auth-primary-copy">Use o e-mail e a senha da loja para sincronizar no celular e no computador.</p>
       <form className="web-auth-form" onSubmit={signIn}>
         <label>
           <span>E-mail</span>
           <div className="web-input-row">
               <AppIcon name="usuario_administrador" size={24} className="web-input-icon" />
-              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="seu@email.com" autoComplete="email" inputMode="email" />
+              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="E-mail da loja" autoComplete="email" inputMode="email" />
             </div>
         </label>
         <label>
           <span>Senha</span>
           <div className="web-password-row web-input-row">
             <AppIcon name="bloqueio_seguro" size={24} className="web-input-icon" />
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Digite sua senha" autoComplete="current-password" />
+            <input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Senha de acesso" autoComplete="current-password" />
             <button type="button" className="secondary-btn" onClick={() => setShowPassword((value) => !value)}>
               {showPassword ? 'Ocultar' : 'Ver'}
             </button>
@@ -225,7 +225,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
         <div className="web-auth-form-options">
           <label className="web-check-row">
             <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
-            <span>Salvar e-mail</span>
+            <span>Lembrar e-mail neste aparelho</span>
           </label>
           <button
             type="button"
@@ -238,8 +238,12 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
             Ajuda
           </button>
         </div>
-        <button type="submit" className="primary-btn" disabled={busy || sessionLoading}>{busy ? 'Aguarde, entrando no sistema...' : 'Entrar'}</button>
+        <button type="submit" className="primary-btn" disabled={busy || sessionLoading}>{busy ? 'Entrando com segurança...' : 'Entrar no painel'}</button>
       </form>
+      <div className="web-auth-secure-note">
+        <AppIcon name="bloqueio_seguro" size={16} />
+        <span>Senha protegida. Nunca compartilhe acesso de dono com funcionário.</span>
+      </div>
       {message && <small className={`web-message web-message-${messageTone}`}>{message}</small>}
     </section>
   );

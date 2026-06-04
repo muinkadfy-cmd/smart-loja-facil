@@ -56,13 +56,21 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
       <section className="master-login-centered-shell" aria-label="Login do Smart Loja Fácil">
         <section className="master-login-form-card master-login-single-card master-login-centered-card" aria-label="Acesso web e mobile">
           <div className="master-login-form-head master-login-centered-head">
+            <div className="master-login-security-strip" aria-label="Acesso protegido">
+              <span>Seguro</span>
+              <span>Mobile</span>
+              <span>Nuvem</span>
+            </div>
             <AppIcon name="app_logo_cadeado_carrinho" size={64} alt="Smart Loja Fácil" className="master-login-brand-icon" />
             <strong>SMART LOJA <b>FÁCIL</b></strong>
-            <small>Login simples para PC e celular</small>
+            <small>Entre para vender, controlar estoque e acompanhar sua loja no celular.</small>
           </div>
 
           {isWeb ? (
-            <WebAuthPanel compact onOpenPanel={action} onAuthenticated={action} autoContinueWhenSession />
+            <>
+              <WebAuthPanel compact onOpenPanel={action} onAuthenticated={action} autoContinueWhenSession />
+              <p className="master-login-footnote">Use sua conta da loja. O painel abre sozinho depois que o login for confirmado.</p>
+            </>
           ) : (
             <form className="web-card web-auth-panel web-auth-panel-compact web-auth-panel-simple master-login-local-card" onSubmit={handleLocalSubmit}>
               <h2>Entrar</h2>
@@ -106,6 +114,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
               {localMessage ? (
                 <small className={`web-message ${localMessage.startsWith('Não') ? 'web-message-error' : 'web-message-info'}`}>{localMessage}</small>
               ) : null}
+              <p className="master-login-footnote">Depois de entrar, confira a internet e sincronização antes de vender.</p>
             </form>
           )}
         </section>

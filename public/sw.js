@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v148-backup-alertas-polidos';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v149-login-micro-polimento';
 const APP_SHELL = [
   '/',
   '/index.html',
