@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v145-micro-interface-subabas';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v145-micro-interface-subabas';
+export const WEB_APP_VERSION = 'pwa-supabase-v146-backup-fotos-historico';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v146-backup-fotos-historico';
 
 
 export interface WebTrainingModeState {
@@ -1639,6 +1639,16 @@ const WEB_BACKUP_TABLES = [
 type WebBackupTableName = typeof WEB_BACKUP_TABLES[number];
 type JsonRecord = Record<string, unknown>;
 
+type WebBackupPhotoSummary = {
+  total_products: number;
+  missing_photo: number;
+  inline_embedded_in_json: number;
+  storage_or_public_url: number;
+  storage_path: number;
+  external_url: number;
+  note: string;
+};
+
 type WebBackupSnapshot = {
   kind: 'smart-loja-facil-web-backup';
   version: 1;
@@ -1648,7 +1658,37 @@ type WebBackupSnapshot = {
   user: { id: string; email: string; role: WebStoreRole };
   counts: Record<string, number>;
   tables: Record<string, JsonRecord[]>;
+  product_photo_summary?: WebBackupPhotoSummary;
 };
+
+function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhotoSummary {
+  const summary: WebBackupPhotoSummary = {
+    total_products: products.length,
+    missing_photo: 0,
+    inline_embedded_in_json: 0,
+    storage_or_public_url: 0,
+    storage_path: 0,
+    external_url: 0,
+    note: 'O backup web salva os cadastros e os links/caminhos das fotos. Arquivos físicos do Supabase Storage não são copiados para dentro do JSON.',
+  };
+
+  for (const product of products) {
+    const value = stringValue(product.image_url).trim();
+    if (!value) {
+      summary.missing_photo += 1;
+    } else if (isInlineProductImageData(value)) {
+      summary.inline_embedded_in_json += 1;
+    } else if (value.startsWith('stores/')) {
+      summary.storage_path += 1;
+      summary.storage_or_public_url += 1;
+    } else if (/^https?:\/\//i.test(value)) {
+      summary.external_url += 1;
+      summary.storage_or_public_url += 1;
+    }
+  }
+
+  return summary;
+}
 
 function readWebBackupHistory(): BackupInfo[] {
   try {
@@ -1773,6 +1813,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
     tables[table] = rows;
     counts[table] = rows.length;
   }
+  const productPhotoSummary = summarizeProductPhotosForBackup(tables.products ?? []);
 
   const createdAt = new Date().toISOString();
   const snapshot: WebBackupSnapshot = {
@@ -1784,6 +1825,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
     user: { id: context.userId, email: context.email, role: context.role },
     counts,
     tables,
+    product_photo_summary: productPhotoSummary,
   };
   const content = JSON.stringify(snapshot, null, 2);
   const fileName = `backup-smart-loja-web-${safeFileStamp(context.store.name)}-${createdAt.slice(0, 19).replace(/[:T]/g, '-')}.json`;
@@ -1812,6 +1854,8 @@ export async function webCreateBackup(): Promise<BackupInfo> {
         app_version: WEB_APP_VERSION,
         cache_version: WEB_CACHE_VERSION,
         counts,
+        product_photo_summary: productPhotoSummary,
+        storage_note: productPhotoSummary.note,
         local_history_id: info.id,
       },
     })
@@ -3322,6 +3366,41 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
         evidence: result.error || `select head count em ${item.table}`,
       });
     }
+
+    try {
+      const client = await getClient();
+      const { data: bucket, error: bucketError } = await client.storage.getBucket(PRODUCT_PHOTO_BUCKET);
+      pushCommercialCheck(checks, {
+        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Storage de fotos de produtos',
+        detail: bucketError
+          ? 'Bucket product-photos não confirmou leitura. Fotos podem ficar em modo compatibilidade até aplicar a migration de Storage.'
+          : `Bucket product-photos encontrado${bucket?.public ? ' e público para leitura de imagens' : ', mas revise se a leitura pública/assinada está correta'}.`,
+        level: bucketError ? 'warn' : 'ok',
+        evidence: bucketError ? bucketError.message : `bucket=${bucket?.name || PRODUCT_PHOTO_BUCKET}; public=${String(bucket?.public)}`,
+      });
+
+      const { data: photoRows, error: photoError } = await client
+        .from('products')
+        .select('image_url')
+        .eq('store_id', context.store.id)
+        .is('deleted_at', null);
+      const photoSummary = summarizeProductPhotosForBackup((photoRows ?? []) as JsonRecord[]);
+      pushCommercialCheck(checks, {
+        id: 'backup-product-photo-summary-v146', area: 'Backup/Fotos', title: 'Fotos dentro do backup web',
+        detail: photoError
+          ? 'Não foi possível calcular resumo das fotos para o backup.'
+          : `${photoSummary.storage_or_public_url} foto(s) em link/Storage, ${photoSummary.inline_embedded_in_json} foto(s) embutida(s) no JSON e ${photoSummary.missing_photo} produto(s) sem foto.`,
+        level: photoError ? 'warn' : photoSummary.inline_embedded_in_json ? 'warn' : 'ok',
+        evidence: photoError ? photoError.message : photoSummary.note,
+      });
+    } catch (storageError) {
+      pushCommercialCheck(checks, {
+        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Storage de fotos de produtos',
+        detail: 'Não foi possível auditar Storage de fotos neste aparelho.',
+        level: 'warn',
+        evidence: humanizeWebError(storageError),
+      });
+    }
   }
 
   pushCommercialCheck(checks, {
@@ -3489,7 +3568,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v145 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v146 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

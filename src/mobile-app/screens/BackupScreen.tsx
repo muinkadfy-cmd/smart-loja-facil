@@ -123,12 +123,13 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
           <span className="mapp-form-icon tone-mint"><InlineIcon name="backup" size={24} /></span>
           <div>
             <strong>Backup da loja</strong>
-            <p>Cria um arquivo com dados comerciais importantes. Guarde em local seguro fora do celular.</p>
+            <p>Cria um arquivo JSON com dados comerciais importantes. Guarde em local seguro fora do celular.</p>
           </div>
         </div>
         <div className="mapp-check-list">
-          <span>✓ Clientes, produtos, vendas e caixa</span>
-          <span>✓ Crediário, pedidos e comprovantes</span>
+          <span>✓ Clientes, produtos, vendas, caixa e estoque</span>
+          <span>✓ Crediário, pedidos, comprovantes e histórico de movimentações</span>
+          <span>✓ Fotos: salva o link/caminho; se estiver embutida no cadastro, entra no JSON</span>
           <span>✓ Confirmação dupla para restaurar</span>
         </div>
         <div className="mapp-form-actions">
@@ -141,7 +142,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Restauração é ação crítica</strong>
-          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer.</p>
+          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos salvas no Storage continuam no bucket product-photos; para migrar para outro projeto Supabase, copie também esse bucket.</p>
         </div>
         <button type="button" onClick={() => fileInputRef.current?.click()}>Importar</button>
       </section>

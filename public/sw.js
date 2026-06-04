@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v145-micro-interface-subabas';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v146-backup-fotos-historico';
 const APP_SHELL = [
   '/',
   '/index.html',
