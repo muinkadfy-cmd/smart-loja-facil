@@ -171,26 +171,28 @@ export function MobileShell({
             <span className={online ? 'mapp-online-chip' : 'mapp-warn-chip'}>{online ? 'Online' : 'Offline'}</span>
           </header>
 
-          <nav className="mapp-context-subnav" aria-label={`Sub-abas de ${activeGroup.label}`}>
-            <div className="mapp-context-subnav-head">
-              <strong>{activeGroup.label}</strong>
-              <span>{activeGroup.helper}</span>
-            </div>
-            <div className="mapp-context-subnav-track">
-              {relatedRoutes.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={item.key === activePage ? 'active' : ''}
-                  onClick={() => onNavigate(item.key)}
-                  aria-current={item.key === activePage ? 'page' : undefined}
-                >
-                  <InlineIcon name={item.icon} size={24} />
-                  <span>{item.shortLabel}</span>
-                </button>
-              ))}
-            </div>
-          </nav>
+          {relatedRoutes.length > 1 ? (
+            <nav className="mapp-context-subnav" aria-label={`Sub-abas de ${activeGroup.label}`}>
+              <div className="mapp-context-subnav-head">
+                <strong>{activeGroup.label}</strong>
+                <span>{activeGroup.helper}</span>
+              </div>
+              <div className="mapp-context-subnav-track">
+                {relatedRoutes.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={item.key === activePage ? 'active' : ''}
+                    onClick={() => onNavigate(item.key)}
+                    aria-current={item.key === activePage ? 'page' : undefined}
+                  >
+                    <InlineIcon name={item.icon} size={24} />
+                    <span>{item.shortLabel}</span>
+                  </button>
+                ))}
+              </div>
+            </nav>
+          ) : null}
 
           {children}
         </main>
