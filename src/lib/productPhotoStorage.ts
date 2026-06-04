@@ -1,5 +1,5 @@
 export const PRODUCT_PHOTO_BUCKET = 'product-photos';
-export const PRODUCT_PHOTO_MAX_BYTES = 2 * 1024 * 1024;
+export const PRODUCT_PHOTO_MAX_BYTES = 4 * 1024 * 1024;
 
 export interface ProductPhotoBlob {
   blob: Blob;

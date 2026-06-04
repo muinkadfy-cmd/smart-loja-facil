@@ -161,7 +161,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Restauração é ação crítica</strong>
-          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos pequenas entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, copie também o bucket product-photos ao migrar de projeto.</p>
+          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos de produtos preparadas pelo app entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, copie também o bucket product-photos ao migrar de projeto.</p>
         </div>
         <button type="button" onClick={() => fileInputRef.current?.click()}>Importar</button>
       </section>

@@ -5566,3 +5566,137 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
     height: 54px;
   }
 }
+
+/* Lote 155 — Produto assistido, foto maior comprimida e crediário parcelado */
+.mapp-product-assist {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid #dbe8f8;
+  background: linear-gradient(180deg, #f4f8ff 0%, #ffffff 100%);
+}
+
+.mapp-product-assist strong {
+  display: block;
+  color: var(--mapp-text);
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.mapp-product-assist p {
+  margin: 3px 0 0;
+  color: var(--mapp-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-weight: 760;
+}
+
+.mapp-assist-chip-grid,
+.mapp-form-quick-picks > div,
+.mapp-installment-shortcuts,
+.mapp-due-date-shortcuts {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mapp-assist-chip-grid::-webkit-scrollbar,
+.mapp-form-quick-picks > div::-webkit-scrollbar,
+.mapp-installment-shortcuts::-webkit-scrollbar,
+.mapp-due-date-shortcuts::-webkit-scrollbar {
+  display: none;
+}
+
+.mapp-assist-chip-grid button,
+.mapp-form-quick-picks button,
+.mapp-installment-shortcuts button,
+.mapp-due-date-shortcuts button {
+  min-height: 38px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid #cfe0f5;
+  background: #ffffff;
+  color: #17335d;
+  padding: 0 12px;
+  font-weight: 900;
+  font-size: 0.8rem;
+  box-shadow: 0 8px 18px rgba(15, 43, 85, 0.06);
+}
+
+.mapp-assist-chip-grid button:active,
+.mapp-form-quick-picks button:active,
+.mapp-installment-shortcuts button:active,
+.mapp-due-date-shortcuts button:active {
+  transform: translateY(1px);
+}
+
+.mapp-form-quick-picks {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.mapp-form-quick-picks > span {
+  color: var(--mapp-muted) !important;
+  font-size: 0.76rem !important;
+  font-weight: 900 !important;
+}
+
+.mapp-form-quick-picks button.active,
+.mapp-installment-shortcuts button.active {
+  border-color: #2f73ff;
+  background: linear-gradient(135deg, #2f73ff 0%, #155bea 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(47, 115, 255, 0.22);
+}
+
+.mapp-credit-installment-box {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid #dbe8f8;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.mapp-credit-installment-box strong {
+  display: block;
+  color: var(--mapp-text);
+  font-size: 1.02rem;
+  font-weight: 950;
+}
+
+.mapp-credit-installment-box p {
+  margin: 3px 0 0;
+  color: var(--mapp-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-weight: 760;
+}
+
+.mapp-due-date-shortcuts button {
+  min-height: 34px;
+  font-size: 0.76rem;
+  background: #f4f8ff;
+}
+
+@media (max-width: 520px) {
+  .mapp-product-assist,
+  .mapp-credit-installment-box {
+    border-radius: 18px;
+    padding: 10px;
+  }
+
+  .mapp-assist-chip-grid button,
+  .mapp-form-quick-picks button,
+  .mapp-installment-shortcuts button,
+  .mapp-due-date-shortcuts button {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 0.76rem;
+  }
+}

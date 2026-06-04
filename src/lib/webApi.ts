@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v154-fotos-produtos-backup';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v154-fotos-produtos-backup';
+export const WEB_APP_VERSION = 'pwa-supabase-v155-produto-assistido-crediario-foto';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v155-produto-assistido-crediario-foto';
 
 
 export interface WebTrainingModeState {
@@ -1316,7 +1316,7 @@ async function uploadProductPhotoForWeb(params: {
 }): Promise<string> {
   const photo = productPhotoDataUrlToBlob(params.imageData);
   if (photo.bytes > PRODUCT_PHOTO_MAX_BYTES) {
-    throw new Error('A foto precisa ter no máximo 2 MB para subir na nuvem.');
+    throw new Error('A foto preparada ficou grande demais para subir na nuvem. Tente cortar a imagem ou escolher outra foto.');
   }
 
   const path = buildProductPhotoStoragePath({
@@ -3722,7 +3722,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v154 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v155 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

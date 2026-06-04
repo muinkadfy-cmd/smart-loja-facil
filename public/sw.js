@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v154-fotos-produtos-backup';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v155-produto-assistido-crediario-foto';
 const APP_SHELL = [
   '/',
   '/index.html',

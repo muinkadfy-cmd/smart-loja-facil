@@ -74,6 +74,45 @@ const emptyCustomerForm: CustomerFormState = {
   notes: '',
 };
 
+
+type ProductPreset = {
+  label: string;
+  category: string;
+  size: string;
+  color: string;
+  nameHint: string;
+};
+
+const PRODUCT_PRESETS: ProductPreset[] = [
+  { label: 'Blusa feminina', category: 'Roupas femininas', size: 'M', color: 'Variada', nameHint: 'Blusa feminina' },
+  { label: 'Vestido', category: 'Roupas femininas', size: 'M', color: 'Estampado', nameHint: 'Vestido feminino' },
+  { label: 'Camiseta masculina', category: 'Roupas masculinas', size: 'G', color: 'Preta', nameHint: 'Camiseta masculina' },
+  { label: 'Infantil', category: 'Roupas infantis', size: '4', color: 'Variada', nameHint: 'Roupa infantil' },
+  { label: 'Lingerie', category: 'Lingeries', size: 'M', color: 'Variada', nameHint: 'Lingerie' },
+  { label: 'Acessório', category: 'Acessórios', size: 'Único', color: 'Sortido', nameHint: 'Acessório' },
+  { label: 'Presente', category: 'Presentes', size: 'Único', color: 'Sortido', nameHint: 'Presente' },
+  { label: 'Utilitário', category: 'Utilitários', size: 'Único', color: 'Sortido', nameHint: 'Utilitário' },
+];
+
+const PRODUCT_CATEGORY_OPTIONS = [
+  'Roupas femininas',
+  'Roupas masculinas',
+  'Roupas infantis',
+  'Lingeries',
+  'Acessórios',
+  'Presentes',
+  'Utilitários',
+  'Calçados',
+  'Bolsas',
+  'Outros',
+];
+
+const PRODUCT_SIZE_OPTIONS = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'Único', 'RN', '1', '2', '4', '6', '8', '10', '12', '14', '16'];
+const PRODUCT_COLOR_OPTIONS = ['Preto', 'Branco', 'Azul', 'Rosa', 'Vermelho', 'Verde', 'Bege', 'Marrom', 'Cinza', 'Estampado', 'Sortido', 'Variada'];
+const MAX_PRODUCT_PHOTO_SOURCE_BYTES = 12 * 1024 * 1024;
+const TARGET_PRODUCT_PHOTO_BYTES = 1.65 * 1024 * 1024;
+const PRODUCT_PHOTO_MAX_EDGE = 1600;
+
 function moneyToNumber(value: string): number {
   const normalized = value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
   const parsed = Number(normalized);
@@ -100,13 +139,80 @@ function productPhotoLabel(value: string | null | undefined): string {
   return 'Foto na nuvem';
 }
 
-function fileToDataUrl(file: File): Promise<string> {
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
     reader.onerror = () => reject(new Error('Não foi possível ler a foto selecionada.'));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
+}
+
+function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Não foi possível abrir a foto. Tente outra imagem.'));
+    };
+    image.src = url;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Não foi possível preparar a foto para salvar.'));
+    }, type, quality);
+  });
+}
+
+async function compressProductPhoto(file: File): Promise<{ dataUrl: string; originalBytes: number; outputBytes: number; compressed: boolean }> {
+  if (file.size <= TARGET_PRODUCT_PHOTO_BYTES && file.type !== 'image/png') {
+    const dataUrl = await blobToDataUrl(file);
+    return { dataUrl, originalBytes: file.size, outputBytes: file.size, compressed: false };
+  }
+
+  const image = await loadImageFromFile(file);
+  const sourceWidth = Math.max(1, image.naturalWidth || image.width);
+  const sourceHeight = Math.max(1, image.naturalHeight || image.height);
+  const scale = Math.min(1, PRODUCT_PHOTO_MAX_EDGE / Math.max(sourceWidth, sourceHeight));
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Este aparelho não conseguiu preparar a foto. Tente uma imagem menor.');
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  let bestBlob = await canvasToBlob(canvas, 'image/jpeg', 0.86);
+  for (const quality of [0.78, 0.68, 0.58, 0.48]) {
+    if (bestBlob.size <= TARGET_PRODUCT_PHOTO_BYTES) break;
+    bestBlob = await canvasToBlob(canvas, 'image/jpeg', quality);
+  }
+
+  const dataUrl = await blobToDataUrl(bestBlob);
+  return {
+    dataUrl,
+    originalBytes: file.size,
+    outputBytes: bestBlob.size,
+    compressed: bestBlob.size < file.size || scale < 1 || file.type === 'image/png',
+  };
+}
+
+function fileSizeLabel(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function productToForm(product: Product): ProductFormState {
@@ -205,13 +311,41 @@ function ProductForm({
       </div>
 
       <div className="mapp-form-grid">
+        <div className="mapp-product-assist span-2">
+          <div>
+            <strong>Preenchimento rápido</strong>
+            <p>Toque em um modelo para preencher categoria, tamanho e cor. Depois ajuste o que precisar.</p>
+          </div>
+          <div className="mapp-assist-chip-grid" aria-label="Modelos rápidos de produto">
+            {PRODUCT_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => onChange({
+                  ...form,
+                  name: form.name.trim() ? form.name : preset.nameHint,
+                  category: preset.category,
+                  unit: form.unit.trim() || 'un',
+                  size: form.size.trim() ? form.size : preset.size,
+                  color: form.color.trim() ? form.color : preset.color,
+                })}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label className="span-2">
           <span>Nome do produto *</span>
-          <input ref={nameInputRef} value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} placeholder="Ex.: Camiseta feminina" />
+          <input ref={nameInputRef} value={form.name} onChange={(event) => onChange({ ...form, name: event.target.value })} placeholder="Ex.: Camiseta feminina preta M" />
         </label>
         <label>
           <span>Categoria</span>
-          <input value={form.category} onChange={(event) => onChange({ ...form, category: event.target.value })} placeholder="Roupas, presentes..." />
+          <select value={form.category} onChange={(event) => onChange({ ...form, category: event.target.value })}>
+            <option value="">Escolha uma categoria</option>
+            {PRODUCT_CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
+          </select>
         </label>
         <label>
           <span>Código interno</span>
@@ -235,12 +369,28 @@ function ProductForm({
         </label>
         <label>
           <span>Tamanho</span>
-          <input value={form.size} onChange={(event) => onChange({ ...form, size: event.target.value })} placeholder="P, M, G..." />
+          <input value={form.size} onChange={(event) => onChange({ ...form, size: event.target.value })} placeholder="P, M, G, 4, 6..." />
         </label>
         <label>
           <span>Cor</span>
           <input value={form.color} onChange={(event) => onChange({ ...form, color: event.target.value })} placeholder="Preto, azul..." />
         </label>
+        <div className="mapp-form-quick-picks span-2">
+          <span>Tamanhos rápidos</span>
+          <div>
+            {PRODUCT_SIZE_OPTIONS.map((size) => (
+              <button key={size} type="button" className={form.size === size ? 'active' : ''} onClick={() => onChange({ ...form, size })}>{size}</button>
+            ))}
+          </div>
+        </div>
+        <div className="mapp-form-quick-picks span-2">
+          <span>Cores rápidas</span>
+          <div>
+            {PRODUCT_COLOR_OPTIONS.map((color) => (
+              <button key={color} type="button" className={form.color === color ? 'active' : ''} onClick={() => onChange({ ...form, color })}>{color}</button>
+            ))}
+          </div>
+        </div>
         <div className="mapp-product-photo-field span-2">
           <div className="mapp-product-photo-preview-wrap">
             {hasProductPhoto(form) ? (
@@ -261,7 +411,7 @@ function ProductForm({
           </div>
           <div className="mapp-product-photo-actions">
             <strong>Foto do produto</strong>
-            <p>PNG, JPG ou WEBP até 2 MB. A miniatura aparece na lista e toca para ampliar.</p>
+            <p>Pode escolher foto maior. O app reduz automaticamente para salvar rápido, sincronizar e entrar no backup quando possível.</p>
             <label className="mapp-photo-upload-button">
               <input
                 type="file"
@@ -405,14 +555,18 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       setFeedback({ tone: 'error', text: 'Escolha uma foto em PNG, JPG ou WEBP.' });
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setFeedback({ tone: 'error', text: 'A foto precisa ter no máximo 2 MB para salvar e sincronizar bem no celular.' });
+    if (file.size > MAX_PRODUCT_PHOTO_SOURCE_BYTES) {
+      setFeedback({ tone: 'error', text: 'Essa foto está grande demais para celular. Escolha uma imagem até 12 MB ou tire outra foto mais leve.' });
       return;
     }
     try {
-      const imageData = await fileToDataUrl(file);
-      setForm({ ...form, image_data: imageData });
-      setFeedback({ tone: 'info', text: 'Foto carregada. Salve o produto para enviar para a nuvem.' });
+      setFeedback({ tone: 'info', text: 'Preparando a foto para salvar sem pesar no celular...' });
+      const prepared = await compressProductPhoto(file);
+      setForm({ ...form, image_data: prepared.dataUrl });
+      const sizeMessage = prepared.compressed
+        ? `Foto reduzida de ${fileSizeLabel(prepared.originalBytes)} para ${fileSizeLabel(prepared.outputBytes)}. Salve o produto para enviar para a nuvem.`
+        : `Foto carregada com ${fileSizeLabel(prepared.outputBytes)}. Salve o produto para enviar para a nuvem.`;
+      setFeedback({ tone: 'info', text: sizeMessage });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     }
