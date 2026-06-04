@@ -23,7 +23,7 @@ interface CreditsScreenProps {
 }
 
 type CreditFilter = 'todos' | 'aberto' | 'vencidos' | 'quitado';
-type CreditPrintFormat = '58mm' | '80mm' | 'a4';
+type CreditPrintFormat = 'a4';
 
 type ReceiveState = {
   credit: CreditSummary;
@@ -31,6 +31,18 @@ type ReceiveState = {
   amount: string;
   method: CreditPaymentMethod | '';
   redistribute: boolean;
+};
+
+type CustomerCreditGroup = {
+  customerKey: string;
+  customerName: string;
+  contact: string;
+  credits: CreditSummary[];
+  total: number;
+  paid: number;
+  balance: number;
+  notesCount: number;
+  openNotes: number;
 };
 
 function requestId(prefix: string): string {
@@ -169,8 +181,8 @@ function buildReceiptStyles(): string {
     <style>
       *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
       :root{color-scheme:light}
-      body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif}
-      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12)}
+      body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif;padding:18px;min-height:100vh}
+      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12)}.slf-mode-tip{margin:0 auto 12px;max-width:920px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;text-align:center}
       .slf-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
       .slf-brand{display:flex;gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;word-break:break-word}.slf-contact{font-size:11px;color:#64748b;margin-top:3px}.slf-sub{font-size:12px;color:#64748b;margin-top:4px}.slf-badge{border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:nowrap;border:1px solid #e2e8f0}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
       .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;word-break:break-word}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
@@ -197,7 +209,7 @@ function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSumm
         ? `Atenção: esta parcela está atrasada. ${dueHint || 'Confira o vencimento e combine o recebimento com o cliente.'}`
         : 'Esta parcela ainda está em aberto. Envie este comprovante para o cliente acompanhar vencimento e saldo.';
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Parcela ${installment.number}/${credit.installments.length}</title>${buildReceiptStyles()}</head><body>
-    <main class="slf-receipt">
+    <div class="slf-mode-tip">Visualização limpa para iPhone/Android: confira, tire print, compartilhe ou use A4/PDF.</div><div class="slf-mode-tip">Extrato da nota: confira todas as parcelas, tire print no iPhone ou use A4/PDF.</div><main class="slf-receipt">
       <header class="slf-head">
         <div>${buildReceiptBrand(store)}<div class="slf-sub">Comprovante individual da parcela do crediário</div></div>
         <strong class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</strong>
@@ -358,16 +370,48 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         || (filter === 'aberto' && credit.status === 'aberto')
         || (filter === 'vencidos' && hasOverdue)
         || (filter === 'quitado' && credit.status === 'quitado');
+      const installmentText = credit.installments.map((item) => `parcela ${item.number} ${installmentStatusLabel(item)} ${item.due_date}`).join(' ');
       const matchesTerm = !term || [
         credit.customer_name,
         credit.customer_phone,
         credit.customer_whatsapp,
         String(credit.sale_number),
+        `nota ${credit.sale_number}`,
+        `venda ${credit.sale_number}`,
         credit.status,
+        installmentText,
       ].some((value) => String(value || '').toLowerCase().includes(term));
       return matchesFilter && matchesTerm;
     });
   }, [credits, filter, query]);
+
+  const groupedCredits = useMemo<CustomerCreditGroup[]>(() => {
+    const groups = new Map<string, CustomerCreditGroup>();
+    for (const credit of filteredCredits) {
+      const customerName = credit.customer_name?.trim() || 'Cliente sem nome';
+      const contact = credit.customer_whatsapp || credit.customer_phone || '';
+      const key = `${customerName.toLowerCase()}|${contact}`;
+      const current = groups.get(key) ?? {
+        customerKey: key,
+        customerName,
+        contact,
+        credits: [],
+        total: 0,
+        paid: 0,
+        balance: 0,
+        notesCount: 0,
+        openNotes: 0,
+      };
+      current.credits.push(credit);
+      current.total += Number(credit.total || 0);
+      current.paid += creditPaidTotal(credit);
+      current.balance += Math.max(0, Number(credit.balance || 0));
+      current.notesCount += 1;
+      if (credit.status !== 'quitado' && Number(credit.balance || 0) > 0.009) current.openNotes += 1;
+      groups.set(key, current);
+    }
+    return Array.from(groups.values()).sort((a, b) => b.balance - a.balance || a.customerName.localeCompare(b.customerName));
+  }, [filteredCredits]);
 
   function toggleCredit(creditId: string): void {
     setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
@@ -470,7 +514,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     setSaving(true);
     try {
       await api.exportHtmlPdf(buildCreditGeneralReceiptHtml(receiptStore, credit), `crediario-nota-${credit.sale_number || credit.id}`, true, undefined, format);
-      setFeedback({ tone: 'success', text: `Comprovante geral ${format === 'a4' ? 'A4/PDF' : format} aberto para imprimir ou enviar.` });
+      setFeedback({ tone: 'success', text: 'Extrato A4/PDF aberto. No iPhone, visualize em tela cheia e tire print ou compartilhe.' });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -482,7 +526,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     setSaving(true);
     try {
       await api.exportHtmlPdf(buildInstallmentReceiptHtml(receiptStore, credit, installment), `crediario-${credit.sale_number}-parcela-${installment.number}`, true, undefined, format);
-      setFeedback({ tone: 'success', text: `Comprovante da parcela ${installment.number}/${credit.installments.length} aberto em ${format === 'a4' ? 'A4/PDF' : format}.` });
+      setFeedback({ tone: 'success', text: `Parcela ${installment.number}/${credit.installments.length} aberta em A4/PDF. No iPhone, visualize e tire print se precisar.` });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -532,7 +576,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       </section>
 
       <section className="mapp-success-card">
-        <strong>Ajuda rápida: notas expansíveis e comprovante por parcela</strong>
+        <strong>Ajuda rápida: cliente, notas e parcelas expansíveis</strong>
         <span>Abra uma nota para ver todas as parcelas. Cada parcela pode gerar comprovante com status Pago, Parcial, Pendente ou Vencido.</span>
       </section>
 
@@ -552,7 +596,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       <section className="mapp-filters-card">
         <label className="mapp-search-field">
           <InlineIcon name="relatorios" size={16} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente, telefone ou venda" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente, nota, venda, telefone ou status" />
         </label>
         <div className="mapp-filter-pills">
           {[
@@ -649,79 +693,94 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
       {loading ? <div className="mapp-inline-status">Carregando crediário...</div> : null}
 
-      {filteredCredits.length ? (
-        <section className="mapp-credit-list" aria-label="Lista de crediários">
-          {filteredCredits.map((credit) => {
-            const openInstallments = creditOpenInstallments(credit);
-            const nextInstallment = openInstallments[0] ?? credit.installments[0];
-            const expanded = Boolean(expandedCredits[credit.id]);
-            const visibleInstallments = expanded ? credit.installments : credit.installments.slice(0, 2);
-            const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
-            return (
-              <article key={credit.id} className={`mapp-credit-card ${expanded ? 'expanded' : ''}`}>
-                <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
-                  <span><InlineIcon name="clientes" size={24} /></span>
-                  <div>
-                    <strong>{credit.customer_name}</strong>
-                    <small>Nota/Venda #{String(credit.sale_number).padStart(4, '0')} · {formatDateTime(credit.created_at)}</small>
-                    <small>{paidCount}/{credit.installments.length} parcela(s) pagas · toque para {expanded ? 'recolher' : 'abrir'}</small>
-                  </div>
-                  <em className={credit.status === 'quitado' ? 'ok' : 'warn'}>{credit.status === 'quitado' ? 'Quitado' : 'Aberto'}</em>
-                </button>
-                <div className="mapp-credit-totals">
-                  <div><span>Valor original</span><strong>{formatCurrency(credit.total)}</strong></div>
-                  <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
-                  <div><span>Restante</span><strong>{formatCurrency(credit.balance)}</strong></div>
-                  <div><span>Contato</span><strong>{credit.customer_whatsapp || credit.customer_phone || '-'}</strong></div>
+      {groupedCredits.length ? (
+        <section className="mapp-credit-customer-list" aria-label="Clientes com crediário">
+          {groupedCredits.map((group) => (
+            <section key={group.customerKey} className="mapp-credit-customer-card">
+              <header className="mapp-credit-customer-head">
+                <div className="mapp-credit-customer-avatar" aria-hidden="true">{receiptInitials(group.customerName)}</div>
+                <div>
+                  <strong>{group.customerName}</strong>
+                  <small>{group.notesCount} nota(s) · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
                 </div>
-                <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Visualizar/print</button>
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, '58mm')} disabled={saving}>Extrato 58mm</button>
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, '80mm')} disabled={saving}>Extrato 80mm</button>
-                  <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Extrato A4</button>
-                  <button type="button" onClick={() => void shareCreditReceipt(credit)} disabled={saving}>Enviar extrato</button>
-                </div>
-                <div className="mapp-installment-list">
-                  {visibleInstallments.map((installment) => {
-                    const statusLabel = installmentStatusLabel(installment);
-                    const tone = installmentStatusTone(installment);
-                    return (
-                      <div key={installment.id} className={`mapp-installment-row mapp-installment-row-${tone} ${isOverdue(installment) ? 'overdue' : ''}`}>
-                        <div className="mapp-installment-main">
-                          <strong>Parcela {formatNumber(installment.number)}/{formatNumber(credit.installments.length)}</strong>
-                          <small>{statusLabel} · vence {dateOnly(installment.due_date)}</small>
-                          <div className="mapp-installment-values">
-                            <span>Original <b>{formatCurrency(installment.amount)}</b></span>
-                            <span>Pago <b>{formatCurrency(paidOf(installment))}</b></span>
-                            <span>Restante <b>{formatCurrency(remainingOf(installment))}</b></span>
-                          </div>
+                <em className={group.balance <= 0.009 ? 'ok' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : formatCurrency(group.balance)}</em>
+              </header>
+              <div className="mapp-credit-customer-totals">
+                <span>Total <b>{formatCurrency(group.total)}</b></span>
+                <span>Pago <b>{formatCurrency(group.paid)}</b></span>
+                <span>Restante <b>{formatCurrency(group.balance)}</b></span>
+              </div>
+              <div className="mapp-credit-list" aria-label={`Notas do cliente ${group.customerName}`}>
+                {group.credits.map((credit) => {
+                  const openInstallments = creditOpenInstallments(credit);
+                  const nextInstallment = openInstallments[0] ?? credit.installments[0];
+                  const expanded = Boolean(expandedCredits[credit.id]);
+                  const visibleInstallments = expanded ? credit.installments : credit.installments.slice(0, 2);
+                  const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+                  return (
+                    <article key={credit.id} className={`mapp-credit-card ${expanded ? 'expanded' : ''}`}>
+                      <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
+                        <span><InlineIcon name="comprovantes" size={24} /></span>
+                        <div>
+                          <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
+                          <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcela(s) pagas</small>
+                          <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
                         </div>
-                        <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
-                        <div className="mapp-installment-actions">
-                          {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? <button type="button" onClick={() => openReceive(credit, installment)}>Receber</button> : null}
-                          <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>Ver/print</button>
-                          <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, '58mm')} disabled={saving}>58</button>
-                          <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, '80mm')} disabled={saving}>80</button>
-                          <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>A4</button>
-                          <button type="button" onClick={() => void shareInstallmentReceipt(credit, installment)} disabled={saving}>Enviar</button>
-                        </div>
+                        <em className={credit.status === 'quitado' ? 'ok' : 'warn'}>{credit.status === 'quitado' ? 'Quitada' : 'Aberta'}</em>
+                      </button>
+                      <div className="mapp-credit-totals">
+                        <div><span>Total da nota</span><strong>{formatCurrency(credit.total)}</strong></div>
+                        <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
+                        <div><span>Restante</span><strong>{formatCurrency(credit.balance)}</strong></div>
+                        <div><span>Parcelas</span><strong>{paidCount}/{credit.installments.length}</strong></div>
                       </div>
-                    );
-                  })}
-                  {credit.installments.length > visibleInstallments.length ? (
-                    <button type="button" className="mapp-credit-expand-button" onClick={() => toggleCredit(credit.id)}>
-                      Ver todas as {formatNumber(credit.installments.length)} parcelas
-                    </button>
-                  ) : null}
-                </div>
-                {nextInstallment && credit.status !== 'quitado' ? (
-                  <button type="button" className="mapp-credit-primary-action" onClick={() => openReceive(credit, nextInstallment)}>
-                    Receber próxima parcela
-                  </button>
-                ) : null}
-              </article>
-            );
-          })}
+                      <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
+                        <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>Visualizar iPhone</button>
+                        <button type="button" onClick={() => void exportCreditReceipt(credit, 'a4')} disabled={saving}>A4 / PDF</button>
+                        <button type="button" onClick={() => void shareCreditReceipt(credit)} disabled={saving}>Enviar extrato</button>
+                      </div>
+                      <div className="mapp-installment-list">
+                        {visibleInstallments.map((installment) => {
+                          const statusLabel = installmentStatusLabel(installment);
+                          const tone = installmentStatusTone(installment);
+                          return (
+                            <div key={installment.id} className={`mapp-installment-row mapp-installment-row-${tone} ${isOverdue(installment) ? 'overdue' : ''}`}>
+                              <div className="mapp-installment-main">
+                                <strong>Parcela {formatNumber(installment.number)}/{formatNumber(credit.installments.length)}</strong>
+                                <small>{statusLabel} · vence {dateOnly(installment.due_date)}</small>
+                                <div className="mapp-installment-values">
+                                  <span>Original <b>{formatCurrency(installment.amount)}</b></span>
+                                  <span>Pago <b>{formatCurrency(paidOf(installment))}</b></span>
+                                  <span>Restante <b>{formatCurrency(remainingOf(installment))}</b></span>
+                                </div>
+                              </div>
+                              <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
+                              <div className="mapp-installment-actions mapp-installment-actions-slim">
+                                {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? <button type="button" onClick={() => openReceive(credit, installment)}>Receber</button> : null}
+                                <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>Visualizar</button>
+                                <button type="button" onClick={() => void exportInstallmentReceipt(credit, installment, 'a4')} disabled={saving}>A4/PDF</button>
+                                <button type="button" onClick={() => void shareInstallmentReceipt(credit, installment)} disabled={saving}>Enviar</button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {credit.installments.length > visibleInstallments.length ? (
+                          <button type="button" className="mapp-credit-expand-button" onClick={() => toggleCredit(credit.id)}>
+                            Ver todas as {formatNumber(credit.installments.length)} parcelas desta nota
+                          </button>
+                        ) : null}
+                      </div>
+                      {nextInstallment && credit.status !== 'quitado' ? (
+                        <button type="button" className="mapp-credit-primary-action" onClick={() => openReceive(credit, nextInstallment)}>
+                          Receber próxima parcela
+                        </button>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </section>
       ) : !loading ? (
         <EmptyState icon="crediario" title="Sem crediário encontrado" detail={query ? 'Tente buscar por outro cliente ou venda.' : 'Vendas no crediário aparecerão aqui.'} actionLabel="Abrir PDV" actionPage="sales" onNavigate={onNavigate} />
