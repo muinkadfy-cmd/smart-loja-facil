@@ -6504,3 +6504,180 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   .mapp-filter-pills button { padding-inline: 10px; }
   .mapp-receipt-actions { grid-template-columns: 1fr; }
 }
+
+/* Lote 159 - Crediario notas expansíveis e comprovantes por parcela */
+.mapp-credit-note-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.mapp-credit-note-head > span {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(124, 58, 237, .16), rgba(14, 165, 233, .10));
+  color: #5b21b6;
+  border: 1px solid rgba(124, 58, 237, .14);
+}
+
+.mapp-credit-note-head strong {
+  display: block;
+  color: var(--mapp-text, #111827);
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.mapp-credit-note-head small {
+  display: block;
+  color: var(--mapp-muted, #64748b);
+  margin-top: 3px;
+  line-height: 1.25;
+}
+
+.mapp-credit-note-head em,
+.mapp-installment-status {
+  font-style: normal;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mapp-credit-note-head em.ok,
+.mapp-installment-status.ok {
+  background: rgba(16, 185, 129, .13);
+  color: #047857;
+}
+
+.mapp-credit-note-head em.warn,
+.mapp-installment-status.warn {
+  background: rgba(245, 158, 11, .14);
+  color: #a16207;
+}
+
+.mapp-installment-status.danger {
+  background: rgba(239, 68, 68, .14);
+  color: #b91c1c;
+}
+
+.mapp-installment-status.neutral {
+  background: rgba(100, 116, 139, .13);
+  color: #475569;
+}
+
+.mapp-credit-note-actions,
+.mapp-installment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.mapp-credit-note-actions button,
+.mapp-installment-actions button,
+.mapp-credit-expand-button {
+  border: 1px solid rgba(148, 163, 184, .28);
+  background: rgba(255,255,255,.86);
+  color: #334155;
+  border-radius: 999px;
+  padding: 8px 10px;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 850;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+}
+
+.mapp-credit-note-actions button:first-child,
+.mapp-installment-actions button:first-child {
+  background: #111827;
+  border-color: #111827;
+  color: #fff;
+}
+
+.mapp-installment-row {
+  align-items: flex-start;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 10px;
+  padding: 12px;
+}
+
+.mapp-installment-row .mapp-installment-actions {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+
+.mapp-installment-main {
+  min-width: 0;
+}
+
+.mapp-installment-main strong,
+.mapp-installment-main small {
+  display: block;
+}
+
+.mapp-installment-values {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mapp-installment-values span {
+  display: block;
+  border-radius: 11px;
+  padding: 7px 8px;
+  background: rgba(248, 250, 252, .92);
+  border: 1px solid rgba(226, 232, 240, .86);
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.mapp-installment-values b {
+  display: block;
+  color: #111827;
+  font-size: 12px;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.mapp-credit-expand-button {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(124, 58, 237, .08);
+  color: #5b21b6;
+  border-color: rgba(124, 58, 237, .18);
+}
+
+.mapp-credit-card.expanded {
+  border-color: rgba(124, 58, 237, .22);
+  box-shadow: 0 18px 42px rgba(76, 29, 149, .11);
+}
+
+@media (max-width: 380px) {
+  .mapp-credit-note-head {
+    grid-template-columns: 1fr auto;
+  }
+  .mapp-credit-note-head > span {
+    display: none;
+  }
+  .mapp-installment-values {
+    grid-template-columns: 1fr;
+  }
+  .mapp-credit-note-actions button,
+  .mapp-installment-actions button {
+    flex: 1 1 calc(50% - 6px);
+  }
+}

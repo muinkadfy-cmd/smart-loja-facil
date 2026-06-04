@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v158-relatorios-comprovantes-logs';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v159-crediario-notas-comprovantes';
 const APP_SHELL = [
   '/',
   '/index.html',
