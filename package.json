@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.155",
+  "version": "0.1.158",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil PWA mobile-first v155 com produto assistido, fotos maiores comprimidas e crediário parcelado",
+  "description": "Smart Loja Fácil PWA mobile-first v158 com relatórios, comprovantes e logs 10/10 mobile, cálculos comerciais, comprovantes e crediário",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

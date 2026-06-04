@@ -314,6 +314,13 @@ img, svg { max-width: 100%; }
   color: #10203a;
   box-shadow: var(--mapp-soft-shadow);
 }
+.mapp-page-reload-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: #f7fbff;
+  box-shadow: 0 8px 18px rgba(15, 43, 85, 0.08);
+}
 .mapp-bell-shape svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .mapp-badge { position: absolute; right: -7px; top: -8px; min-width: 25px; height: 25px; padding: 0 7px; display: inline-grid; place-items: center; border-radius: 999px; background: #f23a18; color: #fff; font-size: 0.82rem; font-weight: 950; border: 3px solid #fff; }
 
@@ -531,11 +538,80 @@ img, svg { max-width: 100%; }
   background: #fff;
   padding: 14px;
 }
+.mapp-list-card.is-clickable { cursor: pointer; }
+.mapp-list-card.is-expanded { align-items: start; }
 .mapp-list-main { min-width: 0; display: grid; gap: 4px; }
 .mapp-list-main strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.08rem; }
 .mapp-list-main small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--mapp-muted); font-weight: 700; }
 .mapp-list-value { color: #4c43e9; font-size: 1.05rem; white-space: nowrap; }
 .mapp-more-button { width: 46px; height: 46px; border: 1px solid var(--mapp-line); border-radius: 16px; background: #fff; color: #475569; font-weight: 950; }
+.mapp-list-thumb {
+  width: 54px;
+  height: 54px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #dbe6f2;
+  border-radius: 17px;
+  background: #eef6ff;
+}
+.mapp-list-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.mapp-list-expanded {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #edf2f8;
+  padding-top: 12px;
+}
+.mapp-sale-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.mapp-sale-detail-grid span {
+  min-width: 0;
+  border: 1px solid #e2eaf5;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #6a778a;
+  padding: 9px 10px;
+  font-size: 0.76rem;
+  font-weight: 790;
+}
+.mapp-sale-detail-grid b {
+  display: block;
+  overflow: hidden;
+  color: #132640;
+  font-size: 0.86rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mapp-sale-detail-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.mapp-sale-detail-actions button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 14px;
+  background: #102a4c;
+  color: #fff;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+.mapp-sale-detail-actions button + button {
+  border: 1px solid #dbe5f1;
+  background: #fff;
+  color: #24415f;
+}
 .mapp-empty-state { display: grid; place-items: center; text-align: center; gap: 10px; padding: 26px 18px; }
 .mapp-empty-state > span { display: inline-grid; place-items: center; width: 66px; height: 66px; border-radius: 22px; background: #eef6ff; color: var(--mapp-blue); }
 .mapp-empty-state > span svg,
@@ -640,6 +716,21 @@ img, svg { max-width: 100%; }
 .mapp-product-pick-list button > span.is-empty {
   background: #fff0f0;
   color: #e5484d;
+}
+
+.mapp-product-pick-list .mapp-product-mini-thumb,
+.mapp-cart-item > .mapp-product-mini-thumb {
+  overflow: hidden;
+  border: 1px solid #dbe8f8;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
+  box-shadow: 0 8px 18px rgba(15, 43, 85, 0.08);
+}
+
+.mapp-product-mini-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .mapp-product-pick-list strong {
@@ -1184,6 +1275,7 @@ img, svg { max-width: 100%; }
   .mapp-brand-dot svg, .mapp-brand-dot img, .mapp-brand-dot .app-svg-icon { width: 22px !important; height: 22px !important; }
   .mapp-header-actions .mapp-icon-button:first-child { display: none; }
   .mapp-icon-button { width: 48px; height: 48px; border-radius: 17px; }
+  .mapp-page-reload-button { width: 40px; height: 40px; border-radius: 14px; }
   .mapp-bell-shape svg { width: 25px; height: 25px; }
   .mapp-badge { min-width: 22px; height: 22px; right: -6px; top: -7px; border-width: 2px; font-size: 0.74rem; }
   .mapp-page { padding: 16px 16px var(--mapp-bottom-safe); }
@@ -5472,10 +5564,12 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
 }
 
 .mapp-product-thumb {
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
   align-self: start;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fd 100%);
+  box-shadow: 0 12px 26px rgba(15, 43, 85, 0.12);
 }
 
 .mapp-photo-modal {
@@ -5699,4 +5793,714 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
     padding: 0 10px;
     font-size: 0.76rem;
   }
+}
+
+/* Lote 158 — Central de Notificações compacta/premium */
+.mapp-notification-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 28, 48, 0.28);
+  backdrop-filter: blur(5px);
+}
+
+.mapp-notification-modal {
+  width: min(660px, calc(100% - 32px));
+  max-height: min(82dvh, 720px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(213, 224, 238, 0.96);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(14, 32, 58, 0.18);
+  padding: 16px;
+}
+
+.mapp-notification-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mapp-notification-head h2 {
+  margin: 0;
+  color: #101f35;
+  font-size: clamp(1.28rem, 3vw, 1.55rem);
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.mapp-notification-head p {
+  margin: 4px 0 0;
+  color: #748197;
+  font-size: 0.9rem;
+  font-weight: 760;
+}
+
+.mapp-notification-close {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #dbe5f1;
+  border-radius: 15px;
+  background: #fff;
+  color: #24364f;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.mapp-notification-tabs {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  border: 1px solid #e1e9f4;
+  border-radius: 17px;
+  background: #f6f8fb;
+  padding: 5px;
+}
+
+.mapp-notification-tabs button {
+  min-width: 0;
+  min-height: 38px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  color: #526278;
+  padding: 0 10px;
+  font-size: 0.86rem;
+  font-weight: 920;
+  white-space: nowrap;
+}
+
+.mapp-notification-tabs button.active {
+  background: #ffffff;
+  color: #0f2749;
+  box-shadow: 0 8px 18px rgba(21, 43, 75, 0.08);
+}
+
+.mapp-notification-tabs button span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 5px;
+  border-radius: 999px;
+  background: #246bf2;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.mapp-notification-tabs .mapp-notification-clear-tab {
+  color: #8b5d13;
+  padding-inline: 12px;
+}
+
+.mapp-notification-list {
+  min-height: 0;
+  display: grid;
+  gap: 9px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 4px;
+}
+
+.mapp-notification-card {
+  position: relative;
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 8px 42px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e2eaf5;
+  border-radius: 18px;
+  background: #fbfdff;
+  padding: 10px 11px;
+  box-shadow: 0 8px 22px rgba(18, 42, 76, 0.055);
+}
+
+.mapp-notification-card.is-unread {
+  border-color: #d4e1f2;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.mapp-notification-card.is-read {
+  opacity: 0.72;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.mapp-notification-unread-dot {
+  width: 8px;
+  height: 34px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.mapp-notification-card.is-unread .mapp-notification-unread-dot {
+  background: var(--mapp-blue);
+}
+
+.mapp-notification-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef5ff;
+  color: var(--mapp-blue);
+}
+
+.mapp-notification-icon svg,
+.mapp-notification-icon img,
+.mapp-notification-icon .app-svg-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.mapp-notification-copy {
+  min-width: 0;
+}
+
+.mapp-notification-copy strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #10203a;
+  font-size: 0.95rem;
+  line-height: 1.12;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapp-notification-copy p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 3px 0 0;
+  color: #68778d;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  font-weight: 730;
+}
+
+.mapp-notification-time {
+  justify-self: end;
+  color: #8a96a8;
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.mapp-notification-card > button {
+  min-height: 36px;
+  min-width: 50px;
+  border: 0;
+  border-radius: 12px;
+  background: #102a4c;
+  color: #fff;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.mapp-notification-card.is-read > button {
+  background: #e8eef6;
+  color: #526278;
+}
+
+.mapp-notification-card.tone-orange.is-unread .mapp-notification-unread-dot,
+.mapp-notification-card.tone-orange > button { background: #e88019; }
+.mapp-notification-card.tone-orange .mapp-notification-icon { background: #fff2df; color: #c76b00; }
+.mapp-notification-card.tone-purple.is-unread .mapp-notification-unread-dot,
+.mapp-notification-card.tone-purple > button { background: #7c5cff; }
+.mapp-notification-card.tone-purple .mapp-notification-icon { background: #f2ebff; color: #7354e8; }
+.mapp-notification-card.tone-blue.is-unread .mapp-notification-unread-dot,
+.mapp-notification-card.tone-blue > button { background: #246bf2; }
+.mapp-notification-card.tone-blue .mapp-notification-icon { background: #edf5ff; color: #246bf2; }
+.mapp-notification-card.tone-green.is-unread .mapp-notification-unread-dot,
+.mapp-notification-card.tone-green > button { background: #16a05d; }
+.mapp-notification-card.tone-green .mapp-notification-icon { background: #eafbf2; color: #137d48; }
+
+.mapp-notification-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, auto);
+  gap: 10px;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.mapp-notification-actions button {
+  min-width: 0;
+  min-height: 42px;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.mapp-notification-mark-all {
+  border: 1px solid #dbe5f1;
+  background: #fff;
+  color: #24415f;
+}
+
+.mapp-notification-mark-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mapp-notification-primary {
+  border: 0;
+  background: linear-gradient(135deg, #246bf2 0%, #1454d8 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(36, 107, 242, 0.2);
+}
+
+.mapp-notification-empty {
+  display: grid;
+  place-items: center;
+  gap: 5px;
+  min-height: 110px;
+  border: 1px dashed #cedbed;
+  border-radius: 18px;
+  background: #f8fbff;
+  color: #657389;
+  text-align: center;
+  padding: 18px;
+}
+
+.mapp-notification-empty strong {
+  color: #203755;
+  font-weight: 950;
+}
+
+.mapp-notification-modal button:focus-visible,
+.mapp-notification-modal [role='tab']:focus-visible {
+  outline: 3px solid rgba(36, 107, 242, 0.36);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .mapp-notification-layer {
+    padding: max(14px, env(safe-area-inset-top, 0px)) 16px max(14px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .mapp-notification-modal {
+    width: calc(100% - 32px);
+    max-height: min(80dvh, 620px);
+    border-radius: 22px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .mapp-notification-layer {
+    place-items: center;
+    padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px));
+    background: rgba(16, 28, 48, 0.22);
+    backdrop-filter: blur(4px);
+  }
+
+  .mapp-notification-modal {
+    width: calc(100% - 20px);
+    max-height: min(78dvh, 560px);
+    gap: 9px;
+    border-radius: 20px;
+    padding: 11px;
+  }
+
+  .mapp-notification-head h2 {
+    font-size: 1.18rem;
+  }
+
+  .mapp-notification-head p {
+    font-size: 0.8rem;
+  }
+
+  .mapp-notification-close {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .mapp-notification-tabs {
+    gap: 5px;
+    padding: 4px;
+    border-radius: 15px;
+  }
+
+  .mapp-notification-tabs button {
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 0.76rem;
+  }
+
+  .mapp-notification-tabs button span {
+    min-width: 19px;
+    height: 19px;
+    margin-left: 3px;
+    font-size: 0.66rem;
+  }
+
+  .mapp-notification-list {
+    gap: 7px;
+  }
+
+  .mapp-notification-card {
+    min-height: 66px;
+    grid-template-columns: 6px 36px minmax(0, 1fr) auto;
+    gap: 8px;
+    border-radius: 15px;
+    padding: 8px;
+  }
+
+  .mapp-notification-unread-dot {
+    width: 6px;
+    height: 28px;
+  }
+
+  .mapp-notification-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mapp-notification-icon svg,
+  .mapp-notification-icon img,
+  .mapp-notification-icon .app-svg-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mapp-notification-copy strong {
+    font-size: 0.86rem;
+  }
+
+  .mapp-notification-copy p {
+    font-size: 0.74rem;
+    line-height: 1.2;
+  }
+
+  .mapp-notification-time {
+    align-self: start;
+    padding-top: 2px;
+    font-size: 0.68rem;
+  }
+
+  .mapp-notification-card > button {
+    grid-column: 4;
+    min-height: 32px;
+    min-width: 48px;
+    padding: 0 9px;
+    font-size: 0.74rem;
+  }
+
+  .mapp-notification-actions {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .mapp-notification-actions button {
+    min-height: 40px;
+    border-radius: 13px;
+    font-size: 0.8rem;
+  }
+
+  .mapp-notification-primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .mapp-notification-modal {
+    width: calc(100% - 20px);
+    max-height: min(76dvh, 530px);
+    padding: 10px;
+  }
+
+  .mapp-notification-tabs button {
+    font-size: 0.72rem;
+    padding-inline: 6px;
+  }
+
+  .mapp-notification-card {
+    min-height: 62px;
+    grid-template-columns: 5px 34px minmax(0, 1fr) auto;
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .mapp-notification-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 360px) {
+  .mapp-notification-modal {
+    width: calc(100% - 20px);
+    max-height: min(75dvh, 510px);
+  }
+
+  .mapp-notification-head {
+    gap: 8px;
+  }
+
+  .mapp-notification-tabs {
+    grid-template-columns: 1fr 1.12fr auto;
+  }
+
+  .mapp-notification-copy strong {
+    font-size: 0.82rem;
+  }
+
+  .mapp-notification-copy p {
+    font-size: 0.71rem;
+  }
+}
+
+/* Lote 159 — Proteção contra erro de valor no recebimento do crediário */
+.mapp-credit-payment-review {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dbe7f5;
+  border-radius: 18px;
+  background: #f8fbff;
+  padding: 13px;
+}
+
+.mapp-credit-payment-review > strong {
+  color: #132640;
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.mapp-credit-payment-review > p {
+  margin: 0;
+  color: #526278;
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.mapp-credit-payment-review > small {
+  color: #7a5a12;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.mapp-credit-payment-review-partial,
+.mapp-credit-payment-review-over-installment,
+.mapp-credit-payment-review-blocked {
+  border-color: #f0c987;
+  background: #fff8eb;
+}
+
+.mapp-credit-payment-review-blocked > strong,
+.mapp-credit-payment-review-over-installment > strong {
+  color: #8a5200;
+}
+
+.mapp-credit-payment-alert,
+.mapp-credit-payment-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mapp-credit-payment-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mapp-credit-payment-alert span,
+.mapp-credit-payment-summary span {
+  min-width: 0;
+  border: 1px solid rgba(213, 224, 238, 0.86);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #6b778b;
+  padding: 9px;
+  font-size: 0.76rem;
+  font-weight: 790;
+  line-height: 1.25;
+}
+
+.mapp-credit-payment-alert b,
+.mapp-credit-payment-summary b {
+  display: block;
+  overflow: hidden;
+  color: #10203a;
+  font-size: 0.86rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .mapp-credit-payment-alert,
+  .mapp-credit-payment-summary {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .mapp-credit-payment-review {
+    border-radius: 16px;
+    padding: 11px;
+  }
+}
+
+@media (max-width: 430px) {
+  .mapp-list-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .mapp-list-value {
+    grid-column: 2 / 4;
+    justify-self: start;
+  }
+
+  .mapp-sale-detail-grid,
+  .mapp-sale-detail-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Lote 160 — Miniaturas de produto e recarregar no topo */
+.mapp-header-actions .mapp-page-reload-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(15, 43, 85, 0.08);
+}
+
+html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+}
+
+@media (max-width: 390px) {
+  .mapp-header-actions .mapp-page-reload-button,
+  html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+  }
+}
+
+/* Lote 158 — Relatórios, comprovantes e logs 10/10 mobile */
+.mapp-filter-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  margin: 4px 0 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mapp-filter-pills::-webkit-scrollbar { display: none; }
+.mapp-filter-pills button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(113, 101, 95, .18);
+  background: rgba(255, 255, 255, .86);
+  color: #4b413c;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 38px;
+  box-shadow: 0 8px 18px rgba(63, 43, 18, .06);
+}
+.mapp-filter-pills button.active {
+  border-color: rgba(203, 124, 118, .5);
+  background: linear-gradient(135deg, rgba(203, 124, 118, .15), rgba(155, 159, 184, .16));
+  color: #3f2b12;
+}
+.mapp-report-help,
+.mapp-section-note {
+  border: 1px solid rgba(155, 159, 184, .18);
+  background: rgba(255,255,255,.74);
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: #625650;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.mapp-report-help strong { display: block; color: #3f2b12; font-size: 12px; margin-bottom: 2px; }
+.mapp-load-more { width: 100%; margin-top: 8px; }
+.mapp-receipt-button-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mapp-receipt-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.mapp-receipt-actions button {
+  min-height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(113,101,95,.18);
+  background: rgba(255,255,255,.92);
+  color: #3f2b12;
+  font-weight: 900;
+  font-size: 11px;
+}
+.mapp-crud-title-row em.neutral,
+.mapp-crud-title-row em.ok,
+.mapp-crud-title-row em.warn,
+.mapp-crud-title-row em.danger {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.mapp-crud-title-row em.neutral { background: #eef2ff; color: #3730a3; }
+.mapp-crud-title-row em.ok { background: #dcfce7; color: #166534; }
+.mapp-crud-title-row em.warn { background: #fef3c7; color: #92400e; }
+.mapp-crud-title-row em.danger { background: #fee2e2; color: #991b1b; }
+.mapp-audit-list { gap: 10px; }
+.mapp-audit-card {
+  border: 1px solid rgba(155, 159, 184, .18);
+  border-radius: 18px;
+  background: rgba(255,255,255,.88);
+  padding: 12px;
+  box-shadow: 0 12px 26px rgba(63,43,18,.06);
+}
+.mapp-audit-card strong { display: block; color: #2f261f; font-size: 13px; line-height: 1.25; margin: 4px 0; }
+.mapp-audit-card p { margin: 0; color: #655a55; font-size: 12px; line-height: 1.42; overflow-wrap: anywhere; }
+.mapp-audit-card time { display: block; margin-top: 8px; color: #8a7d76; font-size: 11px; font-weight: 800; }
+.mapp-audit-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 900;
+}
+.mapp-notification-logout {
+  border: 1px solid rgba(185, 28, 28, .2);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #fff1f2;
+  color: #9f1239;
+  font-weight: 900;
+}
+@media (max-width: 390px) {
+  .mapp-receipt-button-grid { grid-template-columns: 1fr; }
+  .mapp-filter-pills button { padding-inline: 10px; }
+  .mapp-receipt-actions { grid-template-columns: 1fr; }
 }

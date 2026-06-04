@@ -7,6 +7,7 @@ import {
   isInlineProductImageData,
   productPhotoDataUrlToBlob,
 } from './productPhotoStorage';
+import { normalizeCreditPaymentMethod, remainingInstallmentAmount, totalCreditOpenAmount } from './creditPaymentGuard';
 import type {
   AppStatus,
   AuditEvent,
@@ -55,8 +56,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v155-produto-assistido-crediario-foto';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v155-produto-assistido-crediario-foto';
+export const WEB_APP_VERSION = 'pwa-supabase-v158-relatorios-comprovantes-logs';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v158-relatorios-comprovantes-logs';
 
 
 export interface WebTrainingModeState {
@@ -713,12 +714,22 @@ export function shouldQueueWebError(error: unknown): boolean {
 export function humanizeWebError(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
   const lower = raw.toLowerCase();
-  if (lower.includes('row-level security') || lower.includes('rls')) return `Permissão insuficiente no Supabase/RLS. ${raw}`;
-  if (lower.includes('jwt') || lower.includes('session') || lower.includes('login') || lower.includes('auth')) return `Login pendente ou sessão expirada. ${raw}`;
   if (lower.includes('modo treinamento seguro ativo') || lower.includes('ambiente demo ativo')) return raw;
-  if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline')) return `Não foi possível sincronizar. Verifique a internet deste aparelho. ${raw}`;
-  if (lower.includes('supabase') && lower.includes('config')) return `Supabase não configurado. ${raw}`;
-  return raw;
+  if (lower.includes('invalid login') || lower.includes('invalid credentials')) return 'Não foi possível entrar. Confira e-mail e senha e tente novamente.';
+  if (lower.includes('row-level security') || lower.includes('rls') || lower.includes('policy') || lower.includes('permission denied')) return 'Não foi possível salvar: a permissão da nuvem precisa ser conferida. Entre como dono/administrador ou chame o suporte.';
+  if (lower.includes('jwt') || lower.includes('session') || lower.includes('login') || lower.includes('auth')) return 'Login pendente ou expirado. Saia da conta, entre novamente e tente outra vez.';
+  if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('offline')) return 'Não foi possível sincronizar. Confira a internet deste aparelho e toque em Tentar novamente.';
+  if (lower.includes('supabase') && lower.includes('config')) return 'Nuvem não configurada. Chame o suporte para ativar login e sincronização.';
+  if (lower.includes('bucket') || lower.includes('storage')) return 'O armazenamento de fotos precisa ser conferido. O produto pode salvar sem foto até o suporte ajustar isso.';
+  if (lower.includes('duplicate') || lower.includes('already exists')) return 'Este registro parece já existir. Atualize a tela e confira antes de salvar novamente.';
+  if (!raw.trim()) return 'Não foi possível concluir agora. Tente novamente.';
+  return raw.replace(/Supabase\/RLS|Supabase|RLS|RPC|JWT|bucket product-photos|product-photos|service worker|localStorage|app_state/gi, (token) => {
+    if (/bucket product-photos|product-photos|bucket/i.test(token)) return 'armazenamento de fotos';
+    if (/localStorage|app_state/i.test(token)) return 'dados salvos no aparelho';
+    if (/service worker/i.test(token)) return 'atualização do app';
+    if (/JWT|RPC|RLS|Supabase\/RLS|Supabase/i.test(token)) return 'nuvem';
+    return 'sincronização';
+  }).slice(0, 220);
 }
 
 
@@ -834,7 +845,7 @@ function guestSettings(): Settings {
     phone: '',
     whatsapp: '',
     address: '',
-    receipt_message: 'Entre com Supabase para sincronizar no celular.',
+    receipt_message: 'Entre na nuvem para sincronizar no celular.',
     low_stock_limit: 3,
     slow_mode: false,
     admin_password_enabled: false,
@@ -849,7 +860,7 @@ function missingSupabaseError(): Error {
     return new Error(`Configuração insegura detectada: ${env.securityWarnings.join(' ')}`);
   }
   const missing = env.missing.join(' e ') || 'variáveis públicas';
-  return new Error(`Modo web precisa de ${missing} no Cloudflare para sincronizar com Supabase. Use somente chave publica anon/publishable, nunca service_role.`);
+  return new Error(`A conexão da nuvem precisa de configuração pública no deploy. Chame o suporte para ativar login e sincronização com segurança.`);
 }
 
 async function getClient() {
@@ -1062,15 +1073,15 @@ export async function webDashboard(): Promise<DashboardData> {
       paymentMap.set(method, current);
     }
     dashboard.payment_today = Array.from(paymentMap.values());
-    dashboard.recent_sales = (sales ?? []).slice(0, 8).map((row: Record<string, unknown>) => ({
+    dashboard.recent_sales = await enrichSaleSummariesWithProducts(context.store.id, (sales ?? []).slice(0, 8).map((row: Record<string, unknown>) => ({
       id: stringValue(row.id),
       number: numberValue(row.number),
-      customer_name: stringValue(row.customer_name, 'Balcao'),
+      customer_name: stringValue(row.customer_name, 'Balcão'),
       payment_method: normalizePaymentMethod(row.payment_method),
       total: numberValue(row.total),
-      status: stringValue(row.status, 'finalized'),
+      status: saleStatusFromCloud(row.status),
       created_at: toIso(row.created_at),
-    }));
+    })));
   } catch {
     dashboard.payment_today = [];
     dashboard.recent_sales = [];
@@ -1166,7 +1177,7 @@ export async function webAppStatus(): Promise<AppStatus> {
   const env = getPublicWebEnv();
   if (!env.isConfigured) {
     const settings = guestSettings();
-    return { db_path: 'Supabase não configurado', sqlite_ok: false, offline_ready: false, version: WEB_APP_VERSION, settings, dashboard: emptyDashboard() };
+    return { db_path: 'Nuvem não configurada', sqlite_ok: false, offline_ready: false, version: WEB_APP_VERSION, settings, dashboard: emptyDashboard() };
   }
 
   try {
@@ -1174,7 +1185,7 @@ export async function webAppStatus(): Promise<AppStatus> {
     const settings = mapSettings(context.store, context.email);
     const dashboard = await webDashboard();
     return {
-      db_path: `Supabase · ${context.store.name}`,
+      db_path: `Nuvem · ${context.store.name}`,
       sqlite_ok: true,
       offline_ready: true,
       version: WEB_APP_VERSION,
@@ -1183,7 +1194,7 @@ export async function webAppStatus(): Promise<AppStatus> {
     };
   } catch {
     const settings = guestSettings();
-    return { db_path: 'Aguardando login Supabase', sqlite_ok: false, offline_ready: false, version: WEB_APP_VERSION, settings, dashboard: emptyDashboard() };
+    return { db_path: 'Aguardando login na nuvem', sqlite_ok: false, offline_ready: false, version: WEB_APP_VERSION, settings, dashboard: emptyDashboard() };
   }
 }
 
@@ -2242,7 +2253,54 @@ function mapSale(row: Record<string, unknown>): SaleSummary {
     total: numberValue(row.total),
     status: saleStatusFromCloud(row.status),
     created_at: toIso(row.created_at),
+    thumbnail_url: stringValue(row.thumbnail_url) || undefined,
+    first_product_name: stringValue(row.first_product_name) || undefined,
+    item_count: row.item_count === undefined ? undefined : numberValue(row.item_count),
   };
+}
+
+async function enrichSaleSummariesWithProducts(storeId: string, sales: SaleSummary[]): Promise<SaleSummary[]> {
+  if (sales.length === 0) return sales;
+  const client = await getClient();
+  const saleIds = sales.map((sale) => sale.id).filter(Boolean);
+  const { data: items } = await client
+    .from('sale_items')
+    .select('sale_id, product_id, product_name, qty, created_at')
+    .eq('store_id', storeId)
+    .in('sale_id', saleIds)
+    .order('created_at', { ascending: true });
+  const rows = (items ?? []) as Record<string, unknown>[];
+  const productIds = Array.from(new Set(rows.map((row) => stringValue(row.product_id)).filter(Boolean)));
+  const productImages = new Map<string, string>();
+  if (productIds.length > 0) {
+    const { data: products } = await client
+      .from('products')
+      .select('id, image_url')
+      .eq('store_id', storeId)
+      .in('id', productIds);
+    for (const product of products ?? []) {
+      const row = product as Record<string, unknown>;
+      productImages.set(stringValue(row.id), stringValue(row.image_url));
+    }
+  }
+  const itemsBySale = new Map<string, Record<string, unknown>[]>();
+  for (const item of rows) {
+    const saleId = stringValue(item.sale_id);
+    const list = itemsBySale.get(saleId) ?? [];
+    list.push(item);
+    itemsBySale.set(saleId, list);
+  }
+  return sales.map((sale) => {
+    const saleItems = itemsBySale.get(sale.id) ?? [];
+    const firstItem = saleItems[0];
+    const firstProductId = firstItem ? stringValue(firstItem.product_id) : '';
+    return {
+      ...sale,
+      thumbnail_url: productImages.get(firstProductId) || sale.thumbnail_url,
+      first_product_name: firstItem ? stringValue(firstItem.product_name) : sale.first_product_name,
+      item_count: saleItems.length || sale.item_count,
+    };
+  });
 }
 
 type WebSalePayloadItem = { product_id: string; qty: number; unit_price: number };
@@ -2298,7 +2356,7 @@ export async function webSales(): Promise<SaleSummary[]> {
     .order('created_at', { ascending: false })
     .limit(120);
   if (error) throw new Error(`Não foi possível carregar vendas do Supabase: ${error.message}`);
-  return (data ?? []).map((row: Record<string, unknown>) => mapSale(row));
+  return enrichSaleSummariesWithProducts(context.store.id, (data ?? []).map((row: Record<string, unknown>) => mapSale(row)));
 }
 
 export async function webCreateSale(payload: unknown): Promise<SaleSummary> {
@@ -2557,11 +2615,25 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
   const creditId = stringValue(source.credit_id);
   const installmentId = stringValue(source.installment_id);
   const amount = Math.max(0, numberValue(source.amount));
-  const method = normalizePaymentMethod(source.method);
+  const method = normalizeCreditPaymentMethod(stringValue(source.method));
   const requestId = stringValue(source.request_id) || clientRequestId('pay');
   const redistribute = Boolean(source.settle_with_redistribution);
   if (!creditId || !installmentId) throw new Error('Parcela inválida para recebimento.');
-  if (amount <= 0) throw new Error('Valor inválido para recebimento.');
+  if (amount <= 0) throw new Error('Informe um valor maior que R$ 0,00.');
+  if (!method) throw new Error('Escolha como o cliente pagou: dinheiro, PIX, cartão ou outro.');
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
+  const installmentBefore = creditBefore?.installments.find((item) => item.id === installmentId);
+  if (!creditBefore || !installmentBefore) throw new Error('Parcela inválida para recebimento.');
+  if (installmentBefore.status === 'pago') throw new Error('Essa parcela já está paga. Escolha outra parcela em aberto.');
+  const installmentOpen = remainingInstallmentAmount(installmentBefore);
+  const creditOpen = totalCreditOpenAmount(creditBefore);
+  if (amount > creditOpen + 0.009) {
+    throw new Error('Esse valor parece maior que o saldo em aberto. Confira antes de receber.');
+  }
+  if (amount > installmentOpen + 0.009 && !redistribute) {
+    throw new Error('Esse valor parece maior que a parcela. Para abater próximas parcelas, marque a opção de redistribuir antes de confirmar.');
+  }
   const client = await getClient();
   const { error } = await client.rpc('web_receive_credit_payment', {
     target_credit_id: creditId,
@@ -2790,8 +2862,8 @@ function buildReportSkeleton(report: ReportKind, from: string, to: string): Repo
   const generatedAt = new Date().toISOString();
   const periodText = from === to ? reportDate(from) : `${reportDate(from)} até ${reportDate(to)}`;
   if (report === 'caixa') return { report, title: 'Caixa por período', description: `Movimentos de caixa entre ${periodText}.`, empty_message: 'Nenhum movimento de caixa encontrado no período.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'data', label: 'Data' }, { key: 'tipo', label: 'Tipo' }, { key: 'forma', label: 'Forma' }, { key: 'motivo', label: 'Motivo' }, { key: 'valor', label: 'Valor', align: 'right' }], rows: [] };
-  if (report === 'crediario') return { report, title: 'Crediário em aberto', description: 'Clientes com saldo pendente no Supabase.', empty_message: 'Nenhum crediário em aberto encontrado.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'cliente', label: 'Cliente' }, { key: 'venda', label: 'Venda' }, { key: 'total', label: 'Total', align: 'right' }, { key: 'saldo', label: 'Saldo', align: 'right' }, { key: 'data', label: 'Data' }], rows: [] };
-  if (report === 'estoque_baixo') return { report, title: 'Estoque baixo', description: 'Produtos ativos abaixo do limite configurado da loja.', empty_message: 'Nenhum produto abaixo do limite.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'produto', label: 'Produto' }, { key: 'categoria', label: 'Categoria' }, { key: 'estoque', label: 'Estoque', align: 'right' }, { key: 'preco', label: 'Preço', align: 'right' }, { key: 'status', label: 'Status' }], rows: [] };
+  if (report === 'crediario') return { report, title: 'Crediário em aberto', description: `Clientes com saldo pendente criados entre ${periodText}.`, empty_message: 'Nenhum crediário em aberto encontrado.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'cliente', label: 'Cliente' }, { key: 'venda', label: 'Venda' }, { key: 'total', label: 'Total', align: 'right' }, { key: 'saldo', label: 'Saldo', align: 'right' }, { key: 'data', label: 'Data' }], rows: [] };
+  if (report === 'estoque_baixo') return { report, title: 'Estoque baixo atual', description: 'Produtos ativos abaixo do limite configurado. Este relatório não depende do período.', empty_message: 'Nenhum produto abaixo do limite.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'produto', label: 'Produto' }, { key: 'categoria', label: 'Categoria' }, { key: 'estoque', label: 'Estoque', align: 'right' }, { key: 'preco', label: 'Preço', align: 'right' }, { key: 'status', label: 'Status' }], rows: [] };
   return { report, title: 'Vendas por período', description: `Vendas registradas entre ${periodText}.`, empty_message: 'Nenhuma venda encontrada no período.', generated_at: generatedAt, total_rows: 0, summary: [], columns: [{ key: 'data', label: 'Data' }, { key: 'venda', label: 'Venda' }, { key: 'cliente', label: 'Cliente' }, { key: 'forma', label: 'Forma' }, { key: 'status', label: 'Status' }, { key: 'total', label: 'Total', align: 'right' }], rows: [] };
 }
 
@@ -2806,7 +2878,7 @@ export async function webReportData(reportValue: string, from: string, to: strin
     const { data, error } = await client.from('sales').select('number, customer_name, payment_method, total, status, created_at').eq('store_id', context.store.id).gte('created_at', range.fromIso).lt('created_at', range.toIso).order('created_at', { ascending: false });
     if (error) throw new Error(`Não foi possível gerar relatório de vendas: ${error.message}`);
     const rows = (data ?? []).map((sale: Record<string, unknown>) => ({ data: reportDateTime(toIso(sale.created_at)), venda: `#${numberValue(sale.number)}`, cliente: stringValue(sale.customer_name, 'Balcão'), forma: stringValue(sale.payment_method, '-'), status: stringValue(sale.status, '-'), total: reportMoney(numberValue(sale.total)) }));
-    const validSales = (data ?? []).filter((sale: Record<string, unknown>) => sale.status !== 'canceled');
+    const validSales = (data ?? []).filter((sale: Record<string, unknown>) => String(sale.status) !== 'canceled');
     const total = validSales.reduce((sum, sale: Record<string, unknown>) => sum + numberValue(sale.total), 0);
     model.rows = rows; model.total_rows = rows.length; model.summary = [{ label: 'Total vendido', value: reportMoney(total), detail: 'Soma sem vendas canceladas.', tone: 'green' }, { label: 'Vendas', value: String(validSales.length), detail: 'Quantidade finalizada no período.', tone: 'blue' }, { label: 'Ticket médio', value: reportMoney(validSales.length ? total / validSales.length : 0), detail: 'Média por venda válida.', tone: 'purple' }];
     return model;
@@ -2821,7 +2893,7 @@ export async function webReportData(reportValue: string, from: string, to: strin
     return model;
   }
   if (report === 'crediario') {
-    const { data, error } = await client.from('credits').select('customer_name, sale_id, total, balance, status, created_at').eq('store_id', context.store.id).eq('status', 'open').order('created_at', { ascending: false });
+    const { data, error } = await client.from('credits').select('customer_name, sale_id, total, balance, status, created_at').eq('store_id', context.store.id).eq('status', 'open').gte('created_at', range.fromIso).lt('created_at', range.toIso).order('created_at', { ascending: false });
     if (error) throw new Error(`Não foi possível gerar relatório de crediário: ${error.message}`);
     const rows = (data ?? []).map((credit: Record<string, unknown>) => ({ cliente: stringValue(credit.customer_name, 'Cliente'), venda: stringValue(credit.sale_id).slice(0, 8) || '-', total: reportMoney(numberValue(credit.total)), saldo: reportMoney(numberValue(credit.balance)), data: reportDateTime(toIso(credit.created_at)) }));
     const balance = (data ?? []).reduce((sum, credit: Record<string, unknown>) => sum + numberValue(credit.balance), 0);
@@ -3514,8 +3586,8 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
       const result = await countCommercialRows(item.table, context.store.id, item.filter ?? 'store_id');
       counts[item.table] = result.count;
       pushCommercialCheck(checks, {
-        id: `read-${item.table}`, area: 'Supabase/RLS', title: `Leitura de ${item.label}`,
-        detail: result.error ? `Não leu ${item.label}. Verifique tabela, policy ou migration.` : `${result.count} registro(s) visíveis para esta loja.`,
+        id: `read-${item.table}`, area: 'Permissões da nuvem', title: `Leitura de ${item.label}`,
+        detail: result.error ? `Não leu ${item.label}. Verifique a estrutura e as permissões da nuvem.` : `${result.count} registro(s) visíveis para esta loja.`,
         level: result.error ? (item.required ? 'danger' : 'warn') : 'ok',
         evidence: result.error || `select head count em ${item.table}`,
       });
@@ -3525,10 +3597,10 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
       const client = await getClient();
       const { data: bucket, error: bucketError } = await client.storage.getBucket(PRODUCT_PHOTO_BUCKET);
       pushCommercialCheck(checks, {
-        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Storage de fotos de produtos',
+        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Armazenamento de fotos de produtos',
         detail: bucketError
-          ? 'Bucket product-photos não confirmou leitura. Fotos podem ficar em modo compatibilidade até aplicar a migration de Storage.'
-          : `Bucket product-photos encontrado${bucket?.public ? ' e público para leitura de imagens' : ', mas revise se a leitura pública/assinada está correta'}.`,
+          ? 'O armazenamento de fotos não confirmou leitura. Fotos podem ficar em modo compatibilidade até o suporte ajustar a nuvem.'
+          : `Armazenamento de fotos encontrado${bucket?.public ? ' e liberado para leitura de imagens' : ', mas revise se a leitura está correta'}.`,
         level: bucketError ? 'warn' : 'ok',
         evidence: bucketError ? bucketError.message : `bucket=${bucket?.name || PRODUCT_PHOTO_BUCKET}; public=${String(bucket?.public)}`,
       });
@@ -3549,7 +3621,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
       });
     } catch (storageError) {
       pushCommercialCheck(checks, {
-        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Storage de fotos de produtos',
+        id: 'storage-product-photos-bucket-v146', area: 'Backup/Fotos', title: 'Armazenamento de fotos de produtos',
         detail: 'Não foi possível auditar Storage de fotos neste aparelho.',
         level: 'warn',
         evidence: humanizeWebError(storageError),
@@ -3722,7 +3794,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v155 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v158 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

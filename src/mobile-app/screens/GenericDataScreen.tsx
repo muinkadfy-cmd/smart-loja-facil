@@ -126,7 +126,7 @@ async function loadPageData(page: PageKey, status: AppStatus | null): Promise<Om
   }
   return {
     metrics: [
-      { label: 'Status', value: status?.sqlite_ok ? 'Online' : 'Verificar', detail: 'Supabase' },
+      { label: 'Status', value: status?.sqlite_ok ? 'Online' : 'Verificar', detail: 'nuvem' },
     ],
     records: [],
   };
@@ -168,6 +168,10 @@ export function GenericDataScreen({ page, status, refreshToken, onNavigate, onRe
 
   if (page === 'reports') {
     return <ReportsScreen refreshToken={refreshToken} onRefresh={onRefresh} />;
+  }
+
+  if (page === 'audit') {
+    return <AuditLogsScreen refreshToken={refreshToken} onRefresh={onRefresh} />;
   }
 
   if (page === 'settings') {
@@ -219,11 +223,28 @@ function metricTone(tone: ReportData['summary'][number]['tone']): 'blue' | 'purp
   return tone;
 }
 
+function reportKindHelp(kind: ReportKind): string {
+  if (kind === 'crediario') return 'Mostra crediários abertos no período pela data de criação. Confira vencimentos nas parcelas do cliente.';
+  if (kind === 'estoque_baixo') return 'Estoque baixo é uma foto da situação atual e não depende do período escolhido.';
+  if (kind === 'caixa') return 'Mostra movimentos do caixa no período. Conferência completa usa abertura, entradas, saídas e fechamento.';
+  return 'Vendas canceladas podem aparecer na lista para histórico, mas não entram no total vendido.';
+}
+
+function humanReportStatus(value: string): string {
+  const text = String(value || '').toLowerCase();
+  if (text.includes('cancel')) return 'Cancelada — não entra no total';
+  if (text.includes('final') || text.includes('pago') || text.includes('paid')) return 'Finalizada';
+  if (text.includes('parcial')) return 'Parcial';
+  if (text.includes('pend') || text.includes('open')) return 'Pendente';
+  return value || '-';
+}
+
 function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRefresh: () => void }): JSX.Element {
   const [kind, setKind] = useState<ReportKind>('vendas');
   const [from, setFrom] = useState(() => inputDate(30));
   const [to, setTo] = useState(() => inputDate(0));
   const [report, setReport] = useState<ReportData | null>(null);
+  const [visibleRows, setVisibleRows] = useState(15);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -232,6 +253,7 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
     let active = true;
     setLoading(true);
     setError(null);
+    setVisibleRows(15);
     api.reportData(kind, from, to)
       .then((payload) => {
         if (!active) return;
@@ -259,6 +281,22 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
     }
   };
 
+  const copySummary = async () => {
+    if (!report) return;
+    const lines = [
+      report.title,
+      `Período: ${from} até ${to}`,
+      report.description,
+      '',
+      ...report.summary.map((metric) => `${metric.label}: ${metric.value} — ${metric.detail}`),
+      '',
+      `Registros: ${report.total_rows}`,
+      `Observação: ${reportKindHelp(report.report)}`,
+    ];
+    await navigator.clipboard?.writeText(lines.join('\n')).catch(() => undefined);
+    setFeedback('Resumo copiado para enviar no WhatsApp ou para suporte.');
+  };
+
   return (
     <div className="mapp-screen mapp-reports-screen">
       <section className="mapp-panel mapp-report-toolbar">
@@ -272,18 +310,23 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
             <button key={value} type="button" className={kind === value ? 'active' : ''} onClick={() => setKind(value as ReportKind)}>{label}</button>
           ))}
         </div>
+        <div className="mapp-report-help">
+          <strong>Ajuda rápida</strong>
+          <span>{reportKindHelp(kind)}</span>
+        </div>
         <div className="mapp-form-grid">
           <label>
             <span>Data inicial</span>
-            <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+            <input type="date" value={from} onChange={(event) => setFrom(event.target.value)} disabled={kind === 'estoque_baixo'} />
           </label>
           <label>
             <span>Data final</span>
-            <input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+            <input type="date" value={to} onChange={(event) => setTo(event.target.value)} disabled={kind === 'estoque_baixo'} />
           </label>
         </div>
         <div className="mapp-button-grid">
           <button type="button" className="mapp-primary-button" onClick={onRefresh}>Atualizar</button>
+          <button type="button" className="mapp-secondary-button" onClick={copySummary} disabled={!report}>Copiar resumo</button>
           <button type="button" className="mapp-secondary-button" onClick={exportCsv}>Exportar CSV</button>
         </div>
       </section>
@@ -301,12 +344,17 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
           </section>
           <section className="mapp-section-block">
             <div className="mapp-section-title"><h2>{report.title}</h2><button type="button" onClick={exportCsv}>CSV</button></div>
+            <p className="mapp-section-note">{report.description} {reportKindHelp(report.report)}</p>
             {report.rows.length ? (
               <div className="mapp-report-list">
-                {report.rows.slice(0, 10).map((row, index) => {
+                {report.rows.slice(0, visibleRows).map((row, index) => {
                   const first = report.columns[0];
                   const last = report.columns[report.columns.length - 1];
-                  const middle = report.columns.slice(1, -1).map((column) => row[column.key]).filter(Boolean).join(' · ');
+                  const middle = report.columns.slice(1, -1).map((column) => {
+                    const value = row[column.key];
+                    if (!value) return '';
+                    return column.key === 'status' ? humanReportStatus(value) : value;
+                  }).filter(Boolean).join(' · ');
                   return (
                     <ListCard
                       key={`${first?.key ?? 'row'}-${index}`}
@@ -318,12 +366,146 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
                     />
                   );
                 })}
+                {report.rows.length > visibleRows ? (
+                  <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleRows((count) => count + 15)}>
+                    Ver mais registros ({report.rows.length - visibleRows} restantes)
+                  </button>
+                ) : null}
               </div>
             ) : (
               <EmptyState icon="relatorios" title="Sem dados no período" detail={report.empty_message} actionLabel="Atualizar" actionPage="reports" onNavigate={onRefresh as unknown as (page: PageKey) => void} />
             )}
           </section>
         </>
+      ) : null}
+    </div>
+  );
+}
+
+type AuditFilter = 'todos' | 'erros' | 'avisos' | 'vendas' | 'crediario' | 'caixa' | 'backup' | 'sync';
+
+function auditLabel(entity: string): string {
+  const text = entity.toLowerCase();
+  if (text.includes('sale')) return 'Venda';
+  if (text.includes('credit') || text.includes('installment')) return 'Crediário';
+  if (text.includes('cash')) return 'Caixa';
+  if (text.includes('backup')) return 'Backup';
+  if (text.includes('product')) return 'Produto';
+  if (text.includes('customer')) return 'Cliente';
+  if (text.includes('order')) return 'Pedido';
+  return entity || 'Sistema';
+}
+
+function auditSimpleText(event: AuditEvent): string {
+  const action = event.action.toLowerCase();
+  const area = auditLabel(event.entity);
+  if (action.includes('error') || action.includes('fail')) return `${area}: erro registrado. Copie para suporte se persistir.`;
+  if (action.includes('create')) return `${area}: registro criado.`;
+  if (action.includes('update') || action.includes('save')) return `${area}: alteração salva.`;
+  if (action.includes('cancel')) return `${area}: cancelamento registrado.`;
+  if (action.includes('payment') || action.includes('receive')) return `${area}: pagamento/recebimento registrado.`;
+  if (action.includes('open')) return `${area}: abertura registrada.`;
+  if (action.includes('close')) return `${area}: fechamento registrado.`;
+  return `${area}: ${event.action || 'atividade registrada'}.`;
+}
+
+function auditDetailsText(details: string): string {
+  if (!details) return 'Sem detalhes adicionais.';
+  try {
+    const parsed = JSON.parse(details) as Record<string, unknown>;
+    const pairs = Object.entries(parsed).filter(([key]) => !/token|senha|password|secret|key|jwt/i.test(key)).slice(0, 8);
+    if (pairs.length === 0) return 'Detalhes técnicos ocultos por segurança.';
+    return pairs.map(([key, value]) => `${key}: ${String(value)}`).join(' · ');
+  } catch {
+    return details.replace(/token|jwt|secret|password|senha/gi, 'dado protegido').slice(0, 220);
+  }
+}
+
+function auditMatchesFilter(event: AuditEvent, filter: AuditFilter): boolean {
+  const text = `${event.entity} ${event.action} ${event.details}`.toLowerCase();
+  if (filter === 'todos') return true;
+  if (filter === 'erros') return /erro|error|fail|falha/.test(text);
+  if (filter === 'avisos') return /warn|aviso|aten/.test(text);
+  if (filter === 'vendas') return /sale|venda/.test(text);
+  if (filter === 'crediario') return /credit|installment|credi/.test(text);
+  if (filter === 'caixa') return /cash|caixa/.test(text);
+  if (filter === 'backup') return /backup/.test(text);
+  if (filter === 'sync') return /sync|outbox|sincron/.test(text);
+  return true;
+}
+
+function AuditLogsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRefresh: () => void }): JSX.Element {
+  const [events, setEvents] = useState<AuditEvent[]>([]);
+  const [filter, setFilter] = useState<AuditFilter>('todos');
+  const [visibleRows, setVisibleRows] = useState(30);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    api.audit()
+      .then((rows) => { if (active) setEvents(rows); })
+      .catch((err: unknown) => { if (active) setError(err instanceof Error ? err.message : String(err)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [refreshToken]);
+
+  useEffect(() => setVisibleRows(30), [filter]);
+
+  const filtered = events.filter((event) => auditMatchesFilter(event, filter));
+  const errorEvents = events.filter((event) => auditMatchesFilter(event, 'erros'));
+
+  const copyLogs = async (onlyErrors = false) => {
+    const source = onlyErrors ? errorEvents : filtered;
+    const lines = source.slice(0, 50).map((event) => [
+      formatDateTime(event.created_at),
+      auditSimpleText(event),
+      auditDetailsText(event.details),
+    ].join(' | '));
+    await navigator.clipboard?.writeText(lines.join('\n')).catch(() => undefined);
+    setFeedback(onlyErrors ? 'Últimos erros copiados para suporte.' : 'Últimos logs visíveis copiados para suporte.');
+  };
+
+  return (
+    <div className="mapp-screen mapp-audit-screen">
+      <section className="mapp-mini-stat-grid">
+        <StatCard label="Logs" value={formatNumber(events.length)} detail="ações recentes" icon="auditoria_logs" tone="blue" />
+        <StatCard label="Erros" value={formatNumber(errorEvents.length)} detail="para suporte" icon="bloqueio_seguro" tone="orange" />
+      </section>
+      <section className="mapp-success-card">
+        <strong>Ajuda rápida: logs para suporte</strong>
+        <span>Copie os últimos logs quando algo der errado. O texto evita senha, chave privada e termos técnicos desnecessários.</span>
+      </section>
+      <div className="mapp-filter-pills" role="tablist" aria-label="Filtrar logs">
+        {[
+          ['todos', 'Todos'], ['erros', 'Erros'], ['avisos', 'Avisos'], ['vendas', 'Vendas'], ['crediario', 'Crediário'], ['caixa', 'Caixa'], ['backup', 'Backup'], ['sync', 'Sync'],
+        ].map(([key, label]) => <button key={key} type="button" className={filter === key ? 'active' : ''} onClick={() => setFilter(key as AuditFilter)}>{label}</button>)}
+      </div>
+      <div className="mapp-button-grid">
+        <button type="button" className="mapp-primary-button" onClick={onRefresh}>Atualizar</button>
+        <button type="button" className="mapp-secondary-button" onClick={() => void copyLogs(false)}>Copiar últimos logs</button>
+        <button type="button" className="mapp-secondary-button" onClick={() => void copyLogs(true)} disabled={errorEvents.length === 0}>Copiar último erro</button>
+      </div>
+      {feedback ? <div className="mapp-form-feedback mapp-form-feedback-success">{feedback}</div> : null}
+      {error ? <div className="mapp-error-box">{error}</div> : null}
+      {loading ? <div className="mapp-inline-status">Carregando logs...</div> : null}
+      {filtered.length ? (
+        <section className="mapp-list-stack mapp-audit-list">
+          {filtered.slice(0, visibleRows).map((event) => (
+            <article key={event.id} className="mapp-audit-card">
+              <span className="mapp-audit-badge">{auditLabel(event.entity)}</span>
+              <strong>{auditSimpleText(event)}</strong>
+              <p>{auditDetailsText(event.details)}</p>
+              <time>{formatDateTime(event.created_at)}</time>
+            </article>
+          ))}
+          {filtered.length > visibleRows ? <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleRows((count) => count + 30)}>Ver mais logs ({filtered.length - visibleRows} restantes)</button> : null}
+        </section>
+      ) : !loading ? (
+        <EmptyState icon="auditoria_logs" title="Nenhum log neste filtro" detail="Quando houver ação ou erro, os detalhes aparecerão aqui para suporte." actionLabel="Atualizar" actionPage="audit" onNavigate={onRefresh as unknown as (page: PageKey) => void} />
       ) : null}
     </div>
   );
@@ -451,7 +633,7 @@ function PlaceholderScreen({ page, status, onNavigate, onRefresh }: PlaceholderP
   const route = getMobileRoute(page);
   const checklist = [
     'Layout novo isolado',
-    'Supabase preservado',
+    'Nuvem preservada',
     'Mobile-first ativo',
     'Pronto para migração da função completa',
   ];
@@ -494,7 +676,7 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
   const copyDiagnostic = async () => {
     const text = [
       `Versão: ${status?.version ?? 'sem versão'}`,
-      `Supabase: ${status?.sqlite_ok ? 'online' : 'verificar'}`,
+      `Nuvem: ${status?.sqlite_ok ? 'online' : 'verificar login'}`,
       `Loja: ${status?.settings.store_name ?? 'sem loja'}`,
       `Cache: smart-loja-pwa-supabase-v135-proposta-comercial`,
       `Largura: ${window.innerWidth}px`,
@@ -507,7 +689,7 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
       <section className="mapp-section-block">
         <div className="mapp-section-title"><h2>Diagnóstico simples</h2><button type="button" onClick={onRefresh}>Atualizar</button></div>
         <div className="mapp-diagnostic-grid">
-          <span><b>Supabase</b><strong>{status?.sqlite_ok ? 'Online' : 'Verificar login'}</strong></span>
+          <span><b>Nuvem</b><strong>{status?.sqlite_ok ? 'Online' : 'Verificar login'}</strong></span>
           <span><b>Versão</b><strong>{status?.version ?? 'v135'}</strong></span>
           <span><b>Mobile</b><strong>{window.innerWidth <= 860 ? 'Sim' : 'Desktop'}</strong></span>
           <span><b>Cache</b><strong>v135 proposta</strong></span>

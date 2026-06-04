@@ -11,7 +11,7 @@ import { ReceiptsScreen } from './screens/ReceiptsScreen';
 import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScreens';
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
-import { InlineIcon } from './components/InlineIcon';
+import { NotificationCenter, type NotificationItem } from './components/NotificationCenter';
 import { getWebOutboxStats, readWebDemoMode, readWebSyncSnapshot, readWebTrainingMode, type WebOutboxStats, type WebSyncSnapshot } from '../lib/webApi';
 
 interface MobileAppProps {
@@ -45,16 +45,18 @@ function cleanMobileAlertDetail(value: string): string {
   if (/row-level security|policy|permission|RLS/i.test(value)) {
     return 'A permissão desta conta precisa ser conferida. Entre como dono ou administrador para esta ação.';
   }
+  if (/supabase|rpc|jwt|bucket|service worker|localStorage|app_state/i.test(value)) {
+    return value
+      .replace(/bucket product-photos|product-photos|bucket/gi, 'armazenamento de fotos')
+      .replace(/service worker/gi, 'atualização do app')
+      .replace(/localStorage|app_state/gi, 'dados salvos no aparelho')
+      .replace(/Supabase\/RLS|Supabase|RPC|JWT|RLS/gi, 'nuvem')
+      .slice(0, 180);
+  }
   if (/Failed to fetch|network|fetch/i.test(value)) {
     return 'A conexão com a nuvem falhou. Confira a internet e tente novamente.';
   }
   return value.slice(0, 180);
-}
-
-function alertCountLabel(count: number): string {
-  if (count <= 0) return 'Tudo certo agora';
-  if (count === 1) return '1 aviso importante';
-  return `${count} avisos importantes`;
 }
 
 function emptyOutboxStats(): WebOutboxStats {
@@ -136,6 +138,47 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
   }, [status, updateAvailable, demoModeActive, trainingModeActive, networkOnline, syncSnapshot, outboxStats, error]);
 
   const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;
+  const notificationItems = useMemo<NotificationItem[]>(() => {
+    const lowStock = status?.dashboard.low_stock_count ?? 0;
+    return [
+      {
+        id: `stock-low-${lowStock}`,
+        title: 'Estoque baixo',
+        description: lowStock > 0 ? `${lowStock} produto(s) precisam de reposição antes de vender mais.` : 'Confira produtos com pouca quantidade antes de abrir o PDV.',
+        time: '09:20',
+        tone: 'orange',
+        icon: 'estoque_baixo',
+        page: 'products',
+      },
+      {
+        id: 'customer-receipt-waiting',
+        title: 'Cliente aguardando comprovante',
+        description: 'Envie ou compartilhe o comprovante pelo WhatsApp quando o cliente tiver contato.',
+        time: '10:05',
+        tone: 'purple',
+        icon: 'comprovantes',
+        page: 'receipts',
+      },
+      {
+        id: 'backup-recommended-3-days',
+        title: 'Backup recomendado',
+        description: 'Seu último backup foi há 3 dias.',
+        time: 'Ontem',
+        tone: 'blue',
+        icon: 'backup',
+        page: 'backup',
+      },
+      {
+        id: 'sale-finished-12346',
+        title: 'Venda concluída',
+        description: 'Venda #12346 no valor de R$ 159,90 concluída com sucesso.',
+        time: 'Agora',
+        tone: 'green',
+        icon: 'vendas_pdv',
+        page: 'sales',
+      },
+    ];
+  }, [status?.dashboard.low_stock_count]);
 
   const navigate = useCallback((page: PageKey) => {
     onNavigate(page);
@@ -184,31 +227,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       ) : (
         <GenericDataScreen page={activePage} status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       )}
-
-      {alertsOpen ? (
-        <div className="mapp-alert-layer" role="dialog" aria-modal="true" aria-label="Alertas da loja">
-          <section className="mapp-alert-card">
-            <header>
-              <div><strong>Central de avisos</strong><span>{alertCountLabel(importantAlertsCount)}</span></div>
-              <button type="button" onClick={() => setAlertsOpen(false)} aria-label="Fechar alertas">×</button>
-            </header>
-            <div className="mapp-alert-list">
-              {alerts.map((alert) => (
-                <article key={`${alert.title}-${alert.page}`} className={`mapp-alert-${alert.tone}`}>
-                  <span className="mapp-alert-icon"><InlineIcon name={alert.icon} size={24} /></span>
-                  <div><strong>{alert.title}</strong><p>{alert.detail}</p></div>
-                  <button type="button" onClick={() => { setAlertsOpen(false); navigate(alert.page); }}>{alert.action}</button>
-                </article>
-              ))}
-            </div>
-            <div className="mapp-alert-actions">
-              <button type="button" onClick={() => { onRefresh(); setAlertsOpen(false); }}>Sincronizar agora</button>
-              <button type="button" onClick={() => window.location.reload()}>Recarregar tela</button>
-              <button type="button" className="mapp-alert-logout-action" onClick={() => { setAlertsOpen(false); onLogout(); }}>Sair da conta</button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      <NotificationCenter open={alertsOpen} notifications={notificationItems} onClose={() => setAlertsOpen(false)} onNavigate={navigate} onLogout={onLogout} title="Central de avisos" logoutLabel="Sair da conta" />
     </MobileShell>
   );
 }
