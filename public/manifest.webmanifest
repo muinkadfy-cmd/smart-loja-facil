@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v150",
-  "short_name": "Smart Loja v150",
-  "description": "Smart Loja Fácil PWA mobile-first v150 com cabeçalho da loja mais responsivo, sem quebrar palavras no topo, login polido, alertas leigos, logout seguro, backup auditável e histórico preservado.",
+  "name": "Smart Loja Fácil PWA v151",
+  "short_name": "Smart Loja v151",
+  "description": "Smart Loja Fácil PWA mobile-first v151 com login centralizado, mais clean, salvar e-mail/senha opcional, entrada automática em aparelho confiável, alertas leigos, logout seguro, backup auditável e histórico preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
