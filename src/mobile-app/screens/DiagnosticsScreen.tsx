@@ -516,6 +516,54 @@ interface RegressionAuditSummary {
 }
 
 
+type DayOneImplantResult = 'pending' | 'passed' | 'failed' | 'blocked';
+type DayOneImplantPriority = 'P0' | 'P1' | 'P2';
+type DayOneImplantDecision = 'blocked' | 'attention' | 'ready';
+
+interface DayOneImplantStep {
+  id: string;
+  phase: string;
+  title: string;
+  action: string;
+  expected: string;
+  evidence: string;
+  priority: DayOneImplantPriority;
+}
+
+interface DayOneImplantState {
+  results: Record<string, DayOneImplantResult>;
+  clientName: string;
+  implantor: string;
+  storeContact: string;
+  schedule: string;
+  deviceA: string;
+  deviceB: string;
+  printer: string;
+  internet: string;
+  notes: string;
+  acceptedBy: string;
+  acceptedAt: string;
+  updatedAt: string;
+}
+
+interface DayOneImplantSummary {
+  passed: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  total: number;
+  percent: number;
+  criticalOpen: number;
+  decision: DayOneImplantDecision;
+  title: string;
+  subtitle: string;
+  score: number;
+  stars: string;
+  blockers: string[];
+  warnings: string[];
+}
+
+
 
 const REGRESSION_AUDIT_KEY = 'smart-loja:regression-audit-v140';
 const LEGACY_REGRESSION_AUDIT_KEYS = ['smart-loja:regression-audit-v139'];
@@ -527,7 +575,7 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
     title: 'Login, sessão e troca de aparelho',
     action: 'Entrar, sair, recarregar o PWA instalado e confirmar que o usuário volta para a loja correta sem travar.',
     expected: 'Login, sessão e logout funcionam sem tela branca, loop ou loja errada.',
-    evidence: 'Print do Diagnóstico Web com usuário, papel, loja e versão v140.',
+    evidence: 'Print do Diagnóstico Web com usuário, papel, loja e versão v141.',
     priority: 'P0',
   },
   {
@@ -623,10 +671,124 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
   {
     id: 'regression-pwa-cache-deploy',
     group: '12. PWA/deploy',
-    title: 'PWA instalado recebeu v140',
-    action: 'Depois do deploy, abrir o app instalado, conferir versão/cache v140 e limpar cache antigo se necessário.',
-    expected: 'Diagnóstico mostra v140 e as telas novas aparecem no celular instalado.',
-    evidence: 'Print de versão/cache v140 no PWA instalado.',
+    title: 'PWA instalado recebeu v141',
+    action: 'Depois do deploy, abrir o app instalado, conferir versão/cache v141 e limpar cache antigo se necessário.',
+    expected: 'Diagnóstico mostra v141 e as telas novas aparecem no celular instalado.',
+    evidence: 'Print de versão/cache v141 no PWA instalado.',
+    priority: 'P1',
+  },
+];
+
+
+const DAY_ONE_IMPLANT_KEY = 'smart-loja:day-one-implantation-v141';
+
+const DAY_ONE_IMPLANT_STEPS: DayOneImplantStep[] = [
+  {
+    id: 'day1-schedule-internet',
+    phase: '1. Chegada e preparo',
+    title: 'Horário, responsável, internet e aparelho definidos',
+    action: 'Confirmar horário da implantação, responsável da loja, aparelho principal carregado e internet estável antes de qualquer venda real.',
+    expected: 'Cliente sabe quem acompanha, qual aparelho será usado e o app não começa offline ou em celular errado.',
+    evidence: 'Nome do responsável, aparelho e tipo de internet anotados no checklist.',
+    priority: 'P1',
+  },
+  {
+    id: 'day1-supabase-role',
+    phase: '2. Login e nuvem',
+    title: 'Login, loja e papel conferidos',
+    action: 'Entrar no PWA, abrir Diagnóstico Web, conferir loja correta, e-mail logado, papel e conexão com a nuvem.',
+    expected: 'Dono/admin autorizado aparece na loja correta e sem erro vermelho no teste comercial.',
+    evidence: 'Print do Diagnóstico com loja, papel, versão e teste comercial rodado.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-pwa-installed-cache',
+    phase: '2. Login e nuvem',
+    title: 'PWA instalado recebeu v141',
+    action: 'Abrir o app instalado no celular, conferir versão/cache v141 e limpar cache antigo se necessário.',
+    expected: 'PWA mostra v141, abas novas aparecem e o app não fica preso em versão antiga.',
+    evidence: 'Print de versão/cache v141 no celular instalado.',
+    priority: 'P1',
+  },
+  {
+    id: 'day1-printer-confirmed',
+    phase: '3. Equipamentos',
+    title: 'Impressora e comprovante testados',
+    action: 'Rodar teste 58mm/80mm/A4 disponível e confirmar se o cliente vai imprimir ou compartilhar pelo WhatsApp/PDF.',
+    expected: 'Comprovante não corta dados importantes e o formato de entrega fica combinado antes da venda real.',
+    evidence: 'Foto do papel impresso ou confirmação de PDF/WhatsApp testado.',
+    priority: 'P1',
+  },
+  {
+    id: 'day1-backup-before-real',
+    phase: '3. Equipamentos',
+    title: 'Backup/diagnóstico antes da operação real',
+    action: 'Copiar diagnóstico e, se houver dados reais, criar backup controlado antes de teste que mexa em venda, caixa ou estoque.',
+    expected: 'Existe caminho de volta e suporte tem informação para resolver problema sem chute.',
+    evidence: 'Diagnóstico copiado e backup controlado anotado.',
+    priority: 'P1',
+  },
+  {
+    id: 'day1-test-customer-product',
+    phase: '4. Teste controlado',
+    title: 'Cliente e produto TESTE conferidos',
+    action: 'Criar ou conferir um cliente TESTE e produto TESTE, recarregar e checar se não duplica nem some.',
+    expected: 'Cadastros ficam salvos, legíveis no mobile e aparecem no segundo aparelho quando sincronizado.',
+    evidence: 'Nome do cliente/produto TESTE e horário anotados.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-test-sale-receipt',
+    phase: '4. Teste controlado',
+    title: 'Venda teste com estoque e comprovante',
+    action: 'Fazer uma venda pequena de teste, conferir baixa de estoque e abrir/reimprimir comprovante.',
+    expected: 'Venda grava uma vez, estoque fica correto e comprovante abre sem erro.',
+    evidence: 'Número/horário da venda teste, estoque antes/depois e comprovante conferido.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-cash-real-control',
+    phase: '4. Teste controlado',
+    title: 'Caixa abriu, movimentou e fechou corretamente',
+    action: 'Abrir caixa, registrar movimento controlado, conferir saldo e fechar apenas se o fluxo do cliente exigir.',
+    expected: 'Saldo fica claro, sem duplicidade e sem confundir teste com dinheiro real.',
+    evidence: 'Saldo inicial/final e movimento TESTE anotados.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-second-device-sync',
+    phase: '5. Dois aparelhos',
+    title: 'Segundo aparelho viu os mesmos dados',
+    action: 'Abrir no aparelho 2 e conferir cliente, produto, venda, caixa/pedido/crediário criados no aparelho 1.',
+    expected: 'Dados aparecem iguais, sem duplicidade, atraso confuso ou pendência escondida.',
+    evidence: 'Print/horário da conferência no aparelho 2.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-role-permissions',
+    phase: '5. Dois aparelhos',
+    title: 'Permissões mínimas conferidas',
+    action: 'Testar dono/admin/operador/leitor quando houver contas: leitor não salva, operador não mexe em configurações críticas, dono mantém controle.',
+    expected: 'Botões e nuvem respeitam papel do usuário sem abrir brecha para alteração indevida.',
+    evidence: 'E-mails/papéis testados anotados sem expor senha.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-first-real-sale',
+    phase: '6. Primeira operação real',
+    title: 'Primeira venda real acompanhada',
+    action: 'Depois de sair da demo/treinamento, acompanhar uma venda real do cliente e conferir caixa, estoque e comprovante.',
+    expected: 'Cliente consegue vender com suporte presente e entende o que fazer se aparecer erro.',
+    evidence: 'Horário da primeira venda real, forma de pagamento e comprovante confirmado.',
+    priority: 'P0',
+  },
+  {
+    id: 'day1-client-acceptance',
+    phase: '7. Aceite e suporte',
+    title: 'Cliente aceitou Dia 1 e pós-venda ficou combinado',
+    action: 'Registrar aceite, canal de suporte, horário da revisão e qualquer ajuste P0/P1/P2 encontrado no primeiro uso.',
+    expected: 'Cliente não fica sozinho sem suporte e falhas reais viram chamado com responsável e prazo.',
+    evidence: 'Aceite, canal de suporte e próxima revisão anotados/copiadados.',
     priority: 'P1',
   },
 ];
@@ -2451,7 +2613,7 @@ function buildRegressionAuditText(params: {
     return `[${regressionResultLabel(result)}] [${step.priority}] ${step.group} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v140',
+    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v141',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -2479,6 +2641,178 @@ function buildRegressionAuditText(params: {
     'Regra honesta: esta auditoria não substitui teste físico real. Só marque Passou quando tiver evidência em celular, Supabase produção, papéis, impressão, backup e dois aparelhos.',
   ].join('\n');
 }
+
+function emptyDayOneImplantState(): DayOneImplantState {
+  return {
+    results: {},
+    clientName: '',
+    implantor: '',
+    storeContact: '',
+    schedule: '',
+    deviceA: '',
+    deviceB: '',
+    printer: '',
+    internet: '',
+    notes: '',
+    acceptedBy: '',
+    acceptedAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeDayOneImplantResult(value: unknown): DayOneImplantResult {
+  return value === 'passed' || value === 'failed' || value === 'blocked' ? value : 'pending';
+}
+
+function normalizeDayOneImplantState(value: unknown): DayOneImplantState {
+  const source = value && typeof value === 'object' ? value as Partial<DayOneImplantState> : {};
+  const allowed = new Set(DAY_ONE_IMPLANT_STEPS.map((step) => step.id));
+  const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
+  const results: Record<string, DayOneImplantResult> = {};
+  for (const [id, result] of Object.entries(rawResults)) {
+    if (allowed.has(id)) results[id] = normalizeDayOneImplantResult(result);
+  }
+  return {
+    results,
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 160) : '',
+    implantor: typeof source.implantor === 'string' ? source.implantor.slice(0, 140) : '',
+    storeContact: typeof source.storeContact === 'string' ? source.storeContact.slice(0, 160) : '',
+    schedule: typeof source.schedule === 'string' ? source.schedule.slice(0, 160) : '',
+    deviceA: typeof source.deviceA === 'string' ? source.deviceA.slice(0, 160) : '',
+    deviceB: typeof source.deviceB === 'string' ? source.deviceB.slice(0, 160) : '',
+    printer: typeof source.printer === 'string' ? source.printer.slice(0, 180) : '',
+    internet: typeof source.internet === 'string' ? source.internet.slice(0, 180) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1600) : '',
+    acceptedBy: typeof source.acceptedBy === 'string' ? source.acceptedBy.slice(0, 140) : '',
+    acceptedAt: typeof source.acceptedAt === 'string' ? source.acceptedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readDayOneImplantState(): DayOneImplantState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyDayOneImplantState();
+  try {
+    return normalizeDayOneImplantState(JSON.parse(window.localStorage.getItem(DAY_ONE_IMPLANT_KEY) || '{}'));
+  } catch {
+    return emptyDayOneImplantState();
+  }
+}
+
+function saveDayOneImplantState(state: DayOneImplantState): DayOneImplantState {
+  const normalized = normalizeDayOneImplantState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(DAY_ONE_IMPLANT_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function dayOneResultLabel(result: DayOneImplantResult): string {
+  if (result === 'passed') return 'Passou';
+  if (result === 'failed') return 'Falhou';
+  if (result === 'blocked') return 'Bloqueado';
+  return 'Pendente';
+}
+
+function buildDayOneImplantSummary(params: {
+  state: DayOneImplantState;
+  report: WebCommercialValidationReport | null;
+  finalGate: FinalSellGate;
+  regression: RegressionAuditSummary;
+  executive: ExecutiveHealthSummary;
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+}): DayOneImplantSummary {
+  const total = DAY_ONE_IMPLANT_STEPS.length;
+  let passed = 0;
+  let failed = 0;
+  let blocked = 0;
+  let criticalOpen = 0;
+  for (const step of DAY_ONE_IMPLANT_STEPS) {
+    const result = normalizeDayOneImplantResult(params.state.results[step.id]);
+    if (result === 'passed') passed += 1;
+    if (result === 'failed') failed += 1;
+    if (result === 'blocked') blocked += 1;
+    if ((step.priority === 'P0' || step.priority === 'P1') && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+  }
+  const pending = total - passed - failed - blocked;
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
+  const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
+  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do Dia 1 com Falhou/Bloqueado.`);
+  addBlocker(params.regression.decision === 'blocked', 'Auditoria final de regressão ainda está bloqueada.');
+  addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda não liberou venda assistida.');
+  addBlocker(params.executive.decision === 'blocked', 'Painel executivo ainda bloqueia escala/controlada.');
+  addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes do Dia 1.`);
+  addBlocker(!params.online, 'Aparelho está offline agora.');
+  addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
+  addWarning(pending > 0, `${pending} item(ns) do Dia 1 ainda pendente(s).`);
+  addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
+  addWarning(params.roleState.role === 'viewer', 'Leitor não deve aceitar implantação real.');
+  addWarning(!params.state.clientName.trim(), 'Informe cliente/loja da implantação.');
+  addWarning(!params.state.implantor.trim(), 'Informe responsável pela implantação.');
+  addWarning(!params.state.deviceA.trim(), 'Informe aparelho principal.');
+  addWarning(!params.state.printer.trim(), 'Informe impressora/formato de comprovante combinado.');
+  const percent = Math.round((passed / total) * 100);
+  const penalty = blockers.length * 15 + warnings.length * 3 + failed * 8 + blocked * 10 + pending * 3;
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+  const decision: DayOneImplantDecision = blockers.length ? 'blocked' : pending || warnings.length || !params.state.acceptedAt ? 'attention' : 'ready';
+  const title = decision === 'ready' ? 'Dia 1 aceito com evidência' : decision === 'attention' ? 'Dia 1 quase pronto' : 'Não iniciar cliente sozinho';
+  const subtitle = decision === 'ready'
+    ? 'Implantação real marcada como concluída neste aparelho. Mantenha pós-venda ativo.'
+    : decision === 'attention'
+      ? 'Sem bloqueio crítico, mas faltam marcações, campos ou aceite final do Dia 1.'
+      : 'Existe risco operacional antes de deixar o cliente vender sozinho.';
+  return { passed, failed, blocked, pending, total, percent, criticalOpen, decision, title, subtitle, score, stars: executiveStars(score), blockers, warnings };
+}
+
+function buildDayOneImplantText(params: {
+  state: DayOneImplantState;
+  summary: DayOneImplantSummary;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const rows = DAY_ONE_IMPLANT_STEPS.map((step) => {
+    const result = normalizeDayOneImplantResult(params.state.results[step.id]);
+    return `[${dayOneResultLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
+  });
+  return [
+    'Smart Loja Fácil — checklist de implantação em cliente real / Dia 1 v141',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.summary.title}`,
+    `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
+    `Progresso: ${params.summary.passed}/${params.summary.total} passou; ${params.summary.failed} falhou; ${params.summary.blocked} bloqueado; ${params.summary.pending} pendente`,
+    `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
+    `Responsável implantação: ${params.state.implantor || 'não informado'}`,
+    `Contato da loja: ${params.state.storeContact || 'não informado'}`,
+    `Horário combinado: ${params.state.schedule || 'não informado'}`,
+    `Aparelho principal: ${params.state.deviceA || 'não informado'}`,
+    `Segundo aparelho: ${params.state.deviceB || 'não informado'}`,
+    `Impressora/comprovante: ${params.state.printer || 'não informado'}`,
+    `Internet: ${params.state.internet || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    `Aceito por: ${params.state.acceptedBy || 'não aceito'}${params.state.acceptedAt ? ` em ${formatDateTime(params.state.acceptedAt)}` : ''}`,
+    params.state.notes ? `Observações: ${params.state.notes}` : 'Observações: nenhuma',
+    '',
+    'Bloqueios:',
+    ...(params.summary.blockers.length ? params.summary.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio crítico registrado neste aparelho.']),
+    '',
+    'Avisos:',
+    ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
+    '',
+    'Checklist Dia 1:',
+    ...rows,
+    '',
+    'Regra honesta: implantação real só deve ser aceita com teste em aparelho do cliente, internet, PWA atualizado, impressão/comprovante, venda teste, sync e primeira venda acompanhada.',
+  ].join('\n');
+}
+
 
 function buildTriageText(params: {
   items: CommercialTriageItem[];
@@ -2734,6 +3068,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [clientImprovementDraft, setClientImprovementDraft] = useState<ClientImprovementDraft>(() => emptyClientImprovementDraft());
   const [executiveHealthState, setExecutiveHealthState] = useState<ExecutiveHealthState>(() => readExecutiveHealthState());
   const [regressionAuditState, setRegressionAuditState] = useState<RegressionAuditState>(() => readRegressionAuditState());
+  const [dayOneImplantState, setDayOneImplantState] = useState<DayOneImplantState>(() => readDayOneImplantState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -2846,6 +3181,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const clientFeedbackSummary = useMemo(() => summarizeClientFeedback(clientFeedbackState), [clientFeedbackState]);
   const executiveHealthSummary = useMemo(() => buildExecutiveHealthSummary({ report, finalGate, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState, acceptance: finalAcceptance, executive: executiveHealthState }), [report, finalGate, triageSummary, assistedSummary, guidedDoneCount, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSaleSummary, clientFeedbackSummary, outbox, online, roleState, finalAcceptance, executiveHealthState]);
   const regressionAuditSummary = useMemo(() => buildRegressionAuditSummary({ state: regressionAuditState, report, finalGate, triage: triageSummary, assisted: assistedSummary, executive: executiveHealthSummary, outbox, online, roleState }), [regressionAuditState, report, finalGate, triageSummary, assistedSummary, executiveHealthSummary, outbox, online, roleState]);
+  const dayOneImplantSummary = useMemo(() => buildDayOneImplantSummary({ state: dayOneImplantState, report, finalGate, regression: regressionAuditSummary, executive: executiveHealthSummary, outbox, online, roleState }), [dayOneImplantState, report, finalGate, regressionAuditSummary, executiveHealthSummary, outbox, online, roleState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -3439,6 +3775,57 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Auditoria final copiada sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+
+  function patchDayOneImplant(patch: Partial<DayOneImplantState>): void {
+    setDayOneImplantState((current) => saveDayOneImplantState({ ...current, ...patch }));
+  }
+
+  function setDayOneImplantResult(id: string, result: DayOneImplantResult): void {
+    setDayOneImplantState((current) => {
+      const nextResults = { ...current.results };
+      if (result === 'pending') delete nextResults[id];
+      else nextResults[id] = result;
+      return saveDayOneImplantState({ ...current, results: nextResults, acceptedAt: '', acceptedBy: '' });
+    });
+  }
+
+  function approveDayOneImplant(): void {
+    if (dayOneImplantSummary.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Não dá para aceitar Dia 1 com falha crítica, pendência local, offline, fechamento bloqueado ou auditoria bloqueada.' });
+      return;
+    }
+    if (dayOneImplantSummary.pending > 0) {
+      setFeedback({ tone: 'info', text: 'Ainda existe item pendente no Dia 1. Marque Passou/Falhou/Bloqueado com evidência antes do aceite.' });
+      return;
+    }
+    if (roleState.role === 'viewer') {
+      setFeedback({ tone: 'error', text: 'Leitor não deve aceitar implantação real. Use dono/admin/responsável autorizado.' });
+      return;
+    }
+    const acceptedBy = dayOneImplantState.implantor.trim() || dayOneImplantState.storeContact.trim();
+    if (!acceptedBy) {
+      setFeedback({ tone: 'info', text: 'Informe responsável pela implantação ou contato da loja antes de aceitar Dia 1.' });
+      return;
+    }
+    const next = saveDayOneImplantState({ ...dayOneImplantState, acceptedBy, acceptedAt: new Date().toISOString() });
+    setDayOneImplantState(next);
+    setFeedback({ tone: dayOneImplantSummary.decision === 'ready' ? 'success' : 'info', text: 'Dia 1 aceito com evidência neste aparelho. Mantenha pós-venda e revisão do primeiro dia.' });
+  }
+
+  function resetDayOneImplant(): void {
+    const ok = window.confirm('Zerar checklist Dia 1 deste aparelho? Isso não apaga venda, caixa, clientes, produtos, proposta, termo, suporte ou dados reais.');
+    if (!ok) return;
+    const next = saveDayOneImplantState(emptyDayOneImplantState());
+    setDayOneImplantState(next);
+    setFeedback({ tone: 'info', text: 'Checklist Dia 1 zerado neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyDayOneImplant(): Promise<void> {
+    const text = buildDayOneImplantText({ state: dayOneImplantState, summary: dayOneImplantSummary, report, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Checklist Dia 1 copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -3461,6 +3848,8 @@ ${buildExecutiveHealthText({ state: executiveHealthState, summary: executiveHeal
 
 ${buildRegressionAuditText({ state: regressionAuditState, summary: regressionAuditSummary, report, snapshot, roleState, online })}
 
+${buildDayOneImplantText({ state: dayOneImplantState, summary: dayOneImplantSummary, report, snapshot, roleState, online })}
+
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
 Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`
@@ -3482,6 +3871,8 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Pós-venda/SLA: ${postSaleSummary.solved}/${postSaleSummary.total} chamados resolvidos; críticos abertos=${postSaleSummary.criticalOpen}`,
           `Feedback/NPS: ${clientFeedbackState.npsScore}/10 (${clientFeedbackSummary.npsLabel}); melhorias abertas=${clientFeedbackSummary.open}; P0/P1 abertas=${clientFeedbackSummary.openP0P1}`,
           `Saúde executiva: ${executiveHealthSummary.score}/100 ${executiveHealthSummary.title}; bloqueios=${executiveHealthSummary.blockers.length}; avisos=${executiveHealthSummary.warnings.length}`,
+          `Auditoria final: ${regressionAuditSummary.score}/100 ${regressionAuditSummary.title}; pendente=${regressionAuditSummary.pending}; bloqueios=${regressionAuditSummary.blockers.length}`,
+          `Implantação Dia 1: ${dayOneImplantSummary.score}/100 ${dayOneImplantSummary.title}; pendente=${dayOneImplantSummary.pending}; bloqueios=${dayOneImplantSummary.blockers.length}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -3931,6 +4322,66 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         </div>
         <small className="mapp-final-honesty">Aprovado: {regressionAuditState.approvedAt ? `${regressionAuditState.approvedBy || 'responsável'} em ${formatDateTime(regressionAuditState.approvedAt)}` : 'não aprovado'}. Não marque Passou sem evidência real.</small>
       </section>
+
+      <section className={`mapp-section-block mapp-day-one-panel tone-${dayOneImplantSummary.decision}`}>
+        <div className="mapp-section-title"><h2>Implantação cliente real / Dia 1</h2><button type="button" onClick={() => void copyDayOneImplant()}>Copiar Dia 1</button></div>
+        <div className="mapp-regression-hero">
+          <div>
+            <span>{dayOneImplantSummary.title}</span>
+            <strong>{dayOneImplantSummary.score}/100 · {dayOneImplantSummary.stars}</strong>
+            <p>{dayOneImplantSummary.subtitle}</p>
+          </div>
+          <b className={dayOneImplantSummary.decision}>{dayOneImplantSummary.decision === 'blocked' ? 'NÃO INICIAR' : dayOneImplantSummary.decision === 'attention' ? 'REVISAR' : 'ACEITO'}</b>
+        </div>
+        <div className="mapp-regression-summary-grid">
+          <span><b>{dayOneImplantSummary.passed}</b> Passou</span>
+          <span><b>{dayOneImplantSummary.failed}</b> Falhou</span>
+          <span><b>{dayOneImplantSummary.blocked}</b> Bloqueado</span>
+          <span><b>{dayOneImplantSummary.pending}</b> Pendente</span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso da implantação Dia 1 ${dayOneImplantSummary.percent}%`}><span style={{ width: `${dayOneImplantSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={dayOneImplantState.clientName} onChange={(event) => patchDayOneImplant({ clientName: event.target.value })} placeholder={regressionAuditState.storeOrClient || executiveHealthState.clientName || roleState.storeName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Responsável implantação<input value={dayOneImplantState.implantor} onChange={(event) => patchDayOneImplant({ implantor: event.target.value })} placeholder="Ex.: suporte / implantador / dono" /></label>
+          <label>Contato da loja<input value={dayOneImplantState.storeContact} onChange={(event) => patchDayOneImplant({ storeContact: event.target.value })} placeholder="Ex.: responsável no balcão / WhatsApp" /></label>
+          <label>Horário combinado<input value={dayOneImplantState.schedule} onChange={(event) => patchDayOneImplant({ schedule: event.target.value })} placeholder="Ex.: 03/06 às 14h / primeiro dia assistido" /></label>
+          <label>Aparelho principal<input value={dayOneImplantState.deviceA} onChange={(event) => patchDayOneImplant({ deviceA: event.target.value })} placeholder="Ex.: celular do dono / PC caixa" /></label>
+          <label>Segundo aparelho<input value={dayOneImplantState.deviceB} onChange={(event) => patchDayOneImplant({ deviceB: event.target.value })} placeholder="Ex.: Android instalado / notebook" /></label>
+          <label>Impressora/comprovante<input value={dayOneImplantState.printer} onChange={(event) => patchDayOneImplant({ printer: event.target.value })} placeholder="Ex.: Epson 80mm / PDF / WhatsApp" /></label>
+          <label>Internet usada<input value={dayOneImplantState.internet} onChange={(event) => patchDayOneImplant({ internet: event.target.value })} placeholder="Ex.: Wi-Fi da loja / 4G reserva" /></label>
+          <label>Observações Dia 1<textarea value={dayOneImplantState.notes} onChange={(event) => patchDayOneImplant({ notes: event.target.value })} placeholder="Anote venda teste, venda real, aparelho, impressora, cliente, falhas encontradas e próximos ajustes." rows={3} /></label>
+        </div>
+        <div className="mapp-regression-step-list">
+          {DAY_ONE_IMPLANT_STEPS.map((step) => {
+            const result = normalizeDayOneImplantResult(dayOneImplantState.results[step.id]);
+            return (
+              <article key={step.id} className={`mapp-regression-step priority-${step.priority.toLowerCase()} result-${result}`}>
+                <header><span>{step.priority}</span><strong>{step.phase}</strong></header>
+                <h3>{step.title}</h3>
+                <p><b>Fazer:</b> {step.action}</p>
+                <p><b>Esperado:</b> {step.expected}</p>
+                <small><b>Evidência:</b> {step.evidence}</small>
+                <div className="mapp-regression-buttons">
+                  {(['passed', 'failed', 'blocked', 'pending'] as DayOneImplantResult[]).map((option) => (
+                    <button key={option} type="button" className={result === option ? 'is-active' : ''} onClick={() => setDayOneImplantResult(step.id, option)}>{dayOneResultLabel(option)}</button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {dayOneImplantSummary.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios do Dia 1</strong>{dayOneImplantSummary.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : <div className="mapp-final-alert-list"><strong>Sem bloqueio crítico no Dia 1</strong><p>Mesmo assim, só aceite com evidência real em celular, internet, impressão/comprovante, sync e primeira venda acompanhada.</p></div>}
+        {dayOneImplantSummary.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos do Dia 1</strong>{dayOneImplantSummary.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={approveDayOneImplant} disabled={dayOneImplantSummary.decision === 'blocked'}>Aceitar Dia 1</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyDayOneImplant()}>Copiar checklist Dia 1</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetDayOneImplant}>Zerar Dia 1</button>
+        </div>
+        <small className="mapp-final-honesty">Aceito: {dayOneImplantState.acceptedAt ? `${dayOneImplantState.acceptedBy || 'responsável'} em ${formatDateTime(dayOneImplantState.acceptedAt)}` : 'não aceito'}. Não deixe cliente operar sozinho com P0/P1 aberto, pendência, offline ou comprovante não validado.</small>
+      </section>
+
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
         <div className="mapp-section-title"><h2>Modo treinamento seguro</h2><button type="button" onClick={() => void copyTrainingMode()}>Copiar orientação</button></div>

@@ -4250,3 +4250,20 @@ img, svg { max-width: 100%; }
   .mapp-regression-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mapp-regression-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.mapp-day-one-panel {
+  border-color: rgba(37, 99, 235, .16);
+  background: linear-gradient(180deg, rgba(239,246,255,.92), rgba(255,255,255,.96));
+}
+.mapp-day-one-panel.tone-blocked {
+  border-color: rgba(239, 68, 68, .25);
+  background: linear-gradient(180deg, rgba(255,241,242,.94), rgba(255,255,255,.96));
+}
+.mapp-day-one-panel.tone-attention {
+  border-color: rgba(245, 158, 11, .25);
+  background: linear-gradient(180deg, rgba(255,251,235,.94), rgba(255,255,255,.96));
+}
+.mapp-day-one-panel.tone-ready {
+  border-color: rgba(34, 197, 94, .25);
+  background: linear-gradient(180deg, rgba(240,253,244,.94), rgba(255,255,255,.96));
+}

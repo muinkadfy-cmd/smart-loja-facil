@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v140-auditoria-final-regressao';
-const currentCache = 'smart-loja-pwa-supabase-v140-auditoria-final-regressao';
+const currentVersion = 'pwa-supabase-v141-implantacao-dia-1';
+const currentCache = 'smart-loja-pwa-supabase-v141-implantacao-dia-1';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v140')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v140.');
+if (!mainSource.includes('smart-mobile-rebuild-v141')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v141.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,8 +82,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v140 auditoria final de regressão.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v140 auditoria final de regressão.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v141 implantação dia 1.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v141 implantação dia 1.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
@@ -96,7 +96,7 @@ try {
 }
 
 const css = read('src/mobile-app/styles/mobile-app.css');
-for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel']) {
+for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
 
@@ -124,4 +124,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v140 PWA passou. Auditoria final de regressão, painel executivo de saúde comercial, feedback/NPS, pós-venda, termo de implantação, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');
+console.log('OK: release_check v141 PWA passou. Checklist de implantação real dia 1, auditoria final de regressão, painel executivo de saúde comercial, feedback/NPS, pós-venda, termo de implantação, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');

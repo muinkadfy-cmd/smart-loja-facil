@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './mobile-app/styles/mobile-app.css';
 
-document.documentElement.className = 'smart-mobile-rebuild smart-mobile-rebuild-v140';
+document.documentElement.className = 'smart-mobile-rebuild smart-mobile-rebuild-v141';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
