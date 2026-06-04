@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v147",
-  "short_name": "Smart Loja v147",
-  "description": "Smart Loja Fácil PWA mobile-first v147 com alertas leigos, ícones de notificação polidos, logout seguro, backup auditável, fotos no Storage e histórico comercial, mantendo Dia 1/Dia 2, auditoria final, painel executivo, feedback/NPS, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
+  "name": "Smart Loja Fácil PWA v148",
+  "short_name": "Smart Loja v148",
+  "description": "Smart Loja Fácil PWA mobile-first v148 com backup do caixa corrigido, alertas leigos mais limpos, janela de avisos mobile polida, logout seguro, backup auditável, fotos no Storage e histórico comercial preservados.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

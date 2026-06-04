@@ -111,7 +111,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'PWA e cache',
     title: 'Celular instalado recebeu v139',
     detail: 'Depois do deploy, abrir o PWA instalado, conferir v139 no Diagnóstico Web e limpar cache antigo se necessário.',
-    expected: 'Versão pwa-supabase-v147-alertas-logout-polimento e cache smart-loja-pwa-supabase-v147-alertas-logout-polimento visíveis no celular.',
+    expected: 'Versão pwa-supabase-v148-backup-alertas-polidos e cache smart-loja-pwa-supabase-v148-backup-alertas-polidos visíveis no celular.',
     tone: 'cache',
   },
   {
@@ -297,7 +297,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v147-alertas-logout-polimento, cache v147, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v148-backup-alertas-polidos, cache v148, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
@@ -337,7 +337,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'Família neo-* limpa validada sem corte',
     detail: 'Abrir Dashboard, Produtos, Vendas e Crediário e conferir shell, topbar, sidebar, action ribbon e dock mobile.',
-    expected: 'Diagnóstico mostra shell mobile v139, abas operacionais, alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
+    expected: 'Diagnóstico mostra shell mobile v139, abas operacionais, alertas limpos e backup corrigido ativos, sem corte lateral e com toque confortável no menu/dock.',
     tone: 'mobile',
   },
   {

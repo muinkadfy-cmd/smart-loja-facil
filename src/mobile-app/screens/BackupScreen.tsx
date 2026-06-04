@@ -20,6 +20,25 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+
+function backupErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const text = raw || 'Não foi possível concluir o backup agora.';
+  if (/cash_sessions\.created_at|created_at does not exist/i.test(text)) {
+    return 'O backup encontrou uma diferença antiga na tabela do caixa. Atualize para esta versão e tente novamente. Seus dados não foram apagados.';
+  }
+  if (/backups_log|auditoria\/sync|migration/i.test(text)) {
+    return 'O arquivo foi baixado, mas o histórico do backup não confirmou na nuvem. Aplique as migrations novas no Supabase e tente novamente.';
+  }
+  if (/permission|row-level security|policy|RLS/i.test(text)) {
+    return 'Sua conta não tem permissão para fazer backup desta loja. Entre como dono ou administrador.';
+  }
+  if (/network|fetch|Failed to fetch|internet/i.test(text)) {
+    return 'Falha de conexão ao criar o backup. Confira a internet e tente novamente.';
+  }
+  return text;
+}
+
 function askRestoreConfirmation(fileName: string): string | null {
   const ok = window.confirm(`Restaurar o backup ${fileName}? Use somente arquivo confiável da mesma loja.`);
   if (!ok) return null;
@@ -39,7 +58,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
       setBackups(rows);
       setFeedback(null);
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      setFeedback({ tone: 'error', text: backupErrorMessage(error) });
     } finally {
       setLoading(false);
     }
@@ -61,7 +80,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
       await loadBackups();
       onRefresh();
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      setFeedback({ tone: 'error', text: backupErrorMessage(error) });
     } finally {
       setLoading(false);
     }
@@ -80,7 +99,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         onRefresh();
       }
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      setFeedback({ tone: 'error', text: backupErrorMessage(error) });
     } finally {
       setLoading(false);
     }
@@ -100,7 +119,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
       await loadBackups();
       onRefresh();
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      setFeedback({ tone: 'error', text: backupErrorMessage(error) });
     } finally {
       setLoading(false);
     }

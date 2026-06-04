@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v147-alertas-logout-polimento';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v147-alertas-logout-polimento';
+export const WEB_APP_VERSION = 'pwa-supabase-v148-backup-alertas-polidos';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v148-backup-alertas-polidos';
 
 
 export interface WebTrainingModeState {
@@ -1637,6 +1637,23 @@ const WEB_BACKUP_TABLES = [
 ] as const;
 
 type WebBackupTableName = typeof WEB_BACKUP_TABLES[number];
+
+const WEB_BACKUP_ORDER_COLUMNS: Record<WebBackupTableName, string> = {
+  customers: 'created_at',
+  products: 'created_at',
+  sales: 'created_at',
+  sale_items: 'created_at',
+  cash_sessions: 'opened_at',
+  credits: 'created_at',
+  credit_installments: 'created_at',
+  payments: 'created_at',
+  cash_movements: 'created_at',
+  orders: 'created_at',
+  order_items: 'created_at',
+  receipts: 'created_at',
+  stock_movements: 'created_at',
+  audit_log: 'created_at',
+};
 type JsonRecord = Record<string, unknown>;
 
 type WebBackupPhotoSummary = {
@@ -1739,13 +1756,27 @@ function normalizeSnapshotRow(row: JsonRecord, storeId: string): JsonRecord {
 
 async function fetchStoreRows(table: WebBackupTableName, storeId: string): Promise<JsonRecord[]> {
   const client = await getClient();
-  const { data, error } = await client
+  const orderColumn = WEB_BACKUP_ORDER_COLUMNS[table] ?? 'created_at';
+  const ordered = await client
     .from(table)
     .select('*')
     .eq('store_id', storeId)
-    .order('created_at', { ascending: true });
-  if (error) throw new Error(`Não foi possível incluir ${table} no backup web: ${error.message}`);
-  return (data ?? []) as JsonRecord[];
+    .order(orderColumn, { ascending: true });
+
+  if (!ordered.error) return (ordered.data ?? []) as JsonRecord[];
+
+  // Algumas tabelas antigas não têm created_at. Exemplo real: cash_sessions usa opened_at.
+  // Se um projeto estiver com schema antigo/diferente, o backup não deve parar por causa da ordenação.
+  const fallback = await client
+    .from(table)
+    .select('*')
+    .eq('store_id', storeId);
+
+  if (fallback.error) {
+    throw new Error(`Não foi possível incluir ${table} no backup web: ${fallback.error.message}`);
+  }
+
+  return (fallback.data ?? []) as JsonRecord[];
 }
 
 async function upsertRows(table: WebBackupTableName, rows: JsonRecord[], storeId: string): Promise<number> {
@@ -3568,7 +3599,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v147 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v148 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

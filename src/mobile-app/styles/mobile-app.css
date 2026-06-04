@@ -4444,3 +4444,131 @@ img, svg { max-width: 100%; }
   .mapp-alert-list article button { grid-column: 2; justify-self: start; min-width: 128px; margin-top: 4px; }
   .mapp-alert-actions { grid-template-columns: 1fr; }
 }
+
+/* Lote 148 — backup corrigido + central de avisos mais clean/mobile */
+.mapp-alert-layer {
+  align-items: end;
+  background: rgba(12, 24, 44, 0.34);
+  backdrop-filter: blur(10px);
+  padding: 12px;
+}
+.mapp-alert-card {
+  width: min(620px, 100%);
+  margin: 0 auto calc(10px + env(safe-area-inset-bottom));
+  padding: 0;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(185, 202, 230, 0.72);
+  box-shadow: 0 24px 70px rgba(13, 28, 54, 0.28);
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+}
+.mapp-alert-card header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 16px 16px 12px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(215, 226, 242, 0.78);
+}
+.mapp-alert-card header strong {
+  font-size: 1.22rem;
+  letter-spacing: -0.035em;
+}
+.mapp-alert-card header span {
+  display: inline-flex;
+  margin-top: 3px;
+  color: #60718e;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+.mapp-alert-card header button {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  color: #334155;
+  background: #f8fbff;
+  box-shadow: inset 0 -1px 0 rgba(20, 37, 63, 0.04);
+}
+.mapp-alert-list {
+  padding: 14px 14px 4px;
+  gap: 10px;
+}
+.mapp-alert-list article {
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  min-height: 76px;
+  padding: 12px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(31, 56, 88, 0.06);
+}
+.mapp-alert-list strong {
+  color: #10233f;
+  font-size: 0.98rem;
+  letter-spacing: -0.018em;
+}
+.mapp-alert-list p {
+  color: #62728d;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+.mapp-alert-icon {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 16px !important;
+}
+.mapp-alert-list article button {
+  min-height: 40px;
+  border-radius: 14px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+.mapp-alert-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 12px 14px 14px;
+  margin: 0;
+  background: rgba(247, 250, 255, 0.96);
+  border-top: 1px solid rgba(215, 226, 242, 0.78);
+}
+.mapp-bell-button .mapp-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  box-shadow: 0 8px 18px rgba(203, 52, 47, 0.26);
+}
+.mapp-form-feedback-error {
+  border-radius: 18px;
+  line-height: 1.35;
+}
+@media (max-width: 640px) {
+  .mapp-alert-layer { padding: 0; }
+  .mapp-alert-card {
+    width: 100%;
+    max-height: min(88dvh, 760px);
+    margin: 0;
+    border-radius: 26px 26px 0 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+  .mapp-alert-list { padding: 12px 12px 4px; }
+  .mapp-alert-list article {
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 12px;
+  }
+  .mapp-alert-list article button {
+    grid-column: 2;
+    width: 100%;
+    justify-self: stretch;
+  }
+  .mapp-alert-actions {
+    grid-template-columns: 1fr;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+}

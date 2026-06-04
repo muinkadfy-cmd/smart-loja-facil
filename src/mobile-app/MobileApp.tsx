@@ -37,6 +37,26 @@ interface MobileAlertItem {
   icon: 'offline_local' | 'bloqueio_seguro' | 'estoque_baixo' | 'vendas_pdv' | 'atualizar' | 'loja_ativa' | 'backup' | 'painel_da_loja';
 }
 
+
+function cleanMobileAlertDetail(value: string): string {
+  if (/cash_sessions\.created_at|created_at does not exist/i.test(value)) {
+    return 'O backup encontrou diferença antiga na tabela do caixa. Atualize para a versão nova e tente novamente.';
+  }
+  if (/row-level security|policy|permission|RLS/i.test(value)) {
+    return 'A permissão desta conta precisa ser conferida. Entre como dono ou administrador para esta ação.';
+  }
+  if (/Failed to fetch|network|fetch/i.test(value)) {
+    return 'A conexão com a nuvem falhou. Confira a internet e tente novamente.';
+  }
+  return value.slice(0, 180);
+}
+
+function alertCountLabel(count: number): string {
+  if (count <= 0) return 'Tudo certo agora';
+  if (count === 1) return '1 aviso importante';
+  return `${count} avisos importantes`;
+}
+
 function emptyOutboxStats(): WebOutboxStats {
   return { total: 0, pending: 0, error: 0, lastCreatedAt: '', lastError: '' };
 }
@@ -100,7 +120,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     const dashboard = status?.dashboard;
     const items: MobileAlertItem[] = [];
     if (!networkOnline) items.push({ title: 'Sem internet neste aparelho', detail: 'As ações podem ficar pendentes. Conecte a internet antes de vender de verdade.', action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'offline_local' });
-    if (error) items.push({ title: 'Atenção no carregamento', detail: error.slice(0, 180), action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'bloqueio_seguro' });
+    if (error) items.push({ title: 'Atenção no carregamento', detail: cleanMobileAlertDetail(error), action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'bloqueio_seguro' });
     if (!status?.sqlite_ok) items.push({ title: 'Entre para sincronizar', detail: 'Faça login para ver a mesma loja no celular e no computador.', action: 'Diagnóstico', page: 'diagnostics', tone: networkOnline ? 'warning' : 'danger', icon: 'bloqueio_seguro' });
     if (outboxStats.error > 0) items.push({ title: 'Pendência com erro', detail: `${outboxStats.error} alteração(ões) precisam de atenção antes de vender sem acompanhamento.`, action: 'Ver pendências', page: 'diagnostics', tone: 'danger', icon: 'backup' });
     if (outboxStats.pending > 0) items.push({ title: 'Ainda falta enviar', detail: `${outboxStats.pending} alteração(ões) estão guardadas neste aparelho aguardando sincronização.`, action: 'Enviar agora', page: 'diagnostics', tone: 'warning', icon: 'backup' });
@@ -114,6 +134,8 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     if (trainingModeActive) items.push({ title: 'Modo treinamento ativo', detail: 'Gravações reais estão bloqueadas para demonstração segura.', action: 'Ver modo', page: 'diagnostics', tone: 'warning', icon: 'bloqueio_seguro' });
     return items.length ? items.slice(0, 8) : [{ title: 'Tudo certo', detail: 'Nenhum alerta importante agora. Dados prontos para conferência.', action: 'Dashboard', page: 'dashboard' as PageKey, tone: 'success', icon: 'painel_da_loja' }];
   }, [status, updateAvailable, demoModeActive, trainingModeActive, networkOnline, syncSnapshot, outboxStats, error]);
+
+  const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;
 
   const navigate = useCallback((page: PageKey) => {
     onNavigate(page);
@@ -131,7 +153,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       settings={settings}
       loading={loading}
       error={error}
-      alertsCount={alerts.filter((alert) => alert.tone !== 'success').length}
+      alertsCount={importantAlertsCount}
       updateAvailable={updateAvailable}
       onNavigate={navigate}
       onRefresh={onRefresh}
@@ -167,7 +189,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
         <div className="mapp-alert-layer" role="dialog" aria-modal="true" aria-label="Alertas da loja">
           <section className="mapp-alert-card">
             <header>
-              <div><strong>Central de avisos</strong><span>{alerts.filter((alert) => alert.tone !== 'success').length || 0} atenção(ões)</span></div>
+              <div><strong>Central de avisos</strong><span>{alertCountLabel(importantAlertsCount)}</span></div>
               <button type="button" onClick={() => setAlertsOpen(false)} aria-label="Fechar alertas">×</button>
             </header>
             <div className="mapp-alert-list">
@@ -180,7 +202,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
               ))}
             </div>
             <div className="mapp-alert-actions">
-              <button type="button" onClick={onRefresh}>Sincronizar agora</button>
+              <button type="button" onClick={() => { onRefresh(); setAlertsOpen(false); }}>Sincronizar agora</button>
               <button type="button" onClick={() => window.location.reload()}>Recarregar tela</button>
               <button type="button" className="mapp-alert-logout-action" onClick={() => { setAlertsOpen(false); onLogout(); }}>Sair da conta</button>
             </div>
