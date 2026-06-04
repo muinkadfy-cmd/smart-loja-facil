@@ -169,7 +169,7 @@ async function webCall<T>(module: string, task: string, action: () => Promise<T>
       throw new Error(safeDetail);
     }
     recordWebSyncSnapshot(pendingByNetwork ? 'pending' : 'error', module, detail);
-    throw error;
+    throw new Error(detail);
   }
 }
 

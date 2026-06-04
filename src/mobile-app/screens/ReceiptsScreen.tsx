@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
-import type { CreditSummary, PageKey, ReceiptSummary } from '../../types';
+import { creditPaymentMethodLabel, remainingInstallmentAmount } from '../../lib/creditPaymentGuard';
+import type { AppStatus, CreditInstallment, CreditSummary, PageKey, ReceiptSummary, Settings } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 
 interface ReceiptsScreenProps {
+  status: AppStatus | null;
   refreshToken: number;
   onNavigate: (page: PageKey) => void;
   onRefresh: () => void;
 }
 
 type Feedback = { tone: 'success' | 'error' | 'info'; text: string };
-type ReceiptPrintFormat = '58mm' | '80mm' | 'a4';
+type ReceiptPrintFormat = 'a4';
 type ReceiptFilter = 'todos' | 'vendas' | 'crediario' | 'parcelas' | 'pedidos' | 'caixa' | 'cancelados';
+type ReceiptPreviewKind = 'salvo' | 'nota' | 'parcela';
+type ReceiptStoreInfo = Pick<Settings, 'store_name' | 'phone' | 'whatsapp' | 'receipt_message'> & { logo_url?: string };
+
 type ReceiptView = ReceiptSummary & {
   source_kind?: ReceiptFilter;
   installment_number?: number;
@@ -23,6 +28,23 @@ type ReceiptView = ReceiptSummary & {
   installment_paid_amount?: number;
   installment_remaining?: number;
 };
+
+type CreditCustomerGroup = {
+  customerKey: string;
+  customerName: string;
+  contact: string;
+  credits: CreditSummary[];
+  total: number;
+  paid: number;
+  balance: number;
+  notesCount: number;
+  openNotes: number;
+};
+
+type ReceiptPreview =
+  | { kind: 'salvo'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; fileStem: string }
+  | { kind: 'nota'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; credit: CreditSummary; fileStem: string }
+  | { kind: 'parcela'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; credit: CreditSummary; installment: CreditInstallment; fileStem: string };
 
 const receiptFilters: Array<{ key: ReceiptFilter; label: string }> = [
   { key: 'todos', label: 'Todos' },
@@ -58,69 +80,6 @@ function receiptTone(status: string): 'ok' | 'warn' | 'danger' | 'neutral' {
   return 'neutral';
 }
 
-function safeWhatsapp(value: string): string {
-  const digits = value.replace(/\D/g, '');
-  if (!digits) return '';
-  return digits.startsWith('55') ? digits : `55${digits}`;
-}
-
-function htmlToText(html: string): string {
-  if (typeof window === 'undefined') return html.replace(/<[^>]+>/g, ' ');
-  const element = document.createElement('div');
-  element.innerHTML = html;
-  return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-}
-
-function remaining(amount: number, paid: number): number {
-  return Math.max(0, Number((amount - paid).toFixed(2)));
-}
-
-function installmentStatus(amount: number, paid: number, dueDate: string, originalStatus: string): string {
-  const rest = remaining(amount, paid);
-  if (rest <= 0.009) return 'pago';
-  if (paid > 0) return 'parcial';
-  const due = new Date(`${dueDate}T23:59:59`);
-  if (dueDate && !Number.isNaN(due.getTime()) && due.getTime() < Date.now()) return 'vencido';
-  return originalStatus || 'pendente';
-}
-
-function buildInstallmentReceiptContent(credit: CreditSummary, installmentIndex: number): string {
-  const installment = credit.installments[installmentIndex];
-  const paid = Number(installment.paid_amount || 0);
-  const rest = remaining(Number(installment.amount || 0), paid);
-  const status = receiptStatusLabel(installmentStatus(Number(installment.amount || 0), paid, installment.due_date, installment.status));
-  const next = paid > Number(installment.amount || 0) ? paid - Number(installment.amount || 0) : 0;
-  return `
-    <section class="slf-receipt">
-      <div class="slf-receipt-head">
-        <div class="slf-receipt-brand"><div><div class="slf-receipt-title">Smart Loja Fácil</div><div class="slf-receipt-sub">Comprovante de crediário por parcela</div></div></div>
-        <strong class="slf-receipt-badge">${escapeHtml(status.toUpperCase())}</strong>
-      </div>
-      <div class="slf-receipt-grid">
-        <div class="slf-receipt-info"><span>Cliente</span><strong>${escapeHtml(credit.customer_name || 'Cliente')}</strong></div>
-        <div class="slf-receipt-info"><span>Venda</span><strong>#${String(credit.sale_number || 0).padStart(4, '0')}</strong></div>
-        <div class="slf-receipt-info"><span>Parcela</span><strong>${installment.number}/${credit.installments.length}</strong></div>
-        <div class="slf-receipt-info"><span>Vencimento</span><strong>${escapeHtml(installment.due_date || '-')}</strong></div>
-      </div>
-      <table class="slf-receipt-table">
-        <tbody>
-          <tr><th>Valor original</th><td class="num">${formatCurrency(installment.amount)}</td></tr>
-          <tr><th>Total já pago</th><td class="num">${formatCurrency(paid)}</td></tr>
-          <tr><th>Restante</th><td class="num">${formatCurrency(rest)}</td></tr>
-          <tr><th>Status</th><td class="num">${escapeHtml(status)}</td></tr>
-          ${installment.paid_at ? `<tr><th>Pagamento</th><td class="num">${escapeHtml(formatDateTime(installment.paid_at))}</td></tr>` : ''}
-        </tbody>
-      </table>
-      ${next > 0 ? `<div class="slf-receipt-note">Houve abatimento em próxima parcela: ${formatCurrency(next)}.</div>` : ''}
-      <div class="slf-receipt-note">Envie este comprovante para o cliente acompanhar o que já pagou e o que falta.</div>
-      <div class="slf-receipt-footer">Gerado pelo Smart Loja Fácil</div>
-    </section>`;
-}
-
 function receiptCategory(receipt: ReceiptView): ReceiptFilter {
   if (receipt.source_kind) return receipt.source_kind;
   const type = `${receipt.receipt_type || ''} ${receipt.status || ''} ${receipt.content || ''}`.toLowerCase();
@@ -132,49 +91,296 @@ function receiptCategory(receipt: ReceiptView): ReceiptFilter {
   return 'vendas';
 }
 
-function buildInstallmentReceiptViews(credits: CreditSummary[]): ReceiptView[] {
-  return credits.flatMap((credit) => credit.installments.map((installment, index) => {
-    const paid = Number(installment.paid_amount || 0);
-    const amount = Number(installment.amount || 0);
-    const status = installmentStatus(amount, paid, installment.due_date, installment.status);
-    return {
-      id: `credit-installment-${installment.id}`,
-      sale_id: credit.sale_id,
-      sale_number: credit.sale_number,
-      customer_name: credit.customer_name,
-      customer_whatsapp: credit.customer_whatsapp || credit.customer_phone || '',
-      receipt_type: 'parcela-crediario',
-      total: amount,
-      status,
-      created_at: installment.paid_at || installment.due_date || credit.created_at,
-      content: buildInstallmentReceiptContent(credit, index),
-      source_kind: 'parcelas',
-      installment_number: installment.number,
-      installment_total: credit.installments.length,
-      installment_due_date: installment.due_date,
-      installment_paid_amount: paid,
-      installment_remaining: remaining(amount, paid),
-    } satisfies ReceiptView;
-  }));
+function safeWhatsapp(value: string): string {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.startsWith('55') ? digits : `55${digits}`;
 }
 
-export function ReceiptsScreen({ refreshToken, onNavigate }: ReceiptsScreenProps): JSX.Element {
-  const [receipts, setReceipts] = useState<ReceiptView[]>([]);
-  const [selected, setSelected] = useState<ReceiptView | null>(null);
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function htmlToText(html: string): string {
+  if (typeof window === 'undefined') return html.replace(/<[^>]+>/g, ' ');
+  const element = document.createElement('div');
+  element.innerHTML = html;
+  return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+function startOfToday(): Date {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function dateOnly(value: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value || '-';
+  return date.toLocaleDateString('pt-BR');
+}
+
+function remainingOf(installment: CreditInstallment): number {
+  return remainingInstallmentAmount(installment);
+}
+
+function paidOf(installment: CreditInstallment): number {
+  return Math.max(0, Number(installment.paid_amount || 0));
+}
+
+function isOverdue(installment: CreditInstallment): boolean {
+  if (installment.status === 'pago') return false;
+  const dueDate = new Date(`${installment.due_date}T00:00:00`);
+  if (Number.isNaN(dueDate.getTime())) return false;
+  return dueDate < startOfToday();
+}
+
+function installmentStatusLabel(installment: CreditInstallment): string {
+  if (installment.status === 'pago' || remainingOf(installment) <= 0.009) return 'Paga';
+  if (isOverdue(installment)) return paidOf(installment) > 0 ? 'Parcial vencida' : 'Vencida';
+  if (installment.status === 'parcial' || paidOf(installment) > 0) return 'Parcial';
+  return 'Pendente';
+}
+
+function installmentStatusTone(installment: CreditInstallment): 'ok' | 'warn' | 'danger' | 'neutral' {
+  const label = installmentStatusLabel(installment).toLowerCase();
+  if (label.includes('paga')) return 'ok';
+  if (label.includes('venc')) return 'danger';
+  if (label.includes('parcial') || label.includes('pend')) return 'warn';
+  return 'neutral';
+}
+
+function receiptStatusTone(label: string): 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' | 'neutral' {
+  const lower = label.toLowerCase();
+  if (lower.includes('paga') || lower.includes('quit')) return 'paid';
+  if (lower.includes('venc')) return 'overdue';
+  if (lower.includes('parcial')) return 'partial';
+  if (lower.includes('pend')) return 'pending';
+  if (lower.includes('cancel')) return 'danger';
+  return 'neutral';
+}
+
+function creditPaidTotal(credit: CreditSummary): number {
+  return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
+}
+
+function customerInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? 'L';
+  const second = parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1];
+  return `${first ?? 'L'}${second ?? 'J'}`.toUpperCase();
+}
+
+function normalizeReceiptStore(settings: Settings | null | undefined): ReceiptStoreInfo {
+  const source = settings as (Settings & { logo_url?: string }) | null | undefined;
+  const name = source?.store_name?.trim() || 'Minha loja';
+  return {
+    store_name: name,
+    phone: source?.phone?.trim() || '',
+    whatsapp: source?.whatsapp?.trim() || '',
+    receipt_message: source?.receipt_message?.trim() || 'Obrigado pela preferência.',
+    logo_url: source?.logo_url?.trim() || '',
+  };
+}
+
+function buildReceiptBrand(store: ReceiptStoreInfo): string {
+  const name = store.store_name || 'Minha loja';
+  const contact = [store.phone, store.whatsapp && store.whatsapp !== store.phone ? store.whatsapp : ''].filter(Boolean).join(' · ');
+  const logo = store.logo_url
+    ? `<img class="slf-logo-img" src="${escapeHtml(store.logo_url)}" alt="Logo da loja">`
+    : `<span class="slf-logo-initials">${escapeHtml(customerInitials(name))}</span>`;
+  return `<div class="slf-brand">${logo}<div><div class="slf-title">${escapeHtml(name)}</div>${contact ? `<div class="slf-contact">${escapeHtml(contact)}</div>` : ''}</div></div>`;
+}
+
+function buildReceiptStyles(): string {
+  return `
+    <style>
+      *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      :root{color-scheme:light}
+      body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif;padding:18px;min-height:100vh}
+      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12)}
+      .slf-mode-tip{margin:0 auto 12px;max-width:920px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;text-align:center}
+      .slf-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
+      .slf-brand{display:flex;gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;word-break:break-word}.slf-contact{font-size:11px;color:#64748b;margin-top:3px}.slf-sub{font-size:12px;color:#64748b;margin-top:4px}.slf-badge{border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:nowrap;border:1px solid #e2e8f0}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
+      .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;word-break:break-word}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
+      table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border-bottom:1px solid #e5e7eb;padding:9px 6px;text-align:left;vertical-align:top}th{color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.02em}.num{text-align:right;white-space:nowrap}.status-paid{color:#047857;font-weight:950}.status-partial{color:#b45309;font-weight:950}.status-pending{color:#1d4ed8;font-weight:950}.status-overdue,.status-danger{color:#b91c1c;font-weight:950}.slf-note{margin-top:12px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;padding:11px;color:#9a3412;font-size:12px;line-height:1.45}.slf-note.danger{background:#fef2f2;border-color:#fecaca;color:#991b1b}.slf-note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.slf-total{display:flex;justify-content:space-between;gap:10px;border-radius:14px;background:#111827;color:#fff;padding:12px;margin-top:10px;font-weight:950}.slf-footer{margin-top:14px;color:#64748b;font-size:11px;text-align:center}.slf-print-tip{margin-top:10px;border:1px dashed #cbd5e1;border-radius:12px;padding:9px;color:#475569;font-size:11px;text-align:center}
+      @media print{body{background:#fff}.slf-receipt{box-shadow:none;border-radius:0;border:0}.no-print{display:none!important}}
+      @media (max-width:560px){body{padding:0}.slf-receipt{border-radius:0;padding:14px}.slf-grid,.slf-kpis{grid-template-columns:1fr}.slf-head{align-items:flex-start}.slf-logo-img,.slf-logo-initials{width:44px;height:44px;border-radius:14px}.slf-title{font-size:17px}.slf-badge{font-size:11px;padding:7px 9px}table{font-size:11px}th,td{padding:7px 4px}}
+    </style>`;
+}
+
+function dueDateHint(installment: CreditInstallment): string {
+  const dueDate = new Date(`${installment.due_date}T00:00:00`);
+  if (Number.isNaN(dueDate.getTime())) return '';
+  const days = Math.floor((startOfToday().getTime() - dueDate.getTime()) / 86400000);
+  if (days > 0 && installmentStatusLabel(installment).toLowerCase().includes('venc')) return `Vencida há ${formatNumber(days)} dia(s)`;
+  return '';
+}
+
+function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary, installment: CreditInstallment): string {
+  const paid = paidOf(installment);
+  const rest = remainingOf(installment);
+  const status = installmentStatusLabel(installment);
+  const tone = receiptStatusTone(status);
+  const paidDate = installment.paid_at ? formatDateTime(installment.paid_at) : 'Ainda não pago';
+  const method = installment.payment_method ? creditPaymentMethodLabel(String(installment.payment_method)) : 'Não informado';
+  const dueHint = dueDateHint(installment);
+  const noteClass = tone === 'paid' ? 'ok' : tone === 'overdue' ? 'danger' : '';
+  const noteText = tone === 'paid'
+    ? `Parcela quitada. Restante desta parcela: ${formatCurrency(0)}.`
+    : tone === 'partial'
+      ? `Pagamento parcial recebido. Ainda falta ${formatCurrency(rest)} nesta parcela.`
+      : tone === 'overdue'
+        ? `Atenção: esta parcela está atrasada. ${dueHint || 'Confira o vencimento e combine o recebimento com o cliente.'}`
+        : 'Esta parcela ainda está em aberto. Envie este comprovante para o cliente acompanhar vencimento e saldo.';
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Parcela ${installment.number}/${credit.installments.length}</title>${buildReceiptStyles()}</head><body>
+    <div class="slf-mode-tip">Visualização limpa para iPhone/Android: confira, tire print, compartilhe ou use A4/PDF.</div><main class="slf-receipt">
+      <header class="slf-head">
+        <div>${buildReceiptBrand(store)}<div class="slf-sub">Comprovante individual da parcela do crediário</div></div>
+        <strong class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</strong>
+      </header>
+      <section class="slf-grid">
+        <div class="slf-info"><span>Cliente</span><strong>${escapeHtml(credit.customer_name || 'Cliente')}</strong></div>
+        <div class="slf-info"><span>Venda / nota</span><strong>#${String(credit.sale_number || 0).padStart(4, '0')}</strong></div>
+        <div class="slf-info"><span>Parcela</span><strong>${installment.number}/${credit.installments.length}</strong></div>
+        <div class="slf-info"><span>Vencimento</span><strong>${escapeHtml(dateOnly(installment.due_date))}${dueHint ? ` · ${escapeHtml(dueHint)}` : ''}</strong></div>
+      </section>
+      <section class="slf-kpis">
+        <div class="slf-kpi light"><span>Valor original</span><strong>${formatCurrency(installment.amount)}</strong></div>
+        <div class="slf-kpi light"><span>Total já pago</span><strong>${formatCurrency(paid)}</strong></div>
+        <div class="slf-kpi"><span>Restante</span><strong>${formatCurrency(rest)}</strong></div>
+      </section>
+      <table aria-label="Resumo da parcela"><tbody>
+        <tr><th>Valor original</th><td class="num">${formatCurrency(installment.amount)}</td></tr>
+        <tr><th>Pago nesta parcela</th><td class="num">${formatCurrency(paid)}</td></tr>
+        <tr><th>Restante desta parcela</th><td class="num">${formatCurrency(rest)}</td></tr>
+        <tr><th>Status</th><td class="num status-${tone}">${escapeHtml(status)}</td></tr>
+        <tr><th>Forma do pagamento</th><td class="num">${escapeHtml(method)}</td></tr>
+        <tr><th>Data do pagamento</th><td class="num">${escapeHtml(paidDate)}</td></tr>
+      </tbody></table>
+      <div class="slf-note ${noteClass}">${escapeHtml(noteText)}</div>
+      <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
+      <div class="slf-print-tip">No iPhone, abra em tela cheia e tire print ou use Compartilhar. No Android/PC, use Imprimir / salvar PDF.</div>
+    </main></body></html>`;
+}
+
+function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary): string {
+  const paid = creditPaidTotal(credit);
+  const balance = Math.max(0, Number(credit.balance || 0));
+  const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const partialCount = credit.installments.filter((installment) => installmentStatusLabel(installment).includes('Parcial')).length;
+  const overdueCount = credit.installments.filter(isOverdue).length;
+  const nextOpen = [...credit.installments].filter((installment) => remainingOf(installment) > 0.009 && installment.status !== 'pago').sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number)[0] ?? null;
+  const status = balance <= 0.009 ? 'Nota quitada' : overdueCount ? 'Atenção: parcela vencida' : partialCount ? 'Com pagamento parcial' : 'Em aberto';
+  const tone = receiptStatusTone(status);
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crediário venda ${credit.sale_number}</title>${buildReceiptStyles()}</head><body>
+    <div class="slf-mode-tip">Extrato da nota inteira: cliente, total, parcelas, pago, restante e status.</div><main class="slf-receipt">
+      <header class="slf-head">
+        <div>${buildReceiptBrand(store)}<div class="slf-sub">Extrato completo do crediário / nota inteira</div></div>
+        <strong class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</strong>
+      </header>
+      <section class="slf-grid">
+        <div class="slf-info"><span>Cliente</span><strong>${escapeHtml(credit.customer_name || 'Cliente')}</strong></div>
+        <div class="slf-info"><span>Venda / nota</span><strong>#${String(credit.sale_number || 0).padStart(4, '0')}</strong></div>
+        <div class="slf-info"><span>Quantidade de parcelas</span><strong>${credit.installments.length}</strong></div>
+        <div class="slf-info"><span>Próximo vencimento</span><strong>${nextOpen ? `${dateOnly(nextOpen.due_date)} · ${formatCurrency(remainingOf(nextOpen))}` : 'Sem parcelas em aberto'}</strong></div>
+      </section>
+      <section class="slf-kpis">
+        <div class="slf-kpi light"><span>Total da nota</span><strong>${formatCurrency(credit.total)}</strong></div>
+        <div class="slf-kpi light"><span>Total pago</span><strong>${formatCurrency(paid)}</strong></div>
+        <div class="slf-kpi"><span>Total restante</span><strong>${formatCurrency(balance)}</strong></div>
+      </section>
+      <table aria-label="Parcelas do crediário">
+        <thead><tr><th>Parcela</th><th>Vencimento</th><th class="num">Original</th><th class="num">Pago</th><th class="num">Restante</th><th class="num">Status</th></tr></thead>
+        <tbody>${credit.installments.map((installment) => {
+          const label = installmentStatusLabel(installment);
+          const rowTone = receiptStatusTone(label);
+          return `<tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td class="num">${formatCurrency(paidOf(installment))}</td><td class="num">${formatCurrency(remainingOf(installment))}</td><td class="num status-${rowTone}">${escapeHtml(label)}</td></tr>`;
+        }).join('')}</tbody>
+      </table>
+      <div class="slf-total"><span>Parcelas pagas</span><strong>${paidCount}/${credit.installments.length}</strong></div>
+      <div class="slf-note">Este extrato mostra a nota inteira. Para enviar só uma parcela, use o botão Enviar parcela dentro da nota na aba Comprovantes.</div>
+      <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
+      <div class="slf-print-tip">No iPhone, use Visualizar/print para abrir a tela limpa e tirar print. No Android/PC, use Imprimir / salvar PDF.</div>
+    </main></body></html>`;
+}
+
+function installmentShareText(credit: CreditSummary, installment: CreditInstallment): string {
+  return [
+    `Comprovante da parcela ${installment.number}/${credit.installments.length}`,
+    `Cliente: ${credit.customer_name || 'Cliente'}`,
+    `Venda/nota: #${String(credit.sale_number || 0).padStart(4, '0')}`,
+    `Status: ${installmentStatusLabel(installment)}`,
+    `Valor original: ${formatCurrency(installment.amount)}`,
+    `Pago: ${formatCurrency(paidOf(installment))}`,
+    `Restante: ${formatCurrency(remainingOf(installment))}`,
+    `Vencimento: ${dateOnly(installment.due_date)}`,
+  ].join('\n');
+}
+
+function creditGeneralShareText(credit: CreditSummary): string {
+  const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const overdueCount = credit.installments.filter(isOverdue).length;
+  return [
+    `Extrato do crediário / nota #${String(credit.sale_number || 0).padStart(4, '0')}`,
+    `Cliente: ${credit.customer_name || 'Cliente'}`,
+    `Total: ${formatCurrency(credit.total)}`,
+    `Pago: ${formatCurrency(creditPaidTotal(credit))}`,
+    `Restante: ${formatCurrency(credit.balance)}`,
+    `Parcelas pagas: ${paidCount}/${credit.installments.length}`,
+    overdueCount ? `Atenção: ${overdueCount} parcela(s) vencida(s).` : 'Sem parcela vencida no momento.',
+  ].join('\n');
+}
+
+function buildInstallmentReceiptViews(store: ReceiptStoreInfo, credits: CreditSummary[]): ReceiptView[] {
+  return credits.flatMap((credit) => credit.installments.map((installment) => ({
+    id: `credit-installment-${installment.id}`,
+    sale_id: credit.sale_id,
+    sale_number: credit.sale_number,
+    customer_name: credit.customer_name,
+    customer_whatsapp: credit.customer_whatsapp || credit.customer_phone || '',
+    receipt_type: 'parcela-crediario-a4',
+    total: Number(installment.amount || 0),
+    status: installmentStatusLabel(installment),
+    created_at: installment.paid_at || installment.due_date || credit.created_at,
+    content: buildInstallmentReceiptHtml(store, credit, installment),
+    source_kind: 'parcelas',
+    installment_number: installment.number,
+    installment_total: credit.installments.length,
+    installment_due_date: installment.due_date,
+    installment_paid_amount: paidOf(installment),
+    installment_remaining: remainingOf(installment),
+  } satisfies ReceiptView)));
+}
+
+export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScreenProps): JSX.Element {
+  const [savedReceipts, setSavedReceipts] = useState<ReceiptView[]>([]);
+  const [credits, setCredits] = useState<CreditSummary[]>([]);
+  const [selected, setSelected] = useState<ReceiptPreview | null>(null);
   const [filter, setFilter] = useState<ReceiptFilter>('todos');
+  const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(30);
+  const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
+  const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
 
+  const receiptStore = useMemo(() => normalizeReceiptStore(status?.settings), [status?.settings]);
+
   const loadReceipts = async () => {
     setLoading(true);
     try {
-      const [rows, credits] = await Promise.all([api.receipts(), api.credits().catch(() => [])]);
-      const combined = [...(rows as ReceiptView[]), ...buildInstallmentReceiptViews(credits as CreditSummary[])];
-      combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setReceipts(combined);
-      setSelected((current) => current ? combined.find((row) => row.id === current.id) ?? current : null);
+      const [rows, creditRows] = await Promise.all([api.receipts(), api.credits().catch(() => [])]);
+      const normalizedReceipts = (rows as ReceiptView[]).map((receipt) => ({ ...receipt, source_kind: receipt.source_kind || receiptCategory(receipt) }));
+      setSavedReceipts(normalizedReceipts);
+      setCredits(creditRows as CreditSummary[]);
+      setSelected((current) => current ? current : null);
       setFeedback(null);
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -189,27 +395,131 @@ export function ReceiptsScreen({ refreshToken, onNavigate }: ReceiptsScreenProps
 
   useEffect(() => {
     setVisibleCount(30);
-  }, [filter]);
+  }, [filter, query]);
 
-  const filteredReceipts = useMemo(() => receipts.filter((receipt) => {
+  const installmentReceiptViews = useMemo(() => buildInstallmentReceiptViews(receiptStore, credits), [credits, receiptStore]);
+
+  const filteredSavedReceipts = useMemo(() => savedReceipts.filter((receipt) => {
     const category = receiptCategory(receipt);
-    if (filter === 'todos') return true;
-    if (filter === 'crediario') return category === 'crediario' || category === 'parcelas';
-    if (filter === 'cancelados') return category === 'cancelados' || receiptStatusLabel(receipt.status) === 'Cancelado';
-    return category === filter;
-  }), [filter, receipts]);
+    if (filter === 'crediario' || filter === 'parcelas') return false;
+    if (filter !== 'todos' && filter !== category) return false;
+    const term = query.trim().toLowerCase();
+    if (!term) return true;
+    return [receiptTitle(receipt), receipt.customer_name, receipt.customer_whatsapp, receipt.receipt_type, receipt.status, String(receipt.sale_number)]
+      .some((value) => String(value || '').toLowerCase().includes(term));
+  }), [filter, query, savedReceipts]);
 
-  const totalReceipts = receipts.length;
-  const totalValue = useMemo(() => receipts.reduce((sum, receipt) => sum + Number(receipt.total || 0), 0), [receipts]);
-  const pendingCount = receipts.filter((receipt) => ['Pendente', 'Parcial', 'Vencido'].includes(receiptStatusLabel(receipt.status))).length;
+  const filteredCredits = useMemo(() => {
+    if (!['todos', 'crediario', 'parcelas'].includes(filter)) return [];
+    const term = query.trim().toLowerCase();
+    return credits.filter((credit) => {
+      const installmentText = credit.installments.map((item) => `parcela ${item.number} ${installmentStatusLabel(item)} ${dateOnly(item.due_date)}`).join(' ');
+      return !term || [
+        credit.customer_name,
+        credit.customer_phone,
+        credit.customer_whatsapp,
+        String(credit.sale_number),
+        `nota ${credit.sale_number}`,
+        `venda ${credit.sale_number}`,
+        credit.status,
+        installmentText,
+      ].some((value) => String(value || '').toLowerCase().includes(term));
+    });
+  }, [credits, filter, query]);
 
-  async function exportReceipt(receipt: ReceiptView, printFormat: ReceiptPrintFormat = '80mm'): Promise<void> {
-    const html = receipt.content || `<h1>${receiptTitle(receipt)}</h1><p>${receipt.customer_name || 'Consumidor'} - ${formatCurrency(receipt.total)}</p>`;
+  const groupedCredits = useMemo<CreditCustomerGroup[]>(() => {
+    const groups = new Map<string, CreditCustomerGroup>();
+    for (const credit of filteredCredits) {
+      const customerName = credit.customer_name?.trim() || 'Cliente sem nome';
+      const contact = credit.customer_whatsapp || credit.customer_phone || '';
+      const key = `${customerName.toLowerCase()}|${contact}`;
+      const current = groups.get(key) ?? {
+        customerKey: key,
+        customerName,
+        contact,
+        credits: [],
+        total: 0,
+        paid: 0,
+        balance: 0,
+        notesCount: 0,
+        openNotes: 0,
+      };
+      current.credits.push(credit);
+      current.total += Number(credit.total || 0);
+      current.paid += creditPaidTotal(credit);
+      current.balance += Math.max(0, Number(credit.balance || 0));
+      current.notesCount += 1;
+      if (credit.status !== 'quitado' && Number(credit.balance || 0) > 0.009) current.openNotes += 1;
+      groups.set(key, current);
+    }
+    return Array.from(groups.values()).sort((a, b) => b.balance - a.balance || a.customerName.localeCompare(b.customerName));
+  }, [filteredCredits]);
+
+  const totalReceipts = savedReceipts.length + installmentReceiptViews.length + credits.length;
+  const totalValue = useMemo(() => savedReceipts.reduce((sum, receipt) => sum + Number(receipt.total || 0), 0) + credits.reduce((sum, credit) => sum + Number(credit.total || 0), 0), [credits, savedReceipts]);
+  const pendingCount = useMemo(() => credits.flatMap((credit) => credit.installments).filter((installment) => remainingOf(installment) > 0.009 && installment.status !== 'pago').length, [credits]);
+
+  function toggleCustomer(customerKey: string): void {
+    setExpandedCustomers((current) => ({ ...current, [customerKey]: !current[customerKey] }));
+  }
+
+  function toggleCredit(creditId: string): void {
+    setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
+  }
+
+  function savedReceiptPreview(receipt: ReceiptView): ReceiptPreview {
+    return {
+      kind: 'salvo',
+      id: receipt.id,
+      title: receiptTitle(receipt),
+      customer: receipt.customer_name || 'Consumidor',
+      createdAt: receipt.created_at,
+      total: Number(receipt.total || 0),
+      status: receiptStatusLabel(receipt.status),
+      html: receipt.content || `<section class="slf-receipt"><h1>${escapeHtml(receiptTitle(receipt))}</h1><p>${escapeHtml(receipt.customer_name || 'Consumidor')} - ${formatCurrency(receipt.total)}</p></section>`,
+      phone: receipt.customer_whatsapp || '',
+      fileStem: `comprovante-${receipt.sale_number || receipt.id}`,
+    };
+  }
+
+  function creditPreview(credit: CreditSummary): ReceiptPreview {
+    return {
+      kind: 'nota',
+      id: `credit-${credit.id}`,
+      title: `Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')}`,
+      customer: credit.customer_name || 'Cliente',
+      createdAt: credit.created_at,
+      total: Number(credit.total || 0),
+      status: Number(credit.balance || 0) <= 0.009 ? 'Quitada' : 'Em aberto',
+      html: buildCreditGeneralReceiptHtml(receiptStore, credit),
+      phone: credit.customer_whatsapp || credit.customer_phone || '',
+      credit,
+      fileStem: `comprovante-nota-${credit.sale_number || credit.id}`,
+    };
+  }
+
+  function installmentPreview(credit: CreditSummary, installment: CreditInstallment): ReceiptPreview {
+    return {
+      kind: 'parcela',
+      id: `credit-${credit.id}-installment-${installment.id}`,
+      title: `Parcela ${installment.number}/${credit.installments.length} · Nota #${String(credit.sale_number || 0).padStart(4, '0')}`,
+      customer: credit.customer_name || 'Cliente',
+      createdAt: installment.paid_at || installment.due_date || credit.created_at,
+      total: Number(installment.amount || 0),
+      status: installmentStatusLabel(installment),
+      html: buildInstallmentReceiptHtml(receiptStore, credit, installment),
+      phone: credit.customer_whatsapp || credit.customer_phone || '',
+      credit,
+      installment,
+      fileStem: `comprovante-nota-${credit.sale_number || credit.id}-parcela-${installment.number}`,
+    };
+  }
+
+  async function exportPreview(preview: ReceiptPreview, printFormat: ReceiptPrintFormat = 'a4'): Promise<void> {
     setSaving(true);
     try {
-      await api.exportHtmlPdf(html, `comprovante-${receipt.sale_number || receipt.id}`, true, undefined, printFormat);
-      const label = printFormat === 'a4' ? 'A4/PDF' : printFormat;
-      setFeedback({ tone: 'success', text: `Prévia ${label} aberta para salvar, imprimir ou enviar.` });
+      await api.exportHtmlPdf(preview.html, preview.fileStem, true, undefined, printFormat);
+      setFeedback({ tone: 'success', text: 'A4/PDF aberto. No iPhone, confira em tela cheia e tire print ou compartilhe.' });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -217,31 +527,34 @@ export function ReceiptsScreen({ refreshToken, onNavigate }: ReceiptsScreenProps
     }
   }
 
-  function openFullPreview(receipt: ReceiptView): void {
-    const html = receipt.content || `<p>Comprovante sem prévia HTML salva.</p>`;
+  function openFullPreview(preview: ReceiptPreview): void {
     const popup = window.open('', '_blank', 'noopener,noreferrer');
     if (!popup) {
-      setFeedback({ tone: 'info', text: 'O navegador bloqueou a tela cheia. Use A4/PDF ou Compartilhar.' });
+      setFeedback({ tone: 'info', text: 'O navegador bloqueou a visualização. Use A4/PDF ou Compartilhar.' });
       return;
     }
     popup.document.open();
-    popup.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(receiptTitle(receipt))}</title><style>body{margin:0;background:#f2f6fb;font-family:Arial,sans-serif}.wrap{max-width:920px;margin:auto;padding:16px}.paper{background:#fff;border-radius:18px;padding:18px;box-shadow:0 18px 48px rgba(15,23,42,.16);overflow:auto}.top{position:sticky;top:0;background:#0f172a;color:white;padding:12px 16px;font-weight:800}</style></head><body><div class="top">Prévia em tela cheia</div><main class="wrap"><div class="paper">${html}</div></main></body></html>`);
+    popup.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(preview.title)}</title><style>body{margin:0;background:#f2f6fb;font-family:Arial,sans-serif}.wrap{max-width:920px;margin:auto;padding:16px}.paper{background:#fff;border-radius:18px;padding:18px;box-shadow:0 18px 48px rgba(15,23,42,.16);overflow:auto}.top{position:sticky;top:0;background:#0f172a;color:white;padding:12px 16px;font-weight:800;z-index:2}</style></head><body><div class="top">Prévia em tela cheia · iPhone/Android</div><main class="wrap"><div class="paper">${preview.html}</div></main></body></html>`);
     popup.document.close();
   }
 
-  async function shareReceipt(receipt: ReceiptView): Promise<void> {
-    const status = receiptStatusLabel(receipt.status);
-    const text = `${receiptTitle(receipt)}\nStatus: ${status}\nCliente: ${receipt.customer_name || 'Consumidor'}\nTotal/Parcela: ${formatCurrency(receipt.total)}\n${htmlToText(receipt.content).slice(0, 900)}`;
-    const phone = safeWhatsapp(receipt.customer_whatsapp || '');
+  async function sharePreview(preview: ReceiptPreview): Promise<void> {
+    const baseText = preview.kind === 'nota'
+      ? creditGeneralShareText(preview.credit)
+      : preview.kind === 'parcela'
+        ? installmentShareText(preview.credit, preview.installment)
+        : `${preview.title}\nStatus: ${preview.status}\nCliente: ${preview.customer}\nTotal: ${formatCurrency(preview.total)}`;
+    const text = `${baseText}\n\n${htmlToText(preview.html).slice(0, 650)}`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: receiptTitle(receipt), text });
+        await navigator.share({ title: preview.title, text });
         setFeedback({ tone: 'success', text: 'Comprovante enviado pelo compartilhamento do celular.' });
         return;
       } catch {
-        // continua para WhatsApp/copia quando o usuário cancela ou o navegador não permite.
+        // continua para WhatsApp/cópia quando o usuário cancela ou o navegador bloqueia.
       }
     }
+    const phone = safeWhatsapp(preview.phone || '');
     if (phone) {
       await api.openExternalUrl(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`);
       setFeedback({ tone: 'success', text: 'WhatsApp aberto com o comprovante preenchido.' });
@@ -251,100 +564,200 @@ export function ReceiptsScreen({ refreshToken, onNavigate }: ReceiptsScreenProps
     setFeedback({ tone: 'info', text: 'Texto do comprovante copiado. Cole no WhatsApp ou em outro app.' });
   }
 
-  const visibleReceipts = filteredReceipts.slice(0, visibleCount);
+  const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);
+  const hasAnyVisible = Boolean(visibleSavedReceipts.length || groupedCredits.length);
 
   return (
     <div className="mapp-screen mapp-receipts-screen">
       <section className="mapp-mini-stat-grid">
-        <StatCard label="Comprovantes" value={formatNumber(totalReceipts)} detail="vendas e parcelas" icon="comprovantes" tone="sky" />
-        <StatCard label="Valor somado" value={formatCurrency(totalValue)} detail="lista atual" icon="dinheiro" tone="green" />
-        <StatCard label="Atenção" value={formatNumber(pendingCount)} detail="pendentes/parciais" icon="crediario" tone="orange" />
+        <StatCard label="Comprovantes" value={formatNumber(totalReceipts)} detail="salvos, notas e parcelas" icon="comprovantes" tone="sky" />
+        <StatCard label="Valor somado" value={formatCurrency(totalValue)} detail="vendas + notas" icon="dinheiro" tone="green" />
+        <StatCard label="Atenção" value={formatNumber(pendingCount)} detail="parcelas pendentes" icon="crediario" tone="orange" />
       </section>
 
       {loading ? <div className="mapp-inline-status">Carregando comprovantes...</div> : null}
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
       <section className="mapp-success-card">
-        <strong>Ajuda rápida: comprovante certo para cada situação</strong>
-        <span>Use 58mm para bobina estreita, 80mm para bobina maior e A4/PDF para folha comum. Parcelas aparecem separadas com status Pago, Parcial, Pendente ou Vencido.</span>
+        <strong>Comprovantes organizados por cliente, nota e parcela</strong>
+        <span>Agora esta aba concentra Visualizar, A4/PDF e Enviar. No iPhone, use Visualizar para abrir limpo e tirar print; 58mm/80mm foram removidos daqui para não confundir.</span>
       </section>
 
-      <div className="mapp-filter-pills" role="tablist" aria-label="Filtrar comprovantes">
-        {receiptFilters.map((item) => (
-          <button key={item.key} type="button" className={filter === item.key ? 'active' : ''} onClick={() => setFilter(item.key)}>
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <section className="mapp-filters-card mapp-receipts-filter-card">
+        <label className="mapp-search-field">
+          <InlineIcon name="relatorios" size={16} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar cliente, nota, venda, parcela ou telefone" />
+        </label>
+        <div className="mapp-filter-pills" role="tablist" aria-label="Filtrar comprovantes">
+          {receiptFilters.map((item) => (
+            <button key={item.key} type="button" className={filter === item.key ? 'active' : ''} onClick={() => setFilter(item.key)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {selected ? (
         <section className="mapp-form-panel mapp-receipt-preview">
           <div className="mapp-form-head">
             <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
             <div>
-              <strong>{receiptTitle(selected)}</strong>
-              <p>{selected.customer_name || 'Consumidor'} · {formatDateTime(selected.created_at)}</p>
+              <strong>{selected.title}</strong>
+              <p>{selected.customer} · {formatDateTime(selected.createdAt)}</p>
             </div>
           </div>
           <div className="mapp-receipt-summary">
             <span>Total <strong>{formatCurrency(selected.total)}</strong></span>
-            <span>Tipo <strong>{selected.receipt_type || '80mm'}</strong></span>
-            <span>Status <strong>{receiptStatusLabel(selected.status)}</strong></span>
-            {selected.source_kind === 'parcelas' ? <span>Restante <strong>{formatCurrency(selected.installment_remaining || 0)}</strong></span> : null}
+            <span>Tipo <strong>{selected.kind === 'nota' ? 'Nota inteira' : selected.kind === 'parcela' ? 'Parcela' : 'Salvo'}</strong></span>
+            <span>Status <strong>{selected.status}</strong></span>
           </div>
           <iframe
-            title={`Prévia segura do ${receiptTitle(selected)}`}
+            title={`Prévia segura do ${selected.title}`}
             className="mapp-receipt-frame"
             sandbox=""
-            srcDoc={selected.content || '<p>Comprovante sem prévia HTML salva.</p>'}
+            srcDoc={selected.html || '<p>Comprovante sem prévia HTML salva.</p>'}
           />
           <div className="mapp-button-grid mapp-receipt-button-grid">
-            <button type="button" className="mapp-primary-button" onClick={() => void exportReceipt(selected, '58mm')} disabled={saving}>58mm</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void exportReceipt(selected, '80mm')} disabled={saving}>80mm</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void exportReceipt(selected, 'a4')} disabled={saving}>A4 / PDF</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => openFullPreview(selected)}>Tela cheia</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void shareReceipt(selected)}>WhatsApp / compartilhar</button>
+            <button type="button" className="mapp-primary-button" onClick={() => openFullPreview(selected)}>Visualizar / print iPhone</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>A4 / PDF</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected)}>Enviar / compartilhar</button>
             <button type="button" className="mapp-secondary-button" onClick={() => setSelected(null)}>Fechar prévia</button>
           </div>
         </section>
       ) : null}
 
-      {visibleReceipts.length ? (
-        <section className="mapp-crud-list">
-          {visibleReceipts.map((receipt) => (
-            <article key={receipt.id} className="mapp-crud-card mapp-receipt-card">
-              <span className="mapp-crud-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
-              <div className="mapp-crud-main">
-                <div className="mapp-crud-title-row">
-                  <strong>{receiptTitle(receipt)}</strong>
-                  <em className={receiptTone(receipt.status)}>{receiptStatusLabel(receipt.status)}</em>
+      {groupedCredits.length ? (
+        <section className="mapp-credit-customer-list mapp-receipt-credit-list" aria-label="Comprovantes do crediário por cliente">
+          {groupedCredits.map((group) => {
+            const customerExpanded = expandedCustomers[group.customerKey] ?? true;
+            return (
+              <section key={group.customerKey} className="mapp-credit-customer-card mapp-receipt-customer-card">
+                <button type="button" className="mapp-credit-customer-head mapp-receipt-customer-head" onClick={() => toggleCustomer(group.customerKey)} aria-expanded={customerExpanded}>
+                  <div className="mapp-credit-customer-avatar" aria-hidden="true">{customerInitials(group.customerName)}</div>
+                  <div>
+                    <strong>{group.customerName}</strong>
+                    <small>{group.notesCount} nota(s) · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
+                  </div>
+                  <em className={group.balance <= 0.009 ? 'ok' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : formatCurrency(group.balance)}</em>
+                </button>
+                {customerExpanded ? (
+                  <>
+                    <div className="mapp-credit-customer-totals">
+                      <span>Total <b>{formatCurrency(group.total)}</b></span>
+                      <span>Pago <b>{formatCurrency(group.paid)}</b></span>
+                      <span>Restante <b>{formatCurrency(group.balance)}</b></span>
+                    </div>
+                    <div className="mapp-credit-list" aria-label={`Notas do cliente ${group.customerName}`}>
+                      {group.credits.map((credit) => {
+                        const expanded = expandedCredits[credit.id] ?? false;
+                        const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+                        const creditReceipt = creditPreview(credit);
+                        return (
+                          <article key={credit.id} className={`mapp-credit-card mapp-receipt-note-card ${expanded ? 'expanded' : ''}`}>
+                            <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
+                              <span><InlineIcon name="comprovantes" size={24} /></span>
+                              <div>
+                                <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
+                                <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcela(s) pagas</small>
+                                <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
+                              </div>
+                              <em className={Number(credit.balance || 0) <= 0.009 ? 'ok' : 'warn'}>{Number(credit.balance || 0) <= 0.009 ? 'Quitada' : 'Aberta'}</em>
+                            </button>
+                            <div className="mapp-credit-totals">
+                              <div><span>Total da nota</span><strong>{formatCurrency(credit.total)}</strong></div>
+                              <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
+                              <div><span>Restante</span><strong>{formatCurrency(credit.balance)}</strong></div>
+                              <div><span>Parcelas</span><strong>{paidCount}/{credit.installments.length}</strong></div>
+                            </div>
+                            <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
+                              <button type="button" onClick={() => setSelected(creditReceipt)}>Visualizar</button>
+                              <button type="button" onClick={() => void exportPreview(creditReceipt, 'a4')} disabled={saving}>A4/PDF</button>
+                              <button type="button" onClick={() => void sharePreview(creditReceipt)} disabled={saving}>Enviar extrato</button>
+                            </div>
+                            {expanded ? (
+                              <div className="mapp-installment-list">
+                                {credit.installments.map((installment) => {
+                                  const statusLabel = installmentStatusLabel(installment);
+                                  const tone = installmentStatusTone(installment);
+                                  const parcelReceipt = installmentPreview(credit, installment);
+                                  return (
+                                    <div key={installment.id} className={`mapp-installment-row mapp-installment-row-${tone} ${isOverdue(installment) ? 'overdue' : ''}`}>
+                                      <div className="mapp-installment-main">
+                                        <strong>Parcela {formatNumber(installment.number)}/{formatNumber(credit.installments.length)}</strong>
+                                        <small>{statusLabel} · vence {dateOnly(installment.due_date)}</small>
+                                        <div className="mapp-installment-values">
+                                          <span>Original <b>{formatCurrency(installment.amount)}</b></span>
+                                          <span>Pago <b>{formatCurrency(paidOf(installment))}</b></span>
+                                          <span>Restante <b>{formatCurrency(remainingOf(installment))}</b></span>
+                                        </div>
+                                      </div>
+                                      <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
+                                      <div className="mapp-installment-actions mapp-installment-actions-slim">
+                                        <button type="button" onClick={() => setSelected(parcelReceipt)}>Visualizar</button>
+                                        <button type="button" onClick={() => void exportPreview(parcelReceipt, 'a4')} disabled={saving}>A4/PDF</button>
+                                        <button type="button" onClick={() => void sharePreview(parcelReceipt)} disabled={saving}>Enviar</button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : null}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : null}
+              </section>
+            );
+          })}
+        </section>
+      ) : null}
+
+      {visibleSavedReceipts.length ? (
+        <section className="mapp-crud-list mapp-receipt-saved-list" aria-label="Comprovantes salvos">
+          <div className="mapp-section-title-row">
+            <strong>Comprovantes salvos de vendas e caixa</strong>
+            <small>{formatNumber(filteredSavedReceipts.length)} registro(s)</small>
+          </div>
+          {visibleSavedReceipts.map((receipt) => {
+            const preview = savedReceiptPreview(receipt);
+            return (
+              <article key={receipt.id} className="mapp-crud-card mapp-receipt-card">
+                <span className="mapp-crud-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
+                <div className="mapp-crud-main">
+                  <div className="mapp-crud-title-row">
+                    <strong>{receiptTitle(receipt)}</strong>
+                    <em className={receiptTone(receipt.status)}>{receiptStatusLabel(receipt.status)}</em>
+                  </div>
+                  <p>{receipt.customer_name || 'Consumidor'} · {receipt.receipt_type} · {formatDateTime(receipt.created_at)}</p>
+                  <div className="mapp-crud-meta">
+                    <span>{formatCurrency(receipt.total)}</span>
+                    {receipt.source_kind === 'parcelas' ? <span>Restante {formatCurrency(receipt.installment_remaining || 0)}</span> : null}
+                    <span>{receipt.customer_whatsapp ? 'WhatsApp disponível' : 'sem WhatsApp'}</span>
+                  </div>
                 </div>
-                <p>{receipt.customer_name || 'Consumidor'} · {receipt.receipt_type} · {formatDateTime(receipt.created_at)}</p>
-                <div className="mapp-crud-meta">
-                  <span>{formatCurrency(receipt.total)}</span>
-                  {receipt.source_kind === 'parcelas' ? <span>Restante {formatCurrency(receipt.installment_remaining || 0)}</span> : null}
-                  <span>{receipt.customer_whatsapp ? 'WhatsApp disponível' : 'sem WhatsApp'}</span>
+                <div className="mapp-crud-side">
+                  <strong>{formatCurrency(receipt.total)}</strong>
+                  <div className="mapp-receipt-actions">
+                    <button type="button" onClick={() => setSelected(preview)}>Ver</button>
+                    <button type="button" onClick={() => void exportPreview(preview, 'a4')} disabled={saving}>A4</button>
+                    <button type="button" onClick={() => void sharePreview(preview)}>Enviar</button>
+                  </div>
                 </div>
-              </div>
-              <div className="mapp-crud-side">
-                <strong>{formatCurrency(receipt.total)}</strong>
-                <div className="mapp-receipt-actions">
-                  <button type="button" onClick={() => setSelected(receipt)}>Ver</button>
-                  <button type="button" onClick={() => void exportReceipt(receipt, '58mm')} disabled={saving}>58</button>
-                  <button type="button" onClick={() => void exportReceipt(receipt, '80mm')} disabled={saving}>80</button>
-                  <button type="button" onClick={() => void shareReceipt(receipt)}>Enviar</button>
-                </div>
-              </div>
-            </article>
-          ))}
-          {filteredReceipts.length > visibleCount ? (
+              </article>
+            );
+          })}
+          {filteredSavedReceipts.length > visibleCount ? (
             <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleCount((count) => count + 30)}>
-              Ver mais comprovantes ({filteredReceipts.length - visibleCount} restantes)
+              Ver mais comprovantes ({filteredSavedReceipts.length - visibleCount} restantes)
             </button>
           ) : null}
         </section>
-      ) : !loading ? (
-        <EmptyState icon="comprovantes" title="Nenhum comprovante neste filtro" detail="Depois de finalizar vendas ou receber parcelas, os comprovantes aparecerão aqui para reimprimir ou compartilhar." actionLabel="Ir para vendas" actionPage="sales" onNavigate={onNavigate} />
+      ) : null}
+
+      {!hasAnyVisible && !loading ? (
+        <EmptyState icon="comprovantes" title="Nenhum comprovante neste filtro" detail="Use a busca por cliente/nota ou gere uma venda/recebimento. Extratos do crediário aparecem aqui por cliente e nota." actionLabel="Ir para vendas" actionPage="sales" onNavigate={onNavigate} />
       ) : null}
     </div>
   );

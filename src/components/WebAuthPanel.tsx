@@ -105,7 +105,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
     const client = getSupabaseClient();
     if (!client) {
       setMessageTone('error');
-      setMessage(env.hasUnsafeServiceRoleKey ? env.securityWarnings.join(' ') : 'Nuvem não configurada. Informe a URL e a chave pública anon/publishable para ativar login e sincronização.');
+      setMessage(env.hasUnsafeServiceRoleKey ? env.securityWarnings.join(' ') : 'Nuvem não configurada. Chame o suporte para ativar o login e a sincronização.');
       recordWebSyncSnapshot('error', 'Login', 'Nuvem não configurada.');
       return;
     }
@@ -121,7 +121,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
       return;
     }
     setBusy(true);
-    recordWebSyncSnapshot('syncing', 'Login', mode === 'auto' ? 'Entrando automaticamente em aparelho confiável...' : 'Validando login seguro no Supabase...');
+    recordWebSyncSnapshot('syncing', 'Login', mode === 'auto' ? 'Entrando automaticamente em aparelho confiável...' : 'Validando login seguro...');
     const { error } = await client.auth.signInWithPassword({ email: nextEmail.trim(), password: nextPassword });
     setBusy(false);
     if (error) {
@@ -133,7 +133,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
     }
     persistLoginOptions(nextEmail, nextPassword);
     if (!rememberPassword && !autoLogin) setPassword('');
-    recordWebSyncSnapshot('synced', 'Login', 'Conexão segura. Sessão Supabase ativa neste aparelho.');
+    recordWebSyncSnapshot('synced', 'Login', 'Tudo certo: login confirmado neste aparelho.');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-in' } }));
     setMessageTone('success');
     setMessage(mode === 'auto' ? 'Login automático confirmado. Abrindo o painel...' : 'Login confirmado. Abrindo o painel da loja...');
@@ -270,7 +270,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
           <div className="web-auth-status-pill web-auth-status-warn">Nuvem não configurada</div>
         </div>
         <h2>Falta configurar a nuvem</h2>
-        <p className="web-auth-primary-copy">Configure as variáveis públicas no deploy para liberar login e sincronização. Não coloque chave privada no app.</p>
+        <p className="web-auth-primary-copy">Chame o suporte para ativar a conexão da loja. Não informe senha nem chave privada nesta tela.</p>
         {env.securityWarnings.length > 0 ? (
           <div className="web-auth-alert">{env.securityWarnings.join(' ')}</div>
         ) : null}
@@ -308,8 +308,8 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
       <h2>{session ? 'Login pronto' : 'Entrar no painel'}</h2>
       <p className="web-auth-primary-copy">
         {session
-          ? 'A tela de login aparece sempre. Toque para abrir o painel ou deixe a entrada automática ativa neste aparelho.'
-          : 'Entre com a conta da loja para sincronizar no celular e no computador.'}
+          ? 'Ajuda rápida: a tela de login aparece sempre. Toque para abrir o painel ou deixe a entrada automática ativa neste aparelho.'
+          : 'Ajuda rápida: entre com a conta da loja para sincronizar no celular e no computador.'}
       </p>
       {session ? (
         <div className="web-auth-session-ready" title={session.email}>
@@ -347,7 +347,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
             </label>
             <label className="web-check-row web-check-row-auto">
               <input type="checkbox" checked={autoLogin} onChange={(event) => handleAutoLoginChange(event.target.checked)} />
-              <span>Entrar automaticamente ao abrir</span>
+              <span>Salvo neste aparelho: entrar automaticamente ao abrir</span>
             </label>
           </div>
           <div className="web-auth-login-tools">

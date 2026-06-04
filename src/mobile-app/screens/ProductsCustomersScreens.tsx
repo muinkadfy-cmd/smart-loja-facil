@@ -84,6 +84,7 @@ type ProductPreset = {
 };
 
 const PRODUCT_PRESETS: ProductPreset[] = [
+  { label: 'Camiseta feminina', category: 'Roupas femininas', size: 'M', color: 'Variada', nameHint: 'Camiseta feminina' },
   { label: 'Blusa feminina', category: 'Roupas femininas', size: 'M', color: 'Variada', nameHint: 'Blusa feminina' },
   { label: 'Vestido', category: 'Roupas femininas', size: 'M', color: 'Estampado', nameHint: 'Vestido feminino' },
   { label: 'Camiseta masculina', category: 'Roupas masculinas', size: 'G', color: 'Preta', nameHint: 'Camiseta masculina' },
@@ -411,7 +412,7 @@ function ProductForm({
           </div>
           <div className="mapp-product-photo-actions">
             <strong>Foto do produto</strong>
-            <p>Pode escolher foto maior. O app reduz automaticamente para salvar rápido, sincronizar e entrar no backup quando possível.</p>
+            <p>Dica: use foto clara, sem sombra, até 12 MB; o app reduz automaticamente para salvar rápido e entrar no backup quando possível.</p>
             <label className="mapp-photo-upload-button">
               <input
                 type="file"
@@ -672,11 +673,15 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   };
 
   const changeProductStatus = async (product: Product, nextStatus: Product['status']) => {
+    if (nextStatus === 'inativo') {
+      const ok = window.confirm(`Inativar ${product.name}? Ele sai do PDV, mas o histórico de vendas continua guardado.`);
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       if (nextStatus === 'inativo') {
         await api.inactivateProduct(product.id);
-        setFeedback({ tone: 'success', text: 'Produto inativado. Ele saiu das vendas, mas continua no histórico.' });
+        setFeedback({ tone: 'success', text: 'Tudo certo: produto inativado. Ele saiu das vendas, mas continua no histórico.' });
       } else {
         await api.saveProduct({ ...product, status: 'ativo' });
         setFeedback({ tone: 'success', text: 'Produto reativado e pronto para vender.' });
@@ -701,7 +706,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     setSavingStock(true);
     try {
       await api.adjustStock(stockAdjust.product.id, Math.round(delta), reason);
-      setFeedback({ tone: 'success', text: `Estoque de ${stockAdjust.product.name} ajustado e sincronizado.` });
+      setFeedback({ tone: 'success', text: `Tudo certo: estoque de ${stockAdjust.product.name} ajustado e sincronizado.` });
       setStockAdjust(null);
       await loadProducts();
       onRefresh();
@@ -718,7 +723,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         <span className="mapp-panel-icon tone-sky"><InlineIcon name="produtos" size={24} /></span>
         <div>
           <strong>Produtos prontos para vender</strong>
-          <p>Cadastre, edite, busque e acompanhe estoque baixo sem sair da interface nova.</p>
+          <p>Cadastre, edite, busque e acompanhe estoque baixo. Dica: estoque mínimo é o limite para o app avisar quando precisa repor.</p>
         </div>
         <button type="button" onClick={startNewProduct}>Novo produto</button>
       </section>
@@ -740,6 +745,11 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
           <button type="button" onClick={() => setFilter('baixo')}>Ver baixo estoque</button>
         </section>
       ) : null}
+
+      <section className="mapp-success-card">
+        <strong>Dica de estoque mínimo</strong>
+        <span>Quando o estoque ficar em {formatNumber(lowLimit)} ou menos, o produto aparece em Atenção para reposição.</span>
+      </section>
 
       <StatusFeedback feedback={feedback} />
 
@@ -977,11 +987,15 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
   };
 
   const changeCustomerStatus = async (customer: Customer, nextStatus: Customer['status']) => {
+    if (nextStatus === 'inativo') {
+      const ok = window.confirm(`Inativar ${customer.name}? O cliente sai das listas principais, mas vendas e crediário continuam preservados.`);
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       if (nextStatus === 'inativo') {
         await api.inactivateCustomer(customer.id);
-        setFeedback({ tone: 'success', text: 'Cliente inativado. O histórico permanece preservado.' });
+        setFeedback({ tone: 'success', text: 'Tudo certo: cliente inativado. O histórico permanece preservado.' });
       } else {
         await api.saveCustomer({ ...customer, status: 'ativo' });
         setFeedback({ tone: 'success', text: 'Cliente reativado e disponível para vendas.' });
@@ -1010,13 +1024,21 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
     }
   };
 
+  const openCustomerWhatsapp = async (customer: Customer) => {
+    const phone = (customer.whatsapp || customer.phone).replace(/\D/g, '');
+    if (!phone) return;
+    const safePhone = phone.startsWith('55') ? phone : `55${phone}`;
+    await api.openExternalUrl(`https://wa.me/${safePhone}`);
+    setFeedback({ tone: 'success', text: 'WhatsApp aberto para este cliente.' });
+  };
+
   return (
     <div className="mapp-screen mapp-crud-screen mapp-customers-screen">
       <section className="mapp-panel mapp-action-panel mapp-crud-hero">
         <span className="mapp-panel-icon tone-purple"><InlineIcon name="clientes" size={24} /></span>
         <div>
           <strong>Clientes organizados</strong>
-          <p>Cadastre contatos, WhatsApp e limite para vendas, pedidos e crediário.</p>
+          <p>Dica: telefone ajuda a enviar comprovante pelo WhatsApp e localizar o cliente no crediário.</p>
         </div>
         <button type="button" onClick={startNewCustomer}>Novo cliente</button>
       </section>
@@ -1085,6 +1107,7 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
                 <strong>{customer.credit_limit ? formatCurrency(customer.credit_limit) : 'Sem limite'}</strong>
                 <div className="mapp-product-actions mapp-customer-actions">
                   <button type="button" onClick={() => openCustomerForm(customerToForm(customer), `Editando ${customer.name}.`)}>Editar</button>
+                  {customer.whatsapp || customer.phone ? <button type="button" onClick={() => void openCustomerWhatsapp(customer)}>WhatsApp</button> : null}
                   <button type="button" onClick={() => void copyCustomerContact(customer)}>Copiar</button>
                   <button type="button" onClick={() => void changeCustomerStatus(customer, customer.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
                     {customer.status === 'ativo' ? 'Inativar' : 'Ativar'}

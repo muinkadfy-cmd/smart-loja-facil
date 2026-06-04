@@ -81,7 +81,7 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
   async function printSelected() {
     if (!selected) return;
     try {
-      const path = await api.exportHtmlPdf(selected.content, `comprovante-venda-${selected.sale_number || selected.sale_id}`, true, pdfFolder);
+      const path = await api.exportHtmlPdf(selected.content, `comprovante-venda-${selected.sale_number || selected.sale_id}`, true, pdfFolder, selected.receipt_type);
       setError('');
       setMessage(`PDF gerado em ${path}.`);
     } catch (err) {

@@ -25,11 +25,17 @@ const pages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
   { key: 'diagnostics', label: 'Diagnóstico Web', icon: 'bloqueio_seguro' },
 ];
 
-const mobileMainPages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
-  { key: 'dashboard', label: 'Início', icon: 'painel_da_loja' },
-  { key: 'sales', label: 'Vendas', icon: 'vendas_pdv' },
+const mobileDockPages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
+  { key: 'dashboard', label: 'Painel', icon: 'painel_da_loja' },
+  { key: 'sales', label: 'PDV', icon: 'vendas_pdv' },
+  { key: 'orders', label: 'Pedidos', icon: 'pedidos' },
+  { key: 'products', label: 'Estoque', icon: 'produtos' },
   { key: 'customers', label: 'Clientes', icon: 'clientes' },
-  { key: 'products', label: 'Produtos', icon: 'produtos' },
+  { key: 'reports', label: 'Relat.', icon: 'relatorios' },
+  { key: 'cash', label: 'Caixa', icon: 'caixa' },
+  { key: 'credits', label: 'Crédito', icon: 'crediario' },
+  { key: 'receipts', label: 'Recibos', icon: 'comprovantes' },
+  { key: 'settings', label: 'Config.', icon: 'configuracoes' },
 ];
 
 const mobileQuickPages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
@@ -348,7 +354,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const alertSummaryLabel = notificationCount > 0 ? `${notificationCount} atenção(ões)` : 'Nenhum alerta importante agora';
   const primaryAlert = alertsToDisplay[0];
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
-  const activePageTitle = activePage === 'dashboard' ? 'Painel da loja' : activePageMeta.label;
+  const activePageTitle = activePage === 'dashboard' ? 'Dashboard' : activePageMeta.label;
   const environmentLabel = runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Sem internet') : status?.offline_ready ? 'Local / Offline' : 'Verificando';
   const avatarInitials = initialsFromSettings(settings);
   const sidebarVersionLabel = compactVersionLabel(status?.version);
@@ -384,8 +390,6 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     const timer = window.setTimeout(() => setToast(null), 5200);
     return () => window.clearTimeout(timer);
   }, [toast]);
-
-  const isMoreActive = !mobileMainPages.some((page) => page.key === activePage);
 
   function submitQuickSearch(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -521,7 +525,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   aria-current={activePage === page.key ? 'page' : undefined}
                 >
                   <span className="neo-nav-item-icon">
-                    <AppIcon name={page.icon} size={24} className="app-icon-nav" />
+                    <AppIcon name={page.icon} size={32} className="app-icon-nav" />
                   </span>
                   <span className="neo-nav-item-label">{page.label}</span>
                   {pageAlert.count > 0 ? <small className={`neo-nav-item-badge ${pageAlert.level}`}>{pageAlert.count}</small> : null}
@@ -556,10 +560,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </button>
               <div className="neo-mobile-branding">
                 <AppIcon name="app_logo_cadeado_carrinho" size={32} alt="Smart Loja Fácil" className="neo-mobile-brand-logo" />
-                <div>
-                  <strong>Smart Loja</strong>
-                  <small>Fácil</small>
-                </div>
+                <strong>Smart Loja Fácil</strong>
               </div>
               <div className="neo-mobile-tools">
                 <button type="button" className="neo-notify-btn" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
@@ -578,7 +579,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   onClick={() => navigatePage(page.key)}
                   aria-current={activePage === page.key ? 'page' : undefined}
                 >
-                  <AppIcon name={page.icon} size={16} className="app-icon-chip" />
+                  <AppIcon name={page.icon} size={24} className="app-icon-chip" />
                   <span>{page.label}</span>
                 </button>
               ))}
@@ -756,13 +757,13 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
               </div>
             ) : null}
 
-            <div className="neo-page-content">{children}</div>
+            <div className="neo-page-content neo-live-content">{children}</div>
           </section>
         </main>
       </div>
 
       <nav className="neo-mobile-dock" aria-label="Navegação mobile">
-        {mobileMainPages.map((page) => (
+        {mobileDockPages.map((page) => (
           <button
             type="button"
             key={page.key}
@@ -770,14 +771,10 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
             onClick={() => navigatePage(page.key)}
             aria-current={activePage === page.key ? 'page' : undefined}
           >
-            <AppIcon name={page.icon} size={24} className="app-icon-chip" />
+            <AppIcon name={page.icon} size={32} className="app-icon-chip" />
             <span>{page.label}</span>
           </button>
         ))}
-        <button type="button" className={isMoreActive ? 'active' : ''} onClick={() => setSidebarOpen(true)} aria-current={isMoreActive ? 'page' : undefined}>
-          <AppIcon name="configuracoes" size={24} className="app-icon-chip" />
-          <span>Mais</span>
-        </button>
       </nav>
     </div>
   );

@@ -1,0 +1,159 @@
+import { useEffect, useState } from 'react';
+import { api } from '../../lib/api';
+import type { AppStatus, DashboardData, PageKey, PaymentMethod, ReceiptSummary, SaleSummary } from '../../types';
+import { ActionTile } from '../components/ActionTile';
+import { EmptyState } from '../components/EmptyState';
+import { ListCard } from '../components/ListCard';
+import { StatCard } from '../components/StatCard';
+import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { findReceiptForSale, shareSaleReceipt } from '../components/receiptShare';
+
+interface DashboardScreenProps {
+  status: AppStatus | null;
+  onNavigate: (page: PageKey) => void;
+}
+
+function emptyDashboard(): DashboardData {
+  return {
+    today_sales_total: 0,
+    today_sales_count: 0,
+    customers_total: 0,
+    products_total: 0,
+    orders_open: 0,
+    credits_open_total: 0,
+    credits_active_customers: 0,
+    low_stock_count: 0,
+    payment_today: [],
+    recent_sales: [],
+  };
+}
+
+function paymentLabel(method: PaymentMethod): string {
+  if (method === 'dinheiro') return 'Dinheiro';
+  if (method === 'pix') return 'Pix';
+  if (method === 'cartao') return 'Cartão';
+  return 'Crediário';
+}
+
+export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): JSX.Element {
+  const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
+  const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const dashboard = status?.dashboard ?? emptyDashboard();
+  const lowStock = dashboard.low_stock_count ?? 0;
+  const activities = dashboard.recent_sales.slice(0, 4);
+  const averageTicket = dashboard.today_sales_count > 0 ? dashboard.today_sales_total / dashboard.today_sales_count : 0;
+  const hasSalesToday = dashboard.today_sales_count > 0;
+  const hasProducts = (dashboard.products_total ?? 0) > 0;
+  const hasCustomers = dashboard.customers_total > 0;
+
+  function navigateToLowStock() {
+    window.location.hash = 'baixo-estoque';
+    onNavigate('products');
+  }
+
+  useEffect(() => {
+    let active = true;
+    api.receipts()
+      .then((rows) => { if (active) setReceipts(rows); })
+      .catch(() => { if (active) setReceipts([]); });
+    return () => { active = false; };
+  }, []);
+
+  async function shareActivityReceipt(sale: SaleSummary): Promise<void> {
+    const receipt = findReceiptForSale(receipts, sale);
+    const message = await shareSaleReceipt(sale, receipt);
+    setShareFeedback(message);
+  }
+
+  return (
+    <div className="mapp-screen mapp-dashboard-screen">
+      <section className="mapp-stat-grid">
+        <StatCard label="Vendas hoje" value={formatCurrency(dashboard.today_sales_total)} detail={`${formatNumber(dashboard.today_sales_count)} venda(s)`} icon="vendas_pdv" tone="blue" />
+        <StatCard label="Ticket médio" value={formatCurrency(averageTicket)} detail="por venda" icon="caixa" tone="green" />
+        <StatCard label="Pedidos" value={formatNumber(dashboard.orders_open)} detail="em aberto" icon="pedidos" tone="orange" />
+        <StatCard label="Clientes" value={formatNumber(dashboard.customers_total)} detail="base ativa" icon="clientes" tone="purple" />
+      </section>
+
+      {lowStock > 0 ? (
+        <section className="mapp-warning-card">
+          <div>
+            <strong>Atenção: estoque baixo</strong>
+            <p>{lowStock} produto(s) precisam de reposição.</p>
+          </div>
+          <button type="button" onClick={navigateToLowStock}>Ver produtos</button>
+        </section>
+      ) : (
+        <section className="mapp-success-card">
+          <strong>Tudo certo: estoque sem alertas críticos</strong>
+          <span>Continue acompanhando produtos e vendas.</span>
+        </section>
+      )}
+
+      <section className="mapp-section-block">
+        <div className="mapp-section-title">
+          <h2>O que fazer agora?</h2>
+          <button type="button" onClick={() => onNavigate('diagnostics')}>Ajuda rápida</button>
+        </div>
+        <div className="mapp-actions-grid">
+          {!hasSalesToday ? <ActionTile label="Abrir PDV" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} /> : null}
+          {!hasProducts ? <ActionTile label="Cadastrar produto" icon="produtos" page="products" tone="sky" intent="novo-produto" onNavigate={onNavigate} /> : null}
+          {!hasCustomers ? <ActionTile label="Cadastrar cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} /> : null}
+          {hasSalesToday && hasProducts && hasCustomers ? <ActionTile label="Conferir caixa" icon="caixa" page="cash" tone="green" onNavigate={onNavigate} /> : null}
+        </div>
+      </section>
+
+      <section className="mapp-section-block">
+        <div className="mapp-section-title">
+          <h2>Ações rápidas</h2>
+          <button type="button" onClick={() => onNavigate('diagnostics')}>Diagnóstico</button>
+        </div>
+        <div className="mapp-actions-grid">
+          <ActionTile label="Nova venda" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
+          <ActionTile label="Novo pedido" icon="pedidos" page="orders" tone="orange" intent="novo-pedido" onNavigate={onNavigate} />
+          <ActionTile label="Novo produto" icon="produtos" page="products" tone="sky" intent="novo-produto" onNavigate={onNavigate} />
+          <ActionTile label="Novo cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} />
+        </div>
+      </section>
+
+      <section className="mapp-section-block">
+        <div className="mapp-section-title">
+          <h2>Atividades recentes</h2>
+          <button type="button" onClick={() => onNavigate('sales')}>Ver todas</button>
+        </div>
+        {activities.length ? (
+          <div className="mapp-list-stack">
+            {shareFeedback ? <div className="mapp-form-feedback mapp-form-feedback-info">{shareFeedback}</div> : null}
+            {activities.map((sale) => (
+              <ListCard
+                key={sale.id}
+                icon="vendas_pdv"
+                title={`Venda #${String(sale.number).padStart(4, '0')}`}
+                subtitle={`${sale.first_product_name || sale.customer_name || 'Consumidor'} · ${formatDateTime(sale.created_at)}`}
+                value={formatCurrency(sale.total)}
+                tone="blue"
+                thumbnailSrc={sale.thumbnail_url}
+                thumbnailAlt={sale.first_product_name || `Venda #${sale.number}`}
+                expanded={expandedSaleId === sale.id}
+                onClick={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
+              >
+                <div className="mapp-sale-detail-grid">
+                  <span>Cliente <b>{sale.customer_name || 'Consumidor'}</b></span>
+                  <span>Forma <b>{paymentLabel(sale.payment_method)}</b></span>
+                  <span>Itens <b>{formatNumber(sale.item_count || 1)}</b></span>
+                  <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
+                </div>
+                <div className="mapp-sale-detail-actions">
+                  <button type="button" onClick={() => void shareActivityReceipt(sale)}>Compartilhar comprovante</button>
+                  <button type="button" onClick={() => onNavigate('sales')}>Abrir vendas</button>
+                </div>
+              </ListCard>
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon="vendas_pdv" title="Nenhuma venda hoje" detail="Abra o PDV para registrar a primeira venda." actionLabel="Abrir PDV" actionPage="sales" onNavigate={onNavigate} />
+        )}
+      </section>
+    </div>
+  );
+}

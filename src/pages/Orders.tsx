@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { DataTable } from '../components/DataTable';
 import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
@@ -36,6 +36,8 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
   const [busyOrderId, setBusyOrderId] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const orderFormRef = useRef<HTMLElement | null>(null);
+  const orderCustomerSelectRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
     Promise.all([api.orders(), api.products(), api.customers()])
@@ -54,6 +56,30 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
     setCustomers(c.filter((row) => row.status === 'ativo'));
     onChanged();
   }
+
+  function scrollToOrderForm() {
+    window.requestAnimationFrame(() => {
+      orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => orderCustomerSelectRef.current?.focus(), 260);
+    });
+  }
+
+  function startNewOrder() {
+    setError('');
+    setMessage('Pronto para montar um novo pedido.');
+    setForm({ customer_id: '', product_id: '', qty: 1 });
+    setCart([]);
+    scrollToOrderForm();
+  }
+
+  useEffect(() => {
+    if (window.location.hash !== '#novo-pedido') return undefined;
+    const timer = window.setTimeout(() => {
+      startNewOrder();
+      window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,7 +191,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           <p>{runtimeInfo.isWeb ? 'Pedidos sincronizados na nuvem com separação, entrega, cancelamento e baixa segura de estoque.' : 'Pedido local com múltiplos itens, separação, entrega e baixa segura de estoque apenas na entrega.'}</p>
         </div>
       </div>
-      <section className="panel classic-panel form-panel classic-legacy-form-panel">
+      <section className="panel classic-panel form-panel classic-legacy-form-panel" ref={orderFormRef}>
         <div className="panel-head panel-head-tight">
           <div>
             <h2>Montar pedido</h2>
@@ -175,7 +201,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           </div>
         </div>
         <form className="form-grid compact" onSubmit={submit}>
-          <label>Cliente<select value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcão</option>{customers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Cliente<select ref={orderCustomerSelectRef} value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcão</option>{customers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
           <label>Produto<select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })}><option value="">Selecione</option>{products.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
           <label>Quantidade<input type="number" min="1" step="1" value={form.qty} onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })} /></label>
           <button type="button" className="secondary-btn" onClick={addItem}>Adicionar item</button>

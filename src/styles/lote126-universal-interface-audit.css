@@ -1,0 +1,701 @@
+:root {
+  --lote126-universal-interface-audit: active;
+  --slf126-bg: #F4F7FB;
+  --slf126-bg-soft: #eaf1f8;
+  --slf126-surface: #ffffff;
+  --slf126-surface-soft: #f8fbff;
+  --slf126-border: #d6e2ef;
+  --slf126-border-strong: #b8cce3;
+  --slf126-ink: #172033;
+  --slf126-text: #2f3a4d;
+  --slf126-muted: #64748b;
+  --slf126-primary: #175fbd;
+  --slf126-primary-dark: #104e9d;
+  --slf126-success: #157044;
+  --slf126-warning: #a86700;
+  --slf126-danger: #bd3028;
+  --slf126-focus: 0 0 0 4px rgba(23, 95, 189, .16);
+  --slf126-shadow: 0 18px 44px rgba(16, 32, 53, .105);
+  --slf126-shadow-soft: 0 9px 24px rgba(16, 32, 53, .065);
+}
+
+/* Lote 126: auditoria universal de interface, abas e fundo premium combinável. */
+html.lote126-universal-interface-audit,
+html.lote126-universal-interface-audit body,
+.lote126-universal-interface-audit #root,
+.lote126-universal-interface-audit .neo-shell {
+  background: var(--slf126-bg);
+}
+
+.lote126-universal-interface-audit body {
+  color: var(--slf126-text);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lote126-universal-interface-audit .neo-main {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .74) 0%, rgba(234, 241, 248, .76) 42%, rgba(244, 247, 251, .96) 100%),
+    var(--slf126-bg);
+}
+
+.lote126-universal-interface-audit .neo-page-shell {
+  padding-top: clamp(24px, 2.8vw, 36px);
+  background: transparent;
+}
+
+.lote126-universal-interface-audit .neo-page-content,
+.lote126-universal-interface-audit .stack,
+.lote126-universal-interface-audit .neo-dashboard {
+  gap: clamp(15px, 1.9vw, 22px);
+}
+
+.lote126-universal-interface-audit .neo-topbar {
+  background: rgba(255, 255, 255, .94);
+  border-bottom-color: rgba(184, 204, 227, .74);
+  box-shadow: 0 10px 30px rgba(16, 32, 53, .062);
+}
+
+.lote126-universal-interface-audit .neo-sidebar {
+  background: linear-gradient(180deg, #182333 0%, #111827 100%);
+  border-right-color: rgba(248, 251, 255, .12);
+}
+
+.lote126-universal-interface-audit .neo-sidebar-footer {
+  border-color: rgba(248, 251, 255, .16);
+  background: rgba(248, 251, 255, .07);
+}
+
+.lote126-universal-interface-audit .neo-sidebar-brand-mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .2);
+}
+
+.lote126-universal-interface-audit .neo-nav {
+  gap: 8px;
+}
+
+.lote126-universal-interface-audit .neo-nav-item {
+  min-height: 50px;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 11px;
+  padding: 8px 10px;
+  color: rgba(248, 251, 255, .9);
+}
+
+.lote126-universal-interface-audit .neo-nav-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .12);
+  color: #d9e9ff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06);
+}
+
+.lote126-universal-interface-audit .app-icon-nav {
+  width: 32px !important;
+  height: 32px !important;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .18));
+  transform: scale(1.03);
+}
+
+.lote126-universal-interface-audit .neo-nav-item:hover {
+  background: rgba(255, 255, 255, .1);
+  color: #ffffff;
+}
+
+.lote126-universal-interface-audit .neo-nav-item:hover .neo-nav-item-icon {
+  background: rgba(255, 255, 255, .18);
+  color: #ffffff;
+}
+
+.lote126-universal-interface-audit .neo-nav-item.active {
+  color: #102033;
+}
+
+.lote126-universal-interface-audit .neo-nav-item.active .neo-nav-item-icon {
+  background: linear-gradient(180deg, #f0f7ff 0%, #dceeff 100%);
+  color: var(--slf126-primary);
+  box-shadow: inset 0 0 0 1px #c7ddf7;
+}
+
+.lote126-universal-interface-audit .neo-page-meta h1,
+.lote126-universal-interface-audit .page-title h1 {
+  color: var(--slf126-ink);
+  font-weight: 950;
+}
+
+.lote126-universal-interface-audit .neo-page-meta p,
+.lote126-universal-interface-audit .page-title p,
+.lote126-universal-interface-audit .panel-head p,
+.lote126-universal-interface-audit .classic-panel-header p,
+.lote126-universal-interface-audit .neo-section-head p {
+  color: var(--slf126-muted);
+}
+
+.lote126-universal-interface-audit .neo-surface,
+.lote126-universal-interface-audit .neo-context-surface,
+.lote126-universal-interface-audit .neo-quick-surface,
+.lote126-universal-interface-audit .neo-chart-surface,
+.lote126-universal-interface-audit .neo-system-surface,
+.lote126-universal-interface-audit .neo-trust-strip,
+.lote126-universal-interface-audit .classic-panel,
+.lote126-universal-interface-audit .panel,
+.lote126-universal-interface-audit .form-panel,
+.lote126-universal-interface-audit .data-table-shell,
+.lote126-universal-interface-audit .web-card,
+.lote126-universal-interface-audit .web-hero-card,
+.lote126-universal-interface-audit .backup-callout,
+.lote126-universal-interface-audit .backup-tip-card,
+.lote126-universal-interface-audit .backup-external-panel,
+.lote126-universal-interface-audit .layout-audit-card,
+.lote126-universal-interface-audit .web-sync-test-card,
+.lote126-universal-interface-audit .web-sync-module-check-card,
+.lote126-universal-interface-audit .table-filters {
+  border-color: var(--slf126-border);
+  background: rgba(255, 255, 255, .97);
+  box-shadow: var(--slf126-shadow-soft);
+}
+
+.lote126-universal-interface-audit .neo-kpi-card,
+.lote126-universal-interface-audit .neo-context-card,
+.lote126-universal-interface-audit .neo-quick-card,
+.lote126-universal-interface-audit .neo-system-row,
+.lote126-universal-interface-audit .metric-card,
+.lote126-universal-interface-audit .stat-card,
+.lote126-universal-interface-audit .mini-insight-card,
+.lote126-universal-interface-audit .web-health-card,
+.lote126-universal-interface-audit .mobile-data-card,
+.lote126-universal-interface-audit .sales-mobile-cart-card,
+.lote126-universal-interface-audit .layout-audit-row,
+.lote126-universal-interface-audit .web-sync-module-card {
+  border-color: var(--slf126-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: var(--slf126-shadow-soft);
+}
+
+.lote126-universal-interface-audit .neo-kpi-card:hover,
+.lote126-universal-interface-audit .neo-context-card:hover,
+.lote126-universal-interface-audit .neo-quick-card:hover,
+.lote126-universal-interface-audit .stat-card:hover,
+.lote126-universal-interface-audit .metric-card:hover,
+.lote126-universal-interface-audit .mini-insight-card:hover,
+.lote126-universal-interface-audit .web-health-card:hover {
+  border-color: var(--slf126-border-strong);
+  box-shadow: var(--slf126-shadow);
+}
+
+.lote126-universal-interface-audit .app-svg-icon > svg {
+  overflow: visible;
+}
+
+.lote126-universal-interface-audit .neo-page-meta-icon,
+.lote126-universal-interface-audit .neo-kpi-icon,
+.lote126-universal-interface-audit .neo-context-card-icon,
+.lote126-universal-interface-audit .neo-quick-icon,
+.lote126-universal-interface-audit .neo-trust-badge,
+.lote126-universal-interface-audit .stat-icon,
+.lote126-universal-interface-audit .empty-state-icon {
+  border-color: #d6e8ff;
+  background: #eef6ff;
+}
+
+.lote126-universal-interface-audit .neo-page-meta-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.lote126-universal-interface-audit .neo-page-meta-icon .app-svg-icon {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.lote126-universal-interface-audit .neo-kpi-card {
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.lote126-universal-interface-audit .neo-kpi-icon,
+.lote126-universal-interface-audit .neo-context-card-icon,
+.lote126-universal-interface-audit .neo-trust-badge,
+.lote126-universal-interface-audit .stat-icon,
+.lote126-universal-interface-audit .empty-state-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+}
+
+.lote126-universal-interface-audit .neo-kpi-icon .app-svg-icon,
+.lote126-universal-interface-audit .neo-context-card-icon .app-svg-icon,
+.lote126-universal-interface-audit .neo-trust-badge .app-svg-icon,
+.lote126-universal-interface-audit .empty-state-icon .app-svg-icon {
+  width: 34px !important;
+  height: 34px !important;
+  transform: scale(1.04);
+}
+
+.lote126-universal-interface-audit .stat-icon .app-svg-icon {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.lote126-universal-interface-audit .status-chip .app-svg-icon,
+.lote126-universal-interface-audit .pill .app-svg-icon,
+.lote126-universal-interface-audit .neo-mini-chip .app-svg-icon,
+.lote126-universal-interface-audit .app-icon-button-inline {
+  transform: scale(1.12);
+  transform-origin: center;
+}
+
+.lote126-universal-interface-audit .primary-btn .app-icon-button-inline,
+.lote126-universal-interface-audit .secondary-btn .app-icon-button-inline,
+.lote126-universal-interface-audit .ghost-btn .app-icon-button-inline,
+.lote126-universal-interface-audit .danger-btn .app-icon-button-inline,
+.lote126-universal-interface-audit .classic-action-grid button .app-svg-icon,
+.lote126-universal-interface-audit .classic-payment-title .app-svg-icon,
+.lote126-universal-interface-audit .table-filter-summary .app-svg-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.lote126-universal-interface-audit .primary-btn.big .app-icon-button-inline,
+.lote126-universal-interface-audit .secondary-btn.big .app-icon-button-inline {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.lote126-universal-interface-audit .status-chip .app-svg-icon,
+.lote126-universal-interface-audit .pill .app-svg-icon,
+.lote126-universal-interface-audit .neo-mini-chip .app-svg-icon {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+.lote126-universal-interface-audit .neo-quick-card {
+  min-height: 118px;
+  gap: 12px;
+  padding: 16px;
+}
+
+.lote126-universal-interface-audit .neo-quick-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  color: var(--slf126-primary);
+  box-shadow: inset 0 0 0 1px rgba(23, 95, 189, .08);
+}
+
+.lote126-universal-interface-audit .neo-quick-icon .app-svg-icon {
+  width: 36px !important;
+  height: 36px !important;
+  transform: scale(1.04);
+}
+
+.lote126-universal-interface-audit .neo-quick-card-primary .neo-quick-icon,
+.lote126-universal-interface-audit .neo-quick-card:hover .neo-quick-icon,
+.lote126-universal-interface-audit .neo-quick-card:focus-visible .neo-quick-icon {
+  background: linear-gradient(180deg, #eaf4ff 0%, #ddecff 100%);
+  border-color: #bdd9fb;
+}
+
+.lote126-universal-interface-audit .neo-mobile-quick-access button {
+  min-height: 42px;
+  gap: 5px;
+  color: #40546d;
+}
+
+.lote126-universal-interface-audit .neo-mobile-quick-access .app-icon-chip {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.lote126-universal-interface-audit .neo-mobile-dock .app-icon-chip {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.lote126-universal-interface-audit .neo-mobile-quick-access .app-icon-chip,
+.lote126-universal-interface-audit .neo-mobile-dock .app-icon-chip {
+  filter: drop-shadow(0 1px 1px rgba(16, 32, 53, .12));
+}
+
+.lote126-universal-interface-audit input,
+.lote126-universal-interface-audit select,
+.lote126-universal-interface-audit textarea,
+.lote126-universal-interface-audit .table-filter-control {
+  border-color: var(--slf126-border);
+  background: var(--slf126-surface);
+  color: var(--slf126-ink);
+}
+
+.lote126-universal-interface-audit input::placeholder,
+.lote126-universal-interface-audit textarea::placeholder {
+  color: #94a3b8;
+}
+
+.lote126-universal-interface-audit label > span,
+.lote126-universal-interface-audit .classic-fieldset-title,
+.lote126-universal-interface-audit .table-filter-search > span,
+.lote126-universal-interface-audit .table-filter-select > span {
+  color: #33465f;
+}
+
+.lote126-universal-interface-audit button,
+.lote126-universal-interface-audit .primary-btn,
+.lote126-universal-interface-audit .secondary-btn,
+.lote126-universal-interface-audit .ghost-btn,
+.lote126-universal-interface-audit .danger-btn {
+  transition: background-color .14s ease, border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+
+.lote126-universal-interface-audit .primary-btn,
+.lote126-universal-interface-audit .neo-dashboard-primary-action,
+.lote126-universal-interface-audit .web-sync-test-grid .primary-sync-action {
+  border-color: var(--slf126-primary);
+  background: linear-gradient(180deg, #2478df 0%, var(--slf126-primary-dark) 100%);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(23, 95, 189, .18);
+}
+
+.lote126-universal-interface-audit .secondary-btn,
+.lote126-universal-interface-audit .ghost-btn,
+.lote126-universal-interface-audit .classic-action-grid button,
+.lote126-universal-interface-audit .layout-audit-actions button,
+.lote126-universal-interface-audit .layout-audit-row button,
+.lote126-universal-interface-audit .web-sync-test-grid button {
+  border-color: var(--slf126-border);
+  background: var(--slf126-surface);
+  color: var(--slf126-ink);
+}
+
+.lote126-universal-interface-audit button:hover:not(:disabled),
+.lote126-universal-interface-audit .primary-btn:hover:not(:disabled),
+.lote126-universal-interface-audit .secondary-btn:hover:not(:disabled),
+.lote126-universal-interface-audit .ghost-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--slf126-border-strong);
+  box-shadow: var(--slf126-shadow-soft);
+}
+
+.lote126-universal-interface-audit button:disabled,
+.lote126-universal-interface-audit .primary-btn:disabled,
+.lote126-universal-interface-audit .secondary-btn:disabled,
+.lote126-universal-interface-audit .ghost-btn:disabled {
+  background: #eef2f7;
+  color: #94a3b8;
+  border-color: #dde7f2;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.lote126-universal-interface-audit button:focus-visible,
+.lote126-universal-interface-audit input:focus,
+.lote126-universal-interface-audit select:focus,
+.lote126-universal-interface-audit textarea:focus {
+  outline: 0;
+  border-color: rgba(23, 95, 189, .58);
+  box-shadow: var(--slf126-focus);
+}
+
+.lote126-universal-interface-audit .status-chip,
+.lote126-universal-interface-audit .pill,
+.lote126-universal-interface-audit .neo-mini-chip,
+.lote126-universal-interface-audit .ok-dot,
+.lote126-universal-interface-audit .bad-dot,
+.lote126-universal-interface-audit .classic-ok-stock,
+.lote126-universal-interface-audit .classic-low-stock,
+.lote126-universal-interface-audit .neo-confirm-chip,
+.lote126-universal-interface-audit .neo-trust-items span {
+  border-color: #cfe0f5;
+  background: #f1f7ff;
+  color: #1756a4;
+}
+
+.lote126-universal-interface-audit .neo-mini-chip.ok,
+.lote126-universal-interface-audit .pill-success,
+.lote126-universal-interface-audit .ok-dot,
+.lote126-universal-interface-audit .classic-ok-stock,
+.lote126-universal-interface-audit .neo-confirm-chip {
+  border-color: #bfe0c7;
+  background: #effaf3;
+  color: var(--slf126-success);
+}
+
+.lote126-universal-interface-audit .pill-warning,
+.lote126-universal-interface-audit .classic-low-stock,
+.lote126-universal-interface-audit .neo-mini-chip.warn {
+  border-color: #e7c47d;
+  background: #fff8e9;
+  color: var(--slf126-warning);
+}
+
+.lote126-universal-interface-audit .pill-danger,
+.lote126-universal-interface-audit .bad-dot {
+  border-color: #edbbb6;
+  background: #fff4f3;
+  color: var(--slf126-danger);
+}
+
+.lote126-universal-interface-audit .desktop-table-wrap,
+.lote126-universal-interface-audit .table-wrap {
+  border-color: var(--slf126-border);
+  background: var(--slf126-surface);
+}
+
+.lote126-universal-interface-audit .data-table th,
+.lote126-universal-interface-audit th {
+  background: #f6f9fd;
+  color: #64748b;
+  border-bottom-color: var(--slf126-border);
+}
+
+.lote126-universal-interface-audit .data-table td,
+.lote126-universal-interface-audit td {
+  color: var(--slf126-text);
+  border-bottom-color: rgba(214, 226, 239, .76);
+}
+
+.lote126-universal-interface-audit .data-row-clickable:hover {
+  background: #f7fbff;
+}
+
+.lote126-universal-interface-audit .data-row-selected {
+  background: #eef6ff;
+}
+
+.lote126-universal-interface-audit .empty-state-card,
+.lote126-universal-interface-audit .empty-state-panel {
+  border-color: var(--slf126-border-strong);
+  background: rgba(255, 255, 255, .86);
+}
+
+.lote126-universal-interface-audit .notice,
+.lote126-universal-interface-audit .error-box,
+.lote126-universal-interface-audit .web-readonly-module-note,
+.lote126-universal-interface-audit .neo-page-alert,
+.lote126-universal-interface-audit .neo-dashboard-insight,
+.lote126-universal-interface-audit .neo-alert-center,
+.lote126-universal-interface-audit .neo-toast {
+  border-color: var(--slf126-border);
+  box-shadow: var(--slf126-shadow-soft);
+}
+
+.lote126-universal-interface-audit .notice {
+  background: #effaf3;
+  color: var(--slf126-success);
+}
+
+.lote126-universal-interface-audit .error-box {
+  background: #fff4f3;
+  color: var(--slf126-danger);
+}
+
+.lote126-universal-interface-audit .product-photo-frame,
+.lote126-universal-interface-audit .product-detail-photo,
+.lote126-universal-interface-audit .product-preview-modal,
+.lote126-universal-interface-audit .product-detail-grid > div,
+.lote126-universal-interface-audit .classic-payment-row-option,
+.lote126-universal-interface-audit .classic-sale-summary-grid > div,
+.lote126-universal-interface-audit .total-box,
+.lote126-universal-interface-audit .classic-sale-total-box {
+  border-color: var(--slf126-border);
+  background: var(--slf126-surface-soft);
+}
+
+.lote126-universal-interface-audit .neo-mobile-dock {
+  background: rgba(255, 255, 255, .95);
+  border-color: var(--slf126-border);
+  box-shadow: 0 16px 46px rgba(16, 32, 53, .15);
+}
+
+.lote126-universal-interface-audit .neo-icon-tool .app-icon-chip,
+.lote126-universal-interface-audit .neo-command-search .app-icon-chip {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+.lote126-universal-interface-audit .neo-mobile-dock button.active,
+.lote126-universal-interface-audit .neo-mobile-quick-access button.active {
+  background: #eef6ff;
+  color: var(--slf126-primary-dark);
+}
+
+@media (max-width: 860px) {
+  .lote126-universal-interface-audit .neo-main {
+    background: var(--slf126-bg);
+  }
+
+  .lote126-universal-interface-audit .neo-topbar {
+    background: rgba(255, 255, 255, .96);
+  }
+
+  .lote126-universal-interface-audit .neo-page-shell {
+    padding-inline: 12px;
+  }
+
+  .lote126-universal-interface-audit .app-icon-button-inline,
+  .lote126-universal-interface-audit .app-icon-chip {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .lote126-universal-interface-audit .primary-btn .app-icon-button-inline,
+  .lote126-universal-interface-audit .secondary-btn .app-icon-button-inline,
+  .lote126-universal-interface-audit .ghost-btn .app-icon-button-inline,
+  .lote126-universal-interface-audit .danger-btn .app-icon-button-inline,
+  .lote126-universal-interface-audit .classic-action-grid button .app-svg-icon,
+  .lote126-universal-interface-audit .layout-audit-actions button .app-svg-icon,
+  .lote126-universal-interface-audit .layout-audit-row button .app-svg-icon,
+  .lote126-universal-interface-audit .web-sync-test-grid button .app-svg-icon {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .lote126-universal-interface-audit .primary-btn.small .app-icon-button-inline,
+  .lote126-universal-interface-audit .secondary-btn.small .app-icon-button-inline,
+  .lote126-universal-interface-audit .ghost-btn.small .app-icon-button-inline {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .lote126-universal-interface-audit .primary-btn.big .app-icon-button-inline,
+  .lote126-universal-interface-audit .secondary-btn.big .app-icon-button-inline {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .lote126-universal-interface-audit .status-chip .app-svg-icon,
+  .lote126-universal-interface-audit .pill .app-svg-icon,
+  .lote126-universal-interface-audit .neo-mini-chip .app-svg-icon,
+  .lote126-universal-interface-audit .table-filter-summary .app-svg-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-icon-tool .app-icon-chip,
+  .lote126-universal-interface-audit .neo-command-search .app-icon-chip,
+  .lote126-universal-interface-audit .web-input-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-sidebar-brand-mark {
+    width: 48px;
+    height: 48px;
+  }
+
+  .lote126-universal-interface-audit .neo-nav-item {
+    min-height: 52px;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+  }
+
+  .lote126-universal-interface-audit .neo-nav-item-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lote126-universal-interface-audit .app-icon-nav {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-page-meta-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+  }
+
+  .lote126-universal-interface-audit .neo-page-meta-icon .app-svg-icon {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-kpi-card {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  .lote126-universal-interface-audit .neo-kpi-icon,
+  .lote126-universal-interface-audit .neo-context-card-icon,
+  .lote126-universal-interface-audit .neo-trust-badge,
+  .lote126-universal-interface-audit .stat-icon,
+  .lote126-universal-interface-audit .empty-state-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .lote126-universal-interface-audit .neo-kpi-icon .app-svg-icon,
+  .lote126-universal-interface-audit .neo-context-card-icon .app-svg-icon,
+  .lote126-universal-interface-audit .neo-trust-badge .app-svg-icon,
+  .lote126-universal-interface-audit .empty-state-icon .app-svg-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .lote126-universal-interface-audit .stat-icon .app-svg-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-quick-card {
+    min-height: 104px;
+    padding: 14px;
+  }
+
+  .lote126-universal-interface-audit .neo-quick-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .lote126-universal-interface-audit .neo-quick-icon .app-svg-icon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-mobile-quick-access button {
+    min-height: 48px;
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  .lote126-universal-interface-audit .neo-mobile-quick-access .app-icon-chip {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .lote126-universal-interface-audit .neo-mobile-dock button {
+    min-height: 62px;
+    gap: 6px;
+  }
+
+  .lote126-universal-interface-audit .neo-mobile-dock .app-icon-chip {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .lote126-universal-interface-audit .page-title p,
+  .lote126-universal-interface-audit .neo-page-meta p {
+    color: #596a80;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lote126-universal-interface-audit button,
+  .lote126-universal-interface-audit .primary-btn,
+  .lote126-universal-interface-audit .secondary-btn,
+  .lote126-universal-interface-audit .ghost-btn,
+  .lote126-universal-interface-audit .danger-btn {
+    transition: none;
+  }
+
+  .lote126-universal-interface-audit button:hover:not(:disabled),
+  .lote126-universal-interface-audit .primary-btn:hover:not(:disabled),
+  .lote126-universal-interface-audit .secondary-btn:hover:not(:disabled),
+  .lote126-universal-interface-audit .ghost-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

@@ -219,7 +219,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       ) : activePage === 'credits' ? (
         <CreditsScreen status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       ) : activePage === 'receipts' ? (
-        <ReceiptsScreen refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
+        <ReceiptsScreen status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       ) : activePage === 'backup' ? (
         <BackupScreen refreshToken={refreshToken} onRefresh={onRefresh} />
       ) : activePage === 'diagnostics' ? (

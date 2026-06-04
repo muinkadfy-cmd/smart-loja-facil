@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import React, { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { DataTable } from '../components/DataTable';
 import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
@@ -37,6 +37,8 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const customerFormRef = useRef<HTMLElement | null>(null);
+  const customerNameInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     api.customers().then(setRows).catch(() => undefined);
@@ -65,6 +67,29 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
     setForm({ ...emptyCustomer });
   }
 
+  function scrollToCustomerForm() {
+    window.requestAnimationFrame(() => {
+      customerFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => customerNameInputRef.current?.focus(), 260);
+    });
+  }
+
+  function startNewCustomer() {
+    setError('');
+    setMessage('Pronto para cadastrar um novo cliente.');
+    resetForm();
+    scrollToCustomerForm();
+  }
+
+  useEffect(() => {
+    if (window.location.hash !== '#novo-cliente') return undefined;
+    const timer = window.setTimeout(() => {
+      startNewCustomer();
+      window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   function editCustomer(customer: Customer) {
     setError('');
     setMessage('');
@@ -78,6 +103,7 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
       status: customer.status,
       notes: customer.notes,
     });
+    scrollToCustomerForm();
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -121,9 +147,9 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
           <p>Cadastro local com limite de crediário, WhatsApp e status controlado.</p>
         </div>
       </div>
-      <section className="panel classic-panel form-panel classic-legacy-form-panel">
+      <section className="panel classic-panel form-panel classic-legacy-form-panel" ref={customerFormRef}>
         <form onSubmit={submit} className="form-grid compact">
-          <label>Nome<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
+          <label>Nome<input ref={customerNameInputRef} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></label>
           <label>Telefone<input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
           <label>WhatsApp<input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></label>
           <label>Limite crediário<input type="number" min="0" step="0.01" value={form.credit_limit} onChange={(e) => setForm({ ...form, credit_limit: Number(e.target.value) })} /></label>

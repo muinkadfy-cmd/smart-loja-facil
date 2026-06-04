@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
-import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, SaleSummary } from '../../types';
+import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { findReceiptForSale, shareSaleReceipt } from '../components/receiptShare';
 
 interface SalesScreenProps {
   status: AppStatus | null;
@@ -19,6 +20,7 @@ type CartItem = {
   qty: number;
   unit_price: number;
   stock: number;
+  image_data: string;
 };
 
 function todayInputValue(): string {
@@ -43,6 +45,7 @@ function paymentLabel(method: PaymentMethod): string {
 
 
 const INSTALLMENT_OPTIONS = [1, 2, 3, 4, 5, 6, 10, 12];
+const DUE_DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => index + 1);
 
 function normalizeInstallmentCount(value: unknown): number {
   const numeric = Number(String(value ?? '').replace(/[^0-9]/g, ''));
@@ -57,10 +60,29 @@ function addDaysInputValue(days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+function dayFromDateValue(value: string): number {
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return new Date().getDate();
+  return parsed.getDate();
+}
+
+function dueDateForDay(day: number): string {
+  const today = new Date();
+  const targetDay = Math.max(1, Math.min(31, Math.round(day)));
+  const month = targetDay >= today.getDate() ? today.getMonth() : today.getMonth() + 1;
+  const year = today.getFullYear() + Math.floor(month / 12);
+  const normalizedMonth = month % 12;
+  const lastDay = new Date(year, normalizedMonth + 1, 0).getDate();
+  const date = new Date(year, normalizedMonth, Math.min(targetDay, lastDay));
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 10);
+}
+
 export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProps): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [sales, setSales] = useState<SaleSummary[]>([]);
+  const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
   const [cash, setCash] = useState<CashSummary | null>(null);
   const [query, setQuery] = useState('');
   const [customerId, setCustomerId] = useState('');
@@ -69,7 +91,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [amountPaid, setAmountPaid] = useState(0);
   const [installmentCount, setInstallmentCount] = useState(1);
   const [firstDueDate, setFirstDueDate] = useState(todayInputValue());
+  const [dueDay, setDueDay] = useState(dayFromDateValue(todayInputValue()));
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -79,16 +103,18 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     setLoading(true);
     setError(null);
     try {
-      const [productRows, customerRows, saleRows, cashSummary] = await Promise.all([
+      const [productRows, customerRows, saleRows, cashSummary, receiptRows] = await Promise.all([
         api.products(),
         api.customers(),
         api.sales(),
         api.cashSummary(),
+        api.receipts(),
       ]);
       setProducts(productRows.filter((product) => product.status === 'ativo'));
       setCustomers(customerRows.filter((customer) => customer.status === 'ativo'));
       setSales(saleRows);
       setCash(cashSummary);
+      setReceipts(receiptRows);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -148,6 +174,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           qty: 1,
           unit_price: product.promo_price ?? product.price,
           stock: product.stock,
+          image_data: product.image_data || '',
         },
       ];
     });
@@ -163,15 +190,39 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   }
 
   async function finishSale(): Promise<void> {
-    if (saving || cart.length === 0) return;
+    if (saving) return;
+    if (cart.length === 0) {
+      setError('Falta preencher: escolha pelo menos um produto antes de finalizar.');
+      return;
+    }
     if (paymentMethod === 'crediario' && !customerId) {
-      setError('Selecione um cliente cadastrado para vender no crediário.');
+      setError('Falta preencher: selecione um cliente cadastrado para vender no crediário.');
       return;
     }
     if (paymentMethod === 'crediario' && !firstDueDate) {
       setError('Escolha o primeiro vencimento do crediário.');
       return;
     }
+    if (paymentMethod !== 'crediario') {
+      if (!Number.isFinite(amountPaid) || amountPaid <= 0) {
+        setError('Informe um valor maior que R$ 0,00.');
+        return;
+      }
+      if (amountPaid + 0.009 < total) {
+        setError(`Você está recebendo menos que o total da venda. Total: ${formatCurrency(total)} · Valor pago: ${formatCurrency(amountPaid)}. Use crediário se o cliente vai ficar devendo.`);
+        return;
+      }
+      if (amountPaid > total + 0.009) {
+        if (paymentMethod !== 'dinheiro') {
+          setError(`Esse valor parece maior que o total da venda. Para ${paymentLabel(paymentMethod)}, use o valor exato: ${formatCurrency(total)}.`);
+          return;
+        }
+        const okOverpaid = window.confirm(`Esse valor parece maior que o total da venda. Confira antes de finalizar.\n\nTotal da venda: ${formatCurrency(total)}\nValor digitado: ${formatCurrency(amountPaid)}\nTroco: ${formatCurrency(amountPaid - total)}\n\nConfirmar venda com esse troco?`);
+        if (!okOverpaid) return;
+      }
+    }
+    const confirmed = window.confirm(`Finalizar venda de ${formatCurrency(total)} em ${paymentLabel(paymentMethod)}? Confira o carrinho e o pagamento antes de confirmar.`);
+    if (!confirmed) return;
     setSaving(true);
     setError(null);
     setFeedback(null);
@@ -194,7 +245,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       setAmountPaid(0);
       setCustomerId('');
       setPaymentMethod('dinheiro');
-      setFeedback('Venda finalizada. Estoque, caixa e comprovante serão sincronizados pela nuvem.');
+      setFirstDueDate(todayInputValue());
+      setDueDay(dayFromDateValue(todayInputValue()));
+      setFeedback('Tudo certo: venda finalizada. Estoque, caixa e comprovante estão sendo enviados para a nuvem.');
       await loadData();
       onRefresh();
     } catch (err) {
@@ -202,6 +255,22 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     } finally {
       setSaving(false);
     }
+  }
+
+  async function shareRecentSale(sale: SaleSummary): Promise<void> {
+    const receipt = findReceiptForSale(receipts, sale);
+    const message = await shareSaleReceipt(sale, receipt);
+    setFeedback(message);
+  }
+
+  function setDueDaySelection(day: number): void {
+    setDueDay(day);
+    setFirstDueDate(dueDateForDay(day));
+  }
+
+  function setShortcutDueDate(value: string): void {
+    setFirstDueDate(value);
+    setDueDay(dayFromDateValue(value));
   }
 
   return (
@@ -219,8 +288,8 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         <div className="mapp-form-head">
           <span className="mapp-form-icon tone-blue"><InlineIcon name="buscar" size={32} /></span>
           <div>
-            <strong>Buscar produto</strong>
-            <p>Nome, código, categoria ou barras.</p>
+            <strong>Passo 1: escolha produto</strong>
+            <p>Dica: busque por nome, código, categoria ou barras.</p>
           </div>
         </div>
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Digite para buscar produto" />
@@ -229,7 +298,13 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             const price = product.promo_price ?? product.price;
             return (
               <button key={product.id} type="button" onClick={() => addProduct(product)}>
-                <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
+                {product.image_data ? (
+                  <span className="mapp-product-mini-thumb">
+                    <img src={product.image_data} alt={product.name} loading="lazy" />
+                  </span>
+                ) : (
+                  <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
+                )}
                 <strong>{product.name}</strong>
                 <small>{product.internal_code || product.category || 'Produto'} · Estoque {formatNumber(product.stock)}</small>
                 <b>{formatCurrency(price)}</b>
@@ -241,14 +316,20 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
 
       <section className="mapp-panel mapp-pdv-cart">
         <div className="mapp-section-title">
-          <h2>Carrinho</h2>
-          {cart.length ? <button type="button" onClick={() => setCart([])}>Limpar</button> : null}
+          <h2>Passo 2: confira carrinho</h2>
+          {cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar</button> : null}
         </div>
         {cart.length ? (
           <div className="mapp-cart-list">
             {cart.map((item) => (
               <article key={item.product_id} className="mapp-cart-item">
-                <span><InlineIcon name="vendas_pdv" size={24} /></span>
+                {item.image_data ? (
+                  <span className="mapp-product-mini-thumb">
+                    <img src={item.image_data} alt={item.name} loading="lazy" />
+                  </span>
+                ) : (
+                  <span><InlineIcon name="vendas_pdv" size={24} /></span>
+                )}
                 <div>
                   <strong>{item.name}</strong>
                   <small>{formatCurrency(item.unit_price)} cada · estoque {formatNumber(item.stock)}</small>
@@ -268,7 +349,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       </section>
 
       <section className="mapp-panel mapp-pdv-checkout">
-        <div className="mapp-section-title"><h2>Pagamento</h2><button type="button" onClick={() => setPaymentMethod('dinheiro')}>Padrão</button></div>
+        <div className="mapp-section-title"><h2>Passo 3: escolha pagamento</h2><button type="button" onClick={() => setPaymentMethod('dinheiro')}>Padrão</button></div>
         <div className={cash?.open_cash ? 'mapp-cash-readiness is-open' : 'mapp-cash-readiness'}>
           <span><InlineIcon name="caixa" size={24} /></span>
           <div>
@@ -314,7 +395,13 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
               </label>
               <label>
                 <span>Primeiro vencimento</span>
-                <input type="date" value={firstDueDate} onChange={(event) => setFirstDueDate(event.target.value)} />
+                <input type="date" value={firstDueDate} onChange={(event) => { setFirstDueDate(event.target.value); setDueDay(dayFromDateValue(event.target.value)); }} />
+              </label>
+              <label>
+                <span>Dia do vencimento</span>
+                <select value={dueDay} onChange={(event) => setDueDaySelection(Number(event.target.value))}>
+                  {DUE_DAY_OPTIONS.map((day) => <option key={day} value={day}>Dia {day}</option>)}
+                </select>
               </label>
               <div className="mapp-credit-installment-box span-2">
                 <div>
@@ -334,9 +421,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                   ))}
                 </div>
                 <div className="mapp-due-date-shortcuts" aria-label="Atalhos de vencimento">
-                  <button type="button" onClick={() => setFirstDueDate(todayInputValue())}>Hoje</button>
-                  <button type="button" onClick={() => setFirstDueDate(addDaysInputValue(15))}>+15 dias</button>
-                  <button type="button" onClick={() => setFirstDueDate(addDaysInputValue(30))}>+30 dias</button>
+                  <button type="button" onClick={() => setShortcutDueDate(todayInputValue())}>Hoje</button>
+                  <button type="button" onClick={() => setShortcutDueDate(addDaysInputValue(15))}>+15 dias</button>
+                  <button type="button" onClick={() => setShortcutDueDate(addDaysInputValue(30))}>+30 dias</button>
                 </div>
               </div>
             </>
@@ -349,7 +436,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           <small>{selectedCustomer ? `Cliente: ${selectedCustomer.name}` : 'Venda para consumidor final'}</small>
         </section>
         <button type="button" className="mapp-primary-button mapp-finish-sale" disabled={saving || cart.length === 0} onClick={() => void finishSale()}>
-          {saving ? 'Finalizando...' : 'Finalizar venda'}
+          {saving ? 'Enviando para a nuvem...' : 'Passo 4: finalizar venda'}
         </button>
       </section>
 
@@ -362,10 +449,24 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 key={sale.id}
                 icon="vendas_pdv"
                 title={`Venda #${String(sale.number).padStart(4, '0')}`}
-                subtitle={`${sale.customer_name || 'Balcão'} · ${paymentLabel(sale.payment_method)} · ${formatDateTime(sale.created_at)}`}
+                subtitle={`${sale.first_product_name || sale.customer_name || 'Balcão'} · ${paymentLabel(sale.payment_method)} · ${formatDateTime(sale.created_at)}`}
                 value={formatCurrency(sale.total)}
                 tone={sale.status === 'cancelada' ? 'orange' : 'blue'}
-              />
+                thumbnailSrc={sale.thumbnail_url}
+                thumbnailAlt={sale.first_product_name || `Venda #${sale.number}`}
+                expanded={expandedSaleId === sale.id}
+                onClick={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
+              >
+                <div className="mapp-sale-detail-grid">
+                  <span>Cliente <b>{sale.customer_name || 'Balcão'}</b></span>
+                  <span>Forma <b>{paymentLabel(sale.payment_method)}</b></span>
+                  <span>Itens <b>{formatNumber(sale.item_count || 1)}</b></span>
+                  <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
+                </div>
+                <div className="mapp-sale-detail-actions">
+                  <button type="button" onClick={() => void shareRecentSale(sale)}>Compartilhar comprovante</button>
+                </div>
+              </ListCard>
             ))}
           </div>
         ) : (

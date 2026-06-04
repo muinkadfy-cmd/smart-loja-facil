@@ -272,6 +272,11 @@ export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageP
     },
   ];
 
+  function navigateWithIntent(page: PageKey, intent: string) {
+    window.location.hash = intent;
+    onNavigate(page);
+  }
+
   return (
     <div className="neo-dashboard" aria-busy={dataLoading}>
       {dashboardError ? (
@@ -428,28 +433,28 @@ export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageP
           </div>
 
           <div className="neo-quick-grid">
-            <button type="button" className="neo-quick-card" onClick={() => onNavigate('products')}>
-              <span className="neo-quick-icon"><AppIcon name="novo_item_adicionar" size={24} className="app-icon-button-inline" /></span>
+            <button type="button" className="neo-quick-card" onClick={() => navigateWithIntent('products', 'novo-produto')}>
+              <span className="neo-quick-icon"><AppIcon name="novo_item_adicionar" size={32} className="app-icon-button-inline" /></span>
               <strong>Novo produto</strong>
             </button>
-            <button type="button" className="neo-quick-card" onClick={() => onNavigate('orders')}>
-              <span className="neo-quick-icon"><AppIcon name="pedidos" size={24} className="app-icon-button-inline" /></span>
+            <button type="button" className="neo-quick-card" onClick={() => navigateWithIntent('orders', 'novo-pedido')}>
+              <span className="neo-quick-icon"><AppIcon name="pedidos" size={32} className="app-icon-button-inline" /></span>
               <strong>Novo pedido</strong>
             </button>
             <button type="button" className="neo-quick-card neo-quick-card-primary" onClick={() => onNavigate('sales')}>
-              <span className="neo-quick-icon"><AppIcon name="vendas_pdv" size={24} className="app-icon-button-inline" /></span>
+              <span className="neo-quick-icon"><AppIcon name="vendas_pdv" size={32} className="app-icon-button-inline" /></span>
               <strong>Abrir PDV</strong>
             </button>
-            <button type="button" className="neo-quick-card" onClick={() => onNavigate('customers')}>
-              <span className="neo-quick-icon"><AppIcon name="clientes" size={24} className="app-icon-button-inline" /></span>
+            <button type="button" className="neo-quick-card" onClick={() => navigateWithIntent('customers', 'novo-cliente')}>
+              <span className="neo-quick-icon"><AppIcon name="clientes" size={32} className="app-icon-button-inline" /></span>
               <strong>Novo cliente</strong>
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('reports')}>
-              <span className="neo-quick-icon"><AppIcon name="relatorios" size={24} className="app-icon-button-inline" /></span>
+              <span className="neo-quick-icon"><AppIcon name="relatorios" size={32} className="app-icon-button-inline" /></span>
               <strong>Relatórios</strong>
             </button>
             <button type="button" className="neo-quick-card" onClick={() => onNavigate('backup')}>
-              <span className="neo-quick-icon"><AppIcon name="backup" size={24} className="app-icon-button-inline" /></span>
+              <span className="neo-quick-icon"><AppIcon name="backup" size={32} className="app-icon-button-inline" /></span>
               <strong>Backup agora</strong>
             </button>
           </div>

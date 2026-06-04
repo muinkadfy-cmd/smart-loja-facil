@@ -3,7 +3,7 @@
   "name": "smart-loja-facil",
   "compatibility_date": "2026-05-25",
   "assets": {
-    "directory": "./dist",
+    "directory": "./dist-codex-build",
     "not_found_handling": "single-page-application"
   }
 }

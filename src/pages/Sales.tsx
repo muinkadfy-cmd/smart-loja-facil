@@ -205,7 +205,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     setPrintingReceipt(true);
     try {
       const fileStem = `comprovante-venda-${latestReceipt.sale_number || latestReceipt.sale_id}`;
-      const path = await api.exportHtmlPdf(latestReceipt.content, fileStem, true);
+      const path = await api.exportHtmlPdf(latestReceipt.content, fileStem, true, undefined, latestReceipt.receipt_type);
       setMessage(`Comprovante da última venda enviado para PDF em ${path}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

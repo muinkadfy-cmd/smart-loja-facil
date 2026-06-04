@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v161-crediario-simplificado-iphone';
-const currentCache = 'smart-loja-pwa-supabase-v161-crediario-simplificado-iphone';
+const currentVersion = 'pwa-supabase-v162-comprovantes-crediario-a4-iphone';
+const currentCache = 'smart-loja-pwa-supabase-v162-comprovantes-crediario-a4-iphone';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v161')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v161.');
+if (!mainSource.includes('smart-mobile-rebuild-v162')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v162.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -83,8 +83,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v161 crediario simplificado iphone.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v161 crediario simplificado iphone.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v162 comprovantes crediario A4 iPhone.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v162 comprovantes crediario A4 iPhone.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -137,4 +137,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v161 PWA passou. Crediário simplificado, cliente/nota/parcelas, iPhone, Central de avisos e mobile conferidos.');
+console.log('OK: release_check v162 PWA passou. Comprovantes com cliente/nota/parcelas, A4/PDF, iPhone e Crediário operacional conferidos.');

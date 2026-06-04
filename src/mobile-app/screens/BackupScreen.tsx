@@ -28,7 +28,7 @@ function backupErrorMessage(error: unknown): string {
     return 'O backup encontrou uma diferença antiga na tabela do caixa. Atualize para esta versão e tente novamente. Seus dados não foram apagados.';
   }
   if (/backups_log|auditoria\/sync|migration/i.test(text)) {
-    return 'O arquivo foi baixado, mas o histórico do backup não confirmou na nuvem. Aplique as migrations novas no Supabase e tente novamente.';
+    return 'O arquivo foi baixado, mas o histórico do backup não confirmou na nuvem. Atualize a estrutura da nuvem com o suporte e tente novamente.';
   }
   if (/permission|row-level security|policy|RLS/i.test(text)) {
     return 'Sua conta não tem permissão para fazer backup desta loja. Entre como dono ou administrador.';
@@ -76,7 +76,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
     setLoading(true);
     try {
       const info = await api.createBackup();
-      setFeedback({ tone: 'success', text: `Backup criado/baixado: ${info.file_name}. Guarde esse arquivo fora do navegador.` });
+      setFeedback({ tone: 'success', text: `Tudo certo: backup criado/baixado: ${info.file_name}. Guarde esse arquivo fora do celular ou navegador.` });
       await loadBackups();
       onRefresh();
     } catch (error) {
@@ -153,7 +153,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         </div>
         <div className="mapp-form-actions">
           <button type="button" className="mapp-secondary-button" onClick={() => fileInputRef.current?.click()} disabled={loading}>Importar JSON</button>
-          <button type="button" className="mapp-primary-button" onClick={() => void createBackup()} disabled={loading}>{loading ? 'Aguarde...' : 'Criar backup'}</button>
+          <button type="button" className="mapp-primary-button" onClick={() => void createBackup()} disabled={loading}>{loading ? 'Aguarde...' : 'Criar backup agora'}</button>
         </div>
       </section>
 
@@ -161,7 +161,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Restauração é ação crítica</strong>
-          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos de produtos preparadas pelo app entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, copie também o bucket product-photos ao migrar de projeto.</p>
+          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos de produtos preparadas pelo app entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, o armazenamento de fotos da nuvem também precisa ser migrado pelo suporte.</p>
         </div>
         <button type="button" onClick={() => fileInputRef.current?.click()}>Importar</button>
       </section>

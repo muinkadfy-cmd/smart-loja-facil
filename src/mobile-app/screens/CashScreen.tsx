@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
+import { parseBrazilianMoneyInput } from '../../lib/creditPaymentGuard';
 import type { AppStatus, CashMovement, CashSummary } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -22,9 +23,8 @@ type Feedback = {
 };
 
 function numberFromInput(value: string): number {
-  const normalized = value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
+  const parsed = parseBrazilianMoneyInput(value);
+  return parsed.ok ? parsed.amount : 0;
 }
 
 function movementLabel(type: string): string {
@@ -99,7 +99,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
       setClosingAmount(String(payload.expected_total.toFixed(2)));
       setNotes('');
       setMode('movement');
-      setFeedback({ tone: 'success', text: 'Caixa aberto e sincronizado. Vendas, entradas e saídas já podem ser acompanhadas.' });
+      setFeedback({ tone: 'success', text: 'Tudo certo: caixa aberto e sincronizado. Vendas, entradas e saídas já podem ser acompanhadas.' });
       onRefresh();
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -112,7 +112,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
     const amount = numberFromInput(movementAmount);
     const reason = movementReason.trim();
     if (amount <= 0) {
-      setFeedback({ tone: 'error', text: 'Informe um valor maior que zero para lançar no caixa.' });
+      setFeedback({ tone: 'error', text: 'Informe um valor maior que R$ 0,00.' });
       return;
     }
     if (!reason) {
@@ -171,6 +171,11 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
         <StatCard label="Status" value={hasOpenCash ? 'Aberto' : 'Fechado'} detail={summary?.open_cash ? formatDateTime(summary.open_cash.opened_at) : 'abra para controlar'} icon="abrir_caixa" tone={hasOpenCash ? 'green' : 'orange'} />
       </section>
 
+      <section className="mapp-success-card">
+        <strong>Ajuda rápida: abra o caixa antes de começar o dia</strong>
+        <span>Resumo simples: Inicial + Entradas - Saídas = Saldo esperado.</span>
+      </section>
+
       {loading ? <div className="mapp-inline-status">Carregando caixa...</div> : null}
       <StatusFeedback feedback={feedback} />
 
@@ -197,7 +202,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
             <span className="mapp-form-icon tone-green"><InlineIcon name="abrir_caixa" size={24} /></span>
             <div>
               <strong>Abrir caixa</strong>
-              <p>Informe o dinheiro inicial. Essa ação não entra na fila offline para evitar duplicidade.</p>
+              <p>Informe o dinheiro inicial. Atenção: esta ação precisa confirmar na nuvem para evitar duplicidade.</p>
             </div>
           </div>
           <div className="mapp-form-grid">

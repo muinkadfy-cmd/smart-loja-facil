@@ -16,7 +16,7 @@ function strokeProps() {
   return {
     fill: 'none',
     stroke: 'currentColor',
-    strokeWidth: 1.9,
+    strokeWidth: 2.2,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
   };

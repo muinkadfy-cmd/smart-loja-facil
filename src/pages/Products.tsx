@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon } from '../components/AppIcon';
 import { DataTable } from '../components/DataTable';
 import { Modal } from '../components/Modal';
@@ -158,6 +158,10 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
   const [details, setDetails] = useState<Product | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const productFormRef = useRef<HTMLElement | null>(null);
+  const productNameInputRef = useRef<HTMLInputElement | null>(null);
+  const stockAdjustRef = useRef<HTMLElement | null>(null);
+  const stockAdjustSelectRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
     Promise.all([api.products(), api.customers()])
@@ -219,6 +223,43 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     setForm({ ...emptyProduct });
   }
 
+  function scrollToPanel(panel: HTMLElement | null, focusTarget?: HTMLElement | null) {
+    window.requestAnimationFrame(() => {
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.setTimeout(() => focusTarget?.focus(), 260);
+    });
+  }
+
+  function startNewProduct() {
+    setError('');
+    setMessage('Pronto para cadastrar um novo produto.');
+    setSelectedProductId(null);
+    setDetails(null);
+    setPreview(null);
+    resetForm();
+    scrollToPanel(productFormRef.current, productNameInputRef.current);
+  }
+
+  useEffect(() => {
+    if (window.location.hash !== '#novo-produto') return undefined;
+    const timer = window.setTimeout(() => {
+      startNewProduct();
+      window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  function openStockAdjust(product: Product | null) {
+    setError('');
+    setMessage('');
+    if (!product) {
+      setError('Selecione um produto na lista antes de ajustar o estoque.');
+      return;
+    }
+    setAdjust((current) => ({ ...current, productId: product.id }));
+    scrollToPanel(stockAdjustRef.current, stockAdjustSelectRef.current);
+  }
+
   function editProduct(product: Product) {
     setError('');
     setMessage('');
@@ -238,6 +279,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       image_data: product.image_data,
       status: product.status,
     });
+    scrollToPanel(productFormRef.current, productNameInputRef.current);
   }
 
   async function onImageSelected(event: ChangeEvent<HTMLInputElement>) {
@@ -438,7 +480,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
           <div className="classic-panel-header">
             <h2>Lista de Produtos</h2>
             <div className="classic-table-actions">
-              <button type="button" className="secondary-btn" onClick={() => { resetForm(); setSelectedProductId(null); }}><AppIcon name="produtos" size={16} className="app-icon-button-inline" />Novo Produto</button>
+              <button type="button" className="secondary-btn" onClick={startNewProduct}><AppIcon name="produtos" size={16} className="app-icon-button-inline" />Novo Produto</button>
               <button type="button" className="ghost-btn" onClick={() => selectedProduct && editProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="editar" size={16} className="app-icon-button-inline" />Editar</button>
               <button type="button" className="ghost-btn" onClick={() => selectedProduct && void inactivateProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="excluir" size={16} className="app-icon-button-inline" />Excluir</button>
               <button type="button" className="ghost-btn" onClick={() => void reload()}><AppIcon name="atualizar" size={16} className="app-icon-button-inline" />Atualizar</button>
@@ -472,19 +514,19 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <h2>Ações</h2>
           </div>
           <div className="classic-action-grid">
-            <button type="button" onClick={() => { resetForm(); setSelectedProductId(null); }}><AppIcon name="produtos" size={24} className="app-icon-button-inline" />Novo produto</button>
-            <button type="button" onClick={() => selectedProduct && setAdjust((current) => ({ ...current, productId: selectedProduct.id }))}><AppIcon name="manutencao_ajuste" size={24} className="app-icon-button-inline" />Ajustar estoque</button>
+            <button type="button" onClick={startNewProduct}><AppIcon name="produtos" size={24} className="app-icon-button-inline" />Novo produto</button>
+            <button type="button" onClick={() => openStockAdjust(selectedProduct)} disabled={!selectedProduct}><AppIcon name="manutencao_ajuste" size={24} className="app-icon-button-inline" />Ajustar estoque</button>
             <button type="button" onClick={() => selectedProduct && setDetails(selectedProduct)} disabled={!selectedProduct}><AppIcon name="buscar" size={24} className="app-icon-button-inline" />Abrir produto</button>
             <button type="button" onClick={() => selectedProduct && void saveProductPhoto(selectedProduct, true)} disabled={!selectedProduct || !selectedProduct.image_data}><AppIcon name="imprimir" size={24} className="app-icon-button-inline" />Salvar foto</button>
             <button type="button" onClick={() => selectedProduct && void shareProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />Enviar WhatsApp</button>
             <button type="button" onClick={() => void openWhatsappOnly()}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />WhatsApp Web</button>
-            <button type="button" onClick={() => void reload()}><AppIcon name="relatorios" size={24} className="app-icon-button-inline" />Relatório de produtos</button>
+            <button type="button" onClick={() => void reload()}><AppIcon name="atualizar" size={24} className="app-icon-button-inline" />Atualizar lista</button>
           </div>
         </aside>
       </section>
 
       <section className="classic-products-bottom">
-        <section className="panel classic-panel form-panel">
+        <section className="panel classic-panel form-panel" ref={productFormRef}>
           <div className="classic-panel-header">
             <h2>Cadastro / Edição</h2>
           </div>
@@ -501,7 +543,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             </div>
 
             <div className="form-grid compact product-form-fields">
-              <label>Produto<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
+              <label>Produto<input ref={productNameInputRef} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
               <label>
                 Categoria
                 <input list="product-categories" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} />
@@ -526,12 +568,12 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
           </form>
         </section>
 
-        <section className="panel classic-panel form-panel">
+        <section className="panel classic-panel form-panel" ref={stockAdjustRef}>
           <div className="classic-panel-header">
             <h2>Ajuste de estoque</h2>
           </div>
           <form onSubmit={adjustStock} className="form-grid compact adjust-grid">
-            <label>Produto<select value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
+            <label>Produto<select ref={stockAdjustSelectRef} value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
             <label>Quantidade (+/-)<input type="number" step="1" value={adjust.delta} onChange={(event) => setAdjust({ ...adjust, delta: Number(event.target.value) })} /></label>
             <label className="span-2">Motivo obrigatório<input value={adjust.reason} onChange={(event) => setAdjust({ ...adjust, reason: event.target.value })} placeholder="Ex: contagem manual, perda, entrada de mercadoria" /></label>
             <button className="secondary-btn">Ajustar estoque</button>

@@ -1,0 +1,231 @@
+:root {
+  --lote119-icon-login-rescue: active;
+}
+
+/* Hotfix raiz: sem esta regra o span inline ignora width/height e o SVG pode ocupar a tela inteira. */
+.app-svg-icon {
+  display: inline-grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  width: var(--app-icon-size, auto);
+  height: var(--app-icon-size, auto);
+  min-width: 0 !important;
+  min-height: 0 !important;
+  line-height: 0 !important;
+  vertical-align: middle !important;
+  overflow: visible !important;
+}
+
+.app-svg-icon > svg {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  flex: 0 0 auto !important;
+}
+
+.app-svg-icon svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Login após limpeza CSS: reconstrução mínima e segura, sem depender dos lotes antigos. */
+.lote119-icon-login-rescue .welcome-screen,
+.lote119-icon-login-rescue .login-landing,
+.lote119-icon-login-rescue .classic-login-landing {
+  min-height: 100dvh !important;
+  width: 100% !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: clamp(18px, 4vw, 42px) !important;
+  background:
+    radial-gradient(circle at 0 0, rgba(102, 167, 255, .16), transparent 34rem),
+    radial-gradient(circle at 100% 100%, rgba(203, 124, 118, .14), transparent 30rem),
+    linear-gradient(180deg, #f8fbff 0%, #edf3f8 100%) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+.lote119-icon-login-rescue .master-login-centered-shell {
+  width: min(100%, 430px) !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.lote119-icon-login-rescue .master-login-form-card,
+.lote119-icon-login-rescue .master-login-single-card,
+.lote119-icon-login-rescue .master-login-centered-card {
+  width: 100% !important;
+  display: grid !important;
+  gap: 16px !important;
+  padding: clamp(22px, 4vw, 34px) !important;
+  border-radius: 26px !important;
+  border: 1px solid var(--app-line) !important;
+  background: rgba(255,255,255,.96) !important;
+  box-shadow: 0 22px 70px rgba(16,32,53,.11) !important;
+  overflow: hidden !important;
+}
+
+.lote119-icon-login-rescue .master-login-form-head,
+.lote119-icon-login-rescue .master-login-centered-head {
+  display: grid !important;
+  justify-items: center !important;
+  text-align: center !important;
+  gap: 8px !important;
+}
+
+.lote119-icon-login-rescue .master-login-brand-icon {
+  width: 64px !important;
+  height: 64px !important;
+  max-width: 64px !important;
+  max-height: 64px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  border: 1px solid var(--app-line) !important;
+  box-shadow: 0 14px 30px rgba(102,167,255,.18) !important;
+}
+
+.lote119-icon-login-rescue .master-login-form-head strong {
+  color: var(--app-ink) !important;
+  font-size: clamp(1.35rem, 5vw, 1.8rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.055em !important;
+  font-weight: 950 !important;
+}
+
+.lote119-icon-login-rescue .master-login-form-head strong b {
+  color: #e45424 !important;
+}
+
+.lote119-icon-login-rescue .master-login-form-head small {
+  color: var(--app-muted) !important;
+  font-weight: 750 !important;
+}
+
+.lote119-icon-login-rescue .web-auth-panel {
+  width: 100% !important;
+  display: grid !important;
+  gap: 14px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.lote119-icon-login-rescue .web-kicker,
+.lote119-icon-login-rescue .web-auth-status-pill {
+  justify-self: center !important;
+}
+
+.lote119-icon-login-rescue .web-auth-panel h2 {
+  margin: 0 !important;
+  color: var(--app-ink) !important;
+  text-align: center !important;
+  font-size: 1.22rem !important;
+  letter-spacing: -.035em !important;
+}
+
+.lote119-icon-login-rescue .web-auth-panel p {
+  margin: 0 !important;
+  color: var(--app-muted) !important;
+  text-align: center !important;
+  line-height: 1.42 !important;
+}
+
+.lote119-icon-login-rescue .web-auth-form {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+.lote119-icon-login-rescue .web-auth-form label,
+.lote119-icon-login-rescue .master-login-local-card label {
+  display: grid !important;
+  gap: 6px !important;
+  color: var(--app-ink) !important;
+  font-weight: 850 !important;
+}
+
+.lote119-icon-login-rescue .web-input-row,
+.lote119-icon-login-rescue .web-password-row {
+  min-height: 54px !important;
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 7px 8px 7px 14px !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--app-line) !important;
+  background: #f8fbff !important;
+}
+
+.lote119-icon-login-rescue .web-input-row input,
+.lote119-icon-login-rescue .web-password-row input {
+  min-width: 0 !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--app-ink) !important;
+}
+
+.lote119-icon-login-rescue .web-password-row .secondary-btn {
+  min-width: 62px !important;
+  min-height: 40px !important;
+  padding: 0 12px !important;
+  border-radius: 13px !important;
+}
+
+.lote119-icon-login-rescue .web-input-icon {
+  width: 24px !important;
+  height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+}
+
+.lote119-icon-login-rescue .web-auth-form-options,
+.lote119-icon-login-rescue .web-check-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.lote119-icon-login-rescue .web-check-row input {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+}
+
+.lote119-icon-login-rescue .web-auth-panel .primary-btn,
+.lote119-icon-login-rescue .master-login-final-btn {
+  width: 100% !important;
+  min-height: 54px !important;
+  border-radius: 16px !important;
+  font-weight: 950 !important;
+}
+
+.lote119-icon-login-rescue .web-message,
+.lote119-icon-login-rescue .web-auth-alert,
+.lote119-icon-login-rescue .web-code-list {
+  max-width: 100% !important;
+  border-radius: 14px !important;
+  overflow-wrap: anywhere !important;
+}
+
+@media (max-width: 480px) {
+  .lote119-icon-login-rescue .welcome-screen,
+  .lote119-icon-login-rescue .login-landing,
+  .lote119-icon-login-rescue .classic-login-landing {
+    padding: 14px !important;
+  }
+
+  .lote119-icon-login-rescue .master-login-form-card,
+  .lote119-icon-login-rescue .master-login-single-card,
+  .lote119-icon-login-rescue .master-login-centered-card {
+    padding: 22px 18px !important;
+    border-radius: 24px !important;
+  }
+}

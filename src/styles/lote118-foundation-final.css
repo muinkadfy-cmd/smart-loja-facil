@@ -1,0 +1,666 @@
+:root {
+  --lote118-foundation-final: active;
+  --slf-page-max: 1280px;
+  --slf-mobile-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  --slf-header-h: 0px;
+}
+
+html.lote118-foundation-final,
+html.lote118-foundation-final body,
+.lote118-foundation-final #root {
+  width: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+/* App shell: uma arquitetura de rolagem clara, sem CSS antigo brigando. */
+.lote118-foundation-final .neo-shell {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: var(--app-text);
+  background: linear-gradient(180deg, #f7faff 0%, #edf3f8 100%);
+}
+
+.lote118-foundation-final .neo-windowbar { display: none; }
+
+.lote118-foundation-final .neo-layout {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+.lote118-foundation-final .neo-sidebar {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 18px 14px;
+  background: linear-gradient(180deg, #1c2635 0%, #121927 100%);
+  color: #f8fbff;
+  overflow: hidden;
+  border-right: 1px solid rgba(255,255,255,.08);
+  box-shadow: inset -1px 0 0 rgba(255,255,255,.05);
+}
+
+.lote118-foundation-final .neo-sidebar-brand {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 60px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.lote118-foundation-final .neo-sidebar-brand-mark,
+.lote118-foundation-final .neo-mobile-brand-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+}
+
+.lote118-foundation-final .neo-sidebar-brand-copy,
+.lote118-foundation-final .neo-sidebar-brand-copy * { min-width: 0; }
+.lote118-foundation-final .neo-sidebar-brand-copy strong {
+  display: block;
+  color: #fff;
+  font-size: .98rem;
+  line-height: 1.08;
+  font-weight: 950;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lote118-foundation-final .neo-sidebar-brand-copy small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(21, 138, 69, .18);
+  color: #bff7d4;
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.lote118-foundation-final .neo-status-dot,
+.lote118-foundation-final .neo-sidebar-brand-copy small i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #28d66d;
+  box-shadow: 0 0 0 4px rgba(40,214,109,.14);
+}
+
+.lote118-foundation-final .neo-nav {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 2px 2px 2px 0;
+}
+.lote118-foundation-final .neo-nav-item {
+  min-width: 0;
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  font-weight: 850;
+  text-align: left;
+}
+.lote118-foundation-final .neo-nav-item-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+}
+.lote118-foundation-final .neo-nav-item-label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lote118-foundation-final .neo-nav-item.active {
+  background: rgba(255,255,255,.95);
+  color: #142033;
+  border-color: rgba(255,255,255,.48);
+  box-shadow: 0 12px 26px rgba(0,0,0,.16);
+}
+.lote118-foundation-final .neo-nav-item.active .neo-nav-item-icon { background: #edf5ff; color: var(--app-primary); }
+
+.lote118-foundation-final .neo-sidebar-footer {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+}
+.lote118-foundation-final .neo-env-block,
+.lote118-foundation-final .neo-version-block { min-width: 0; display: grid; gap: 4px; }
+.lote118-foundation-final .neo-env-block small,
+.lote118-foundation-final .neo-version-block span { color: rgba(255,255,255,.65); font-size: .72rem; }
+.lote118-foundation-final .neo-env-block strong,
+.lote118-foundation-final .neo-version-block strong { color: #fff; font-size: .84rem; line-height: 1.18; overflow-wrap: anywhere; }
+.lote118-foundation-final .neo-version-block button { min-height: 34px; border-radius: 12px; }
+
+.lote118-foundation-final .neo-main {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(180deg, #f9fbfe 0%, #edf3f8 100%);
+  scroll-padding-top: 16px;
+}
+
+.lote118-foundation-final .neo-topbar {
+  position: relative;
+  z-index: 20;
+  padding: 16px clamp(18px, 2.4vw, 32px);
+  background: rgba(255,255,255,.96);
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: 0 10px 28px rgba(16,32,53,.055);
+}
+.lote118-foundation-final .neo-topbar-mobile-row,
+.lote118-foundation-final .neo-mobile-quick-access { display: none; }
+.lote118-foundation-final .neo-header-grid {
+  width: min(100%, var(--slf-page-max));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+.lote118-foundation-final .neo-command-search { display: none; }
+.lote118-foundation-final .neo-topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.lote118-foundation-final .neo-icon-tool,
+.lote118-foundation-final .neo-bell-tool,
+.lote118-foundation-final .neo-notify-btn {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 1px solid var(--app-line);
+  background: #fff;
+  color: var(--app-ink);
+  box-shadow: var(--app-shadow-soft);
+}
+.lote118-foundation-final .neo-bell-inline-icon { width: 23px; height: 23px; color: currentColor; }
+.lote118-foundation-final .neo-alert-count,
+.lote118-foundation-final .neo-notify-btn > span {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #ef3b16;
+  color: #fff;
+  border: 2px solid #fff;
+  font-size: .75rem;
+  font-weight: 950;
+}
+.lote118-foundation-final .neo-store-switch {
+  min-width: 250px;
+  max-width: 360px;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--app-line);
+  background: #fff;
+  box-shadow: var(--app-shadow-soft);
+  text-align: left;
+}
+.lote118-foundation-final .neo-store-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #edf5ff;
+  color: var(--app-primary);
+  font-weight: 950;
+}
+.lote118-foundation-final .neo-store-switch span:nth-child(2) { min-width: 0; }
+.lote118-foundation-final .neo-store-switch small { display: block; color: var(--app-muted); font-size: .72rem; font-weight: 750; }
+.lote118-foundation-final .neo-store-switch strong { display: block; color: var(--app-ink); font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.lote118-foundation-final .neo-page-shell {
+  width: min(100%, var(--slf-page-max));
+  min-width: 0;
+  margin: 0 auto;
+  padding: clamp(16px, 2.4vw, 28px) clamp(16px, 2.6vw, 34px) 42px;
+}
+.lote118-foundation-final .neo-page-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  margin: 0 0 18px;
+}
+.lote118-foundation-final .neo-page-meta-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lote118-foundation-final .neo-page-meta-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: #eaf3ff;
+  color: var(--app-primary);
+}
+.lote118-foundation-final .neo-page-meta h1 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: clamp(1.7rem, 3.2vw, 2.55rem);
+  line-height: 1;
+  letter-spacing: -.055em;
+}
+.lote118-foundation-final .neo-page-meta p { margin: 8px 0 0; max-width: 760px; color: var(--app-muted); line-height: 1.45; }
+.lote118-foundation-final .neo-page-meta-status { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.lote118-foundation-final .neo-mini-chip,
+.lote118-foundation-final .chip,
+.lote118-foundation-final .badge,
+.lote118-foundation-final .status-badge {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+  background: #fff;
+  color: var(--app-muted);
+  font-size: .82rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+.lote118-foundation-final .neo-mini-chip.ok { color: var(--app-success); background: #eefaf3; border-color: #c9edd8; }
+.lote118-foundation-final .neo-mini-chip.warn { color: #925d00; background: #fff8e5; border-color: #f3dda8; }
+
+.lote118-foundation-final .neo-page-content,
+.lote118-foundation-final .classic-page,
+.lote118-foundation-final .neo-dashboard {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.lote118-foundation-final .neo-surface,
+.lote118-foundation-final .classic-panel,
+.lote118-foundation-final .panel,
+.lote118-foundation-final .form-panel,
+.lote118-foundation-final .data-table-shell,
+.lote118-foundation-final .web-card,
+.lote118-foundation-final .reports-hero-panel,
+.lote118-foundation-final .reports-preview-panel,
+.lote118-foundation-final .backup-callout,
+.lote118-foundation-final .backup-tip-card,
+.lote118-foundation-final .backup-external-panel {
+  min-width: 0;
+  border-radius: 18px;
+  border: 1px solid var(--app-line);
+  background: #fff;
+  box-shadow: var(--app-shadow-soft);
+  overflow: hidden;
+}
+.lote118-foundation-final .classic-panel,
+.lote118-foundation-final .panel,
+.lote118-foundation-final .form-panel,
+.lote118-foundation-final .web-card { padding: 16px; }
+.lote118-foundation-final .classic-panel-header,
+.lote118-foundation-final .neo-section-head,
+.lote118-foundation-final .classic-sales-section-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.lote118-foundation-final .classic-panel-header h2,
+.lote118-foundation-final .neo-section-head h2,
+.lote118-foundation-final .classic-sales-section-title h2 { margin: 0; color: var(--app-ink); font-size: 1.06rem; letter-spacing: -.035em; }
+.lote118-foundation-final .classic-panel-header p,
+.lote118-foundation-final .neo-section-head p { margin: 5px 0 0; color: var(--app-muted); line-height: 1.35; }
+
+.lote118-foundation-final .neo-kpi-grid,
+.lote118-foundation-final .dash-kpi-grid,
+.lote118-foundation-final .stats-grid,
+.lote118-foundation-final .reports-grid,
+.lote118-foundation-final .classic-action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 14px;
+}
+.lote118-foundation-final .neo-kpi-card,
+.lote118-foundation-final .dash-kpi-card,
+.lote118-foundation-final .stat-card {
+  min-width: 0;
+  min-height: 132px;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--app-line);
+  background: #fff;
+  box-shadow: var(--app-shadow-soft);
+}
+.lote118-foundation-final .neo-kpi-card > div:first-child { display: contents; }
+.lote118-foundation-final .neo-kpi-icon,
+.lote118-foundation-final .dash-kpi-card .app-icon-stat {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: var(--app-primary);
+}
+.lote118-foundation-final .neo-kpi-card span,
+.lote118-foundation-final .neo-kpi-card strong,
+.lote118-foundation-final .neo-kpi-card small { grid-column: 2; min-width: 0; word-break: normal; overflow-wrap: normal; }
+.lote118-foundation-final .neo-kpi-card span { color: var(--app-muted); font-weight: 750; }
+.lote118-foundation-final .neo-kpi-card strong { color: var(--app-ink); font-size: clamp(1.45rem, 2.8vw, 2.2rem); line-height: 1; white-space: nowrap; letter-spacing: -.055em; }
+.lote118-foundation-final .neo-kpi-card small { color: var(--app-muted); font-weight: 700; }
+
+.lote118-foundation-final input,
+.lote118-foundation-final select,
+.lote118-foundation-final textarea { min-height: 44px; padding: 10px 12px; }
+.lote118-foundation-final label { min-width: 0; }
+.lote118-foundation-final label > span { display: block; margin-bottom: 6px; color: #33465f; font-size: .84rem; font-weight: 850; }
+.lote118-foundation-final form,
+.lote118-foundation-final .classic-sales-add-row,
+.lote118-foundation-final .classic-customer-grid,
+.lote118-foundation-final .classic-sales-middle,
+.lote118-foundation-final .classic-sales-bottom,
+.lote118-foundation-final .classic-payment-options,
+.lote118-foundation-final .classic-sale-summary-grid,
+.lote118-foundation-final .web-module-grid,
+.lote118-foundation-final .web-health-grid {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+.lote118-foundation-final .classic-sales-add-row,
+.lote118-foundation-final .classic-sales-middle,
+.lote118-foundation-final .classic-sales-bottom,
+.lote118-foundation-final .classic-customer-grid,
+.lote118-foundation-final .classic-payment-options { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.lote118-foundation-final .classic-payment-row-option,
+.lote118-foundation-final .classic-sale-summary-grid > div,
+.lote118-foundation-final .classic-sales-guide,
+.lote118-foundation-final .classic-sales-hint {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--app-line);
+  background: #f8fbff;
+}
+
+.lote118-foundation-final .modal-overlay,
+.lote118-foundation-final .dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 31, 57, .48);
+}
+.lote118-foundation-final .modal,
+.lote118-foundation-final .dialog,
+.lote118-foundation-final [role="dialog"] {
+  width: min(96vw, 760px);
+  max-height: min(88dvh, 760px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--app-line);
+  box-shadow: 0 28px 80px rgba(15,31,57,.22);
+}
+
+.lote118-foundation-final .neo-mobile-dock { display: none; }
+.lote118-foundation-final .neo-sidebar-backdrop { display: none; }
+
+@media (max-width: 1120px) {
+  .lote118-foundation-final .neo-layout { grid-template-columns: 240px minmax(0, 1fr); }
+  .lote118-foundation-final .neo-store-switch { min-width: 220px; }
+}
+
+@media (max-width: 860px) {
+  html.lote118-foundation-final body { overflow: hidden; }
+  .lote118-foundation-final .neo-shell { height: 100dvh; }
+  .lote118-foundation-final .neo-layout { display: block; height: 100%; }
+  .lote118-foundation-final .neo-main {
+    height: 100dvh;
+    padding-bottom: 0;
+    scroll-padding-top: 0;
+  }
+  .lote118-foundation-final .neo-topbar {
+    position: relative;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 12px;
+    border-radius: 0 0 22px 22px;
+  }
+  .lote118-foundation-final .neo-topbar-mobile-row {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 10px;
+    min-height: 54px;
+    margin-bottom: 10px;
+  }
+  .lote118-foundation-final .neo-mobile-branding {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .lote118-foundation-final .neo-mobile-brand-logo {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    box-shadow: none;
+  }
+  .lote118-foundation-final .neo-mobile-branding > div { min-width: 0; }
+  .lote118-foundation-final .neo-mobile-branding strong {
+    display: block;
+    max-width: 46vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--app-ink);
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 950;
+  }
+  .lote118-foundation-final .neo-mobile-branding small { display: none; }
+  .lote118-foundation-final .neo-menu-button,
+  .lote118-foundation-final .neo-notify-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    border: 1px solid var(--app-line);
+    background: #fff;
+    color: var(--app-ink);
+    box-shadow: var(--app-shadow-soft);
+  }
+  .lote118-foundation-final .neo-menu-button { display: grid; place-items: center; }
+  .lote118-foundation-final .neo-menu-button span { display: block; width: 20px; height: 2px; border-radius: 999px; background: var(--app-ink); margin: 3px 0; }
+  .lote118-foundation-final .neo-header-grid { width: 100%; display: block; }
+  .lote118-foundation-final .neo-topbar-actions { width: 100%; display: block; }
+  .lote118-foundation-final .neo-topbar-actions > .neo-icon-tool,
+  .lote118-foundation-final .neo-topbar-actions > .neo-bell-tool { display: none; }
+  .lote118-foundation-final .neo-store-switch {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 62px;
+    border-radius: 18px;
+  }
+
+  .lote118-foundation-final .neo-page-shell {
+    width: 100%;
+    padding: 14px 12px var(--slf-mobile-bottom);
+  }
+  .lote118-foundation-final .neo-page-meta {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .lote118-foundation-final .neo-page-meta-icon { display: none; }
+  .lote118-foundation-final .neo-page-meta h1 { font-size: clamp(1.55rem, 7vw, 2rem); line-height: 1.04; }
+  .lote118-foundation-final .neo-page-meta p,
+  .lote118-foundation-final .neo-page-meta-status .neo-mini-chip:nth-child(n+2) { display: none; }
+  .lote118-foundation-final .neo-mini-chip { min-height: 34px; padding: 7px 12px; font-size: .82rem; }
+
+  .lote118-foundation-final .neo-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 110;
+    width: min(86vw, 320px);
+    height: 100dvh;
+    transform: translateX(-105%);
+    transition: transform .22s ease;
+    border-radius: 0 24px 24px 0;
+  }
+  .lote118-foundation-final .neo-sidebar.open { transform: translateX(0); }
+  .lote118-foundation-final .neo-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    background: rgba(13, 24, 38, .46);
+  }
+  .lote118-foundation-final .neo-sidebar-backdrop.open { display: block; }
+
+  .lote118-foundation-final .neo-mobile-dock {
+    position: fixed;
+    z-index: 90;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    min-height: 70px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px;
+    border-radius: 24px;
+    background: rgba(255,255,255,.96);
+    border: 1px solid var(--app-line);
+    box-shadow: 0 18px 54px rgba(16,32,53,.16);
+  }
+  .lote118-foundation-final .neo-mobile-dock button {
+    min-width: 0;
+    min-height: 54px;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: #647184;
+    font-size: .72rem;
+    font-weight: 850;
+  }
+  .lote118-foundation-final .neo-mobile-dock button.active {
+    background: #edf5ff;
+    color: var(--app-primary);
+  }
+
+  .lote118-foundation-final .neo-kpi-grid,
+  .lote118-foundation-final .dash-kpi-grid,
+  .lote118-foundation-final .stats-grid,
+  .lote118-foundation-final .reports-grid,
+  .lote118-foundation-final .classic-action-grid,
+  .lote118-foundation-final .classic-sales-add-row,
+  .lote118-foundation-final .classic-sales-middle,
+  .lote118-foundation-final .classic-sales-bottom,
+  .lote118-foundation-final .classic-customer-grid,
+  .lote118-foundation-final .classic-payment-options,
+  .lote118-foundation-final .classic-sale-summary-grid,
+  .lote118-foundation-final .web-module-grid,
+  .lote118-foundation-final .web-health-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  .lote118-foundation-final .neo-page-dashboard .neo-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lote118-foundation-final .neo-page-dashboard .neo-kpi-card-ticket { grid-column: 1 / -1; }
+  .lote118-foundation-final .neo-kpi-card {
+    min-height: 116px;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+  .lote118-foundation-final .neo-kpi-icon { width: 46px; height: 46px; border-radius: 14px; }
+  .lote118-foundation-final .neo-kpi-card span { font-size: .82rem; }
+  .lote118-foundation-final .neo-kpi-card strong { font-size: clamp(1.22rem, 6vw, 1.58rem); }
+  .lote118-foundation-final .neo-kpi-card small { font-size: .74rem; }
+
+  .lote118-foundation-final .classic-panel,
+  .lote118-foundation-final .panel,
+  .lote118-foundation-final .form-panel,
+  .lote118-foundation-final .web-card { padding: 14px; border-radius: 17px; }
+  .lote118-foundation-final .classic-panel-header,
+  .lote118-foundation-final .neo-section-head,
+  .lote118-foundation-final .classic-sales-section-title { display: grid; gap: 8px; }
+  .lote118-foundation-final .table-wrap,
+  .lote118-foundation-final .responsive-table,
+  .lote118-foundation-final .data-table-shell { border-radius: 16px; }
+  .lote118-foundation-final th,
+  .lote118-foundation-final td { padding: 10px 12px; }
+  .lote118-foundation-final .modal,
+  .lote118-foundation-final .dialog,
+  .lote118-foundation-final [role="dialog"] { width: min(96vw, 680px); max-height: 86dvh; }
+}
+
+@media (max-width: 380px) {
+  .lote118-foundation-final .neo-page-shell { padding-left: 10px; padding-right: 10px; }
+  .lote118-foundation-final .neo-topbar { padding-left: 10px; padding-right: 10px; }
+  .lote118-foundation-final .neo-page-dashboard .neo-kpi-grid { gap: 10px; }
+  .lote118-foundation-final .neo-kpi-card { min-height: 108px; grid-template-columns: 42px minmax(0, 1fr); padding: 10px; }
+  .lote118-foundation-final .neo-kpi-icon { width: 42px; height: 42px; }
+  .lote118-foundation-final .neo-kpi-card strong { font-size: 1.2rem; }
+}

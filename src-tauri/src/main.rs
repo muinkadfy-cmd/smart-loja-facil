@@ -134,6 +134,9 @@ struct SaleSummary {
     total: f64,
     status: String,
     created_at: String,
+    thumbnail_url: Option<String>,
+    first_product_name: Option<String>,
+    item_count: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1053,7 +1056,7 @@ fn split_installments(total: f64, count: i64) -> Vec<f64> {
     let base = total_cents / safe_count;
     let remainder = total_cents % safe_count;
     (0..safe_count)
-        .map(|index| from_cents(base + if index < remainder { 1 } else { 0 }))
+        .map(|index| from_cents(base + if index == safe_count - 1 { remainder } else { 0 }))
         .collect()
 }
 
@@ -1325,8 +1328,34 @@ fn adjust_stock(app: AppHandle, product_id: String, delta: i64, reason: String) 
 }
 
 fn list_sales_inner(connection: &Connection, limit: i64) -> CmdResult<Vec<SaleSummary>> {
-    let mut stmt = connection.prepare("SELECT id,number,customer_name,payment_method,total,status,created_at FROM sales ORDER BY number DESC LIMIT ?1").map_err(|e| e.to_string())?;
-    let rows = stmt.query_map(params![limit], |row| Ok(SaleSummary { id: row.get(0)?, number: row.get(1)?, customer_name: row.get(2)?, payment_method: row.get(3)?, total: row.get(4)?, status: row.get(5)?, created_at: row.get(6)? }))
+    let mut stmt = connection.prepare(
+        "SELECT
+            s.id,
+            s.number,
+            s.customer_name,
+            s.payment_method,
+            s.total,
+            s.status,
+            s.created_at,
+            (SELECT p.image_data FROM sale_items si INNER JOIN products p ON p.id=si.product_id WHERE si.sale_id=s.id AND p.image_data<>'' ORDER BY si.created_at LIMIT 1) AS thumbnail_url,
+            (SELECT si.product_name FROM sale_items si WHERE si.sale_id=s.id ORDER BY si.created_at LIMIT 1) AS first_product_name,
+            (SELECT COUNT(*) FROM sale_items si WHERE si.sale_id=s.id) AS item_count
+         FROM sales s
+         ORDER BY s.number DESC
+         LIMIT ?1"
+    ).map_err(|e| e.to_string())?;
+    let rows = stmt.query_map(params![limit], |row| Ok(SaleSummary {
+        id: row.get(0)?,
+        number: row.get(1)?,
+        customer_name: row.get(2)?,
+        payment_method: row.get(3)?,
+        total: row.get(4)?,
+        status: row.get(5)?,
+        created_at: row.get(6)?,
+        thumbnail_url: row.get(7)?,
+        first_product_name: row.get(8)?,
+        item_count: row.get(9)?,
+    }))
         .map_err(|e| e.to_string())?;
     let result = rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
     Ok(result)
@@ -1344,7 +1373,7 @@ fn create_sale(app: AppHandle, payload: SaleInput) -> CmdResult<SaleSummary> {
     if payload.items.is_empty() { return Err("Venda sem itens".to_string()); }
     let mut connection = conn(&app)?;
     init_schema(&connection)?;
-    if let Some(existing) = connection.query_row("SELECT id,number,customer_name,payment_method,total,status,created_at FROM sales WHERE request_id=?1", params![payload.request_id], |row| Ok(SaleSummary { id: row.get(0)?, number: row.get(1)?, customer_name: row.get(2)?, payment_method: row.get(3)?, total: row.get(4)?, status: row.get(5)?, created_at: row.get(6)? })).optional().map_err(|e| e.to_string())? { return Ok(existing); }
+    if let Some(existing) = connection.query_row("SELECT id,number,customer_name,payment_method,total,status,created_at FROM sales WHERE request_id=?1", params![payload.request_id], |row| Ok(SaleSummary { id: row.get(0)?, number: row.get(1)?, customer_name: row.get(2)?, payment_method: row.get(3)?, total: row.get(4)?, status: row.get(5)?, created_at: row.get(6)?, thumbnail_url: None, first_product_name: None, item_count: None })).optional().map_err(|e| e.to_string())? { return Ok(existing); }
     let tx = connection.transaction().map_err(|e| e.to_string())?;
     let sale_id = new_id("sale");
     let sale_number = next_number(&tx, "sales").map_err(|e| e.to_string())?;
@@ -1829,11 +1858,20 @@ fn receive_installment_flex(app: AppHandle, payload: ReceiveInput) -> CmdResult<
     let already: Option<String> = tx.query_row("SELECT id FROM payments WHERE request_id=?1", params![payload.request_id], |row| row.get(0)).optional().map_err(|e| e.to_string())?;
     if already.is_some() { return Err("Pagamento duplicado bloqueado pelo request_id".to_string()); }
 
-    let settle_with_redistribution = payload.settle_with_redistribution.unwrap_or(false);
     let amount_to_receive = payload.amount.max(0.0);
-    if amount_to_receive <= 0.0 { return Err("Valor inválido para recebimento".to_string()); }
+    if amount_to_receive <= 0.0 { return Err("Informe um valor maior que R$ 0,00.".to_string()); }
+    let method = clean(Some(payload.method.clone())).to_lowercase();
+    if method != "dinheiro" && method != "pix" && method != "cartao" && method != "outro" {
+        return Err("Escolha como o cliente pagou: dinheiro, PIX, cartão ou outro.".to_string());
+    }
+    let redistribute = payload.settle_with_redistribution.unwrap_or(false);
 
     let now = now_iso();
+    let (sale_id, customer_name, _credit_total, _credit_balance_before): (Option<String>, String, f64, f64) = tx.query_row(
+        "SELECT sale_id,customer_name,total,balance FROM credits WHERE id=?1",
+        params![payload.credit_id.clone()],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+    ).map_err(|_| "Crediário não encontrado.".to_string())?;
     let mut stmt = tx.prepare("SELECT id,number,amount,paid_amount,due_date,paid_at,status,payment_method FROM credit_installments WHERE credit_id=?1 ORDER BY number").map_err(|e| e.to_string())?;
     let mut installments = stmt.query_map(params![payload.credit_id.clone()], |row| Ok(CreditInstallment {
         id: row.get(0)?,
@@ -1848,77 +1886,68 @@ fn receive_installment_flex(app: AppHandle, payload: ReceiveInput) -> CmdResult<
     drop(stmt);
 
     let selected_index = installments.iter().position(|item| item.id == payload.installment_id).ok_or_else(|| "Parcela não encontrada".to_string())?;
-    if installments[selected_index].status == "pago" { return Err("Parcela já está paga".to_string()); }
+    if installments[selected_index].status == "pago" { return Err("Essa parcela já está paga. Escolha outra parcela em aberto.".to_string()); }
 
-    let posted_amount = if settle_with_redistribution {
-        let actual_total_paid = installments[selected_index].paid_amount + amount_to_receive;
-        let previous_amount_cents = to_cents(installments[selected_index].amount);
-        let new_amount_cents = to_cents(actual_total_paid);
-        let delta_cents = previous_amount_cents - new_amount_cents;
+    let selected_open_before = (installments[selected_index].amount - installments[selected_index].paid_amount).max(0.0);
+    let credit_open_before: f64 = installments
+        .iter()
+        .filter(|item| item.status != "pago" && item.status != "cancelada")
+        .map(|item| (item.amount - item.paid_amount).max(0.0))
+        .sum();
+    if amount_to_receive > credit_open_before + 0.009 {
+        return Err("Esse valor parece maior que o saldo em aberto. Confira antes de receber.".to_string());
+    }
+    if amount_to_receive > selected_open_before + 0.009 && !redistribute {
+        return Err("Esse valor parece maior que a parcela. Para abater próximas parcelas, marque a opção de redistribuir antes de confirmar.".to_string());
+    }
 
-        if delta_cents != 0 {
-            let next_indices: Vec<usize> = installments
-                .iter()
-                .enumerate()
-                .filter_map(|(index, item)| (index > selected_index && item.status != "pago").then_some(index))
-                .collect();
-            if next_indices.is_empty() {
-                return Err("Não há próxima parcela aberta para redistribuir a diferença".to_string());
-            }
+    let selected_number = installments[selected_index].number;
+    let mut remaining_to_apply = amount_to_receive;
+    let mut affected_details: Vec<String> = Vec::new();
+    for item in installments.iter_mut().filter(|item| item.number >= selected_number && item.status != "pago" && item.status != "cancelada") {
+        if remaining_to_apply <= 0.009 { break; }
+        let installment_open = (item.amount - item.paid_amount).max(0.0);
+        if installment_open <= 0.0 { continue; }
+        let applied = remaining_to_apply.min(installment_open);
+        let before_paid = item.paid_amount;
+        let new_paid = item.paid_amount + applied;
+        let new_status = if new_paid + 0.009 >= item.amount { "pago" } else { "parcial" };
+        tx.execute(
+            "UPDATE credit_installments SET paid_amount=?1, status=?2, payment_method=?3, paid_at=CASE WHEN ?2='pago' THEN ?4 ELSE paid_at END, updated_at=?4 WHERE id=?5",
+            params![new_paid, new_status, method, now, item.id]
+        ).map_err(|e| e.to_string())?;
+        item.paid_amount = new_paid;
+        item.status = new_status.to_string();
+        affected_details.push(format!("parcela {}: {:.2} -> {:.2}", item.number, before_paid, new_paid));
+        remaining_to_apply -= applied;
+    }
 
-            if delta_cents > 0 {
-                let next_index = next_indices[0];
-                installments[next_index].amount = from_cents(to_cents(installments[next_index].amount) + delta_cents);
-            } else {
-                let mut extra_cents = -delta_cents;
-                for next_index in next_indices {
-                    let current_amount_cents = to_cents(installments[next_index].amount);
-                    let min_amount_cents = to_cents(installments[next_index].paid_amount);
-                    let reducible = (current_amount_cents - min_amount_cents).max(0);
-                    let reduce_now = reducible.min(extra_cents);
-                    installments[next_index].amount = from_cents(current_amount_cents - reduce_now);
-                    extra_cents -= reduce_now;
-                    if extra_cents == 0 { break; }
-                }
-                if extra_cents > 0 {
-                    return Err("Valor acima do disponível nas próximas parcelas".to_string());
-                }
-            }
-        }
+    if remaining_to_apply > 0.009 {
+        return Err("Esse valor parece maior que o saldo em aberto. Confira antes de receber.".to_string());
+    }
 
-        installments[selected_index].amount = actual_total_paid;
-        installments[selected_index].paid_amount = actual_total_paid;
-        installments[selected_index].status = "pago".to_string();
-        installments[selected_index].paid_at = Some(now.clone());
-        installments[selected_index].payment_method = Some(payload.method.clone());
-
-        for installment in &installments {
-            let status = if installment.paid_amount + 0.009 >= installment.amount { "pago" } else if installment.paid_amount > 0.0 { "parcial" } else { "aberto" };
-            tx.execute(
-                "UPDATE credit_installments SET amount=?1, paid_amount=?2, status=?3, payment_method=?4, paid_at=CASE WHEN ?3='pago' THEN COALESCE(paid_at, ?5) ELSE paid_at END, updated_at=?5 WHERE id=?6",
-                params![installment.amount, installment.paid_amount, status, installment.payment_method, now, installment.id],
-            ).map_err(|e| e.to_string())?;
-        }
-
-        amount_to_receive
-    } else {
-        let amount = installments[selected_index].amount;
-        let paid = installments[selected_index].paid_amount;
-        let to_pay = amount_to_receive.min(amount - paid).max(0.0);
-        if to_pay <= 0.0 { return Err("Valor inválido para recebimento".to_string()); }
-        let new_paid = paid + to_pay;
-        let new_status = if new_paid + 0.009 >= amount { "pago" } else { "parcial" };
-        tx.execute("UPDATE credit_installments SET paid_amount=?1, status=?2, payment_method=?3, paid_at=CASE WHEN ?2='pago' THEN ?4 ELSE paid_at END, updated_at=?4 WHERE id=?5", params![new_paid, new_status, payload.method, now, payload.installment_id]).map_err(|e| e.to_string())?;
-        to_pay
-    };
-
-    let balance: f64 = tx.query_row("SELECT COALESCE(SUM(amount-paid_amount),0) FROM credit_installments WHERE credit_id=?1", params![payload.credit_id], |row| row.get(0)).map_err(|e| e.to_string())?;
+    let balance: f64 = tx.query_row("SELECT COALESCE(SUM(amount-paid_amount),0) FROM credit_installments WHERE credit_id=?1", params![payload.credit_id.clone()], |row| row.get(0)).map_err(|e| e.to_string())?;
     let credit_status = if balance <= 0.009 { "quitado" } else { "aberto" };
-    tx.execute("UPDATE credits SET balance=?1, status=?2, updated_at=?3 WHERE id=?4", params![balance, credit_status, now, payload.credit_id]).map_err(|e| e.to_string())?;
+    tx.execute("UPDATE credits SET balance=?1, status=?2, updated_at=?3 WHERE id=?4", params![balance, credit_status, now, payload.credit_id.clone()]).map_err(|e| e.to_string())?;
     let payment_id = new_id("pay");
-    tx.execute("INSERT INTO payments(id,request_id,credit_id,installment_id,amount,method,status,created_at) VALUES(?1,?2,?3,?4,?5,?6,'confirmado',?7)", params![payment_id, payload.request_id, payload.credit_id, payload.installment_id, posted_amount, payload.method, now]).map_err(|e| e.to_string())?;
-    tx.execute("INSERT INTO cash_movements(id,request_id,payment_id,type,method,amount,reason,created_at) VALUES(?1,?2,?3,'entrada',?4,?5,'Recebimento de crediário',?6)", params![new_id("cash"), format!("cash-{}", payload.request_id), payment_id, payload.method, posted_amount, now]).map_err(|e| e.to_string())?;
-    audit(&tx, "credit", &payload.credit_id, "receive", &format!("Recebimento flexível de parcela: R$ {:.2}", posted_amount)).map_err(|e| e.to_string())?;
+    tx.execute("INSERT INTO payments(id,request_id,credit_id,installment_id,amount,method,status,created_at) VALUES(?1,?2,?3,?4,?5,?6,'confirmado',?7)", params![payment_id, payload.request_id, payload.credit_id, payload.installment_id, amount_to_receive, method, now]).map_err(|e| e.to_string())?;
+    tx.execute("INSERT INTO cash_movements(id,request_id,payment_id,type,method,amount,reason,created_at) VALUES(?1,?2,?3,'entrada',?4,?5,'Recebimento de crediário',?6)", params![new_id("cash"), format!("cash-{}", payload.request_id), payment_id, method, amount_to_receive, now]).map_err(|e| e.to_string())?;
+    if let Some(sale_id_value) = sale_id {
+        let status_after_label = if balance <= 0.009 { "Quitado" } else if amount_to_receive < selected_open_before - 0.009 { "Parcial" } else { "Em aberto" };
+        let receipt_content = format!(
+            "<section><h2>Smart Loja Fácil</h2><p>Comprovante de crediário</p><p>Cliente: {}</p><p>Parcela: {}</p><p>Valor recebido: {}</p><p>Parcela antes em aberto: {}</p><p>Restante do crediário: {}</p><p>Status depois: {}</p><p>Forma: {}</p><p>Data: {}</p><small>Se foi pagamento parcial, o restante continua em aberto. Se houve valor maior que a parcela, foi abatido nas próximas parcelas.</small></section>",
+            customer_name,
+            installments[selected_index].number,
+            format_money_br(amount_to_receive),
+            format_money_br(selected_open_before),
+            format_money_br(balance),
+            status_after_label,
+            method,
+            now
+        );
+        tx.execute("INSERT INTO receipts(id,sale_id,receipt_type,total,content,created_at) VALUES(?1,?2,'80mm',?3,?4,?5)", params![new_id("receipt"), sale_id_value, amount_to_receive, receipt_content, now]).map_err(|e| e.to_string())?;
+    }
+    audit(&tx, "credit", &payload.credit_id, "receive", &format!("Recebimento protegido: recebido {}; antes {}; depois {}; forma {}; parcelas afetadas: {}; histórico anterior preservado.", format_money_br(amount_to_receive), format_money_br(credit_open_before), format_money_br(balance), method, affected_details.join(", "))).map_err(|e| e.to_string())?;
     tx.commit().map_err(|e| e.to_string())?;
     list_credits(app)?.into_iter().find(|row| row.id == payload.credit_id).ok_or_else(|| "Crediário não encontrado".to_string())
 }
@@ -2798,14 +2827,14 @@ mod tests {
     #[test]
     fn split_installments_preserves_total_in_cents() {
         let installments = split_installments(100.0, 3);
-        assert_eq!(installments, vec![33.34, 33.33, 33.33]);
+        assert_eq!(installments, vec![33.33, 33.33, 33.34]);
         assert_eq!(to_cents(installments.iter().sum()), 10_000);
     }
 
     #[test]
     fn split_installments_handles_small_values() {
         let installments = split_installments(10.01, 2);
-        assert_eq!(installments, vec![5.01, 5.0]);
+        assert_eq!(installments, vec![5.0, 5.01]);
         assert_eq!(to_cents(installments.iter().sum()), 1_001);
     }
 

@@ -219,3 +219,57 @@ Este lote não altera a fonte oficial de dados nem as regras de Supabase. A muda
 - topbar mobile refinada para evitar `SMART LOJ...` cortado;
 - cards do Dashboard mobile com textos curtos e sem quebra feia;
 - ícones do manifest regenerados em PNG válido 192/512 e maskable.
+
+## Mega Lote 109 — Atualização e limpeza de cache PWA
+
+- versão lógica `pwa-supabase-v109-pwa-cache-update`;
+- cache `smart-loja-pwa-supabase-v109-pwa-cache-update`;
+- aviso visual quando houver nova versão do PWA disponível;
+- botão **Atualizar agora** para instalar a versão nova;
+- botão **Limpar cache** para forçar o aparelho a buscar arquivos novos;
+- botão **Atualizar tela** dentro da central de alertas;
+- mensagens leigas de cache/atualização sem mexer em dados, Supabase ou vendas.
+
+## Mega Lote 110 — Dashboard Rescue
+
+- versão lógica `pwa-supabase-v110-dashboard-rescue`;
+- cache `smart-loja-pwa-supabase-v110-dashboard-rescue`;
+- correção visual dos cards do Dashboard para evitar corte de valores;
+- correção do status do sistema para não quebrar texto vertical;
+- versão compacta na sidebar;
+- topbar e cards com mais respiro;
+- mantém botão de atualizar/limpar cache do lote anterior.
+
+## Mega Lote 117 — CSS Foundation Clean
+
+- Herança antiga dos CSS de lotes anteriores desativada no `src/main.tsx`.
+- Base atual reduzida para `styles.css`, `master-ui.css` e `lote117-foundation-clean.css`.
+- Versão PWA: `pwa-supabase-v117-css-foundation-clean`.
+- Cache PWA: `smart-loja-pwa-supabase-v117-css-foundation-clean`.
+- Supabase/dados preservados.
+
+## Lote 118 — CSS Foundation Final
+
+- versão lógica `pwa-supabase-v119-icon-login-rescue`;
+- cache `smart-loja-pwa-supabase-v119-icon-login-rescue`;
+- `main.tsx` agora carrega somente `styles.css` + `src/styles/lote118-foundation-final.css`;
+- `master-ui.css` e CSS antigos dos lotes anteriores ficam fora do carregamento principal;
+- script de limpeza controlada: `npm run css:clean-legacy`;
+- objetivo: reduzir conflito visual, rolagem travada, cards espremidos e herança antiga.
+
+
+## Lote 120 — Componentes comerciais sem herança antiga
+
+- versão lógica `pwa-supabase-v120-commercial-components`;
+- cache `smart-loja-pwa-supabase-v120-commercial-components`;
+- mantém CSS antigos desativados;
+- adiciona `src/styles/lote120-commercial-components.css`;
+- restaura visual comercial de Ambiente e conexões, Atalhos rápidos, Status do sistema, chips/badges, cards internos, tabelas, formulários, modais e estados vazios;
+- não altera dados, Supabase, vendas, clientes, produtos, caixa ou crediário.
+
+## Lote 122 — Mobile rebuild phase 1
+
+Nova interface mobile-first isolada em `src/mobile-app`, sem importar CSS antigo de lotes anteriores. O login, Supabase e sincronização foram preservados. A nova navegação inclui Dashboard, Vendas/PDV, Produtos, Clientes, Pedidos, Caixa, Crediário, Relatórios, Comprovantes, Backup, Configurações, Logs/Diagnóstico e Diagnóstico Web.
+
+Versão PWA: `pwa-supabase-v122-mobile-rebuild-phase1`.
+Cache: `smart-loja-pwa-supabase-v122-mobile-rebuild-phase1`.

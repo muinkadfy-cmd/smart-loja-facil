@@ -13,6 +13,7 @@ type CartItem = {
   qty: number;
   unit_price: number;
   stock: number;
+  image_data: string;
 };
 
 type OrderFilter = 'todos' | 'aberto' | 'separado' | 'entregue' | 'cancelado';
@@ -113,7 +114,7 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
         }
         return current.map((item) => item.product_id === product.id ? { ...item, qty: item.qty + 1 } : item);
       }
-      return [...current, { product_id: product.id, name: product.name, qty: 1, unit_price: product.promo_price ?? product.price, stock: product.stock }];
+      return [...current, { product_id: product.id, name: product.name, qty: 1, unit_price: product.promo_price ?? product.price, stock: product.stock, image_data: product.image_data || '' }];
     });
   }
 
@@ -181,7 +182,7 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
         <span className="mapp-panel-icon tone-orange"><InlineIcon name="pedidos" size={24} /></span>
         <div>
           <strong>Pedidos da loja</strong>
-          <p>Crie, separe, entregue ou cancele pedidos direto no celular.</p>
+          <p>Pedido reserva/organiza uma entrega. Venda finalizada já movimenta pagamento, caixa e comprovante.</p>
         </div>
         <button type="button" onClick={() => setShowForm((value) => !value)}>{showForm ? 'Fechar cadastro' : 'Novo pedido'}</button>
       </section>
@@ -221,7 +222,13 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
             <div className="mapp-product-pick-list">
               {filteredProducts.map((product) => (
                 <button key={product.id} type="button" onClick={() => addProduct(product)}>
-                  <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
+                  {product.image_data ? (
+                    <span className="mapp-product-mini-thumb">
+                      <img src={product.image_data} alt={product.name} loading="lazy" />
+                    </span>
+                  ) : (
+                    <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
+                  )}
                   <strong>{product.name}</strong>
                   <small>{product.category || product.internal_code || 'Produto'} · Estoque {formatNumber(product.stock)}</small>
                   <b>{formatCurrency(product.promo_price ?? product.price)}</b>
@@ -230,12 +237,18 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
             </div>
           </section>
           <section className="mapp-panel mapp-pdv-cart mapp-nested-panel">
-            <div className="mapp-section-title"><h2>Itens do pedido</h2>{cart.length ? <button type="button" onClick={() => setCart([])}>Limpar</button> : null}</div>
+            <div className="mapp-section-title"><h2>Itens do pedido</h2>{cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os itens deste pedido?')) setCart([]); }}>Limpar</button> : null}</div>
             {cart.length ? (
               <div className="mapp-cart-list">
                 {cart.map((item) => (
                   <article key={item.product_id} className="mapp-cart-item">
-                    <span><InlineIcon name="pedidos" size={24} /></span>
+                    {item.image_data ? (
+                      <span className="mapp-product-mini-thumb">
+                        <img src={item.image_data} alt={item.name} loading="lazy" />
+                      </span>
+                    ) : (
+                      <span><InlineIcon name="pedidos" size={24} /></span>
+                    )}
                     <div><strong>{item.name}</strong><small>{formatCurrency(item.unit_price)} cada · estoque {formatNumber(item.stock)}</small></div>
                     <div className="mapp-stepper">
                       <button type="button" onClick={() => updateQty(item.product_id, -1)}>-</button>

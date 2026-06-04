@@ -102,19 +102,19 @@ const JAQUE_LOGO_PREMIUM_URL = '/brand/jaque-logo-premium.png';
 
 function buildInstallmentHtml(settings: Settings | null, credit: CreditSummary, installment: CreditInstallment): string {
   const isPaid = installment.status === 'pago';
+  const remaining = Math.max(0, installment.amount - installment.paid_amount);
   const storePhone = settings?.phone || '';
   const storeWhatsapp = settings?.whatsapp || '';
   const contact = credit.customer_whatsapp || credit.customer_phone || '-';
-  const lineValue = installment.status === 'pago' || installment.status === 'parcial'
-    ? installment.paid_amount
-    : installment.amount;
   const blankRows = Array.from({ length: 8 }, () => '<tr class="blank"><td>&nbsp;</td><td></td><td></td><td></td></tr>').join('');
   const notes = installment.status === 'pago'
     ? `Recebida em ${installment.paid_at ? dateTime(installment.paid_at) : 'data local'}.`
-    : `Parcela em aberto com vencimento em ${dateOnly(installment.due_date)}.`;
+    : installment.status === 'parcial'
+      ? `Pagamento parcial registrado. Restante: ${money(remaining)}.`
+      : `Parcela pendente com vencimento em ${dateOnly(installment.due_date)}.`;
   const cleanPhone = storePhone || storeWhatsapp || '(43) 99607-9372';
   const cleanInstagram = storeWhatsapp ? storeWhatsapp.replace(/^@/, '') : 'jaqueconfeccoes';
-  const printedValue = money(lineValue);
+  const printedValue = money(installment.amount);
   const paidStampOverlay = installment.status === 'pago' && installment.paid_at
     ? `<div class="paid-stamp-overlay" aria-label="Parcela paga"><div class="paid-stamp-overlay-title">PAGO</div><div class="paid-stamp-overlay-date">Em, ${dateOnly(installment.paid_at.slice(0, 10))}</div></div>`
     : '';
@@ -553,6 +553,7 @@ function buildInstallmentHtml(settings: Settings | null, credit: CreditSummary, 
           <section class="notes">
             <strong>Anotações:</strong>
             <p>${notes}</p>
+            <p>Valor original: ${money(installment.amount)} · Pago: ${money(installment.paid_amount)} · Restante: ${money(remaining)} · Status: ${installmentStatusLabel(installment)}</p>
             <p>Saldo total do crediário: ${money(credit.balance)}</p>
           </section>
         </div>
@@ -589,7 +590,6 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   const [pdfFolder, setPdfFolder] = useState<string | null>(getPreferredPdfFolder());
   const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState<Exclude<PaymentMethod, 'crediario'>>('dinheiro');
-  const [redistribute, setRedistribute] = useState(true);
 
   useEffect(() => {
     Promise.all([api.credits(), api.settings()])
@@ -613,7 +613,6 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
     setReceiving({ credit, installment });
     setAmount(Math.max(0, installment.amount - installment.paid_amount));
     setMethod('dinheiro');
-    setRedistribute(credit.installments.some((item) => item.number > installment.number && item.status !== 'pago'));
   }
 
   async function submitReceive(event: FormEvent<HTMLFormElement>) {
@@ -629,13 +628,11 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
         installment_id: receiving.installment.id,
         amount,
         method,
-        settle_with_redistribution: redistribute,
+        settle_with_redistribution: false,
       });
       await reload();
       setReceiving(null);
-      setMessage(redistribute
-        ? 'Parcela recebida com redistribuição automática entre as próximas.'
-        : 'Recebimento lançado no crediário.');
+      setMessage('Recebimento lançado no crediário mantendo o valor original da parcela.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -825,14 +822,8 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             <label>Parcela<input value={`#${receiving.installment.number} · vence ${dateOnly(receiving.installment.due_date)}`} readOnly /></label>
             <label>Valor recebido<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(Number(e.target.value))} /></label>
             <label>Forma<select value={method} onChange={(e) => setMethod(e.target.value as Exclude<PaymentMethod, 'crediario'>)}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartão</option></select></label>
-            <label className="span-2 check-row">
-              <input type="checkbox" checked={redistribute} onChange={(e) => setRedistribute(e.target.checked)} />
-              Fechar esta parcela e jogar a diferença para as próximas parcelas
-            </label>
             <div className="notice span-2">
-              {redistribute
-                ? 'Se pagar menos, a diferença soma na próxima parcela. Se pagar mais, reduz as próximas.'
-                : 'Sem redistribuição, o valor fica como parcial nesta própria parcela.'}
+              O valor original continua preservado. Pagamento menor fica parcial e mostra o restante.
             </div>
             <div className="table-actions span-2">
               <button className="primary-btn" disabled={saving}>{saving ? 'Lançando...' : 'Confirmar recebimento'}</button>

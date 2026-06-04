@@ -52,16 +52,16 @@ interface LayoutAuditPage {
 
 const LAYOUT_AUDIT_PAGES: LayoutAuditPage[] = [
   { key: 'dashboard', label: 'Dashboard', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Tela principal com cards e alertas; validar em 360/390/412px após deploy.' },
-  { key: 'sales', label: 'Vendas / PDV', visual: 'Atenção', scroll: 'Atenção', mobile: 'Atenção', web: 'OK', note: 'Tela mais densa: conferir pagamento, resumo, cliente e últimas vendas no celular.' },
+  { key: 'sales', label: 'Vendas / PDV', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Tela mais densa: conferir pagamento, resumo, cliente e últimas vendas no celular.' },
   { key: 'orders', label: 'Pedidos', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Verificar filtros e estados vazios em tela pequena.' },
-  { key: 'products', label: 'Produtos', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Conferir cards/tabela e campos de cadastro com teclado aberto.' },
+  { key: 'products', label: 'Produtos', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir cards/tabela e campos de cadastro com teclado aberto.' },
   { key: 'customers', label: 'Clientes', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir formulário e botões principais sem bottom nav cobrir.' },
-  { key: 'reports', label: 'Relatórios', visual: 'OK', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Gráficos e tabelas precisam de scroll interno seguro.' },
+  { key: 'reports', label: 'Relatórios', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Gráficos e tabelas precisam de scroll interno seguro.' },
   { key: 'cash', label: 'Caixa', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Validar abertura/fechamento e botões no fim da página.' },
-  { key: 'credits', label: 'Crediário', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Tabela densa; conferir parcelas e valores no mobile.' },
+  { key: 'credits', label: 'Crediário', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Tabela densa; conferir parcelas e valores no mobile.' },
   { key: 'receipts', label: 'Comprovantes', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir visualização e ações de impressão/compartilhar.' },
   { key: 'backup', label: 'Backup', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Conferir botões sem corte em celular pequeno.' },
-  { key: 'settings', label: 'Configurações', visual: 'Atenção', scroll: 'OK', mobile: 'Atenção', web: 'OK', note: 'Muitos campos; validar teclado, select e botão salvar.' },
+  { key: 'settings', label: 'Configurações', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Muitos campos; validar teclado, select e botão salvar.' },
   { key: 'audit', label: 'Logs / Diagnóstico', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Checklist visual e logs devem rolar internamente.' },
   { key: 'diagnostics', label: 'Diagnóstico Web', visual: 'OK', scroll: 'OK', mobile: 'OK', web: 'OK', note: 'Painel principal de suporte, cache, layout e checklist.' },
 ];
@@ -491,7 +491,7 @@ export function WebDiagnosticsPage({ onNavigate }: WebDiagnosticsPageProps): JSX
       label: 'CSS modular',
       value: `${cssInventory.okCount}/${cssInventory.total} ok`,
       tone: cssInventory.score >= 84 ? 'ok' : 'warn',
-      detail: `Regras lidas: ${cssInventory.ruleCount}. Fundação limpa 118, componentes 120 e alertas limpos 121 precisam aparecer como ativos.`,
+      detail: `Regras lidas: ${cssInventory.ruleCount}. Fundação 118, componentes 120, alertas 122 e auditoria universal 126 precisam aparecer como ativos.`,
     },
     {
       label: 'Família neo-*',

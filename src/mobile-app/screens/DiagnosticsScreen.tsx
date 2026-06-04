@@ -753,7 +753,7 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
     group: '10. Permissões',
     title: 'Dono, admin, operador e leitor conferidos',
     action: 'Testar cada papel: dono controla, admin opera, operador não mexe em config crítica e leitor não salva.',
-    expected: 'Botões e Supabase bloqueiam o que cada papel não pode fazer.',
+    expected: 'Botões e permissões da nuvem bloqueiam o que cada papel não pode fazer.',
     evidence: 'Lista dos e-mails/papéis testados sem expor senha.',
     priority: 'P0',
   },
@@ -1108,7 +1108,7 @@ const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
   { id: 'demo-sales', title: 'Simular venda sem finalizar', detail: 'Cliente entende o fluxo de PDV usando clientes/produtos demo. Finalizar venda real continua bloqueado.', area: 'Vendas' },
   { id: 'demo-receipts', title: 'Mostrar comprovantes de amostra', detail: 'Comprovantes demo podem ser abertos/impresso como modelo visual sem mexer no caixa.', area: 'Comprovantes' },
-  { id: 'demo-exit', title: 'Sair da demo antes da operação real', detail: 'Antes da primeira venda verdadeira, desative a demo, confira login/Supabase e rode o teste comercial.', area: 'Segurança' },
+  { id: 'demo-exit', title: 'Sair da demo antes da operação real', detail: 'Antes da primeira venda verdadeira, desative a demo, confira login na nuvem e rode o teste comercial.', area: 'Segurança' },
 ];
 
 
@@ -1286,7 +1286,7 @@ const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
   { id: 'term-printing-limits', title: 'Impressão e equipamentos validados', detail: 'Impressora, navegador, celular e formato 58/80/A4 foram combinados sem promessa impossível.', risk: 'P1' },
   { id: 'term-backup-support', title: 'Backup, restauração e suporte combinados', detail: 'Restauração só com cuidado, suporte com canal claro e diagnóstico copiável.', risk: 'P1' },
   { id: 'term-first-day', title: 'Primeiro dia assistido planejado', detail: 'Primeira venda, caixa, crediário, pedido e comprovante serão acompanhados antes de operar sozinho.', risk: 'P2' },
-  { id: 'term-limits-honest', title: 'Limites honestos registrados', detail: 'Cliente entende que venda final depende de teste real, Supabase, permissões, impressão e cache no aparelho.', risk: 'P1' },
+  { id: 'term-limits-honest', title: 'Limites honestos registrados', detail: 'Cliente entende que venda final depende de teste real, nuvem, permissões, impressão e cache no aparelho.', risk: 'P1' },
   { id: 'term-acceptance-copy', title: 'Termo copiado/aceito', detail: 'Texto foi copiado ou aceito pelo responsável sem senha, sem chave privada e sem dados sensíveis.', risk: 'P1' },
 ];
 
@@ -1386,7 +1386,7 @@ const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
     id: 'owner-auto-test-no-danger',
     phase: '2. Dono e teste automático',
     title: 'Dono rodou teste comercial sem alerta vermelho',
-    whatToDo: 'Entrar como dono, tocar em Rodar teste comercial e revisar Segurança, Supabase/RLS, Sincronização e PWA/cache.',
+    whatToDo: 'Entrar como dono, tocar em Rodar teste comercial e revisar segurança, permissões da nuvem, sincronização e atualização do app.',
     expected: 'Sem alerta vermelho. Amarelo só pode ser teste manual ainda pendente.',
     evidence: 'Relatório copiado pelo botão Copiar relatório.',
     critical: true,
@@ -2107,7 +2107,7 @@ function buildCommercialProposalText(params: {
     params.state.nextStep || 'Agendar instalação assistida e teste em dois aparelhos.',
     params.state.notes ? `\nObservações: ${params.state.notes}` : '',
     '',
-    'Aviso honesto: proposta não substitui teste real. Antes de venda final, validar Supabase, dois aparelhos, permissões, impressão e aceite final.',
+    'Aviso honesto: proposta não substitui teste real. Antes de venda final, validar nuvem, dois aparelhos, permissões, impressão e aceite final.',
   ].filter(Boolean).join('\n');
 }
 
@@ -2122,7 +2122,7 @@ function emptyImplementationTermState(): ImplementationTermState {
     paymentSummary: '',
     supportScope: 'Implantação assistida, treinamento inicial, validação em dois aparelhos e revisão do primeiro dia.',
     clientResponsibilities: 'Informar dados corretos da loja, manter internet, testar no celular real, conferir impressão e avisar falhas antes de vender em escala.',
-    limitations: 'Sistema depende de Supabase configurado, internet para sincronizar, cache atualizado no PWA e impressora compatível/configurada no aparelho do cliente.',
+    limitations: 'Sistema depende de nuvem configurada, internet para sincronizar, cache atualizado no app instalado e impressora compatível/configurada no aparelho do cliente.',
     notes: '',
     acceptedBy: '',
     acceptedAt: '',
@@ -2144,7 +2144,7 @@ function normalizeImplementationTermState(value: unknown): ImplementationTermSta
     paymentSummary: typeof source.paymentSummary === 'string' ? source.paymentSummary.slice(0, 220) : '',
     supportScope: typeof source.supportScope === 'string' && source.supportScope.trim() ? source.supportScope.slice(0, 520) : 'Implantação assistida, treinamento inicial, validação em dois aparelhos e revisão do primeiro dia.',
     clientResponsibilities: typeof source.clientResponsibilities === 'string' && source.clientResponsibilities.trim() ? source.clientResponsibilities.slice(0, 620) : 'Informar dados corretos da loja, manter internet, testar no celular real, conferir impressão e avisar falhas antes de vender em escala.',
-    limitations: typeof source.limitations === 'string' && source.limitations.trim() ? source.limitations.slice(0, 620) : 'Sistema depende de Supabase configurado, internet para sincronizar, cache atualizado no PWA e impressora compatível/configurada no aparelho do cliente.',
+    limitations: typeof source.limitations === 'string' && source.limitations.trim() ? source.limitations.slice(0, 620) : 'Sistema depende de nuvem configurada, internet para sincronizar, cache atualizado no app instalado e impressora compatível/configurada no aparelho do cliente.',
     notes: typeof source.notes === 'string' ? source.notes.slice(0, 1400) : '',
     acceptedBy: typeof source.acceptedBy === 'string' ? source.acceptedBy.slice(0, 120) : '',
     acceptedAt: typeof source.acceptedAt === 'string' ? source.acceptedAt : '',
@@ -2385,7 +2385,7 @@ function buildPostSaleSupportText(params: {
     'Chamados / ajustes combinados:',
     ...ticketRows,
     '',
-    'Regra honesta: P0/P1 aberto não deve ficar sem responsável, prazo e evidência. Não prometa correção sem validar aparelho, papel do usuário, internet, cache e Supabase.',
+    'Regra honesta: P0/P1 aberto não deve ficar sem responsável, prazo e evidência. Não prometa correção sem validar aparelho, papel do usuário, internet, cache e nuvem.',
   ].join('\n');
 }
 
@@ -2775,7 +2775,7 @@ function buildExecutiveHealthText(params: {
     'Avisos:',
     ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
     '',
-    'Regra honesta: este painel não substitui teste físico real. Para escalar, valide Supabase produção, dois aparelhos, papéis, impressão, PWA instalado, backup e primeiro cliente acompanhado.',
+    'Regra honesta: este painel não substitui teste físico real. Para escalar, valide nuvem de produção, dois aparelhos, papéis, impressão, app instalado, backup e primeiro cliente acompanhado.',
   ].join('\n');
 }
 
@@ -2948,7 +2948,7 @@ function buildRegressionAuditText(params: {
     'Checklist final:',
     ...rows,
     '',
-    'Regra honesta: esta auditoria não substitui teste físico real. Só marque Passou quando tiver evidência em celular, Supabase produção, papéis, impressão, backup e dois aparelhos.',
+    'Regra honesta: esta auditoria não substitui teste físico real. Só marque Passou quando tiver evidência em celular, nuvem de produção, papéis, impressão, backup e dois aparelhos.',
   ].join('\n');
 }
 
@@ -4095,7 +4095,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     if (!ok) return;
     const next = setWebDemoModeEnabled(false, { note: demoMode.note });
     setDemoMode(next);
-    setFeedback({ tone: 'success', text: 'Ambiente demo desativado. Toque em Puxar dados para carregar a loja real e confirme Supabase antes de vender.' });
+    setFeedback({ tone: 'success', text: 'Ambiente demo desativado. Toque em Puxar dados para carregar a loja real e confirme a nuvem antes de vender.' });
     onRefresh();
   }
 
@@ -4114,7 +4114,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
       'Regra de segurança:',
       '- Demo ativa mostra clientes, produtos, vendas, caixa e comprovantes fictícios.',
       '- Demo ativa bloqueia gravações reais e não altera estoque/caixa/crediário.',
-      '- Para venda verdadeira, desative a demo, confira login/Supabase e rode o teste comercial.',
+      '- Para venda verdadeira, desative a demo, confira login na nuvem e rode o teste comercial.',
     ];
     await navigator.clipboard?.writeText(lines.join('\n')).catch(() => undefined);
     setFeedback({ tone: 'success', text: 'Resumo do ambiente demo copiado sem dados reais, senha ou chave privada.' });
@@ -4721,7 +4721,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={deactivateDemoMode} disabled={!demoActive}>Voltar para loja real</button>
           <button type="button" className="mapp-secondary-button" onClick={() => void copyDemoMode()}>Copiar resumo</button>
         </div>
-        <small className="mapp-final-honesty">Demo ativa não substitui teste real. Antes de vender de verdade, saia da demo, confira login/Supabase, rode o teste comercial e valide dois aparelhos.</small>
+        <small className="mapp-final-honesty">Demo ativa não substitui teste real. Antes de vender de verdade, saia da demo, confira login na nuvem, rode o teste comercial e valide dois aparelhos.</small>
       </section>
 
 
@@ -4848,7 +4848,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={prepareProposalDemo}>Preparar demo da proposta</button>
           <button type="button" className="mapp-secondary-button" onClick={resetCommercialProposal}>Zerar proposta</button>
         </div>
-        <small className="mapp-final-honesty">Proposta é apoio comercial, não contrato automático. Antes de vender como final, valide dois aparelhos, permissões, impressão, Supabase e aceite final.</small>
+        <small className="mapp-final-honesty">Proposta é apoio comercial, não contrato automático. Antes de vender como final, valide dois aparelhos, permissões, impressão, nuvem e aceite final.</small>
       </section>
 
       <section className={`mapp-section-block mapp-term-panel ${termAccepted ? 'is-accepted' : ''}`}>
@@ -4901,7 +4901,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <div>
             <span>{postSaleSummary.criticalOpen ? 'Atenção no suporte' : postSaleSummary.open ? 'Acompanhamento ativo' : 'Suporte organizado'}</span>
             <strong>{postSaleSummary.open} aberto(s) · {postSaleSummary.solved} resolvido(s)</strong>
-            <p>Use esta área depois da implantação para registrar chamados, prioridade, prazo, responsável e evidência do primeiro cliente. Não mexe em venda, caixa, estoque ou Supabase.</p>
+            <p>Use esta área depois da implantação para registrar chamados, prioridade, prazo, responsável e evidência do primeiro cliente. Não mexe em venda, caixa, estoque ou nuvem.</p>
           </div>
           <b className={postSaleSummary.criticalOpen ? 'danger' : postSaleSummary.open ? 'warn' : 'ok'}>{postSaleSummary.percent}%</b>
         </div>
@@ -5063,7 +5063,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={() => void copyExecutiveHealth()}>Copiar painel executivo</button>
           <button type="button" className="mapp-secondary-button" onClick={resetExecutiveHealth}>Zerar painel</button>
         </div>
-        <small className="mapp-final-honesty">Aprovado: {executiveHealthState.approvedAt ? `${executiveHealthState.approvedBy || 'responsável'} em ${formatDateTime(executiveHealthState.approvedAt)}` : 'não aprovado'}. Este painel não substitui teste real em celular, Supabase, impressão, backup e papéis.</small>
+        <small className="mapp-final-honesty">Aprovado: {executiveHealthState.approvedAt ? `${executiveHealthState.approvedBy || 'responsável'} em ${formatDateTime(executiveHealthState.approvedAt)}` : 'não aprovado'}. Este painel não substitui teste real em celular, nuvem, impressão, backup e papéis.</small>
       </section>
 
 
