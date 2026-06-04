@@ -62,7 +62,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
           </div>
 
           {isWeb ? (
-            <WebAuthPanel compact onOpenPanel={action} />
+            <WebAuthPanel compact onOpenPanel={action} onAuthenticated={action} autoContinueWhenSession />
           ) : (
             <form className="web-card web-auth-panel web-auth-panel-compact web-auth-panel-simple master-login-local-card" onSubmit={handleLocalSubmit}>
               <h2>Entrar</h2>

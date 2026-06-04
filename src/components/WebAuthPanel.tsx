@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppIcon } from './AppIcon';
 import { getPublicWebEnv } from '../lib/env';
 import { getSupabaseClient, summarizeSession, type WebSessionSummary } from '../lib/supabaseClient';
@@ -9,9 +9,11 @@ const REMEMBER_EMAIL_KEY = 'smart-loja:web-auth-email';
 interface WebAuthPanelProps {
   compact?: boolean;
   onOpenPanel?: () => void;
+  onAuthenticated?: () => void;
+  autoContinueWhenSession?: boolean;
 }
 
-export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps): JSX.Element {
+export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, autoContinueWhenSession = false }: WebAuthPanelProps): JSX.Element {
   const env = useMemo(() => getPublicWebEnv(), []);
   const [session, setSession] = useState<WebSessionSummary | null>(null);
   const [email, setEmail] = useState(() => window.localStorage.getItem(REMEMBER_EMAIL_KEY) ?? '');
@@ -23,6 +25,13 @@ export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps
   const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<'error' | 'success' | 'info'>('info');
+  const continuedAfterAuthRef = useRef(false);
+
+  const continueAfterAuth = useCallback((delayMs = 0) => {
+    if (!onAuthenticated || continuedAfterAuthRef.current) return;
+    continuedAfterAuthRef.current = true;
+    window.setTimeout(() => onAuthenticated(), delayMs);
+  }, [onAuthenticated]);
 
   useEffect(() => {
     const client = getSupabaseClient();
@@ -33,20 +42,25 @@ export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps
 
     let active = true;
     void client.auth.getSession().then(({ data }) => {
-      if (active) setSession(summarizeSession(data.session));
+      if (!active) return;
+      const currentSession = summarizeSession(data.session);
+      setSession(currentSession);
+      if (currentSession && autoContinueWhenSession) continueAfterAuth(120);
     }).finally(() => {
       if (active) setSessionLoading(false);
     });
 
     const { data } = client.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(summarizeSession(nextSession));
+      const summary = summarizeSession(nextSession);
+      setSession(summary);
+      if (summary && autoContinueWhenSession) continueAfterAuth(120);
     });
 
     return () => {
       active = false;
       data.subscription.unsubscribe();
     };
-  }, []);
+  }, [autoContinueWhenSession, continueAfterAuth]);
 
   useEffect(() => {
     const syncNetwork = () => setNetworkOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -96,9 +110,10 @@ export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps
     else window.localStorage.removeItem(REMEMBER_EMAIL_KEY);
     setPassword('');
     recordWebSyncSnapshot('synced', 'Login', 'Conexão segura. Sessão Supabase ativa neste aparelho.');
-    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
+    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-in' } }));
     setMessageTone('success');
-    setMessage('Login confirmado. Tudo pronto para vender.');
+    setMessage('Login confirmado. Abrindo o painel da loja...');
+    continueAfterAuth(250);
   }
 
   async function signOut(): Promise<void> {
@@ -109,7 +124,8 @@ export function WebAuthPanel({ compact = false, onOpenPanel }: WebAuthPanelProps
     setBusy(false);
     setSession(null);
     recordWebSyncSnapshot('idle', 'Login', 'Sessão encerrada. Entre para sincronizar.');
-    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed'));
+    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-out' } }));
+    continuedAfterAuthRef.current = false;
     setMessageTone('info');
     setMessage('Sessão web encerrada.');
   }

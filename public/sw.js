@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v143-primeiro-cliente-replicavel';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v144-hotfix-login-fluxo-unico';
 const APP_SHELL = [
   '/',
   '/index.html',

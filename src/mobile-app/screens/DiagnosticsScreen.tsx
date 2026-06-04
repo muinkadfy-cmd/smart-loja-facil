@@ -1006,7 +1006,7 @@ const DAY_TWO_FOLLOW_UP_STEPS: DayTwoFollowUpStep[] = [
   },
 ];
 
-const FIRST_CLIENT_CLOSEOUT_KEY = 'smart-loja:first-client-closeout-v143';
+const FIRST_CLIENT_CLOSEOUT_KEY = 'smart-loja:first-client-closeout-v144';
 const LEGACY_FIRST_CLIENT_CLOSEOUT_KEYS = ['smart-loja:first-client-closeout-v143'];
 
 const FIRST_CLIENT_CLOSEOUT_STEPS: FirstClientCloseoutStep[] = [
@@ -3470,7 +3470,7 @@ function buildFirstClientCloseoutText(params: {
     return `[${firstClientCloseoutLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — encerramento do primeiro cliente / pronto para replicar v143',
+    'Smart Loja Fácil — encerramento do primeiro cliente / pronto para replicar v144',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,

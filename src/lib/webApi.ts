@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v143-primeiro-cliente-replicavel';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v143-primeiro-cliente-replicavel';
+export const WEB_APP_VERSION = 'pwa-supabase-v144-hotfix-login-fluxo-unico';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v144-hotfix-login-fluxo-unico';
 
 
 export interface WebTrainingModeState {
@@ -3199,7 +3199,7 @@ function readFirstClientCloseoutProgress(): { passed: number; failed: number; bl
     'closeout-pricing-terms-final',
     'closeout-next-client-checklist',
   ]);
-  const keys = ['smart-loja:first-client-closeout-v143'];
+  const keys = ['smart-loja:first-client-closeout-v144', 'smart-loja:first-client-closeout-v143'];
   if (!canUseBrowserStorage()) return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
   try {
     for (const key of keys) {
@@ -3467,7 +3467,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   const firstClientCloseoutProgress = readFirstClientCloseoutProgress();
   pushCommercialCheck(checks, {
-    id: 'first-client-closeout-v143', area: 'Teste real', title: 'Encerramento do primeiro cliente / pronto para replicar',
+    id: 'first-client-closeout-v144', area: 'Teste real', title: 'Encerramento do primeiro cliente / pronto para replicar',
     detail: firstClientCloseoutProgress.criticalOpen
       ? `${firstClientCloseoutProgress.criticalOpen} item(ns) P0/P1 do encerramento com Falhou/Bloqueado. Não replicar ainda.`
       : firstClientCloseoutProgress.approved
@@ -3476,7 +3476,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
           ? `Encerramento em andamento: ${firstClientCloseoutProgress.passed}/${firstClientCloseoutProgress.total} item(ns) passaram.`
           : 'Encerramento do primeiro cliente ainda não iniciado. Use para transformar a implantação em processo repetível para novos clientes.',
     level: firstClientCloseoutProgress.criticalOpen ? 'danger' : firstClientCloseoutProgress.approved ? 'ok' : 'warn',
-    evidence: `passou=${firstClientCloseoutProgress.passed}; falhou=${firstClientCloseoutProgress.failed}; bloqueado=${firstClientCloseoutProgress.blocked}; pendente=${firstClientCloseoutProgress.pending}; aprovado=${firstClientCloseoutProgress.approved ? 'sim' : 'não'}; chave=smart-loja:first-client-closeout-v143`,
+    evidence: `passou=${firstClientCloseoutProgress.passed}; falhou=${firstClientCloseoutProgress.failed}; bloqueado=${firstClientCloseoutProgress.blocked}; pendente=${firstClientCloseoutProgress.pending}; aprovado=${firstClientCloseoutProgress.approved ? 'sim' : 'não'}; chave=smart-loja:first-client-closeout-v144`,
   });
 
 
@@ -3489,7 +3489,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v143 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v144 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const outRoot = path.join(root, 'release-commercial');
 const packageDir = path.join(outRoot, 'smart-loja-facil-commercial-clean');
-const manifestPath = path.join(outRoot, 'commercial-release-manifest-v143.json');
+const manifestPath = path.join(outRoot, 'commercial-release-manifest-v144.json');
 
 const excludedDirs = new Set(['node_modules', 'dist', 'dist-codex-build', '.git', '.turbo', '.cache', '.wrangler', 'release-commercial']);
 const excludedDirFragments = ['src-tauri/target', 'src-tauri/.cargo-check', 'tools/QaWorkflow/bin', 'tools/QaWorkflow/obj'];
@@ -67,7 +67,7 @@ const riskyCopied = copied.filter((rel) => {
 });
 const manifest = {
   name: 'Smart Loja Fácil - pacote comercial limpo',
-  version: 'v143',
+  version: 'v144',
   generated_at: new Date().toISOString(),
   package_dir: path.relative(root, packageDir).replace(/\\/g, '/'),
   copied_files: copied.length,
@@ -81,12 +81,12 @@ const manifest = {
     'npm run release:check',
     'npm run release:commercial:check',
     'Aplicar migrations Supabase e bucket product-photos',
-    'Testar encerramento do primeiro cliente v143, Dia 1/Dia 2, auditoria final, roteiro guiado, execução real assistida, aceite final e onboarding em dois aparelhos e papéis owner/admin/operator/viewer',
+    'Testar encerramento do primeiro cliente v144, Dia 1/Dia 2, auditoria final, roteiro guiado, execução real assistida, aceite final e onboarding em dois aparelhos e papéis owner/admin/operator/viewer',
   ],
 };
 fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-process.stdout.write('Commercial release package v143 — Smart Loja Fácil\n');
+process.stdout.write('Commercial release package v144 — Smart Loja Fácil\n');
 process.stdout.write(`Pacote limpo gerado em: ${manifest.package_dir}\n`);
 process.stdout.write(`Arquivos copiados: ${copied.length}\n`);
 process.stdout.write(`Itens ignorados: ${skipped.length}\n`);

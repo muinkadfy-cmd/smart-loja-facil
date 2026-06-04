@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v143-primeiro-cliente-replicavel';
-const currentCache = 'smart-loja-pwa-supabase-v143-primeiro-cliente-replicavel';
+const currentVersion = 'pwa-supabase-v144-hotfix-login-fluxo-unico';
+const currentCache = 'smart-loja-pwa-supabase-v144-hotfix-login-fluxo-unico';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v143')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v143.');
+if (!mainSource.includes('smart-mobile-rebuild-v144')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v144.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,10 +82,10 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v143 primeiro cliente replicável.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v143 primeiro cliente replicável.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v144 hotfix login fluxo único.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v144 hotfix login fluxo único.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
-if (!webApiSource.includes('first-client-closeout-v143')) fail('webApi precisa verificar encerramento do primeiro cliente v143.');
+if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const diagnosticsSource = read('src/mobile-app/screens/DiagnosticsScreen.tsx');
 if (!diagnosticsSource.includes('Correção pós-implantação / Dia 2')) fail('Diagnóstico precisa renderizar a seção Correção pós-implantação / Dia 2.');
 
@@ -128,4 +128,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v143 PWA passou. Encerramento do primeiro cliente, Dia 1/Dia 2, auditoria final de regressão, painel executivo de saúde comercial, feedback/NPS, pós-venda, termo de implantação, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');
+console.log('OK: release_check v144 PWA passou. Hotfix de login com entrada automática no painel após sessão Supabase, mantendo encerramento, Dia 1/Dia 2, auditoria final, painel executivo, feedback/NPS, pós-venda, termo, proposta, tour, treinamento, onboarding e Supabase preservados.');
