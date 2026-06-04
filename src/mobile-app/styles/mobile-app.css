@@ -5074,3 +5074,275 @@ img, svg { max-width: 100%; }
     font-size: clamp(1.62rem, 7vw, 2.02rem);
   }
 }
+
+/* Lote 153 — auto ajuste iPhone/Android: viewport dinamico, teclado, safe-area e telas estreitas */
+:root {
+  --mapp-app-height: calc(var(--mapp-vh, 1vh) * 100);
+  --mapp-safe-top: env(safe-area-inset-top, 0px);
+  --mapp-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mapp-bottom-nav-height: 76px;
+  --mapp-mobile-x: clamp(11px, 3.4vw, 16px);
+  --mapp-mobile-radius: clamp(18px, 5vw, 24px);
+}
+
+html.smart-mobile-rebuild-v153,
+html.smart-mobile-rebuild-v153 body,
+html.smart-mobile-rebuild-v153 #root {
+  width: 100%;
+  min-height: var(--mapp-app-height);
+  height: var(--mapp-app-height);
+  overscroll-behavior: none;
+}
+
+html.smart-mobile-rebuild-v153 body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.smart-mobile-rebuild-v153 input,
+html.smart-mobile-rebuild-v153 select,
+html.smart-mobile-rebuild-v153 textarea,
+html.smart-mobile-rebuild-v153 button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.smart-mobile-rebuild-v153 .welcome-screen,
+html.smart-mobile-rebuild-v153 .mapp-root,
+html.smart-mobile-rebuild-v153 .mapp-shell {
+  min-height: var(--mapp-app-height);
+}
+
+html.smart-mobile-rebuild-v153 .welcome-screen {
+  min-height: var(--mapp-app-height);
+  padding-top: max(12px, var(--mapp-safe-top));
+  padding-bottom: max(12px, var(--mapp-safe-bottom));
+}
+
+html.smart-mobile-rebuild-v153 .master-login-centered-shell {
+  min-height: calc(var(--mapp-app-height) - max(24px, var(--mapp-safe-top)) - max(14px, var(--mapp-safe-bottom)));
+}
+
+html.smart-mobile-rebuild-v153 .master-login-form-card {
+  max-height: calc(var(--mapp-app-height) - max(28px, var(--mapp-safe-top)) - max(18px, var(--mapp-safe-bottom)));
+}
+
+html.smart-mobile-rebuild-v153.mapp-keyboard-open .welcome-screen {
+  place-items: start center;
+  align-items: start;
+  padding-top: max(8px, var(--mapp-safe-top));
+}
+
+html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-centered-shell {
+  align-content: start;
+  min-height: auto;
+}
+
+html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
+  max-height: calc(var(--mapp-app-height) - max(14px, var(--mapp-safe-top)) - 10px);
+}
+
+@media (max-width: 860px) {
+  html.smart-mobile-rebuild-v153 .mapp-root,
+  html.smart-mobile-rebuild-v153 .mapp-shell {
+    height: var(--mapp-app-height);
+    min-height: var(--mapp-app-height);
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-mobile-top {
+    min-height: clamp(60px, 8.4vh, 68px);
+    padding-top: max(7px, calc(var(--mapp-safe-top) + 5px));
+    padding-left: var(--mapp-mobile-x);
+    padding-right: var(--mapp-mobile-x);
+    padding-bottom: 8px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page {
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-padding-bottom: calc(var(--mapp-bottom-nav-height) + var(--mapp-safe-bottom) + 24px);
+    padding-left: var(--mapp-mobile-x);
+    padding-right: var(--mapp-mobile-x);
+    padding-bottom: calc(var(--mapp-bottom-nav-height) + var(--mapp-safe-bottom) + 18px);
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav {
+    left: max(10px, var(--mapp-mobile-x));
+    right: max(10px, var(--mapp-mobile-x));
+    bottom: max(8px, var(--mapp-safe-bottom));
+    min-height: var(--mapp-bottom-nav-height);
+    border-radius: var(--mapp-mobile-radius);
+    padding: 7px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav button {
+    min-height: 54px;
+    border-radius: 16px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-header-brand,
+  html.smart-mobile-rebuild-v153 .mapp-store-card > div,
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row > div,
+  html.smart-mobile-rebuild-v153 .mapp-section-title > div,
+  html.smart-mobile-rebuild-v153 .mapp-stat-card div {
+    min-width: 0;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-header-store-name,
+  html.smart-mobile-rebuild-v153 .mapp-store-card strong {
+    max-width: 100%;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row h1,
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row p {
+    max-width: 100%;
+    overflow-wrap: normal;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-stat-grid,
+  html.smart-mobile-rebuild-v153 .mapp-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-alert-card {
+    max-height: calc(var(--mapp-app-height) - var(--mapp-safe-top) - 12px);
+  }
+
+  html.smart-mobile-rebuild-v153.mapp-keyboard-open .mapp-bottom-nav {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(calc(100% + 24px));
+  }
+
+  html.smart-mobile-rebuild-v153.mapp-keyboard-open .mapp-page {
+    padding-bottom: max(18px, var(--mapp-safe-bottom));
+  }
+}
+
+@media (max-width: 390px) {
+  :root { --mapp-bottom-nav-height: 72px; --mapp-mobile-x: 11px; }
+
+  html.smart-mobile-rebuild-v153 .mapp-mobile-top {
+    gap: 6px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-menu-button,
+  html.smart-mobile-rebuild-v153 .mapp-icon-button {
+    width: 42px;
+    height: 42px;
+    border-radius: 15px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-header-brand strong,
+  html.smart-mobile-rebuild-v153 .mapp-header-store-name {
+    font-size: clamp(0.92rem, 4.2vw, 1.08rem);
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row h1 {
+    font-size: clamp(1.48rem, 6.8vw, 1.9rem);
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row p {
+    font-size: 0.84rem;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-online-chip,
+  html.smart-mobile-rebuild-v153 .mapp-warn-chip {
+    min-height: 30px;
+    padding-inline: 10px;
+    font-size: 0.76rem;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-stat-card,
+  html.smart-mobile-rebuild-v153 .mapp-action-tile {
+    border-radius: 18px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav button {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 340px) {
+  html.smart-mobile-rebuild-v153 .mapp-header-actions {
+    gap: 5px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-menu-button,
+  html.smart-mobile-rebuild-v153 .mapp-icon-button {
+    width: 39px;
+    height: 39px;
+    border-radius: 14px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-online-chip,
+  html.smart-mobile-rebuild-v153 .mapp-warn-chip {
+    justify-self: start;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav button span {
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 860px) and (max-height: 700px) {
+  html.smart-mobile-rebuild-v153 .mapp-mobile-top {
+    min-height: 58px;
+    padding-bottom: 6px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-store-card {
+    min-height: 56px;
+    margin-bottom: 12px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-page-title-row {
+    margin-bottom: 12px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-dashboard-screen {
+    gap: 14px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-stat-card {
+    min-height: 90px;
+  }
+}
+
+@media (max-width: 860px) and (orientation: landscape) and (max-height: 520px) {
+  :root { --mapp-bottom-nav-height: 58px; }
+
+  html.smart-mobile-rebuild-v153 .mapp-mobile-top {
+    min-height: 52px;
+    padding-top: max(5px, var(--mapp-safe-top));
+    padding-bottom: 5px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-store-card {
+    display: none;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav button {
+    min-height: 42px;
+  }
+
+  html.smart-mobile-rebuild-v153 .mapp-bottom-nav button span {
+    display: none;
+  }
+}
