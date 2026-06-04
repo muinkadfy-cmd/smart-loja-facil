@@ -21,12 +21,12 @@ export interface ProductionCheckSummary {
   percent: number;
 }
 
-const CHECKLIST_KEY = 'smart-loja:production-checklist-v138';
+const CHECKLIST_KEY = 'smart-loja:production-checklist-v139';
 const LEGACY_CHECKLIST_KEYS: string[] = ['smart-loja:production-checklist-v137', 'smart-loja:production-checklist-v136', 'smart-loja:production-checklist-v134', 'smart-loja:production-checklist-v130', 'smart-loja:production-checklist-v128', 'smart-loja:production-checklist-v127', 'smart-loja:production-checklist-v126'];
 
 export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   {
-    id: 'commercial-tour-v138',
+    id: 'commercial-tour-v139',
     group: 'Apresentação comercial',
     title: 'Tour comercial guiado concluído na demo',
     detail: 'Ativar ambiente demo, seguir o roteiro de apresentação comercial no Diagnóstico Web e copiar o tour antes de apresentar ao cliente.',
@@ -34,7 +34,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'mobile',
   },
   {
-    id: 'commercial-proposal-v138',
+    id: 'commercial-proposal-v139',
     group: 'Fechamento comercial',
     title: 'Proposta comercial com plano, benefício e próximo passo',
     detail: 'No Diagnóstico Web, escolher plano, preencher preço/implantação, explicar benefícios, combinar próximo passo e copiar a proposta para o cliente.',
@@ -42,7 +42,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'mobile',
   },
   {
-    id: 'implementation-term-v138',
+    id: 'implementation-term-v139',
     group: 'Fechamento comercial',
     title: 'Termo de implantação e aceite do cliente copiado',
     detail: 'No Diagnóstico Web, preencher cliente, responsável, escopo, suporte, responsabilidades, limites honestos e registrar aceite do termo.',
@@ -50,7 +50,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'security',
   },
   {
-    id: 'post-sale-support-v138',
+    id: 'post-sale-support-v139',
     group: 'Pós-venda comercial',
     title: 'Suporte e SLA do primeiro cliente combinados',
     detail: 'No Diagnóstico Web, preencher canal de suporte, responsável, revisão do primeiro dia, SLA e registrar chamados P0/P1/P2 com prazo e evidência.',
@@ -59,7 +59,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   },
 
   {
-    id: 'client-feedback-nps-v138',
+    id: 'client-feedback-nps-v139',
     group: 'Pós-venda comercial',
     title: 'Feedback do cliente, NPS e melhorias priorizadas',
     detail: 'Depois do primeiro dia, coletar nota NPS, satisfação, dor principal, sugestão, próximo contato e transformar melhorias em P0/P1/P2 com prazo e evidência.',
@@ -67,7 +67,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'mobile',
   },
   {
-    id: 'final-commercial-acceptance-v138',
+    id: 'final-commercial-acceptance-v139',
     group: 'Fechamento comercial',
     title: 'Aceite final de venda registrado',
     detail: 'No Diagnóstico Web, conferir que não há P0/P1, preencher responsável, loja/cliente, observação e registrar aceite final.',
@@ -75,23 +75,23 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'security',
   },
   {
-    id: 'guided-two-devices-v138',
-    group: 'Validação guiada v138',
+    id: 'guided-two-devices-v139',
+    group: 'Validação guiada v139',
     title: 'Roteiro guiado multiaparelho concluído',
     detail: 'Abrir Diagnóstico Web no celular, marcar os 11 passos do roteiro guiado e copiar a evidência final.',
     expected: 'Dono, admin, operador e leitor testados em pelo menos dois aparelhos, com relatório copiado e sem alerta vermelho no teste comercial.',
     tone: 'supabase',
   },
   {
-    id: 'assisted-real-execution-v138',
-    group: 'Execução real assistida v138',
+    id: 'assisted-real-execution-v139',
+    group: 'Execução real assistida v139',
     title: 'Execução real marcada com Passou/Falhou/Bloqueado',
     detail: 'Preencher responsável, aparelho 1, aparelho 2, registrar falhas e marcar os 12 passos da execução assistida no Diagnóstico Web.',
     expected: 'Nenhum passo crítico com Falhou/Bloqueado; evidência assistida copiada junto dos prints antes de liberar cliente.',
     tone: 'supabase',
   },
   {
-    id: 'post-test-issues-v138',
+    id: 'post-test-issues-v139',
     group: 'Ajustes aceite',
     title: 'Falhas reais viraram lista de correção',
     detail: 'Toda falha anotada na execução assistida precisa ter print, aparelho, papel do usuário e prioridade P0/P1/P2.',
@@ -99,7 +99,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'security',
   },
   {
-    id: 'role-permission-real-v138',
+    id: 'role-permission-real-v139',
     group: 'Permissões por papel',
     title: 'Owner/admin/operator/viewer validados na prática',
     detail: 'Entrar com cada papel e conferir ações liberadas e bloqueadas no app e pela nuvem.',
@@ -107,23 +107,23 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     tone: 'security',
   },
   {
-    id: 'pwa-cache-v138-installed',
+    id: 'pwa-cache-v139-installed',
     group: 'PWA e cache',
-    title: 'Celular instalado recebeu v138',
-    detail: 'Depois do deploy, abrir o PWA instalado, conferir v138 no Diagnóstico Web e limpar cache antigo se necessário.',
-    expected: 'Versão pwa-supabase-v138-feedback-cliente-nps e cache smart-loja-pwa-supabase-v138-feedback-cliente-nps visíveis no celular.',
+    title: 'Celular instalado recebeu v139',
+    detail: 'Depois do deploy, abrir o PWA instalado, conferir v139 no Diagnóstico Web e limpar cache antigo se necessário.',
+    expected: 'Versão pwa-supabase-v139-painel-executivo-saude e cache smart-loja-pwa-supabase-v139-painel-executivo-saude visíveis no celular.',
     tone: 'cache',
   },
   {
-    id: 'commercial-clean-package-v138',
+    id: 'commercial-clean-package-v139',
     group: 'Release comercial',
     title: 'Pacote comercial limpo sem banco de teste',
-    detail: 'Rodar release:commercial:check e release:commercial:prepare antes de enviar para cliente depois da atualização v138.',
+    detail: 'Rodar release:commercial:check e release:commercial:prepare antes de enviar para cliente depois da atualização v139.',
     expected: 'Nenhum .sqlite3/.db/.env real, log, ZIP antigo ou build gerado no pacote final; manifest de release gerado e conferido.',
     tone: 'security',
   },
   {
-    id: 'supabase-real-multi-device-v138',
+    id: 'supabase-real-multi-device-v139',
     group: 'Supabase produção',
     title: 'Supabase real validado em dois aparelhos',
     detail: 'Testar owner/admin/operator/viewer, duas lojas, produto com foto, cliente, venda, caixa, crediário e atualização automática em PC e celular.',
@@ -132,11 +132,11 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
   },
 
   {
-    id: 'css-consolidation-v138',
+    id: 'css-consolidation-v139',
     group: 'Release técnico',
     title: 'CSS legado consolidado sem quebra visual',
     detail: 'Rodar css_audit, conferir Dashboard, PDV, Produtos, Clientes, Caixa, Crediário, Relatórios, Backup e Configurações depois do Lote 124.',
-    expected: 'Sem master-ui ativo, CSS limpo v138 no diagnóstico e telas críticas preservadas.',
+    expected: 'Sem master-ui ativo, CSS limpo v139 no diagnóstico e telas críticas preservadas.',
     tone: 'mobile',
   },
   {
@@ -297,7 +297,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v138-feedback-cliente-nps, cache v138, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v139-painel-executivo-saude, cache v139, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
@@ -337,7 +337,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'Família neo-* limpa validada sem corte',
     detail: 'Abrir Dashboard, Produtos, Vendas e Crediário e conferir shell, topbar, sidebar, action ribbon e dock mobile.',
-    expected: 'Diagnóstico mostra shell mobile v138, abas operacionais, alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
+    expected: 'Diagnóstico mostra shell mobile v139, abas operacionais, alertas limpos ativos, sem corte lateral e com toque confortável no menu/dock.',
     tone: 'mobile',
   },
   {
@@ -345,7 +345,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'CSS e telas',
     title: 'CSS modular e checklist visual por tela validados',
     detail: 'Abrir o Diagnóstico Web depois do deploy e conferir o bloco Inventário CSS + Checklist visual por módulo.',
-    expected: 'Fundação mobile, componentes comerciais, alertas limpos e abas P1, roteiro e execução assistida v138 ativos; telas críticas marcadas só depois de conferência real.',
+    expected: 'Fundação mobile, componentes comerciais, alertas limpos e abas P1, roteiro e execução assistida v139 ativos; telas críticas marcadas só depois de conferência real.',
     tone: 'mobile',
   },
 ];

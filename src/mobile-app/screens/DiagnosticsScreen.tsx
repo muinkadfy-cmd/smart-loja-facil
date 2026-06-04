@@ -56,8 +56,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v138';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v137', 'smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v139';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v138', 'smart-loja:guided-commercial-test-v137', 'smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -155,7 +155,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v138 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v139 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -434,6 +434,43 @@ interface ClientImprovementDraft {
   due: string;
 }
 
+
+type ExecutiveHealthDecision = 'blocked' | 'attention' | 'ready';
+
+type ExecutiveHealthTone = 'danger' | 'warn' | 'ok';
+
+interface ExecutiveHealthState {
+  sponsor: string;
+  clientName: string;
+  scaleGoal: string;
+  nextReview: string;
+  notes: string;
+  approvedBy: string;
+  approvedAt: string;
+  updatedAt: string;
+}
+
+interface ExecutiveHealthArea {
+  id: string;
+  title: string;
+  score: number;
+  tone: ExecutiveHealthTone;
+  status: string;
+  evidence: string;
+  risk: string;
+}
+
+interface ExecutiveHealthSummary {
+  score: number;
+  stars: string;
+  decision: ExecutiveHealthDecision;
+  title: string;
+  subtitle: string;
+  blockers: string[];
+  warnings: string[];
+  areas: ExecutiveHealthArea[];
+}
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
@@ -443,8 +480,8 @@ const DEMO_MODE_STEPS: DemoModeStep[] = [
 ];
 
 
-const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v138';
-const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v137', 'smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
+const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v139';
+const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v138', 'smart-loja:commercial-tour-v137', 'smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
 
 const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
   {
@@ -554,8 +591,8 @@ const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
 ];
 
 
-const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v138';
-const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v137', 'smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
+const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v139';
+const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v138', 'smart-loja:commercial-proposal-v137', 'smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
 
 const COMMERCIAL_PROPOSAL_PLANS: CommercialProposalPlan[] = [
   {
@@ -607,8 +644,8 @@ const COMMERCIAL_PROPOSAL_CHECKLIST = [
 ];
 
 
-const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v138';
-const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v137', 'smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
+const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v139';
+const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v138', 'smart-loja:implementation-term-v137', 'smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
 
 const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
   { id: 'term-proposal-approved', title: 'Proposta e plano conferidos', detail: 'Cliente sabe plano, mensalidade, implantação, validade e próximo passo combinado.', risk: 'P1' },
@@ -622,8 +659,8 @@ const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
 ];
 
 
-const POST_SALE_SUPPORT_KEY = 'smart-loja:post-sale-support-v138';
-const LEGACY_POST_SALE_SUPPORT_KEYS = ['smart-loja:post-sale-support-v137', 'smart-loja:post-sale-support-v136'];
+const POST_SALE_SUPPORT_KEY = 'smart-loja:post-sale-support-v139';
+const LEGACY_POST_SALE_SUPPORT_KEYS = ['smart-loja:post-sale-support-v138', 'smart-loja:post-sale-support-v137', 'smart-loja:post-sale-support-v136'];
 
 const POST_SALE_SUPPORT_ITEMS: PostSaleSupportItem[] = [
   { id: 'support-channel', title: 'Canal de suporte combinado', detail: 'Registrar WhatsApp, horário, responsável e como o cliente deve enviar print/diagnóstico.', expected: 'Cliente sabe onde pedir ajuda e não manda senha ou chave privada.', priority: 'P1' },
@@ -642,8 +679,12 @@ const POST_SALE_STATUS_LABEL: Record<PostSaleTicketStatus, string> = {
 };
 
 
-const CLIENT_FEEDBACK_KEY = 'smart-loja:client-feedback-nps-v138';
-const LEGACY_CLIENT_FEEDBACK_KEYS = ['smart-loja:client-feedback-nps-v137'];
+const CLIENT_FEEDBACK_KEY = 'smart-loja:client-feedback-nps-v139';
+const LEGACY_CLIENT_FEEDBACK_KEYS = ['smart-loja:client-feedback-nps-v138', 'smart-loja:client-feedback-nps-v137'];
+
+
+const EXECUTIVE_HEALTH_KEY = 'smart-loja:executive-health-v139';
+const LEGACY_EXECUTIVE_HEALTH_KEYS = ['smart-loja:executive-health-v138'];
 
 const CLIENT_FEEDBACK_ITEMS: ClientFeedbackItem[] = [
   { id: 'feedback-client-identified', title: 'Cliente e responsável identificados', detail: 'Registrar loja, contato e pessoa que deu a opinião depois do primeiro uso.', expected: 'Feedback não fica anônimo ou solto.', priority: 'P2' },
@@ -678,18 +719,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v138';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v137', 'smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v139';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v138', 'smart-loja:final-commercial-acceptance-v137', 'smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v138';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v137', 'smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v139';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v138', 'smart-loja:assisted-commercial-run-v137', 'smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v138';
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v139';
 const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v137', 'smart-loja:first-client-onboarding-v136', 'smart-loja:first-client-onboarding-v135', 'smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v138 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v139 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -701,12 +742,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v138-real',
+    id: 'deploy-cache-v139-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v138',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v138.',
+    title: 'Deploy aplicado e PWA abriu v139',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v139.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v138.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v139.',
     critical: true,
   },
   {
@@ -831,7 +872,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' || id === 'deploy-cache-v137-real' ? 'deploy-cache-v138-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' || id === 'deploy-cache-v137-real' ? 'deploy-cache-v139-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -1112,7 +1153,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v138',
+    'Smart Loja Fácil — fechamento comercial / aceite final v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -1206,7 +1247,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v138',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -1299,7 +1340,7 @@ function buildCommercialTourText(params: {
     `Prova: ${step.proof}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — tour de apresentação comercial v138',
+    'Smart Loja Fácil — tour de apresentação comercial v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
     `Cliente/público: ${params.state.audience || 'não informado'}`,
@@ -1402,7 +1443,7 @@ function buildCommercialProposalText(params: {
   const done = new Set(params.state.doneIds);
   const rows = COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} ${item.label} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — proposta comercial / planos e benefícios v138',
+    'Smart Loja Fácil — proposta comercial / planos e benefícios v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
     `Plano sugerido: ${params.plan.name} (${params.plan.tag})`,
@@ -1524,7 +1565,7 @@ function buildImplementationTermText(params: {
   const done = new Set(params.state.doneIds);
   const rows = IMPLEMENTATION_TERM_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.risk}] ${item.title} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — termo simples de implantação e aceite v138',
+    'Smart Loja Fácil — termo simples de implantação e aceite v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável do cliente: ${params.state.responsibleName || 'não informado'}`,
@@ -1691,7 +1732,7 @@ function buildPostSaleSupportText(params: {
     ].filter(Boolean).join(' · '))
     : ['Nenhum chamado registrado ainda. Registre qualquer falha ou ajuste combinado no primeiro cliente.'];
   return [
-    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v138',
+    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável suporte: ${params.state.supportOwner || params.term.responsibleName || 'não informado'}`,
@@ -1868,7 +1909,7 @@ function buildClientFeedbackText(params: {
     ].filter(Boolean).join(' · '))
     : ['Nenhuma melhoria registrada ainda. Depois do primeiro dia, transforme dor real em ação P0/P1/P2.'];
   return [
-    'Smart Loja Fácil — feedback do cliente / NPS e melhorias prioritárias v138',
+    'Smart Loja Fácil — feedback do cliente / NPS e melhorias prioritárias v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.postSale.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || params.postSale.supportOwner || 'não informado'}`,
@@ -1897,6 +1938,215 @@ function buildClientFeedbackText(params: {
   ].join('\n');
 }
 
+
+function emptyExecutiveHealthState(): ExecutiveHealthState {
+  return {
+    sponsor: '',
+    clientName: '',
+    scaleGoal: 'Liberar primeiro cliente assistido e decidir se pode escalar para mais lojas.',
+    nextReview: '',
+    notes: '',
+    approvedBy: '',
+    approvedAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeExecutiveHealthState(value: unknown): ExecutiveHealthState {
+  const source = value && typeof value === 'object' ? value as Partial<ExecutiveHealthState> : {};
+  return {
+    sponsor: typeof source.sponsor === 'string' ? source.sponsor.slice(0, 140) : '',
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 160) : '',
+    scaleGoal: typeof source.scaleGoal === 'string' && source.scaleGoal.trim() ? source.scaleGoal.slice(0, 520) : 'Liberar primeiro cliente assistido e decidir se pode escalar para mais lojas.',
+    nextReview: typeof source.nextReview === 'string' ? source.nextReview.slice(0, 120) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 900) : '',
+    approvedBy: typeof source.approvedBy === 'string' ? source.approvedBy.slice(0, 140) : '',
+    approvedAt: typeof source.approvedAt === 'string' ? source.approvedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readExecutiveHealthState(): ExecutiveHealthState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyExecutiveHealthState();
+  try {
+    const current = normalizeExecutiveHealthState(JSON.parse(window.localStorage.getItem(EXECUTIVE_HEALTH_KEY) || '{}'));
+    if (current.sponsor || current.clientName || current.notes || current.approvedAt || current.updatedAt) return current;
+    for (const key of LEGACY_EXECUTIVE_HEALTH_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeExecutiveHealthState(JSON.parse(raw));
+      if (legacy.sponsor || legacy.clientName || legacy.notes || legacy.approvedAt || legacy.updatedAt) {
+        window.localStorage.setItem(EXECUTIVE_HEALTH_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyExecutiveHealthState();
+  }
+  return emptyExecutiveHealthState();
+}
+
+function saveExecutiveHealthState(state: ExecutiveHealthState): ExecutiveHealthState {
+  const normalized = normalizeExecutiveHealthState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(EXECUTIVE_HEALTH_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function clampExecutiveScore(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function executiveStars(score: number): string {
+  if (score >= 96) return '★★★★★';
+  if (score >= 86) return '★★★★½';
+  if (score >= 76) return '★★★★☆';
+  if (score >= 66) return '★★★½☆';
+  if (score >= 50) return '★★★☆☆';
+  return '★★☆☆☆';
+}
+
+function buildExecutiveHealthSummary(params: {
+  report: WebCommercialValidationReport | null;
+  finalGate: FinalSellGate;
+  triage: ReturnType<typeof summarizeTriage>;
+  assisted: ReturnType<typeof summarizeAssistedState>;
+  guidedDone: number;
+  guidedTotal: number;
+  tourPercent: number;
+  proposalPercent: number;
+  termPercent: number;
+  termAccepted: boolean;
+  onboardingPercent: number;
+  postSale: ReturnType<typeof summarizePostSaleSupport>;
+  feedback: ReturnType<typeof summarizeClientFeedback>;
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+  acceptance: FinalAcceptanceState;
+  executive: ExecutiveHealthState;
+}): ExecutiveHealthSummary {
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
+  const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
+
+  addBlocker(params.triage.p0 > 0, `${params.triage.p0} item(ns) P0 aberto(s) na correção pós-teste.`);
+  addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda bloqueado.');
+  addBlocker(params.assisted.failed > 0 || params.assisted.blocked > 0, 'Execução real assistida tem Falhou/Bloqueado.');
+  addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) ainda não enviada(s).`);
+  addBlocker(!params.online, 'Este aparelho está offline agora.');
+  addBlocker(params.roleState.role === 'sem login', 'Usuário sem login neste aparelho.');
+  addBlocker(params.roleState.role === 'viewer', 'Leitor não deve liberar escala comercial.');
+
+  addWarning(!params.report, 'Teste comercial automático ainda não foi rodado neste aparelho.');
+  addWarning(Boolean(params.report && params.report.score < 9), 'Teste comercial automático abaixo de 9/10.');
+  addWarning(params.guidedDone < params.guidedTotal, 'Roteiro guiado multiaparelho incompleto.');
+  addWarning(params.tourPercent < 100, 'Tour comercial ainda não foi apresentado por completo.');
+  addWarning(params.proposalPercent < 100, 'Proposta comercial ainda não está totalmente preenchida.');
+  addWarning(params.termPercent < 100 || !params.termAccepted, 'Termo de implantação incompleto ou sem aceite.');
+  addWarning(params.onboardingPercent < 100, 'Kit do primeiro cliente incompleto.');
+  addWarning(params.postSale.criticalOpen > 0, 'Pós-venda tem chamado P0/P1 aberto.');
+  addWarning(params.feedback.openP0P1 > 0, 'Feedback/NPS tem melhoria P0/P1 aberta.');
+  addWarning(params.feedback.npsLabel === 'Detrator' || params.feedback.npsLabel === 'Sem nota', 'NPS baixo ou ainda sem nota do cliente.');
+  addWarning(!params.acceptance.acceptedAt, 'Aceite final de venda ainda não foi registrado.');
+  addWarning(!params.executive.sponsor.trim(), 'Responsável executivo pela escala ainda não informado.');
+
+  const areas: ExecutiveHealthArea[] = [
+    {
+      id: 'technical-validation',
+      title: 'Validação técnica',
+      score: clampExecutiveScore(((params.report?.score ?? 0) * 10 + (params.finalGate.score * 10)) / 2),
+      tone: params.finalGate.decision === 'blocked' || params.triage.p0 ? 'danger' : params.report && params.report.score >= 9 ? 'ok' : 'warn',
+      status: params.report ? `${params.report.score}/10 no teste comercial · fechamento ${params.finalGate.score}/10` : 'Teste comercial pendente',
+      evidence: params.acceptance.acceptedAt ? `Aceite final em ${formatDateTime(params.acceptance.acceptedAt)}` : 'Aceite final pendente',
+      risk: params.finalGate.decision === 'blocked' ? 'Não liberar venda/escala com bloqueio.' : 'Manter evidência em dois aparelhos.',
+    },
+    {
+      id: 'real-execution',
+      title: 'Execução real e multiaparelho',
+      score: clampExecutiveScore(((params.guidedDone / Math.max(1, params.guidedTotal)) * 50) + ((params.assisted.passed / Math.max(1, params.assisted.total)) * 50)),
+      tone: params.assisted.failed || params.assisted.blocked || params.guidedDone < params.guidedTotal ? 'danger' : 'ok',
+      status: `Roteiro ${params.guidedDone}/${params.guidedTotal} · execução passou=${params.assisted.passed}, falhou=${params.assisted.failed}, bloqueado=${params.assisted.blocked}`,
+      evidence: 'Precisa de aparelho 1 + aparelho 2, owner/admin/operator/viewer e impressão real.',
+      risk: 'Falha aqui vira P0/P1 antes de cliente operar sozinho.',
+    },
+    {
+      id: 'commercial-closing',
+      title: 'Fechamento comercial',
+      score: clampExecutiveScore((params.tourPercent + params.proposalPercent + params.termPercent + (params.termAccepted ? 100 : 0)) / 4),
+      tone: params.proposalPercent === 100 && params.termPercent === 100 && params.termAccepted ? 'ok' : 'warn',
+      status: `Tour ${params.tourPercent}% · proposta ${params.proposalPercent}% · termo ${params.termPercent}% ${params.termAccepted ? 'aceito' : 'sem aceite'}`,
+      evidence: 'Proposta, termo e aceite devem ficar copiados junto do cliente.',
+      risk: 'Sem proposta/termo, o combinado pode ficar confuso.',
+    },
+    {
+      id: 'customer-success',
+      title: 'Cliente e pós-venda',
+      score: clampExecutiveScore((params.onboardingPercent + params.postSale.percent + params.feedback.percent + (params.feedback.npsLabel === 'Promotor' ? 100 : params.feedback.npsLabel === 'Neutro' ? 75 : params.feedback.npsLabel === 'Detrator' ? 35 : 45)) / 4),
+      tone: params.postSale.criticalOpen || params.feedback.openP0P1 || params.feedback.npsLabel === 'Detrator' ? 'danger' : params.onboardingPercent >= 90 && params.feedback.npsLabel === 'Promotor' ? 'ok' : 'warn',
+      status: `Onboarding ${params.onboardingPercent}% · pós-venda ${params.postSale.percent}% · NPS ${params.feedback.npsLabel}`,
+      evidence: `Chamados críticos abertos=${params.postSale.criticalOpen}; melhorias P0/P1 abertas=${params.feedback.openP0P1}`,
+      risk: 'Sem pós-venda e NPS, escalar pode repetir falhas em novos clientes.',
+    },
+  ];
+
+  const scorePenalty = blockers.length ? 18 : warnings.length ? 6 : 0;
+  const score = clampExecutiveScore((areas.reduce((sum, area) => sum + area.score, 0) / areas.length) - scorePenalty);
+  const decision: ExecutiveHealthDecision = blockers.length ? 'blocked' : warnings.length ? 'attention' : 'ready';
+  const title = decision === 'blocked' ? 'Não escalar ainda' : decision === 'attention' ? 'Escalar só com acompanhamento' : 'Pronto para escalar com controle';
+  const subtitle = decision === 'blocked'
+    ? 'Existe bloqueio crítico ou operacional. Corrija antes de vender para mais clientes.'
+    : decision === 'attention'
+      ? 'Pode seguir com venda assistida, mas ainda há pontos para acompanhar de perto.'
+      : 'Sem bloqueio crítico neste aparelho. Mantenha evidência real e suporte próximo.';
+  return { score, stars: executiveStars(score), decision, title, subtitle, blockers, warnings, areas };
+}
+
+function buildExecutiveHealthText(params: {
+  state: ExecutiveHealthState;
+  summary: ExecutiveHealthSummary;
+  proposal: CommercialProposalState;
+  term: ImplementationTermState;
+  postSale: PostSaleSupportState;
+  feedback: ClientFeedbackState;
+  report: WebCommercialValidationReport | null;
+  roleState: RoleState;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const areaRows = params.summary.areas.map((area) => `[${area.tone.toUpperCase()}] ${area.title}: ${area.score}/100 — ${area.status} | Evidência: ${area.evidence} | Risco: ${area.risk}`);
+  return [
+    'Smart Loja Fácil — painel executivo de saúde comercial v139',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.summary.title}`,
+    `Nota executiva: ${params.summary.score}/100 ${params.summary.stars}`,
+    `Cliente/loja: ${params.state.clientName || params.feedback.clientName || params.postSale.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
+    `Responsável executivo: ${params.state.sponsor || 'não informado'}`,
+    `Objetivo de escala: ${params.state.scaleGoal}`,
+    `Próxima revisão: ${params.state.nextReview || 'não agendada'}`,
+    `Aprovado por: ${params.state.approvedBy || 'não aprovado'}${params.state.approvedAt ? ` em ${formatDateTime(params.state.approvedAt)}` : ''}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    params.state.notes ? `Observações: ${params.state.notes}` : 'Observações: nenhuma',
+    '',
+    'Áreas executivas:',
+    ...areaRows,
+    '',
+    'Bloqueios:',
+    ...(params.summary.blockers.length ? params.summary.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio crítico registrado neste aparelho.']),
+    '',
+    'Avisos:',
+    ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
+    '',
+    'Regra honesta: este painel não substitui teste físico real. Para escalar, valide Supabase produção, dois aparelhos, papéis, impressão, PWA instalado, backup e primeiro cliente acompanhado.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -1917,7 +2167,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v138',
+    'Smart Loja Fácil — plano de correção aceite v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -1955,7 +2205,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v138',
+    'Smart Loja Fácil — execução real assistida v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -2029,7 +2279,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v138',
+    'Smart Loja Fácil — roteiro guiado comercial v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -2082,7 +2332,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v138',
+    'Smart Loja Fácil — modo treinamento seguro v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -2109,7 +2359,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v138',
+    'Smart Loja Fácil — teste comercial v139',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -2149,6 +2399,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [ticketDraft, setTicketDraft] = useState<PostSaleTicketDraft>(() => emptyTicketDraft());
   const [clientFeedbackState, setClientFeedbackState] = useState<ClientFeedbackState>(() => readClientFeedbackState());
   const [clientImprovementDraft, setClientImprovementDraft] = useState<ClientImprovementDraft>(() => emptyClientImprovementDraft());
+  const [executiveHealthState, setExecutiveHealthState] = useState<ExecutiveHealthState>(() => readExecutiveHealthState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -2259,6 +2510,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const postSaleSummary = useMemo(() => summarizePostSaleSupport(postSaleState), [postSaleState]);
   const clientFeedbackDoneSet = useMemo(() => new Set(clientFeedbackState.doneIds), [clientFeedbackState.doneIds]);
   const clientFeedbackSummary = useMemo(() => summarizeClientFeedback(clientFeedbackState), [clientFeedbackState]);
+  const executiveHealthSummary = useMemo(() => buildExecutiveHealthSummary({ report, finalGate, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState, acceptance: finalAcceptance, executive: executiveHealthState }), [report, finalGate, triageSummary, assistedSummary, guidedDoneCount, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSaleSummary, clientFeedbackSummary, outbox, online, roleState, finalAcceptance, executiveHealthState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -2481,7 +2733,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — tour comercial guiado v138',
+      'Smart Loja Fácil — tour comercial guiado v139',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
@@ -2769,6 +3021,38 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Feedback/NPS copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+
+  function patchExecutiveHealth(patch: Partial<ExecutiveHealthState>): void {
+    setExecutiveHealthState((current) => saveExecutiveHealthState({ ...current, ...patch }));
+  }
+
+  function approveExecutiveHealth(): void {
+    if (executiveHealthSummary.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Não é seguro aprovar escala com bloqueio aberto. Corrija P0/P1, pendências, execução real ou login antes.' });
+      return;
+    }
+    if (!executiveHealthState.sponsor.trim()) {
+      setFeedback({ tone: 'error', text: 'Informe o responsável executivo antes de aprovar escala.' });
+      return;
+    }
+    const now = new Date().toISOString();
+    setExecutiveHealthState((current) => saveExecutiveHealthState({ ...current, approvedAt: now, approvedBy: current.sponsor.trim() }));
+    setFeedback({ tone: executiveHealthSummary.decision === 'ready' ? 'success' : 'info', text: executiveHealthSummary.decision === 'ready' ? 'Saúde comercial aprovada para escalar com controle e evidência.' : 'Aprovado apenas com acompanhamento. Revise os avisos antes de vender para mais clientes.' });
+  }
+
+  function resetExecutiveHealth(): void {
+    const ok = window.confirm('Zerar painel executivo deste aparelho? Isso não apaga proposta, termo, pós-venda, feedback, venda, caixa, estoque ou dados reais.');
+    if (!ok) return;
+    setExecutiveHealthState(saveExecutiveHealthState(emptyExecutiveHealthState()));
+    setFeedback({ tone: 'info', text: 'Painel executivo zerado neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyExecutiveHealth(): Promise<void> {
+    const text = buildExecutiveHealthText({ state: executiveHealthState, summary: executiveHealthSummary, proposal: proposalState, term: termState, postSale: postSaleState, feedback: clientFeedbackState, report, roleState, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Painel executivo copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -2786,6 +3070,8 @@ ${buildImplementationTermText({ state: termState, proposal: proposalState, plan:
 ${buildPostSaleSupportText({ state: postSaleState, summary: postSaleSummary, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
 
 ${buildClientFeedbackText({ state: clientFeedbackState, summary: clientFeedbackSummary, postSale: postSaleState, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
+
+${buildExecutiveHealthText({ state: executiveHealthState, summary: executiveHealthSummary, proposal: proposalState, term: termState, postSale: postSaleState, feedback: clientFeedbackState, report, roleState, online, snapshot })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -2807,6 +3093,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Termo implantação: ${termDoneCount}/${IMPLEMENTATION_TERM_ITEMS.length} (${termPercent}%)${termAccepted ? ' aceito' : ''}`,
           `Pós-venda/SLA: ${postSaleSummary.solved}/${postSaleSummary.total} chamados resolvidos; críticos abertos=${postSaleSummary.criticalOpen}`,
           `Feedback/NPS: ${clientFeedbackState.npsScore}/10 (${clientFeedbackSummary.npsLabel}); melhorias abertas=${clientFeedbackSummary.open}; P0/P1 abertas=${clientFeedbackSummary.openP0P1}`,
+          `Saúde executiva: ${executiveHealthSummary.score}/100 ${executiveHealthSummary.title}; bloqueios=${executiveHealthSummary.blockers.length}; avisos=${executiveHealthSummary.warnings.length}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -3161,6 +3448,46 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <small className="mapp-final-honesty">NPS baixo ou melhoria P0/P1 aberta não bloqueia navegar, mas deve virar próximo lote antes de prometer estabilidade total ao cliente.</small>
       </section>
 
+
+      <section className={`mapp-section-block mapp-executive-health-panel tone-${executiveHealthSummary.decision}`}>
+        <div className="mapp-section-title"><h2>Painel executivo / pronto para escalar</h2><button type="button" onClick={() => void copyExecutiveHealth()}>Copiar painel</button></div>
+        <div className="mapp-executive-hero">
+          <div>
+            <span>{executiveHealthSummary.title}</span>
+            <strong>{executiveHealthSummary.score}/100 · {executiveHealthSummary.stars}</strong>
+            <p>{executiveHealthSummary.subtitle}</p>
+          </div>
+          <b className={executiveHealthSummary.decision}>{executiveHealthSummary.decision === 'blocked' ? 'NÃO ESCALAR' : executiveHealthSummary.decision === 'attention' ? 'ASSISTIDO' : 'ESCALAR'}</b>
+        </div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={executiveHealthState.clientName} onChange={(event) => patchExecutiveHealth({ clientName: event.target.value })} placeholder={clientFeedbackState.clientName || postSaleState.clientName || termState.clientName || proposalState.clientName || roleState.storeName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Responsável executivo<input value={executiveHealthState.sponsor} onChange={(event) => patchExecutiveHealth({ sponsor: event.target.value })} placeholder="Ex.: dono / implantador / suporte" /></label>
+          <label>Próxima revisão<input value={executiveHealthState.nextReview} onChange={(event) => patchExecutiveHealth({ nextReview: event.target.value })} placeholder="Ex.: amanhã 18h / 7 dias / após primeiro fechamento" /></label>
+          <label>Objetivo de escala<textarea value={executiveHealthState.scaleGoal} onChange={(event) => patchExecutiveHealth({ scaleGoal: event.target.value })} rows={2} /></label>
+          <label>Observações executivas<textarea value={executiveHealthState.notes} onChange={(event) => patchExecutiveHealth({ notes: event.target.value })} placeholder="Anote decisão, riscos aceitos, aparelhos testados, impressora, cliente piloto e próximos clientes." rows={3} /></label>
+        </div>
+        <div className="mapp-executive-area-grid">
+          {executiveHealthSummary.areas.map((area) => (
+            <article key={area.id} className={`mapp-executive-area tone-${area.tone}`}>
+              <header><span>{area.score}</span><strong>{area.title}</strong></header>
+              <p>{area.status}</p>
+              <small><b>Evidência:</b> {area.evidence}</small>
+              <small><b>Risco:</b> {area.risk}</small>
+            </article>
+          ))}
+        </div>
+        {executiveHealthSummary.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios para escalar</strong>{executiveHealthSummary.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : <div className="mapp-final-alert-list"><strong>Sem bloqueio crítico neste aparelho</strong><p>Mesmo assim, mantenha teste físico real e suporte próximo antes de vender para muitos clientes.</p></div>}
+        {executiveHealthSummary.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos antes de escalar</strong>{executiveHealthSummary.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={approveExecutiveHealth} disabled={executiveHealthSummary.decision === 'blocked'}>Aprovar escala controlada</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyExecutiveHealth()}>Copiar painel executivo</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetExecutiveHealth}>Zerar painel</button>
+        </div>
+        <small className="mapp-final-honesty">Aprovado: {executiveHealthState.approvedAt ? `${executiveHealthState.approvedBy || 'responsável'} em ${formatDateTime(executiveHealthState.approvedAt)}` : 'não aprovado'}. Este painel não substitui teste real em celular, Supabase, impressão, backup e papéis.</small>
+      </section>
+
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
         <div className="mapp-section-title"><h2>Modo treinamento seguro</h2><button type="button" onClick={() => void copyTrainingMode()}>Copiar orientação</button></div>
         <div className="mapp-training-hero">
@@ -3457,7 +3784,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v138 suporte</strong></span>
+          <span><b>Cache</b><strong>v139 suporte</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -3505,7 +3832,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use feedback/NPS v138, proposta comercial, execução real assistida e Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use feedback/NPS v139, proposta comercial, execução real assistida e Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

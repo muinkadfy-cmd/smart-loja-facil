@@ -3954,3 +3954,144 @@ img, svg { max-width: 100%; }
     width: 100%;
   }
 }
+
+.mapp-executive-health-panel {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
+  color: #f8fafc;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+}
+
+.mapp-executive-health-panel.tone-blocked {
+  background: linear-gradient(145deg, rgba(127, 29, 29, 0.96), rgba(30, 41, 59, 0.94));
+}
+
+.mapp-executive-health-panel.tone-attention {
+  background: linear-gradient(145deg, rgba(120, 53, 15, 0.96), rgba(30, 41, 59, 0.94));
+}
+
+.mapp-executive-health-panel .mapp-section-title h2,
+.mapp-executive-health-panel .mapp-section-title button,
+.mapp-executive-health-panel .mapp-final-honesty {
+  color: #f8fafc;
+}
+
+.mapp-executive-health-panel .mapp-final-release-grid label {
+  color: rgba(248, 250, 252, 0.84);
+}
+
+.mapp-executive-health-panel input,
+.mapp-executive-health-panel textarea {
+  background: rgba(255, 255, 255, 0.94);
+  color: #0f172a;
+}
+
+.mapp-executive-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.mapp-executive-hero span {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mapp-executive-hero strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.45rem;
+  color: #fff;
+}
+
+.mapp-executive-hero p {
+  margin: 6px 0 0;
+  line-height: 1.35;
+  color: rgba(248, 250, 252, 0.84);
+}
+
+.mapp-executive-hero b {
+  min-width: 88px;
+  min-height: 56px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.72rem;
+  line-height: 1.12;
+}
+
+.mapp-executive-hero b.ready { color: #86efac; }
+.mapp-executive-hero b.attention { color: #fde68a; }
+.mapp-executive-hero b.blocked { color: #fecaca; }
+
+.mapp-executive-area-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.mapp-executive-area {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.mapp-executive-area.tone-danger { border-color: rgba(239, 68, 68, 0.42); }
+.mapp-executive-area.tone-warn { border-color: rgba(245, 158, 11, 0.42); }
+.mapp-executive-area.tone-ok { border-color: rgba(34, 197, 94, 0.42); }
+
+.mapp-executive-area header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px;
+  align-items: center;
+}
+
+.mapp-executive-area header span {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 165, 233, 0.12);
+  font-weight: 900;
+}
+
+.mapp-executive-area p,
+.mapp-executive-area small {
+  margin: 0;
+  color: #475569;
+  line-height: 1.35;
+}
+
+@media (max-width: 520px) {
+  .mapp-executive-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-executive-hero b {
+    width: 100%;
+  }
+}

@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v138",
-  "short_name": "Smart Loja v138",
-  "description": "Smart Loja Fácil PWA mobile-first v138 com feedback do cliente, NPS, melhorias prioritárias, pós-venda/SLA, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
+  "name": "Smart Loja Fácil PWA v139",
+  "short_name": "Smart Loja v139",
+  "description": "Smart Loja Fácil PWA mobile-first v139 com painel executivo de saúde comercial, feedback/NPS, pós-venda/SLA, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

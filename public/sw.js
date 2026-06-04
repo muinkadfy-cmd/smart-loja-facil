@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v138-feedback-cliente-nps';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v139-painel-executivo-saude';
 const APP_SHELL = [
   '/',
   '/index.html',
