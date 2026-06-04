@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.144",
+  "version": "0.1.145",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil PWA mobile-first v144 com hotfix de login em fluxo único, sem voltar a pedir entrada depois do painel, mantendo Dia 1/Dia 2, auditoria final, painel executivo, proposta, termo, pós-venda, feedback/NPS e validação mobile",
+  "description": "Smart Loja Fácil PWA mobile-first v145 com sub-abas inteligentes, menu agrupado e micro ajustes mobile, mantendo Dia 1/Dia 2, auditoria final, painel executivo, proposta, termo, pós-venda, feedback/NPS e validação mobile",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

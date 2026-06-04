@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { AppStatus, PageKey, Settings } from '../../types';
-import { getMobileRoute, MOBILE_ROUTES } from '../mobileAppRoutes';
+import { getMobileRoute, getMobileRouteGroup, getMobileRoutesByGroup, MOBILE_ROUTE_GROUPS } from '../mobileAppRoutes';
 import { InlineIcon } from '../components/InlineIcon';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -63,7 +63,8 @@ export function MobileShell({
     setMenuOpen(false);
   }, [activePage]);
 
-  const sideRoutes = useMemo(() => MOBILE_ROUTES, []);
+  const activeGroup = useMemo(() => getMobileRouteGroup(activePage), [activePage]);
+  const relatedRoutes = useMemo(() => getMobileRoutesByGroup(activeGroup), [activeGroup]);
 
   return (
     <div className="mapp-root">
@@ -77,11 +78,19 @@ export function MobileShell({
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu">×</button>
         </div>
         <div className="mapp-side-list">
-          {sideRoutes.map((item) => (
-            <button key={item.key} type="button" className={item.key === activePage ? 'active' : ''} onClick={() => { setMenuOpen(false); onNavigate(item.key); }}>
-              <span><InlineIcon name={item.icon} size={24} /></span>
-              <strong>{item.label}</strong>
-            </button>
+          {MOBILE_ROUTE_GROUPS.map((group) => (
+            <section key={group.id} className="mapp-side-group" aria-label={group.label}>
+              <div className="mapp-side-group-title">
+                <strong>{group.label}</strong>
+                <small>{group.helper}</small>
+              </div>
+              {getMobileRoutesByGroup(group).map((item) => (
+                <button key={item.key} type="button" className={item.key === activePage ? 'active' : ''} onClick={() => { setMenuOpen(false); onNavigate(item.key); }}>
+                  <span><InlineIcon name={item.icon} size={24} /></span>
+                  <strong>{item.label}</strong>
+                </button>
+              ))}
+            </section>
           ))}
         </div>
         <div className="mapp-side-footer">
@@ -155,6 +164,27 @@ export function MobileShell({
             </div>
             <span className={online ? 'mapp-online-chip' : 'mapp-warn-chip'}>{online ? 'Online' : 'Offline'}</span>
           </header>
+
+          <nav className="mapp-context-subnav" aria-label={`Sub-abas de ${activeGroup.label}`}>
+            <div className="mapp-context-subnav-head">
+              <strong>{activeGroup.label}</strong>
+              <span>{activeGroup.helper}</span>
+            </div>
+            <div className="mapp-context-subnav-track">
+              {relatedRoutes.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={item.key === activePage ? 'active' : ''}
+                  onClick={() => onNavigate(item.key)}
+                  aria-current={item.key === activePage ? 'page' : undefined}
+                >
+                  <InlineIcon name={item.icon} size={24} />
+                  <span>{item.shortLabel}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
 
           {children}
         </main>

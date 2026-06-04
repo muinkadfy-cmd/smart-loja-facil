@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v144",
-  "short_name": "Smart Loja v144",
-  "description": "Smart Loja Fácil PWA mobile-first v144 com hotfix de login em fluxo único, sem voltar a pedir entrada depois do painel, mantendo Dia 1/Dia 2, auditoria final, painel executivo, feedback/NPS, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
+  "name": "Smart Loja Fácil PWA v145",
+  "short_name": "Smart Loja v145",
+  "description": "Smart Loja Fácil PWA mobile-first v145 com sub-abas inteligentes, menu agrupado e micro ajustes mobile, mantendo Dia 1/Dia 2, auditoria final, painel executivo, feedback/NPS, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

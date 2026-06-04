@@ -209,6 +209,77 @@ img, svg { max-width: 100%; }
 .mapp-online-chip { background: #ecfbf2; border: 1px solid #bdeccf; color: #137d48; }
 .mapp-warn-chip { background: #fff8eb; border: 1px solid #f3d49c; color: #9d5a00; }
 
+
+.mapp-context-subnav {
+  display: grid;
+  gap: 10px;
+  margin: -8px auto 22px;
+  border: 1px solid rgba(204, 218, 236, 0.92);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 12px;
+  box-shadow: 0 12px 34px rgba(22, 45, 78, 0.08);
+  backdrop-filter: blur(14px);
+}
+.mapp-context-subnav-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+.mapp-context-subnav-head strong {
+  color: #17345d;
+  font-size: 0.83rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mapp-context-subnav-head span {
+  min-width: 0;
+  color: var(--mapp-muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+  text-align: right;
+}
+.mapp-context-subnav-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding: 1px 2px 3px;
+  scrollbar-width: none;
+}
+.mapp-context-subnav-track::-webkit-scrollbar { display: none; }
+.mapp-context-subnav-track button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #dbe6f5;
+  border-radius: 999px;
+  background: #fff;
+  color: #30435e;
+  padding: 0 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(22, 45, 78, 0.06);
+  scroll-snap-align: start;
+}
+.mapp-context-subnav-track button svg,
+.mapp-context-subnav-track button img,
+.mapp-context-subnav-track button .app-svg-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+.mapp-context-subnav-track button.active {
+  background: #0e63f4;
+  border-color: #0e63f4;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(14, 99, 244, 0.22);
+}
+
 .mapp-screen { display: grid; gap: 22px; }
 .mapp-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .mapp-mini-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
@@ -895,6 +966,12 @@ img, svg { max-width: 100%; }
 .mapp-sidebar-head small { display: inline-flex; margin-top: 5px; padding: 4px 9px; border-radius: 999px; background: rgba(38, 214, 124, 0.12); color: #60e99d; font-weight: 900; }
 .mapp-sidebar-head button { width: 34px; height: 34px; border: 0; border-radius: 10px; background: rgba(255,255,255,0.1); color: #fff; font-size: 1.3rem; }
 .mapp-side-list { min-height: 0; overflow-y: auto; display: grid; gap: 8px; padding-right: 3px; }
+
+.mapp-side-group { display: grid; gap: 7px; padding: 4px 0 8px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.mapp-side-group:last-child { border-bottom: 0; }
+.mapp-side-group-title { display: grid; gap: 2px; padding: 3px 10px 2px; }
+.mapp-side-group-title strong { color: #ffffff; font-size: 0.78rem; font-weight: 950; letter-spacing: 0.09em; text-transform: uppercase; }
+.mapp-side-group-title small { color: #9fb1c7; font-size: 0.72rem; font-weight: 700; line-height: 1.25; }
 .mapp-side-list button { min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; border: 0; border-radius: 16px; padding: 8px 10px; background: transparent; color: #dce8f8; text-align: left; }
 .mapp-side-list button span { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; background: rgba(255,255,255,0.08); color: #71a7ff; }
 .mapp-side-list button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -961,6 +1038,31 @@ img, svg { max-width: 100%; }
   .mapp-page-title-row h1 { font-size: clamp(2rem, 9vw, 2.72rem); letter-spacing: -0.055em; }
   .mapp-page-title-row p { font-size: 0.98rem; margin-top: 6px; }
   .mapp-online-chip, .mapp-warn-chip { min-height: 36px; padding: 0 13px; font-size: 0.9rem; }
+
+  .mapp-context-subnav {
+    margin: -4px 0 18px;
+    border-radius: 21px;
+    padding: 10px;
+  }
+  .mapp-context-subnav-head {
+    display: grid;
+    gap: 2px;
+    padding: 0 3px;
+  }
+  .mapp-context-subnav-head span {
+    text-align: left;
+    font-size: 0.78rem;
+    line-height: 1.25;
+  }
+  .mapp-context-subnav-track {
+    gap: 7px;
+    padding-bottom: 2px;
+  }
+  .mapp-context-subnav-track button {
+    min-height: 42px;
+    padding: 0 11px;
+    font-size: 0.86rem;
+  }
   .mapp-inline-status { padding: 13px 15px; border-radius: 20px; margin-bottom: 16px; font-size: 0.98rem; }
   .mapp-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .mapp-stat-card { min-height: 116px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 13px; border-radius: 22px; gap: 9px; }
