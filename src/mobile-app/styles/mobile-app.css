@@ -6700,3 +6700,405 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-credit-note-actions, .mapp-installment-actions-slim { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .mapp-credit-note-actions button, .mapp-installment-actions-slim button { min-height: 42px; padding-inline: 8px; }
 @media (max-width: 420px) { .mapp-credit-customer-card { padding: 10px; border-radius: 20px; } .mapp-credit-customer-head { grid-template-columns: 42px minmax(0, 1fr); } .mapp-credit-customer-avatar { width: 42px; height: 42px; border-radius: 15px; } .mapp-credit-customer-head em { grid-column: 1 / -1; justify-self: start; } .mapp-credit-customer-totals { grid-template-columns: 1fr; } .mapp-credit-note-actions, .mapp-installment-actions-slim { grid-template-columns: 1fr; } }
+
+/* Lote 163 — Comprovantes 10/10 mobile: sem corte lateral, status claro e comprovante legível */
+.mapp-receipts-screen {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  gap: 14px;
+}
+
+.mapp-receipts-screen,
+.mapp-receipts-screen * {
+  min-width: 0;
+}
+
+.mapp-receipts-screen .mapp-mini-stat-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mapp-receipts-screen .mapp-mini-stat-grid > :nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.mapp-receipts-screen .mapp-success-card {
+  border-radius: 22px;
+  padding: 14px 16px;
+  line-height: 1.34;
+}
+
+.mapp-receipts-screen .mapp-success-card strong,
+.mapp-receipts-screen .mapp-success-card span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.mapp-receipts-filter-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.07);
+  overflow: hidden;
+}
+
+.mapp-receipts-filter-card .mapp-search-field {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 16px;
+  background: #f8fafc;
+  padding: 0 12px;
+  color: #475569;
+}
+
+.mapp-receipts-filter-card .mapp-search-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.mapp-receipts-filter-card .mapp-filter-pills {
+  margin: 0;
+  padding: 2px 0 4px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mapp-receipts-filter-card .mapp-filter-pills button {
+  min-height: 38px;
+  padding: 0 13px;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.mapp-receipt-preview {
+  padding: 12px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.mapp-receipt-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mapp-receipt-summary > span,
+.mapp-receipt-status-chip {
+  min-width: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  background: #f8fafc;
+  padding: 10px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.mapp-receipt-summary strong {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.mapp-receipt-status-chip.paid {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.mapp-receipt-status-chip.partial,
+.mapp-receipt-status-chip.pending {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #a16207;
+}
+
+.mapp-receipt-status-chip.overdue,
+.mapp-receipt-status-chip.danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.mapp-receipt-frame {
+  width: 100%;
+  max-width: 100%;
+  min-height: min(74dvh, 680px);
+  height: min(74dvh, 680px);
+  display: block;
+  border: 1px solid rgba(148, 163, 184, 0.38);
+  border-radius: 18px;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
+}
+
+.mapp-receipt-button-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.mapp-receipt-button-grid button {
+  min-height: 48px;
+  border-radius: 16px;
+  padding-inline: 10px;
+  font-size: 0.88rem;
+}
+
+.mapp-credit-customer-list.mapp-receipt-credit-list {
+  gap: 12px;
+}
+
+.mapp-receipt-customer-card {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.mapp-credit-customer-head,
+.mapp-receipt-customer-head {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.mapp-receipt-customer-head {
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.mapp-receipt-customer-head em {
+  grid-column: 1 / -1;
+  justify-self: start;
+  max-width: 100%;
+  white-space: normal;
+  line-height: 1.15;
+}
+
+.mapp-receipt-customer-head em.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.mapp-receipt-customer-head em.warn {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.mapp-receipt-customer-head em.ok {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.mapp-credit-customer-head strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.mapp-credit-customer-head small {
+  overflow-wrap: anywhere;
+}
+
+.mapp-receipt-customer-alert {
+  margin: 0 0 10px;
+  border-radius: 16px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.mapp-receipt-customer-alert.warn {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.mapp-receipt-customer-alert.danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.mapp-credit-note-head em.paid,
+.mapp-credit-note-head em.ok {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.mapp-credit-note-head em.partial,
+.mapp-credit-note-head em.warn {
+  background: #fff7ed;
+  color: #b45309;
+  border: 1px solid #fed7aa;
+}
+
+.mapp-credit-note-head em.pending {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.mapp-credit-note-head em.overdue,
+.mapp-credit-note-head em.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.mapp-note-status-line {
+  margin-top: 5px !important;
+  font-weight: 950 !important;
+}
+
+.mapp-note-status-line.paid { color: #047857 !important; }
+.mapp-note-status-line.partial { color: #b45309 !important; }
+.mapp-note-status-line.pending { color: #1d4ed8 !important; }
+.mapp-note-status-line.overdue,
+.mapp-note-status-line.danger { color: #b91c1c !important; }
+
+.mapp-receipt-note-card {
+  padding: 12px;
+  border: 1px solid rgba(203, 213, 225, 0.86);
+  overflow: hidden;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-head {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-head em {
+  white-space: nowrap;
+}
+
+.mapp-receipt-note-card .mapp-credit-totals {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mapp-receipt-note-card .mapp-credit-totals div {
+  border-radius: 15px;
+  padding: 10px;
+}
+
+.mapp-credit-note-actions,
+.mapp-installment-actions-slim {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mapp-credit-note-actions button,
+.mapp-installment-actions-slim button {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 14px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1.05;
+}
+
+.mapp-installment-row {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.mapp-receipt-credit-list .mapp-installment-row-ok {
+  border-color: rgba(16, 185, 129, 0.25);
+  background: linear-gradient(180deg, #ffffff, #f0fdf4);
+}
+
+.mapp-receipt-credit-list .mapp-installment-row-warn {
+  border-color: rgba(245, 158, 11, 0.30);
+  background: linear-gradient(180deg, #ffffff, #fff7ed);
+}
+
+.mapp-receipt-credit-list .mapp-installment-row-danger,
+.mapp-receipt-credit-list .mapp-installment-row.overdue {
+  border-color: rgba(239, 68, 68, 0.30);
+  background: linear-gradient(180deg, #ffffff, #fef2f2);
+}
+
+.mapp-installment-values {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mapp-installment-values span,
+.mapp-installment-values b {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (max-width: 430px) {
+  .mapp-receipts-screen .mapp-mini-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-receipts-screen .mapp-mini-stat-grid > :nth-child(3) {
+    grid-column: auto;
+  }
+
+  .mapp-receipt-summary,
+  .mapp-receipt-button-grid,
+  .mapp-receipt-note-card .mapp-credit-totals,
+  .mapp-credit-customer-totals,
+  .mapp-credit-note-actions,
+  .mapp-installment-actions-slim,
+  .mapp-installment-values {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-receipt-note-card .mapp-credit-note-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mapp-receipt-note-card .mapp-credit-note-head > span {
+    display: none;
+  }
+
+  .mapp-receipt-note-card .mapp-credit-note-head em {
+    justify-self: start;
+    white-space: normal;
+  }
+
+  .mapp-receipt-customer-card {
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .mapp-receipt-customer-head {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .mapp-receipt-frame {
+    min-height: 70dvh;
+    height: 70dvh;
+  }
+}

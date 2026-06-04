@@ -16,6 +16,7 @@ interface ReceiptsScreenProps {
 
 type Feedback = { tone: 'success' | 'error' | 'info'; text: string };
 type ReceiptPrintFormat = 'a4';
+type ReceiptVisualTone = 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' | 'neutral';
 type ReceiptFilter = 'todos' | 'vendas' | 'crediario' | 'parcelas' | 'pedidos' | 'caixa' | 'cancelados';
 type ReceiptPreviewKind = 'salvo' | 'nota' | 'parcela';
 type ReceiptStoreInfo = Pick<Settings, 'store_name' | 'phone' | 'whatsapp' | 'receipt_message'> & { logo_url?: string };
@@ -39,6 +40,8 @@ type CreditCustomerGroup = {
   balance: number;
   notesCount: number;
   openNotes: number;
+  overdueInstallments: number;
+  partialInstallments: number;
 };
 
 type ReceiptPreview =
@@ -155,18 +158,30 @@ function installmentStatusTone(installment: CreditInstallment): 'ok' | 'warn' | 
   return 'neutral';
 }
 
-function receiptStatusTone(label: string): 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' | 'neutral' {
+function receiptStatusTone(label: string): ReceiptVisualTone {
   const lower = label.toLowerCase();
   if (lower.includes('paga') || lower.includes('quit')) return 'paid';
-  if (lower.includes('venc')) return 'overdue';
+  if (lower.includes('venc') || lower.includes('atras')) return 'overdue';
   if (lower.includes('parcial')) return 'partial';
-  if (lower.includes('pend')) return 'pending';
+  if (lower.includes('pend') || lower.includes('abert') || lower.includes('open')) return 'pending';
   if (lower.includes('cancel')) return 'danger';
   return 'neutral';
 }
 
 function creditPaidTotal(credit: CreditSummary): number {
   return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
+}
+
+function creditNoteStatusDetails(credit: CreditSummary): { label: string; tone: ReceiptVisualTone; detail: string; overdueCount: number; partialCount: number; paidCount: number } {
+  const installments = credit.installments || [];
+  const balance = Math.max(0, Number(credit.balance || 0));
+  const paidCount = installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const overdueCount = installments.filter(isOverdue).length;
+  const partialCount = installments.filter((installment) => remainingOf(installment) > 0.009 && paidOf(installment) > 0).length;
+  if (balance <= 0.009) return { label: 'Paga', tone: 'paid', detail: 'Nota quitada, sem saldo restante.', overdueCount, partialCount, paidCount };
+  if (overdueCount > 0) return { label: 'Atrasada', tone: 'overdue', detail: `${formatNumber(overdueCount)} parcela(s) atrasada(s).`, overdueCount, partialCount, paidCount };
+  if (partialCount > 0) return { label: 'Parcial', tone: 'partial', detail: `${formatNumber(partialCount)} parcela(s) com pagamento parcial.`, overdueCount, partialCount, paidCount };
+  return { label: 'Aberta', tone: 'pending', detail: 'Aguardando pagamento.', overdueCount, partialCount, paidCount };
 }
 
 function customerInitials(name: string): string {
@@ -202,15 +217,15 @@ function buildReceiptStyles(): string {
     <style>
       *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
       :root{color-scheme:light}
-      body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif;padding:18px;min-height:100vh}
-      .slf-receipt{max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12)}
-      .slf-mode-tip{margin:0 auto 12px;max-width:920px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;text-align:center}
-      .slf-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
-      .slf-brand{display:flex;gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;word-break:break-word}.slf-contact{font-size:11px;color:#64748b;margin-top:3px}.slf-sub{font-size:12px;color:#64748b;margin-top:4px}.slf-badge{border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:nowrap;border:1px solid #e2e8f0}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
-      .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;word-break:break-word}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
+      body{margin:0;background:#f4f7fb;color:#111827;font-family:Arial,Helvetica,sans-serif;padding:18px;min-height:100vh;overflow-x:hidden}
+      .slf-mode-tip{margin:0 auto 12px;max-width:920px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:900;text-align:center;line-height:1.35}
+      .slf-receipt{width:100%;max-width:920px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid #dbe3ef;box-shadow:0 18px 44px rgba(15,23,42,.12);overflow:hidden}
+      .slf-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:start;border-bottom:1px solid #e5e7eb;padding-bottom:14px;margin-bottom:14px}
+      .slf-brand{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;min-width:0}.slf-logo-img,.slf-logo-initials{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;font-weight:900;object-fit:contain;padding:5px}.slf-title{font-size:20px;font-weight:950;line-height:1.05;color:#0f172a;overflow-wrap:break-word;word-break:normal;hyphens:none}.slf-contact{font-size:11px;color:#64748b;margin-top:3px;overflow-wrap:anywhere}.slf-sub{font-size:12px;color:#64748b;margin-top:4px;line-height:1.35}.slf-badge{justify-self:end;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:950;white-space:normal;text-align:center;line-height:1.15;border:1px solid #e2e8f0;max-width:260px}.slf-badge.paid{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.slf-badge.partial{background:#fffbeb;color:#b45309;border-color:#fde68a}.slf-badge.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-badge.overdue,.slf-badge.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}.slf-badge.neutral{background:#f8fafc;color:#334155;border-color:#cbd5e1}
+      .slf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0}.slf-info{border:1px solid #e5e7eb;border-radius:14px;padding:11px;background:#f8fafc;min-width:0}.slf-info span{display:block;font-size:11px;color:#64748b}.slf-info strong{display:block;margin-top:4px;font-size:15px;color:#111827;overflow-wrap:anywhere}.slf-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}.slf-kpi{border-radius:14px;background:#0f172a;color:#fff;padding:12px;min-width:0}.slf-kpi span{display:block;font-size:11px;opacity:.78}.slf-kpi strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}.slf-kpi.light{background:#f8fafc;color:#0f172a;border:1px solid #e5e7eb}
       table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border-bottom:1px solid #e5e7eb;padding:9px 6px;text-align:left;vertical-align:top}th{color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.02em}.num{text-align:right;white-space:nowrap}.status-paid{color:#047857;font-weight:950}.status-partial{color:#b45309;font-weight:950}.status-pending{color:#1d4ed8;font-weight:950}.status-overdue,.status-danger{color:#b91c1c;font-weight:950}.slf-note{margin-top:12px;border-radius:14px;background:#fff7ed;border:1px solid #fed7aa;padding:11px;color:#9a3412;font-size:12px;line-height:1.45}.slf-note.danger{background:#fef2f2;border-color:#fecaca;color:#991b1b}.slf-note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.slf-total{display:flex;justify-content:space-between;gap:10px;border-radius:14px;background:#111827;color:#fff;padding:12px;margin-top:10px;font-weight:950}.slf-footer{margin-top:14px;color:#64748b;font-size:11px;text-align:center}.slf-print-tip{margin-top:10px;border:1px dashed #cbd5e1;border-radius:12px;padding:9px;color:#475569;font-size:11px;text-align:center}
-      @media print{body{background:#fff}.slf-receipt{box-shadow:none;border-radius:0;border:0}.no-print{display:none!important}}
-      @media (max-width:560px){body{padding:0}.slf-receipt{border-radius:0;padding:14px}.slf-grid,.slf-kpis{grid-template-columns:1fr}.slf-head{align-items:flex-start}.slf-logo-img,.slf-logo-initials{width:44px;height:44px;border-radius:14px}.slf-title{font-size:17px}.slf-badge{font-size:11px;padding:7px 9px}table{font-size:11px}th,td{padding:7px 4px}}
+      @media (max-width:720px){body{padding:0;background:#eef4fb}.slf-mode-tip{border-radius:0;margin:0;padding:10px 12px}.slf-receipt{border-radius:0;padding:14px;border-inline:0;box-shadow:none}.slf-head{grid-template-columns:1fr;gap:10px}.slf-brand{grid-template-columns:44px minmax(0,1fr);align-items:start}.slf-logo-img,.slf-logo-initials{width:44px;height:44px;border-radius:14px}.slf-title{font-size:17px;line-height:1.08}.slf-badge{justify-self:start;max-width:100%;font-size:11px;padding:8px 10px}.slf-grid,.slf-kpis{grid-template-columns:1fr}.slf-kpi strong{font-size:17px}table,thead,tbody,tr,th,td{display:block;width:100%}thead{display:none}tr{border:1px solid #e5e7eb;border-radius:14px;margin:8px 0;padding:6px;background:#fff}td{display:flex;justify-content:space-between;gap:12px;border:0;border-bottom:1px solid #eef2f7;padding:7px 4px;text-align:right;white-space:normal}td:last-child{border-bottom:0}td::before{content:attr(data-label);font-weight:900;color:#64748b;text-align:left;white-space:normal}.num{text-align:right;white-space:normal}}
+      @media print{body{background:#fff;padding:0}.slf-mode-tip,.slf-print-tip{display:none!important}.slf-receipt{box-shadow:none;border-radius:0;border:0;max-width:100%;padding:0}.slf-head{grid-template-columns:minmax(0,1fr) auto}.slf-title{font-size:18px}.slf-badge{justify-self:end}table{display:table}thead{display:table-header-group}tbody{display:table-row-group}tr{display:table-row;border:0;margin:0;padding:0}th,td{display:table-cell;width:auto}td::before{content:none}}
     </style>`;
 }
 
@@ -256,12 +271,12 @@ function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSumm
         <div class="slf-kpi"><span>Restante</span><strong>${formatCurrency(rest)}</strong></div>
       </section>
       <table aria-label="Resumo da parcela"><tbody>
-        <tr><th>Valor original</th><td class="num">${formatCurrency(installment.amount)}</td></tr>
-        <tr><th>Pago nesta parcela</th><td class="num">${formatCurrency(paid)}</td></tr>
-        <tr><th>Restante desta parcela</th><td class="num">${formatCurrency(rest)}</td></tr>
-        <tr><th>Status</th><td class="num status-${tone}">${escapeHtml(status)}</td></tr>
-        <tr><th>Forma do pagamento</th><td class="num">${escapeHtml(method)}</td></tr>
-        <tr><th>Data do pagamento</th><td class="num">${escapeHtml(paidDate)}</td></tr>
+        <tr><th>Valor original</th><td class="num" data-label="Valor original">${formatCurrency(installment.amount)}</td></tr>
+        <tr><th>Pago nesta parcela</th><td class="num" data-label="Pago nesta parcela">${formatCurrency(paid)}</td></tr>
+        <tr><th>Restante desta parcela</th><td class="num" data-label="Restante desta parcela">${formatCurrency(rest)}</td></tr>
+        <tr><th>Status</th><td class="num status-${tone}" data-label="Status">${escapeHtml(status)}</td></tr>
+        <tr><th>Forma do pagamento</th><td class="num" data-label="Forma do pagamento">${escapeHtml(method)}</td></tr>
+        <tr><th>Data do pagamento</th><td class="num" data-label="Data do pagamento">${escapeHtml(paidDate)}</td></tr>
       </tbody></table>
       <div class="slf-note ${noteClass}">${escapeHtml(noteText)}</div>
       <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
@@ -276,8 +291,17 @@ function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSu
   const partialCount = credit.installments.filter((installment) => installmentStatusLabel(installment).includes('Parcial')).length;
   const overdueCount = credit.installments.filter(isOverdue).length;
   const nextOpen = [...credit.installments].filter((installment) => remainingOf(installment) > 0.009 && installment.status !== 'pago').sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number)[0] ?? null;
-  const status = balance <= 0.009 ? 'Nota quitada' : overdueCount ? 'Atenção: parcela vencida' : partialCount ? 'Com pagamento parcial' : 'Em aberto';
-  const tone = receiptStatusTone(status);
+  const statusDetails = creditNoteStatusDetails(credit);
+  const status = statusDetails.tone === 'paid' ? 'Nota paga' : statusDetails.tone === 'overdue' ? 'Nota atrasada' : statusDetails.tone === 'partial' ? 'Com pagamento parcial' : 'Nota em aberto';
+  const tone = statusDetails.tone;
+  const noteClass = tone === 'paid' ? 'ok' : tone === 'overdue' ? 'danger' : '';
+  const noteText = tone === 'paid'
+    ? 'Nota quitada. Todas as parcelas estão pagas.'
+    : tone === 'overdue'
+      ? `${formatNumber(overdueCount)} parcela(s) atrasada(s). Confira os vencimentos destacados na lista abaixo.`
+      : tone === 'partial'
+        ? 'Nota com pagamento parcial. O cliente já pagou uma parte, mas ainda existe saldo restante.'
+        : 'Nota aberta. Nenhuma parcela vencida no momento, mas ainda existe saldo a receber.';
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crediário venda ${credit.sale_number}</title>${buildReceiptStyles()}</head><body>
     <div class="slf-mode-tip">Extrato da nota inteira: cliente, total, parcelas, pago, restante e status.</div><main class="slf-receipt">
       <header class="slf-head">
@@ -300,11 +324,11 @@ function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSu
         <tbody>${credit.installments.map((installment) => {
           const label = installmentStatusLabel(installment);
           const rowTone = receiptStatusTone(label);
-          return `<tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td class="num">${formatCurrency(paidOf(installment))}</td><td class="num">${formatCurrency(remainingOf(installment))}</td><td class="num status-${rowTone}">${escapeHtml(label)}</td></tr>`;
+          return `<tr><td data-label="Parcela">${installment.number}/${credit.installments.length}</td><td data-label="Vencimento">${escapeHtml(dateOnly(installment.due_date))}</td><td class="num" data-label="Original">${formatCurrency(installment.amount)}</td><td class="num" data-label="Pago">${formatCurrency(paidOf(installment))}</td><td class="num" data-label="Restante">${formatCurrency(remainingOf(installment))}</td><td class="num status-${rowTone}" data-label="Status">${escapeHtml(label)}</td></tr>`;
         }).join('')}</tbody>
       </table>
       <div class="slf-total"><span>Parcelas pagas</span><strong>${paidCount}/${credit.installments.length}</strong></div>
-      <div class="slf-note">Este extrato mostra a nota inteira. Para enviar só uma parcela, use o botão Enviar parcela dentro da nota na aba Comprovantes.</div>
+      <div class="slf-note ${noteClass}">${escapeHtml(noteText)} Para enviar só uma parcela, use o botão Enviar dentro da parcela.</div>
       <div class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Gerado pelo Smart Loja Fácil</div>
       <div class="slf-print-tip">No iPhone, use Visualizar/print para abrir a tela limpa e tirar print. No Android/PC, use Imprimir / salvar PDF.</div>
     </main></body></html>`;
@@ -443,13 +467,18 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
         balance: 0,
         notesCount: 0,
         openNotes: 0,
+        overdueInstallments: 0,
+        partialInstallments: 0,
       };
       current.credits.push(credit);
       current.total += Number(credit.total || 0);
       current.paid += creditPaidTotal(credit);
       current.balance += Math.max(0, Number(credit.balance || 0));
       current.notesCount += 1;
+      const noteStatus = creditNoteStatusDetails(credit);
       if (credit.status !== 'quitado' && Number(credit.balance || 0) > 0.009) current.openNotes += 1;
+      current.overdueInstallments += noteStatus.overdueCount;
+      current.partialInstallments += noteStatus.partialCount;
       groups.set(key, current);
     }
     return Array.from(groups.values()).sort((a, b) => b.balance - a.balance || a.customerName.localeCompare(b.customerName));
@@ -490,7 +519,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       customer: credit.customer_name || 'Cliente',
       createdAt: credit.created_at,
       total: Number(credit.total || 0),
-      status: Number(credit.balance || 0) <= 0.009 ? 'Quitada' : 'Em aberto',
+      status: creditNoteStatusDetails(credit).label,
       html: buildCreditGeneralReceiptHtml(receiptStore, credit),
       phone: credit.customer_whatsapp || credit.customer_phone || '',
       credit,
@@ -534,7 +563,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       return;
     }
     popup.document.open();
-    popup.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(preview.title)}</title><style>body{margin:0;background:#f2f6fb;font-family:Arial,sans-serif}.wrap{max-width:920px;margin:auto;padding:16px}.paper{background:#fff;border-radius:18px;padding:18px;box-shadow:0 18px 48px rgba(15,23,42,.16);overflow:auto}.top{position:sticky;top:0;background:#0f172a;color:white;padding:12px 16px;font-weight:800;z-index:2}</style></head><body><div class="top">Prévia em tela cheia · iPhone/Android</div><main class="wrap"><div class="paper">${preview.html}</div></main></body></html>`);
+    popup.document.write(preview.html || '<p>Comprovante sem prévia HTML salva.</p>');
     popup.document.close();
   }
 
@@ -609,7 +638,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
           <div className="mapp-receipt-summary">
             <span>Total <strong>{formatCurrency(selected.total)}</strong></span>
             <span>Tipo <strong>{selected.kind === 'nota' ? 'Nota inteira' : selected.kind === 'parcela' ? 'Parcela' : 'Salvo'}</strong></span>
-            <span>Status <strong>{selected.status}</strong></span>
+            <span className={`mapp-receipt-status-chip ${receiptStatusTone(selected.status)}`}>Status <strong>{selected.status}</strong></span>
           </div>
           <iframe
             title={`Prévia segura do ${selected.title}`}
@@ -638,7 +667,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                     <strong>{group.customerName}</strong>
                     <small>{group.notesCount} nota(s) · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
                   </div>
-                  <em className={group.balance <= 0.009 ? 'ok' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : formatCurrency(group.balance)}</em>
+                  <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Atrasado · ${formatCurrency(group.balance)}` : `Aberto · ${formatCurrency(group.balance)}`}</em>
                 </button>
                 {customerExpanded ? (
                   <>
@@ -647,10 +676,16 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                       <span>Pago <b>{formatCurrency(group.paid)}</b></span>
                       <span>Restante <b>{formatCurrency(group.balance)}</b></span>
                     </div>
+                    {group.overdueInstallments > 0 || group.partialInstallments > 0 ? (
+                      <div className={`mapp-receipt-customer-alert ${group.overdueInstallments > 0 ? 'danger' : 'warn'}`}>
+                        {group.overdueInstallments > 0 ? `${formatNumber(group.overdueInstallments)} parcela(s) atrasada(s)` : `${formatNumber(group.partialInstallments)} parcela(s) com pagamento parcial`}
+                      </div>
+                    ) : null}
                     <div className="mapp-credit-list" aria-label={`Notas do cliente ${group.customerName}`}>
                       {group.credits.map((credit) => {
                         const expanded = expandedCredits[credit.id] ?? false;
-                        const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+                        const noteStatus = creditNoteStatusDetails(credit);
+                        const paidCount = noteStatus.paidCount;
                         const creditReceipt = creditPreview(credit);
                         return (
                           <article key={credit.id} className={`mapp-credit-card mapp-receipt-note-card ${expanded ? 'expanded' : ''}`}>
@@ -659,9 +694,10 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                               <div>
                                 <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
                                 <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcela(s) pagas</small>
+                                <small className={`mapp-note-status-line ${noteStatus.tone}`}>{noteStatus.detail}</small>
                                 <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
                               </div>
-                              <em className={Number(credit.balance || 0) <= 0.009 ? 'ok' : 'warn'}>{Number(credit.balance || 0) <= 0.009 ? 'Quitada' : 'Aberta'}</em>
+                              <em className={noteStatus.tone}>{noteStatus.label}</em>
                             </button>
                             <div className="mapp-credit-totals">
                               <div><span>Total da nota</span><strong>{formatCurrency(credit.total)}</strong></div>

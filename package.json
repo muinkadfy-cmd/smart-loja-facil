@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.162",
+  "version": "0.1.163",
   "private": true,
   "type": "module",
-  "description": "Smart Loja Fácil PWA mobile-first v162 com Comprovantes organizados por cliente, nota/parcela, A4/PDF e visualização iPhone",
+  "description": "Smart Loja Fácil PWA mobile-first v163 com Comprovantes 10/10 mobile, status colorido, nota/parcela e A4/PDF sem corte lateral",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
