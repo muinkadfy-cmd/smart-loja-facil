@@ -56,8 +56,8 @@ interface GuidedCommercialStep {
   risk: 'baixo' | 'medio' | 'alto';
 }
 
-const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v136';
-const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+const GUIDED_TEST_KEY = 'smart-loja:guided-commercial-test-v137';
+const LEGACY_GUIDED_TEST_KEYS = ['smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v135', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
 
 const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
   {
@@ -155,7 +155,7 @@ const GUIDED_COMMERCIAL_STEPS: GuidedCommercialStep[] = [
     group: '9. PWA e atualização',
     title: 'PWA instalado recebeu a versão nova',
     action: 'Depois do deploy, abrir o app instalado no celular, limpar cache antigo se necessário e conferir a versão no Diagnóstico.',
-    expected: 'Aparece v136 no app/cache e as telas novas continuam funcionando no celular.',
+    expected: 'Aparece v137 no app/cache e as telas novas continuam funcionando no celular.',
     role: 'Qualquer papel',
     device: 'Celular instalado',
     risk: 'medio',
@@ -337,6 +337,51 @@ interface ImplementationTermState {
   updatedAt: string;
 }
 
+
+type PostSalePriority = 'P0' | 'P1' | 'P2';
+type PostSaleTicketStatus = 'open' | 'in_progress' | 'waiting_client' | 'solved';
+
+interface PostSaleSupportItem {
+  id: string;
+  title: string;
+  detail: string;
+  expected: string;
+  priority: PostSalePriority;
+}
+
+interface PostSaleSupportTicket {
+  id: string;
+  title: string;
+  category: string;
+  priority: PostSalePriority;
+  status: PostSaleTicketStatus;
+  due: string;
+  owner: string;
+  evidence: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PostSaleSupportState {
+  clientName: string;
+  supportOwner: string;
+  supportChannel: string;
+  firstReviewDate: string;
+  slaNote: string;
+  doneIds: string[];
+  tickets: PostSaleSupportTicket[];
+  updatedAt: string;
+}
+
+interface PostSaleTicketDraft {
+  title: string;
+  category: string;
+  priority: PostSalePriority;
+  due: string;
+  owner: string;
+}
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
@@ -346,8 +391,8 @@ const DEMO_MODE_STEPS: DemoModeStep[] = [
 ];
 
 
-const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v136';
-const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
+const COMMERCIAL_TOUR_KEY = 'smart-loja:commercial-tour-v137';
+const LEGACY_COMMERCIAL_TOUR_KEYS = ['smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v135', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
 
 const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
   {
@@ -457,8 +502,8 @@ const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
 ];
 
 
-const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v136';
-const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
+const COMMERCIAL_PROPOSAL_KEY = 'smart-loja:commercial-proposal-v137';
+const LEGACY_COMMERCIAL_PROPOSAL_KEYS = ['smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
 
 const COMMERCIAL_PROPOSAL_PLANS: CommercialProposalPlan[] = [
   {
@@ -510,8 +555,8 @@ const COMMERCIAL_PROPOSAL_CHECKLIST = [
 ];
 
 
-const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v136';
-const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v135'];
+const IMPLEMENTATION_TERM_KEY = 'smart-loja:implementation-term-v137';
+const LEGACY_IMPLEMENTATION_TERM_KEYS = ['smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
 
 const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
   { id: 'term-proposal-approved', title: 'Proposta e plano conferidos', detail: 'Cliente sabe plano, mensalidade, implantação, validade e próximo passo combinado.', risk: 'P1' },
@@ -524,6 +569,26 @@ const IMPLEMENTATION_TERM_ITEMS: ImplementationTermItem[] = [
   { id: 'term-acceptance-copy', title: 'Termo copiado/aceito', detail: 'Texto foi copiado ou aceito pelo responsável sem senha, sem chave privada e sem dados sensíveis.', risk: 'P1' },
 ];
 
+
+const POST_SALE_SUPPORT_KEY = 'smart-loja:post-sale-support-v137';
+const LEGACY_POST_SALE_SUPPORT_KEYS = ['smart-loja:post-sale-support-v136'];
+
+const POST_SALE_SUPPORT_ITEMS: PostSaleSupportItem[] = [
+  { id: 'support-channel', title: 'Canal de suporte combinado', detail: 'Registrar WhatsApp, horário, responsável e como o cliente deve enviar print/diagnóstico.', expected: 'Cliente sabe onde pedir ajuda e não manda senha ou chave privada.', priority: 'P1' },
+  { id: 'first-day-review-support', title: 'Revisão do primeiro dia agendada', detail: 'Combinar horário para conferir caixa, vendas, comprovantes, pendências e dúvidas depois do primeiro uso.', expected: 'Revisão tem data, responsável e evidência copiada.', priority: 'P1' },
+  { id: 'critical-ticket-rule', title: 'Regra para chamado crítico definida', detail: 'Falha em login, venda, caixa, sync, permissão ou impressão real vira P0/P1 com prazo claro.', expected: 'Nenhum problema crítico fica só em conversa solta.', priority: 'P1' },
+  { id: 'client-evidence-rule', title: 'Evidência simples combinada', detail: 'Cliente sabe mandar print, aparelho usado, papel logado e texto do erro antes do suporte mexer.', expected: 'Chamado chega com informação suficiente para corrigir sem chute.', priority: 'P2' },
+  { id: 'backup-before-risk', title: 'Backup antes de ação arriscada', detail: 'Antes de restaurar backup, limpar cache em massa ou alterar permissão, copiar diagnóstico e fazer backup controlado.', expected: 'Sem perda de dados por tentativa de suporte apressada.', priority: 'P1' },
+  { id: 'post-sale-copy', title: 'Plano de pós-venda copiado', detail: 'Copiar o plano completo de suporte/SLA e guardar junto da proposta, termo e aceite final.', expected: 'Cliente e suporte têm o mesmo combinado.', priority: 'P2' },
+];
+
+const POST_SALE_STATUS_LABEL: Record<PostSaleTicketStatus, string> = {
+  open: 'Aberto',
+  in_progress: 'Em atendimento',
+  waiting_client: 'Aguardando cliente',
+  solved: 'Resolvido',
+};
+
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
   { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
   { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
@@ -533,18 +598,18 @@ const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
 ];
 
 
-const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v136';
-const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+const FINAL_ACCEPTANCE_KEY = 'smart-loja:final-commercial-acceptance-v137';
+const LEGACY_FINAL_ACCEPTANCE_KEYS = ['smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v135', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
 
-const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v136';
-const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+const ASSISTED_RUN_KEY = 'smart-loja:assisted-commercial-run-v137';
+const LEGACY_ASSISTED_RUN_KEYS = ['smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v135', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
 
-const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v136';
-const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v135', 'smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
+const FIRST_CLIENT_ONBOARDING_KEY = 'smart-loja:first-client-onboarding-v137';
+const LEGACY_FIRST_CLIENT_ONBOARDING_KEYS = ['smart-loja:first-client-onboarding-v136', 'smart-loja:first-client-onboarding-v135', 'smart-loja:first-client-onboarding-v134', 'smart-loja:first-client-onboarding-v133', 'smart-loja:first-client-onboarding-v131'];
 
 const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
   { id: 'client-briefing', phase: '1. Antes de entregar', title: 'Cliente entendeu o que o app faz', action: 'Explicar que o PWA roda no celular e no PC, sincroniza pela nuvem e precisa de internet para enviar pendências.', expected: 'Cliente sabe abrir o app, entende pendências e não confunde teste com venda real.', owner: 'Você / suporte', priority: 'P1' },
-  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v136 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
+  { id: 'install-pwa-phone', phase: '2. Instalação', title: 'PWA instalado no celular principal', action: 'Abrir o link no Chrome/Android, tocar em instalar/adicionar à tela inicial e abrir pelo ícone.', expected: 'App abre em tela cheia, mostra v137 no Diagnóstico e não fica preso em cache antigo.', owner: 'Cliente com suporte', priority: 'P1' },
   { id: 'store-settings', phase: '3. Configuração da loja', title: 'Dados da loja conferidos', action: 'Conferir nome, telefone, WhatsApp, endereço, mensagem do comprovante e limite de estoque.', expected: 'Comprovante e telas mostram dados corretos da loja, sem texto de teste esquecido.', owner: 'Dono/admin', priority: 'P1' },
   { id: 'first-products-customers', phase: '4. Cadastros iniciais', title: 'Primeiros clientes e produtos cadastrados', action: 'Cadastrar 3 produtos reais e 2 clientes reais simples, com preço, estoque e telefone quando existir.', expected: 'Dados aparecem em outro aparelho e não duplicam.', owner: 'Operador com suporte', priority: 'P1' },
   { id: 'first-sale-cash', phase: '5. Primeiro dia', title: 'Primeira venda e caixa conferidos', action: 'Abrir caixa, fazer uma venda pequena, conferir estoque, comprovante e fechamento do caixa.', expected: 'Venda entra no relatório, estoque baixa certo e caixa mostra saldo explicado.', owner: 'Dono/operador', priority: 'P1' },
@@ -556,12 +621,12 @@ const FIRST_CLIENT_ONBOARDING_STEPS: FirstClientOnboardingStep[] = [
 
 const ASSISTED_REAL_STEPS: AssistedRealStep[] = [
   {
-    id: 'deploy-cache-v136-real',
+    id: 'deploy-cache-v137-real',
     phase: '1. Deploy e atualização',
-    title: 'Deploy aplicado e PWA abriu v136',
-    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v136.',
+    title: 'Deploy aplicado e PWA abriu v137',
+    whatToDo: 'Depois do deploy, abrir o app instalado no celular, entrar em Diagnóstico Web e conferir versão/cache v137.',
     expected: 'O celular mostra a versão nova, sem tela antiga presa e sem menu cortado.',
-    evidence: 'Print do Diagnóstico Web com versão/cache v136.',
+    evidence: 'Print do Diagnóstico Web com versão/cache v137.',
     critical: true,
   },
   {
@@ -686,7 +751,7 @@ function normalizeAssistedState(value: unknown): AssistedRealState {
   const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
   const results: Record<string, AssistedRunResult> = {};
   for (const [id, raw] of Object.entries(rawResults)) {
-    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' ? 'deploy-cache-v136-real' : id;
+    const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' ? 'deploy-cache-v137-real' : id;
     if (!allowedIds.has(normalizedId)) continue;
     const normalized = normalizeAssistedResult(raw);
     if (normalized !== 'pending') results[normalizedId] = normalized;
@@ -967,7 +1032,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v136',
+    'Smart Loja Fácil — fechamento comercial / aceite final v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -1061,7 +1126,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v136',
+    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -1154,7 +1219,7 @@ function buildCommercialTourText(params: {
     `Prova: ${step.proof}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — tour de apresentação comercial v136',
+    'Smart Loja Fácil — tour de apresentação comercial v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
     `Cliente/público: ${params.state.audience || 'não informado'}`,
@@ -1257,7 +1322,7 @@ function buildCommercialProposalText(params: {
   const done = new Set(params.state.doneIds);
   const rows = COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} ${item.label} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — proposta comercial / planos e benefícios v136',
+    'Smart Loja Fácil — proposta comercial / planos e benefícios v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
     `Plano sugerido: ${params.plan.name} (${params.plan.tag})`,
@@ -1379,7 +1444,7 @@ function buildImplementationTermText(params: {
   const done = new Set(params.state.doneIds);
   const rows = IMPLEMENTATION_TERM_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.risk}] ${item.title} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — termo simples de implantação e aceite v136',
+    'Smart Loja Fácil — termo simples de implantação e aceite v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável do cliente: ${params.state.responsibleName || 'não informado'}`,
@@ -1417,6 +1482,160 @@ function buildImplementationTermText(params: {
   ].filter(Boolean).join('\n');
 }
 
+
+function emptyPostSaleSupportState(): PostSaleSupportState {
+  return {
+    clientName: '',
+    supportOwner: '',
+    supportChannel: 'WhatsApp com horário combinado e diagnóstico copiado pelo app.',
+    firstReviewDate: '',
+    slaNote: 'P0: parar venda até corrigir. P1: corrigir antes de operar sozinho. P2: ajustar sem bloquear operação.',
+    doneIds: [],
+    tickets: [],
+    updatedAt: '',
+  };
+}
+
+function emptyTicketDraft(): PostSaleTicketDraft {
+  return { title: '', category: 'Suporte inicial', priority: 'P1', due: '', owner: '' };
+}
+
+function normalizeTicketStatus(value: unknown): PostSaleTicketStatus {
+  return value === 'in_progress' || value === 'waiting_client' || value === 'solved' ? value : 'open';
+}
+
+function normalizePostSalePriority(value: unknown): PostSalePriority {
+  return value === 'P0' || value === 'P2' ? value : 'P1';
+}
+
+function normalizePostSaleSupportState(value: unknown): PostSaleSupportState {
+  const source = value && typeof value === 'object' ? value as Partial<PostSaleSupportState> : {};
+  const allowedDone = new Set(POST_SALE_SUPPORT_ITEMS.map((item) => item.id));
+  const doneIds = Array.from(new Set((Array.isArray(source.doneIds) ? source.doneIds : []).filter((id): id is string => typeof id === 'string' && allowedDone.has(id))));
+  const rawTickets = Array.isArray(source.tickets) ? source.tickets : [];
+  const tickets = rawTickets
+    .map((item): PostSaleSupportTicket | null => {
+      const row = item && typeof item === 'object' ? item as Partial<PostSaleSupportTicket> : {};
+      const title = typeof row.title === 'string' ? row.title.trim().slice(0, 160) : '';
+      if (!title) return null;
+      const now = new Date().toISOString();
+      return {
+        id: typeof row.id === 'string' && row.id ? row.id : `support-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        title,
+        category: typeof row.category === 'string' ? row.category.slice(0, 80) : 'Suporte inicial',
+        priority: normalizePostSalePriority(row.priority),
+        status: normalizeTicketStatus(row.status),
+        due: typeof row.due === 'string' ? row.due.slice(0, 80) : '',
+        owner: typeof row.owner === 'string' ? row.owner.slice(0, 100) : '',
+        evidence: typeof row.evidence === 'string' ? row.evidence.slice(0, 600) : '',
+        notes: typeof row.notes === 'string' ? row.notes.slice(0, 900) : '',
+        createdAt: typeof row.createdAt === 'string' ? row.createdAt : now,
+        updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : now,
+      };
+    })
+    .filter((item): item is PostSaleSupportTicket => Boolean(item));
+  return {
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 140) : '',
+    supportOwner: typeof source.supportOwner === 'string' ? source.supportOwner.slice(0, 120) : '',
+    supportChannel: typeof source.supportChannel === 'string' && source.supportChannel.trim() ? source.supportChannel.slice(0, 260) : 'WhatsApp com horário combinado e diagnóstico copiado pelo app.',
+    firstReviewDate: typeof source.firstReviewDate === 'string' ? source.firstReviewDate.slice(0, 100) : '',
+    slaNote: typeof source.slaNote === 'string' && source.slaNote.trim() ? source.slaNote.slice(0, 620) : 'P0: parar venda até corrigir. P1: corrigir antes de operar sozinho. P2: ajustar sem bloquear operação.',
+    doneIds,
+    tickets,
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readPostSaleSupportState(): PostSaleSupportState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyPostSaleSupportState();
+  try {
+    const current = normalizePostSaleSupportState(JSON.parse(window.localStorage.getItem(POST_SALE_SUPPORT_KEY) || '{}'));
+    if (current.doneIds.length || current.tickets.length || current.clientName || current.supportOwner || current.updatedAt) return current;
+    for (const key of LEGACY_POST_SALE_SUPPORT_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizePostSaleSupportState(JSON.parse(raw));
+      if (legacy.doneIds.length || legacy.tickets.length || legacy.clientName || legacy.supportOwner || legacy.updatedAt) {
+        window.localStorage.setItem(POST_SALE_SUPPORT_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyPostSaleSupportState();
+  }
+  return emptyPostSaleSupportState();
+}
+
+function savePostSaleSupportState(state: PostSaleSupportState): PostSaleSupportState {
+  const normalized = normalizePostSaleSupportState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(POST_SALE_SUPPORT_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function summarizePostSaleSupport(state: PostSaleSupportState): { total: number; open: number; solved: number; criticalOpen: number; percent: number } {
+  const total = state.tickets.length;
+  const solved = state.tickets.filter((ticket) => ticket.status === 'solved').length;
+  const open = total - solved;
+  const criticalOpen = state.tickets.filter((ticket) => ticket.status !== 'solved' && (ticket.priority === 'P0' || ticket.priority === 'P1')).length;
+  const checklistWeight = POST_SALE_SUPPORT_ITEMS.length;
+  const ticketWeight = total || 1;
+  const percent = Math.round(((state.doneIds.length + solved) / (checklistWeight + ticketWeight)) * 100);
+  return { total, open, solved, criticalOpen, percent: Math.min(100, percent) };
+}
+
+function buildPostSaleSupportText(params: {
+  state: PostSaleSupportState;
+  summary: ReturnType<typeof summarizePostSaleSupport>;
+  term: ImplementationTermState;
+  proposal: CommercialProposalState;
+  gate: FinalSellGate;
+  report: WebCommercialValidationReport | null;
+  roleState: RoleState;
+  online: boolean;
+  snapshot: WebSyncSnapshot;
+}): string {
+  const done = new Set(params.state.doneIds);
+  const checklistRows = POST_SALE_SUPPORT_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.priority}] ${item.title} — ${item.detail}`);
+  const ticketRows = params.state.tickets.length
+    ? params.state.tickets.map((ticket) => [
+      `[${ticket.priority}]`,
+      POST_SALE_STATUS_LABEL[ticket.status],
+      ticket.category,
+      ticket.title,
+      `Responsável: ${ticket.owner || 'não informado'}`,
+      `Prazo: ${ticket.due || 'combinar'}`,
+      ticket.evidence ? `Evidência: ${ticket.evidence}` : 'Evidência: pendente',
+      ticket.notes ? `Nota: ${ticket.notes}` : '',
+    ].filter(Boolean).join(' · '))
+    : ['Nenhum chamado registrado ainda. Registre qualquer falha ou ajuste combinado no primeiro cliente.'];
+  return [
+    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v137',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Cliente/loja: ${params.state.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
+    `Responsável suporte: ${params.state.supportOwner || params.term.responsibleName || 'não informado'}`,
+    `Canal de suporte: ${params.state.supportChannel || 'não informado'}`,
+    `Revisão do primeiro dia: ${params.state.firstReviewDate || 'não agendada'}`,
+    `SLA combinado: ${params.state.slaNote}`,
+    `Resumo chamados: total=${params.summary.total}; abertos=${params.summary.open}; resolvidos=${params.summary.solved}; críticos abertos=${params.summary.criticalOpen}`,
+    `Progresso pós-venda: ${params.summary.percent}%`,
+    `Fechamento comercial: ${params.gate.title} — ${params.gate.score}/10 ${params.gate.stars}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    '',
+    'Checklist do pós-venda:',
+    ...checklistRows,
+    '',
+    'Chamados / ajustes combinados:',
+    ...ticketRows,
+    '',
+    'Regra honesta: P0/P1 aberto não deve ficar sem responsável, prazo e evidência. Não prometa correção sem validar aparelho, papel do usuário, internet, cache e Supabase.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -1437,7 +1656,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v136',
+    'Smart Loja Fácil — plano de correção aceite v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -1475,7 +1694,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v136',
+    'Smart Loja Fácil — execução real assistida v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -1549,7 +1768,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v136',
+    'Smart Loja Fácil — roteiro guiado comercial v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -1602,7 +1821,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v136',
+    'Smart Loja Fácil — modo treinamento seguro v137',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -1629,7 +1848,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v136',
+    'Smart Loja Fácil — teste comercial v137',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -1665,6 +1884,8 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [tourState, setTourState] = useState<CommercialTourState>(() => readCommercialTourState());
   const [proposalState, setProposalState] = useState<CommercialProposalState>(() => readCommercialProposalState());
   const [termState, setTermState] = useState<ImplementationTermState>(() => readImplementationTermState());
+  const [postSaleState, setPostSaleState] = useState<PostSaleSupportState>(() => readPostSaleSupportState());
+  const [ticketDraft, setTicketDraft] = useState<PostSaleTicketDraft>(() => emptyTicketDraft());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -1771,6 +1992,8 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const termDoneCount = termState.doneIds.length;
   const termPercent = Math.round((termDoneCount / IMPLEMENTATION_TERM_ITEMS.length) * 100);
   const termAccepted = Boolean(termState.acceptedAt);
+  const postSaleDoneSet = useMemo(() => new Set(postSaleState.doneIds), [postSaleState.doneIds]);
+  const postSaleSummary = useMemo(() => summarizePostSaleSupport(postSaleState), [postSaleState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -1993,7 +2216,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — tour comercial guiado v136',
+      'Smart Loja Fácil — tour comercial guiado v137',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,
@@ -2151,6 +2374,71 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Termo de implantação copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+
+  function patchPostSaleSupport(patch: Partial<PostSaleSupportState>): void {
+    setPostSaleState((current) => savePostSaleSupportState({ ...current, ...patch }));
+  }
+
+  function togglePostSaleSupportItem(id: string): void {
+    const done = new Set(postSaleState.doneIds);
+    if (done.has(id)) done.delete(id);
+    else done.add(id);
+    setPostSaleState((current) => savePostSaleSupportState({ ...current, doneIds: Array.from(done) }));
+  }
+
+  function addPostSaleTicket(): void {
+    const title = ticketDraft.title.trim();
+    if (!title) {
+      setFeedback({ tone: 'error', text: 'Informe o título do chamado ou ajuste combinado.' });
+      return;
+    }
+    const now = new Date().toISOString();
+    const ticket: PostSaleSupportTicket = {
+      id: `support-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      title,
+      category: ticketDraft.category.trim() || 'Suporte inicial',
+      priority: ticketDraft.priority,
+      status: 'open',
+      due: ticketDraft.due.trim(),
+      owner: ticketDraft.owner.trim() || postSaleState.supportOwner.trim(),
+      evidence: '',
+      notes: '',
+      createdAt: now,
+      updatedAt: now,
+    };
+    setPostSaleState((current) => savePostSaleSupportState({ ...current, tickets: [ticket, ...current.tickets] }));
+    setTicketDraft(emptyTicketDraft());
+    setFeedback({ tone: ticket.priority === 'P0' ? 'error' : 'success', text: ticket.priority === 'P0' ? 'Chamado P0 registrado. Oriente parar operação afetada até corrigir.' : 'Chamado registrado no pós-venda.' });
+  }
+
+  function updatePostSaleTicket(id: string, patch: Partial<PostSaleSupportTicket>): void {
+    setPostSaleState((current) => savePostSaleSupportState({
+      ...current,
+      tickets: current.tickets.map((ticket) => ticket.id === id ? { ...ticket, ...patch, updatedAt: new Date().toISOString() } : ticket),
+    }));
+  }
+
+  function deletePostSaleTicket(id: string): void {
+    const ok = window.confirm('Remover este chamado do pós-venda neste aparelho? Use somente se foi criado por engano.');
+    if (!ok) return;
+    setPostSaleState((current) => savePostSaleSupportState({ ...current, tickets: current.tickets.filter((ticket) => ticket.id !== id) }));
+    setFeedback({ tone: 'info', text: 'Chamado removido deste aparelho. Dados reais da loja não foram alterados.' });
+  }
+
+  function resetPostSaleSupport(): void {
+    const ok = window.confirm('Zerar pós-venda/suporte deste aparelho? Isso não apaga loja, venda, caixa, termo, proposta ou dados reais.');
+    if (!ok) return;
+    setPostSaleState(savePostSaleSupportState(emptyPostSaleSupportState()));
+    setTicketDraft(emptyTicketDraft());
+    setFeedback({ tone: 'info', text: 'Pós-venda zerado neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyPostSaleSupport(): Promise<void> {
+    const text = buildPostSaleSupportText({ state: postSaleState, summary: postSaleSummary, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Plano de pós-venda copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -2164,6 +2452,8 @@ ${buildCommercialTourText({ state: tourState, demoMode, trainingMode, roleState,
 ${buildCommercialProposalText({ state: proposalState, plan: currentProposalPlan, gate: finalGate, tourPercent, onboardingPercent, report, roleState, online, snapshot })}
 
 ${buildImplementationTermText({ state: termState, proposal: proposalState, plan: currentProposalPlan, gate: finalGate, termPercent, proposalPercent, onboardingPercent, report, roleState, online, snapshot })}
+
+${buildPostSaleSupportText({ state: postSaleState, summary: postSaleSummary, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -2183,6 +2473,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Tour comercial: ${tourDoneCount}/${COMMERCIAL_TOUR_STEPS.length} (${tourPercent}%)`,
           `Proposta comercial: ${proposalDoneCount}/${COMMERCIAL_PROPOSAL_CHECKLIST.length} (${proposalPercent}%)`,
           `Termo implantação: ${termDoneCount}/${IMPLEMENTATION_TERM_ITEMS.length} (${termPercent}%)${termAccepted ? ' aceito' : ''}`,
+          `Pós-venda/SLA: ${postSaleSummary.solved}/${postSaleSummary.total} chamados resolvidos; críticos abertos=${postSaleSummary.criticalOpen}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -2404,6 +2695,68 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={resetImplementationTerm}>Zerar termo</button>
         </div>
         <small className="mapp-final-honesty">Termo simples de implantação não substitui contrato jurídico formal. Use para clarear escopo, suporte, limites e aceite; revise com profissional responsável quando necessário.</small>
+      </section>
+
+      <section className={`mapp-section-block mapp-postsale-panel ${postSaleSummary.criticalOpen ? 'has-critical' : postSaleSummary.open ? 'has-open' : 'is-clear'}`}>
+        <div className="mapp-section-title"><h2>Pós-venda / suporte e SLA</h2><button type="button" onClick={() => void copyPostSaleSupport()}>Copiar suporte</button></div>
+        <div className="mapp-postsale-hero">
+          <div>
+            <span>{postSaleSummary.criticalOpen ? 'Atenção no suporte' : postSaleSummary.open ? 'Acompanhamento ativo' : 'Suporte organizado'}</span>
+            <strong>{postSaleSummary.open} aberto(s) · {postSaleSummary.solved} resolvido(s)</strong>
+            <p>Use esta área depois da implantação para registrar chamados, prioridade, prazo, responsável e evidência do primeiro cliente. Não mexe em venda, caixa, estoque ou Supabase.</p>
+          </div>
+          <b className={postSaleSummary.criticalOpen ? 'danger' : postSaleSummary.open ? 'warn' : 'ok'}>{postSaleSummary.percent}%</b>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso do pós-venda ${postSaleSummary.percent}%`}><span style={{ width: `${postSaleSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={postSaleState.clientName} onChange={(event) => patchPostSaleSupport({ clientName: event.target.value })} placeholder={termState.clientName || proposalState.clientName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Responsável suporte<input value={postSaleState.supportOwner} onChange={(event) => patchPostSaleSupport({ supportOwner: event.target.value })} placeholder="Ex.: João / suporte técnico" /></label>
+          <label>Canal de suporte<input value={postSaleState.supportChannel} onChange={(event) => patchPostSaleSupport({ supportChannel: event.target.value })} placeholder="Ex.: WhatsApp, horário comercial" /></label>
+          <label>Revisão do primeiro dia<input value={postSaleState.firstReviewDate} onChange={(event) => patchPostSaleSupport({ firstReviewDate: event.target.value })} placeholder="Ex.: hoje às 18h ou amanhã 09h" /></label>
+          <label>SLA combinado<textarea value={postSaleState.slaNote} onChange={(event) => patchPostSaleSupport({ slaNote: event.target.value })} rows={3} /></label>
+        </div>
+        <div className="mapp-postsale-checklist">
+          {POST_SALE_SUPPORT_ITEMS.map((item) => {
+            const done = postSaleDoneSet.has(item.id);
+            return (
+              <button key={item.id} type="button" className={done ? 'done' : ''} onClick={() => togglePostSaleSupportItem(item.id)}>
+                <span>{done ? '✓' : item.priority}</span>
+                <div><strong>{item.title}</strong><p>{item.detail}</p><small>Esperado: {item.expected}</small></div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="mapp-postsale-new-ticket">
+          <strong>Novo chamado / ajuste combinado</strong>
+          <div className="mapp-final-release-grid">
+            <label>Título<input value={ticketDraft.title} onChange={(event) => setTicketDraft((current) => ({ ...current, title: event.target.value }))} placeholder="Ex.: Impressão 80mm cortou telefone" /></label>
+            <label>Área<input value={ticketDraft.category} onChange={(event) => setTicketDraft((current) => ({ ...current, category: event.target.value }))} placeholder="Ex.: Impressão / Caixa / Login" /></label>
+            <label>Prioridade<select value={ticketDraft.priority} onChange={(event) => setTicketDraft((current) => ({ ...current, priority: event.target.value as PostSalePriority }))}><option value="P0">P0 crítico</option><option value="P1">P1 alto</option><option value="P2">P2 ajuste</option></select></label>
+            <label>Prazo<input value={ticketDraft.due} onChange={(event) => setTicketDraft((current) => ({ ...current, due: event.target.value }))} placeholder="Ex.: corrigir antes de abrir amanhã" /></label>
+            <label>Responsável<input value={ticketDraft.owner} onChange={(event) => setTicketDraft((current) => ({ ...current, owner: event.target.value }))} placeholder={postSaleState.supportOwner || 'Ex.: suporte'} /></label>
+          </div>
+          <button type="button" className="mapp-primary-button" onClick={addPostSaleTicket}>Adicionar chamado</button>
+        </div>
+        <div className="mapp-postsale-ticket-list">
+          {postSaleState.tickets.length ? postSaleState.tickets.map((ticket) => (
+            <article key={ticket.id} className={`mapp-postsale-ticket priority-${ticket.priority.toLowerCase()} status-${ticket.status}`}>
+              <header><span>{ticket.priority}</span><strong>{ticket.title}</strong><select value={ticket.status} onChange={(event) => updatePostSaleTicket(ticket.id, { status: event.target.value as PostSaleTicketStatus })}><option value="open">Aberto</option><option value="in_progress">Em atendimento</option><option value="waiting_client">Aguardando cliente</option><option value="solved">Resolvido</option></select></header>
+              <div className="mapp-final-release-grid">
+                <label>Área<input value={ticket.category} onChange={(event) => updatePostSaleTicket(ticket.id, { category: event.target.value })} /></label>
+                <label>Prazo<input value={ticket.due} onChange={(event) => updatePostSaleTicket(ticket.id, { due: event.target.value })} /></label>
+                <label>Responsável<input value={ticket.owner} onChange={(event) => updatePostSaleTicket(ticket.id, { owner: event.target.value })} /></label>
+                <label>Evidência<textarea value={ticket.evidence} onChange={(event) => updatePostSaleTicket(ticket.id, { evidence: event.target.value })} placeholder="Print, aparelho, papel logado e texto do erro." rows={2} /></label>
+                <label>Observação<textarea value={ticket.notes} onChange={(event) => updatePostSaleTicket(ticket.id, { notes: event.target.value })} placeholder="O que já foi tentado e próximo passo." rows={2} /></label>
+              </div>
+              <button type="button" className="mapp-secondary-button" onClick={() => deletePostSaleTicket(ticket.id)}>Remover chamado</button>
+            </article>
+          )) : <div className="mapp-success-card"><strong>Nenhum chamado aberto</strong><p>Quando o primeiro cliente relatar algo, registre aqui com prioridade, prazo e evidência.</p></div>}
+        </div>
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyPostSaleSupport()}>Copiar plano de suporte</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetPostSaleSupport}>Zerar pós-venda</button>
+        </div>
+        <small className="mapp-final-honesty">P0/P1 aberto não impede navegar, mas impede dizer que o cliente está estável. Registre evidência antes de prometer correção.</small>
       </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
@@ -2702,7 +3055,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <span><b>Loja</b><strong>{roleState.storeName || status?.settings.store_name || 'Sem loja'}</strong></span>
           <span><b>Conexão</b><strong>{online ? 'Online' : 'Offline'}</strong></span>
           <span><b>App</b><strong>{status?.version ?? WEB_APP_VERSION}</strong></span>
-          <span><b>Cache</b><strong>v136 proposta</strong></span>
+          <span><b>Cache</b><strong>v137 suporte</strong></span>
           <span><b>Papel</b><strong>{webRoleLabel(roleState.role)}</strong></span>
           <span><b>Permissão</b><strong>{capabilities.writeLabel}</strong></span>
           <span><b>Última área</b><strong>{snapshot.module}</strong></span>
@@ -2750,7 +3103,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Teste manual ainda é obrigatório antes de vender</strong>
-          <p>Use a proposta comercial v136, a execução real assistida e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
+          <p>Use a proposta comercial v137, a execução real assistida e o Kit do primeiro cliente em dois aparelhos. Marque Passou/Falhou/Bloqueado, copie a evidência e só venda quando não houver falha crítica.</p>
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>

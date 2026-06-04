@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v136-termo-implantacao';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v136-termo-implantacao';
+export const WEB_APP_VERSION = 'pwa-supabase-v137-pos-venda-suporte';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v137-pos-venda-suporte';
 
 
 export interface WebTrainingModeState {
@@ -68,8 +68,8 @@ export interface WebTrainingModeState {
   updatedAt: string;
 }
 
-export const WEB_TRAINING_MODE_KEY = 'smart-loja:training-mode-safe-v136';
-const LEGACY_WEB_TRAINING_MODE_KEYS = ['smart-loja:training-mode-safe-v134', 'smart-loja:training-mode-safe-v133', 'smart-loja:training-mode-safe-v132', 'smart-loja:training-mode-safe-v131'];
+export const WEB_TRAINING_MODE_KEY = 'smart-loja:training-mode-safe-v137';
+const LEGACY_WEB_TRAINING_MODE_KEYS = ['smart-loja:training-mode-safe-v136', 'smart-loja:training-mode-safe-v134', 'smart-loja:training-mode-safe-v133', 'smart-loja:training-mode-safe-v132', 'smart-loja:training-mode-safe-v131'];
 
 function emptyWebTrainingMode(): WebTrainingModeState {
   return { enabled: false, scenario: '', responsible: '', note: '', startedAt: '', updatedAt: '' };
@@ -144,8 +144,8 @@ export interface WebDemoModeState {
   updatedAt: string;
 }
 
-export const WEB_DEMO_MODE_KEY = 'smart-loja:demo-mode-safe-v136';
-const LEGACY_WEB_DEMO_MODE_KEYS = ['smart-loja:demo-mode-safe-v134', 'smart-loja:demo-mode-safe-v133', 'smart-loja:demo-mode-safe-v132'];
+export const WEB_DEMO_MODE_KEY = 'smart-loja:demo-mode-safe-v137';
+const LEGACY_WEB_DEMO_MODE_KEYS = ['smart-loja:demo-mode-safe-v136', 'smart-loja:demo-mode-safe-v134', 'smart-loja:demo-mode-safe-v133', 'smart-loja:demo-mode-safe-v132'];
 
 function emptyWebDemoMode(): WebDemoModeState {
   return { enabled: false, scenario: '', storeName: '', responsible: '', note: '', startedAt: '', updatedAt: '' };
@@ -2843,7 +2843,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
   const total = 11;
   if (typeof window === 'undefined' || !window.localStorage) return { done: 0, total, percent: 0 };
   try {
-    const keys = ['smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
+    const keys = ['smart-loja:guided-commercial-test-v137', 'smart-loja:guided-commercial-test-v136', 'smart-loja:guided-commercial-test-v134', 'smart-loja:guided-commercial-test-v133', 'smart-loja:guided-commercial-test-v131', 'smart-loja:guided-commercial-test-v130', 'smart-loja:guided-commercial-test-v129', 'smart-loja:guided-commercial-test-v128', 'smart-loja:guided-commercial-test-v127', 'smart-loja:guided-commercial-test-v126'];
     for (const key of keys) {
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
@@ -2864,7 +2864,7 @@ function readGuidedCommercialProgress(): { done: number; total: number; percent:
 function readAssistedCommercialProgress(): { passed: number; failed: number; blocked: number; total: number; percent: number; criticalProblems: number } {
   const total = 12;
   const criticalIds = new Set([
-    'deploy-cache-v136-real',
+    'deploy-cache-v137-real',
     'owner-auto-test-no-danger',
     'device-a-create-core-records',
     'device-b-sees-core-records',
@@ -2875,7 +2875,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
     'offline-real-retry-no-duplicate',
     'final-sell-decision',
   ]);
-  const keys = ['smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
+  const keys = ['smart-loja:assisted-commercial-run-v137', 'smart-loja:assisted-commercial-run-v136', 'smart-loja:assisted-commercial-run-v134', 'smart-loja:assisted-commercial-run-v133', 'smart-loja:assisted-commercial-run-v131', 'smart-loja:assisted-commercial-run-v130', 'smart-loja:assisted-commercial-run-v129', 'smart-loja:assisted-commercial-run-v128', 'smart-loja:assisted-commercial-run-v127'];
   if (typeof window === 'undefined' || !window.localStorage) return { passed: 0, failed: 0, blocked: 0, total, percent: 0, criticalProblems: 0 };
   try {
     for (const key of keys) {
@@ -2888,7 +2888,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
       let blocked = 0;
       let criticalProblems = 0;
       for (const [id, result] of Object.entries(results)) {
-        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v133-real' || id === 'deploy-cache-v134-real' ? 'deploy-cache-v136-real' : id;
+        const normalizedId = id === 'deploy-cache-v128-real' || id === 'deploy-cache-v129-real' || id === 'deploy-cache-v130-real' || id === 'deploy-cache-v131-real' || id === 'deploy-cache-v133-real' || id === 'deploy-cache-v134-real' || id === 'deploy-cache-v136-real' ? 'deploy-cache-v137-real' : id;
         if (result === 'passed') passed += 1;
         if (result === 'failed') failed += 1;
         if (result === 'blocked') blocked += 1;
@@ -2904,7 +2904,7 @@ function readAssistedCommercialProgress(): { passed: number; failed: number; blo
 
 
 function readFinalCommercialAcceptanceStatus(): { signed: boolean; responsible: string; acceptedAt: string; key: string } {
-  const keys = ['smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
+  const keys = ['smart-loja:final-commercial-acceptance-v137', 'smart-loja:final-commercial-acceptance-v136', 'smart-loja:final-commercial-acceptance-v134', 'smart-loja:final-commercial-acceptance-v133', 'smart-loja:final-commercial-acceptance-v131', 'smart-loja:final-commercial-acceptance-v130', 'smart-loja:final-commercial-acceptance-v129'];
   if (typeof window === 'undefined' || !window.localStorage) return { signed: false, responsible: '', acceptedAt: '', key: keys[0] };
   try {
     for (const key of keys) {
@@ -2924,7 +2924,7 @@ function readFinalCommercialAcceptanceStatus(): { signed: boolean; responsible: 
 
 function readCommercialTourProgress(): { done: number; total: number; percent: number; active: boolean } {
   const total = 8;
-  const keys = ['smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
+  const keys = ['smart-loja:commercial-tour-v137', 'smart-loja:commercial-tour-v136', 'smart-loja:commercial-tour-v134', 'smart-loja:commercial-tour-v133'];
   if (!canUseBrowserStorage()) return { done: 0, total, percent: 0, active: false };
   try {
     for (const key of keys) {
@@ -2945,7 +2945,7 @@ function readCommercialTourProgress(): { done: number; total: number; percent: n
 
 function readCommercialProposalProgress(): { done: number; total: number; percent: number; active: boolean; plan: string } {
   const total = 7;
-  const keys = ['smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
+  const keys = ['smart-loja:commercial-proposal-v137', 'smart-loja:commercial-proposal-v136', 'smart-loja:commercial-proposal-v135', 'smart-loja:commercial-proposal-v134'];
   if (!canUseBrowserStorage()) return { done: 0, total, percent: 0, active: false, plan: 'não escolhido' };
   try {
     for (const key of keys) {
@@ -2967,7 +2967,7 @@ function readCommercialProposalProgress(): { done: number; total: number; percen
 
 function readImplementationTermProgress(): { done: number; total: number; percent: number; active: boolean; accepted: boolean } {
   const total = 8;
-  const keys = ['smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
+  const keys = ['smart-loja:implementation-term-v137', 'smart-loja:implementation-term-v136', 'smart-loja:implementation-term-v135'];
   if (!canUseBrowserStorage()) return { done: 0, total, percent: 0, active: false, accepted: false };
   try {
     for (const key of keys) {
@@ -2984,6 +2984,41 @@ function readImplementationTermProgress(): { done: number; total: number; percen
     return { done: 0, total, percent: 0, active: false, accepted: false };
   }
   return { done: 0, total, percent: 0, active: false, accepted: false };
+}
+
+
+function readPostSaleSupportProgress(): { total: number; open: number; solved: number; criticalOpen: number; percent: number; active: boolean } {
+  const totalChecklist = 6;
+  const keys = ['smart-loja:post-sale-support-v137', 'smart-loja:post-sale-support-v136'];
+  if (!canUseBrowserStorage()) return { total: 0, open: 0, solved: 0, criticalOpen: 0, percent: 0, active: false };
+  try {
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { doneIds?: unknown; tickets?: unknown; clientName?: unknown; supportOwner?: unknown; updatedAt?: unknown };
+      const done = Array.isArray(parsed.doneIds) ? new Set(parsed.doneIds.filter((id): id is string => typeof id === 'string')).size : 0;
+      const tickets = Array.isArray(parsed.tickets) ? parsed.tickets : [];
+      let solved = 0;
+      let open = 0;
+      let criticalOpen = 0;
+      for (const item of tickets) {
+        const ticket = item && typeof item === 'object' ? item as { status?: unknown; priority?: unknown } : {};
+        const status = typeof ticket.status === 'string' ? ticket.status : 'open';
+        const priority = ticket.priority === 'P0' || ticket.priority === 'P1' || ticket.priority === 'P2' ? ticket.priority : 'P1';
+        if (status === 'solved') solved += 1;
+        else {
+          open += 1;
+          if (priority === 'P0' || priority === 'P1') criticalOpen += 1;
+        }
+      }
+      const active = done > 0 || tickets.length > 0 || typeof parsed.clientName === 'string' || typeof parsed.supportOwner === 'string' || typeof parsed.updatedAt === 'string';
+      const percent = Math.min(100, Math.round(((done + solved) / (totalChecklist + (tickets.length || 1))) * 100));
+      return { total: tickets.length, open, solved, criticalOpen, percent, active };
+    }
+  } catch {
+    return { total: 0, open: 0, solved: 0, criticalOpen: 0, percent: 0, active: false };
+  }
+  return { total: 0, open: 0, solved: 0, criticalOpen: 0, percent: 0, active: false };
 }
 
 export async function webCommercialValidation(): Promise<WebCommercialValidationReport> {
@@ -3072,55 +3107,67 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
   const trainingMode = readWebTrainingMode();
   const demoMode = readWebDemoMode();
   pushCommercialCheck(checks, {
-    id: 'training-mode-safe-v136', area: 'Treinamento', title: 'Modo treinamento seguro',
+    id: 'training-mode-safe-v137', area: 'Treinamento', title: 'Modo treinamento seguro',
     detail: trainingMode.enabled ? 'Treinamento ativo: gravações reais estão bloqueadas para demonstração segura.' : 'Treinamento desativado: operação real liberada conforme papel do usuário.',
     level: trainingMode.enabled ? 'warn' : 'ok',
-    evidence: trainingMode.enabled ? `responsavel=${trainingMode.responsible || 'não informado'}; cenario=${trainingMode.scenario || 'não informado'}` : 'smart-loja:training-mode-safe-v136 desligado',
+    evidence: trainingMode.enabled ? `responsavel=${trainingMode.responsible || 'não informado'}; cenario=${trainingMode.scenario || 'não informado'}` : 'smart-loja:training-mode-safe-v137 desligado',
   });
 
   pushCommercialCheck(checks, {
-    id: 'demo-mode-separated-v136', area: 'Treinamento', title: 'Ambiente demo separado',
+    id: 'demo-mode-separated-v137', area: 'Treinamento', title: 'Ambiente demo separado',
     detail: demoMode.enabled ? 'Demo ativa: telas usam dados fictícios separados da loja real. Desative antes da venda verdadeira.' : 'Demo desativada: telas usam dados reais conforme login e permissão.',
     level: demoMode.enabled ? 'warn' : 'ok',
-    evidence: demoMode.enabled ? `lojaDemo=${demoMode.storeName || 'Loja Demonstração Fácil'}; responsavel=${demoMode.responsible || 'não informado'}` : 'smart-loja:demo-mode-safe-v136 desligado',
+    evidence: demoMode.enabled ? `lojaDemo=${demoMode.storeName || 'Loja Demonstração Fácil'}; responsavel=${demoMode.responsible || 'não informado'}` : 'smart-loja:demo-mode-safe-v137 desligado',
   });
 
 
   const tourProgress = readCommercialTourProgress();
   pushCommercialCheck(checks, {
-    id: 'commercial-tour-v136', area: 'Treinamento', title: 'Tour de apresentação comercial',
+    id: 'commercial-tour-v137', area: 'Treinamento', title: 'Tour de apresentação comercial',
     detail: tourProgress.done >= tourProgress.total
       ? 'Tour comercial concluído neste aparelho com roteiro de apresentação marcado.'
       : tourProgress.active
         ? `Tour comercial em andamento: ${tourProgress.done}/${tourProgress.total} etapa(s).`
         : 'Tour comercial ainda não iniciado. Use antes de apresentar para cliente novo.',
     level: tourProgress.done >= tourProgress.total ? 'ok' : tourProgress.active ? 'warn' : 'warn',
-    evidence: `progresso=${tourProgress.percent}%; chave=smart-loja:commercial-tour-v136`,
+    evidence: `progresso=${tourProgress.percent}%; chave=smart-loja:commercial-tour-v137`,
   });
 
 
   const proposalProgress = readCommercialProposalProgress();
   pushCommercialCheck(checks, {
-    id: 'commercial-proposal-v136', area: 'Venda comercial', title: 'Proposta comercial / planos',
+    id: 'commercial-proposal-v137', area: 'Venda comercial', title: 'Proposta comercial / planos',
     detail: proposalProgress.done >= proposalProgress.total
       ? 'Proposta comercial marcada como pronta neste aparelho.'
       : proposalProgress.active
         ? `Proposta em andamento: ${proposalProgress.done}/${proposalProgress.total} item(ns).`
         : 'Proposta comercial ainda não montada. Use depois do tour para fechar preço, implantação e próximo passo.',
     level: proposalProgress.done >= proposalProgress.total ? 'ok' : proposalProgress.active ? 'warn' : 'warn',
-    evidence: `plano=${proposalProgress.plan}; progresso=${proposalProgress.percent}%; chave=smart-loja:commercial-proposal-v136`,
+    evidence: `plano=${proposalProgress.plan}; progresso=${proposalProgress.percent}%; chave=smart-loja:commercial-proposal-v137`,
   });
 
   const implementationTermProgress = readImplementationTermProgress();
   pushCommercialCheck(checks, {
-    id: 'implementation-term-v136', area: 'Venda comercial', title: 'Termo de implantação e aceite do cliente',
+    id: 'implementation-term-v137', area: 'Venda comercial', title: 'Termo de implantação e aceite do cliente',
     detail: implementationTermProgress.accepted
       ? 'Termo simples de implantação foi aceito neste aparelho. Guarde o texto copiado junto da proposta e prints do teste real.'
       : implementationTermProgress.percent >= 100
         ? 'Checklist do termo está completo; falta registrar aceite do responsável.'
         : 'Termo ainda pendente. Antes de implantar, combine escopo, suporte, responsabilidades, impressão, backup e limites honestos.',
     level: implementationTermProgress.accepted ? 'ok' : implementationTermProgress.percent >= 75 ? 'warn' : 'warn',
-    evidence: `progresso=${implementationTermProgress.percent}%; aceito=${implementationTermProgress.accepted ? 'sim' : 'não'}; chave=smart-loja:implementation-term-v136`,
+    evidence: `progresso=${implementationTermProgress.percent}%; aceito=${implementationTermProgress.accepted ? 'sim' : 'não'}; chave=smart-loja:implementation-term-v137`,
+  });
+
+  const postSaleProgress = readPostSaleSupportProgress();
+  pushCommercialCheck(checks, {
+    id: 'post-sale-support-v137', area: 'Pós-venda', title: 'Suporte e SLA do primeiro cliente',
+    detail: postSaleProgress.criticalOpen
+      ? `${postSaleProgress.criticalOpen} chamado(s) P0/P1 ainda aberto(s). Não considerar cliente estável até registrar responsável, prazo e evidência.`
+      : postSaleProgress.active
+        ? `Pós-venda em andamento: ${postSaleProgress.solved}/${postSaleProgress.total} chamado(s) resolvido(s), progresso ${postSaleProgress.percent}%.`
+        : 'Pós-venda ainda não configurado. Combine canal, revisão do primeiro dia, prioridade, prazo e evidência antes de deixar cliente sozinho.',
+    level: postSaleProgress.criticalOpen ? 'danger' : postSaleProgress.active ? 'warn' : 'warn',
+    evidence: `abertos=${postSaleProgress.open}; resolvidos=${postSaleProgress.solved}; criticosAbertos=${postSaleProgress.criticalOpen}; chave=smart-loja:post-sale-support-v137`,
   });
 
   pushCommercialCheck(checks, {
@@ -3132,40 +3179,40 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v136 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v137 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });
 
   const guidedProgress = readGuidedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'guided-commercial-v136', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
+    id: 'guided-commercial-v137', area: 'Teste real', title: 'Roteiro guiado multiaparelho',
     detail: guidedProgress.done >= guidedProgress.total ? 'Roteiro guiado marcado como concluído neste aparelho.' : `Roteiro guiado ainda incompleto: ${guidedProgress.done}/${guidedProgress.total} passo(s).`,
     level: guidedProgress.done >= guidedProgress.total ? 'ok' : guidedProgress.done >= 6 ? 'warn' : 'warn',
-    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v136`,
+    evidence: `progresso=${guidedProgress.percent}%; chave=smart-loja:guided-commercial-test-v137`,
   });
 
   const assistedProgress = readAssistedCommercialProgress();
   pushCommercialCheck(checks, {
-    id: 'assisted-execution-v136', area: 'Teste real', title: 'Execução real assistida',
+    id: 'assisted-execution-v137', area: 'Teste real', title: 'Execução real assistida',
     detail: assistedProgress.criticalProblems
       ? `${assistedProgress.criticalProblems} falha(s) ou bloqueio(s) crítico(s) foram registrados. Não vender ainda.`
       : assistedProgress.passed >= assistedProgress.total
         ? 'Execução assistida concluída sem falha crítica registrada neste aparelho.'
         : `Execução assistida em andamento: ${assistedProgress.passed}/${assistedProgress.total} passo(s) passaram.`,
     level: assistedProgress.criticalProblems ? 'danger' : assistedProgress.passed >= assistedProgress.total ? 'ok' : 'warn',
-    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v136`,
+    evidence: `passou=${assistedProgress.passed}; falhou=${assistedProgress.failed}; bloqueado=${assistedProgress.blocked}; chave=smart-loja:assisted-commercial-run-v137`,
   });
 
 
   const finalAcceptance = readFinalCommercialAcceptanceStatus();
   pushCommercialCheck(checks, {
-    id: 'final-commercial-acceptance-v136', area: 'Teste real', title: 'Aceite final de venda',
+    id: 'final-commercial-acceptance-v137', area: 'Teste real', title: 'Aceite final de venda',
     detail: finalAcceptance.signed
       ? `Aceite final registrado por ${finalAcceptance.responsible || 'responsável não informado'} em ${new Date(finalAcceptance.acceptedAt).toLocaleString('pt-BR')}.`
       : 'Aceite final ainda não registrado. Só assine depois de zerar P0/P1, concluir dois aparelhos, permissões, impressão e backup controlado.',
     level: finalAcceptance.signed ? 'ok' : 'warn',
-    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v136 sem aceite registrado',
+    evidence: finalAcceptance.signed ? `chave=${finalAcceptance.key}; acceptedAt=${finalAcceptance.acceptedAt}` : 'chave=smart-loja:final-commercial-acceptance-v137 sem aceite registrado',
   });
 
   pushCommercialCheck(checks, {

@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v136-termo-implantacao';
-const currentCache = 'smart-loja-pwa-supabase-v136-termo-implantacao';
+const currentVersion = 'pwa-supabase-v137-pos-venda-suporte';
+const currentCache = 'smart-loja-pwa-supabase-v137-pos-venda-suporte';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v136')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v136.');
+if (!mainSource.includes('smart-mobile-rebuild-v137')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v137.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,8 +82,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v136 termo de implantacao e aceite.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v136 termo de implantacao e aceite.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v137 termo de implantacao e aceite.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v137 termo de implantacao e aceite.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
@@ -124,4 +124,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v136 PWA passou. Termo de implantação, aceite do cliente, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');
+console.log('OK: release_check v137 PWA passou. Termo de implantação, aceite do cliente, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');
