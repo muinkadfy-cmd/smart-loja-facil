@@ -40,3 +40,8 @@ wrangler.toml
 dist-codex-build/
 release-commercial/
 *.zip
+
+.env
+.env.local
+.env.production
+.env.*.local
