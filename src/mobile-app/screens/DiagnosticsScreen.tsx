@@ -471,6 +471,166 @@ interface ExecutiveHealthSummary {
   areas: ExecutiveHealthArea[];
 }
 
+
+type RegressionAuditResult = 'pending' | 'passed' | 'failed' | 'blocked';
+type RegressionAuditDecision = 'blocked' | 'attention' | 'ready';
+type RegressionAuditPriority = 'P0' | 'P1' | 'P2';
+
+interface RegressionAuditStep {
+  id: string;
+  group: string;
+  title: string;
+  action: string;
+  expected: string;
+  evidence: string;
+  priority: RegressionAuditPriority;
+}
+
+interface RegressionAuditState {
+  results: Record<string, RegressionAuditResult>;
+  auditor: string;
+  storeOrClient: string;
+  deviceA: string;
+  deviceB: string;
+  notes: string;
+  approvedBy: string;
+  approvedAt: string;
+  updatedAt: string;
+}
+
+interface RegressionAuditSummary {
+  passed: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  total: number;
+  percent: number;
+  criticalOpen: number;
+  decision: RegressionAuditDecision;
+  title: string;
+  subtitle: string;
+  score: number;
+  stars: string;
+  blockers: string[];
+  warnings: string[];
+}
+
+
+
+const REGRESSION_AUDIT_KEY = 'smart-loja:regression-audit-v140';
+const LEGACY_REGRESSION_AUDIT_KEYS = ['smart-loja:regression-audit-v139'];
+
+const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
+  {
+    id: 'regression-login-session',
+    group: '1. Entrada e sessão',
+    title: 'Login, sessão e troca de aparelho',
+    action: 'Entrar, sair, recarregar o PWA instalado e confirmar que o usuário volta para a loja correta sem travar.',
+    expected: 'Login, sessão e logout funcionam sem tela branca, loop ou loja errada.',
+    evidence: 'Print do Diagnóstico Web com usuário, papel, loja e versão v140.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-dashboard-mobile',
+    group: '2. Mobile principal',
+    title: 'Dashboard e navegação mobile sem corte',
+    action: 'Abrir no celular, navegar pelo menu inferior e conferir se nenhum botão fica escondido ou espremido.',
+    expected: 'Dashboard, cards, alertas e bottom nav ficam legíveis em Android/iPhone.',
+    evidence: 'Print do dashboard no celular instalado.',
+    priority: 'P1',
+  },
+  {
+    id: 'regression-products-customers',
+    group: '3. Cadastros críticos',
+    title: 'Clientes e produtos preservados',
+    action: 'Criar/editar um cliente e um produto TESTE, recarregar e conferir no segundo aparelho.',
+    expected: 'Nada some, nada duplica, estoque e dados básicos permanecem corretos.',
+    evidence: 'Nome do cliente/produto TESTE conferido nos dois aparelhos.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-sale-stock-receipt',
+    group: '4. Venda / PDV',
+    title: 'Venda controlada, estoque e comprovante',
+    action: 'Fazer venda pequena com produto TESTE, conferir baixa de estoque e abrir/reimprimir comprovante.',
+    expected: 'Venda grava uma vez, estoque não fica negativo por erro e comprovante abre sem quebrar.',
+    evidence: 'Número/horário da venda TESTE e comprovante conferido.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-cash-flow',
+    group: '5. Caixa',
+    title: 'Abrir, movimentar e fechar caixa',
+    action: 'Abrir caixa, lançar entrada/saída de teste, fechar e conferir saldo esperado.',
+    expected: 'Caixa não trava, não duplica movimento e mostra saldo claro para usuário leigo.',
+    evidence: 'Saldo inicial/final e movimento TESTE anotados.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-orders-cycle',
+    group: '6. Pedidos',
+    title: 'Pedido criado e concluído/cancelado',
+    action: 'Criar pedido com cliente/produto TESTE, mudar status e conferir no segundo aparelho.',
+    expected: 'Pedido aparece igual nos aparelhos e status não fica preso.',
+    evidence: 'Status final do pedido TESTE registrado.',
+    priority: 'P1',
+  },
+  {
+    id: 'regression-credit-payment',
+    group: '7. Crediário',
+    title: 'Parcela, pagamento e restante claro',
+    action: 'Criar venda/crediário controlado ou usar parcela teste, receber pagamento e conferir valor original/pago/restante.',
+    expected: 'Usuário entende quanto era, quanto pagou e quanto falta sem apagar valor original.',
+    evidence: 'Parcela TESTE com pago/restante conferido.',
+    priority: 'P1',
+  },
+  {
+    id: 'regression-receipts-print',
+    group: '8. Comprovantes e impressão',
+    title: 'Impressão 58mm/80mm/A4 real',
+    action: 'Rodar amostras e testar uma impressão real controlada em 58mm, 80mm ou A4 disponível.',
+    expected: 'Comprovante não corta dados importantes e não confunde amostra com venda real.',
+    evidence: 'Foto ou confirmação do papel impresso.',
+    priority: 'P1',
+  },
+  {
+    id: 'regression-backup-restore-safe',
+    group: '9. Backup',
+    title: 'Backup baixa e restauração é protegida',
+    action: 'Criar/baixar backup e validar restauração só em ambiente vazio/teste, nunca direto em loja real sem cópia.',
+    expected: 'Backup existe, restauração exige confirmação forte e não apaga dados por engano.',
+    evidence: 'Arquivo de backup controlado e ambiente de teste anotados.',
+    priority: 'P1',
+  },
+  {
+    id: 'regression-permissions-roles',
+    group: '10. Permissões',
+    title: 'Dono, admin, operador e leitor conferidos',
+    action: 'Testar cada papel: dono controla, admin opera, operador não mexe em config crítica e leitor não salva.',
+    expected: 'Botões e Supabase bloqueiam o que cada papel não pode fazer.',
+    evidence: 'Lista dos e-mails/papéis testados sem expor senha.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-sync-offline',
+    group: '11. Sync e offline',
+    title: 'Dois aparelhos e pendências sem duplicar',
+    action: 'Alterar dado no aparelho 1, conferir no aparelho 2, simular internet fraca e reenviar pendência segura.',
+    expected: 'Alteração aparece no outro aparelho e pendência enviada não duplica dados.',
+    evidence: 'Horário da sync e pendência zerada no Diagnóstico.',
+    priority: 'P0',
+  },
+  {
+    id: 'regression-pwa-cache-deploy',
+    group: '12. PWA/deploy',
+    title: 'PWA instalado recebeu v140',
+    action: 'Depois do deploy, abrir o app instalado, conferir versão/cache v140 e limpar cache antigo se necessário.',
+    expected: 'Diagnóstico mostra v140 e as telas novas aparecem no celular instalado.',
+    evidence: 'Print de versão/cache v140 no PWA instalado.',
+    priority: 'P1',
+  },
+];
+
 const DEMO_MODE_STEPS: DemoModeStep[] = [
   { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
@@ -2147,6 +2307,179 @@ function buildExecutiveHealthText(params: {
   ].join('\n');
 }
 
+
+
+function emptyRegressionAuditState(): RegressionAuditState {
+  return {
+    results: {},
+    auditor: '',
+    storeOrClient: '',
+    deviceA: '',
+    deviceB: '',
+    notes: '',
+    approvedBy: '',
+    approvedAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeRegressionAuditResult(value: unknown): RegressionAuditResult {
+  return value === 'passed' || value === 'failed' || value === 'blocked' ? value : 'pending';
+}
+
+function normalizeRegressionAuditState(value: unknown): RegressionAuditState {
+  const source = value && typeof value === 'object' ? value as Partial<RegressionAuditState> : {};
+  const allowed = new Set(REGRESSION_AUDIT_STEPS.map((step) => step.id));
+  const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
+  const results: Record<string, RegressionAuditResult> = {};
+  for (const [id, result] of Object.entries(rawResults)) {
+    if (allowed.has(id)) results[id] = normalizeRegressionAuditResult(result);
+  }
+  return {
+    results,
+    auditor: typeof source.auditor === 'string' ? source.auditor.slice(0, 140) : '',
+    storeOrClient: typeof source.storeOrClient === 'string' ? source.storeOrClient.slice(0, 160) : '',
+    deviceA: typeof source.deviceA === 'string' ? source.deviceA.slice(0, 160) : '',
+    deviceB: typeof source.deviceB === 'string' ? source.deviceB.slice(0, 160) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1400) : '',
+    approvedBy: typeof source.approvedBy === 'string' ? source.approvedBy.slice(0, 140) : '',
+    approvedAt: typeof source.approvedAt === 'string' ? source.approvedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readRegressionAuditState(): RegressionAuditState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyRegressionAuditState();
+  try {
+    const current = normalizeRegressionAuditState(JSON.parse(window.localStorage.getItem(REGRESSION_AUDIT_KEY) || '{}'));
+    if (Object.keys(current.results).length || current.auditor || current.storeOrClient || current.updatedAt) return current;
+    for (const key of LEGACY_REGRESSION_AUDIT_KEYS) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const legacy = normalizeRegressionAuditState(JSON.parse(raw));
+      if (Object.keys(legacy.results).length || legacy.auditor || legacy.storeOrClient || legacy.updatedAt) {
+        window.localStorage.setItem(REGRESSION_AUDIT_KEY, JSON.stringify(legacy));
+        return legacy;
+      }
+    }
+  } catch {
+    return emptyRegressionAuditState();
+  }
+  return emptyRegressionAuditState();
+}
+
+function saveRegressionAuditState(state: RegressionAuditState): RegressionAuditState {
+  const normalized = normalizeRegressionAuditState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(REGRESSION_AUDIT_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function regressionResultLabel(result: RegressionAuditResult): string {
+  if (result === 'passed') return 'Passou';
+  if (result === 'failed') return 'Falhou';
+  if (result === 'blocked') return 'Bloqueado';
+  return 'Pendente';
+}
+
+function buildRegressionAuditSummary(params: {
+  state: RegressionAuditState;
+  report: WebCommercialValidationReport | null;
+  finalGate: FinalSellGate;
+  triage: ReturnType<typeof summarizeTriage>;
+  assisted: ReturnType<typeof summarizeAssistedState>;
+  executive: ExecutiveHealthSummary;
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+}): RegressionAuditSummary {
+  const results = params.state.results;
+  const total = REGRESSION_AUDIT_STEPS.length;
+  let passed = 0;
+  let failed = 0;
+  let blocked = 0;
+  let criticalOpen = 0;
+  for (const step of REGRESSION_AUDIT_STEPS) {
+    const result = normalizeRegressionAuditResult(results[step.id]);
+    if (result === 'passed') passed += 1;
+    if (result === 'failed') failed += 1;
+    if (result === 'blocked') blocked += 1;
+    if ((step.priority === 'P0' || step.priority === 'P1') && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+  }
+  const pending = total - passed - failed - blocked;
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
+  const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
+  addBlocker(criticalOpen > 0, `${criticalOpen} regressão(ões) P0/P1 com Falhou/Bloqueado.`);
+  addBlocker(params.triage.p0 > 0, `${params.triage.p0} item(ns) P0 ainda aberto(s) na correção pós-teste.`);
+  addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda bloqueado.');
+  addBlocker(params.assisted.failed > 0 || params.assisted.blocked > 0, 'Execução real assistida tem Falhou/Bloqueado.');
+  addBlocker(params.executive.decision === 'blocked', 'Painel executivo ainda não permite escalar.');
+  addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes da pré-venda.`);
+  addBlocker(!params.online, 'Aparelho está offline agora.');
+  addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
+  addWarning(pending > 0, `${pending} item(ns) de regressão ainda pendente(s).`);
+  addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
+  addWarning(params.roleState.role === 'viewer', 'Leitor não deve aprovar auditoria final.');
+  addWarning(!params.state.auditor.trim(), 'Responsável pela auditoria ainda não informado.');
+  addWarning(!params.state.deviceA.trim() || !params.state.deviceB.trim(), 'Aparelho 1 e aparelho 2 ainda não foram identificados.');
+  const percent = Math.round((passed / total) * 100);
+  const penalty = blockers.length * 16 + warnings.length * 3 + failed * 8 + blocked * 10 + pending * 3;
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+  const decision: RegressionAuditDecision = blockers.length ? 'blocked' : pending || warnings.length ? 'attention' : 'ready';
+  const title = decision === 'ready' ? 'Pré-venda real liberada com evidência' : decision === 'attention' ? 'Quase pronto: faltam conferências' : 'Não liberar pré-venda ainda';
+  const subtitle = decision === 'ready'
+    ? 'Checklist final completo neste aparelho. Ainda mantenha acompanhamento no primeiro cliente.'
+    : decision === 'attention'
+      ? 'Sem bloqueio crítico, mas existem pendências ou avisos antes de chamar de final.'
+      : 'Existe falha crítica, bloqueio ou risco que precisa correção antes do cliente real.';
+  return { passed, failed, blocked, pending, total, percent, criticalOpen, decision, title, subtitle, score, stars: executiveStars(score), blockers, warnings };
+}
+
+function buildRegressionAuditText(params: {
+  state: RegressionAuditState;
+  summary: RegressionAuditSummary;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+}): string {
+  const rows = REGRESSION_AUDIT_STEPS.map((step) => {
+    const result = normalizeRegressionAuditResult(params.state.results[step.id]);
+    return `[${regressionResultLabel(result)}] [${step.priority}] ${step.group} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
+  });
+  return [
+    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v140',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.summary.title}`,
+    `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
+    `Progresso: ${params.summary.passed}/${params.summary.total} passou; ${params.summary.failed} falhou; ${params.summary.blocked} bloqueado; ${params.summary.pending} pendente`,
+    `Cliente/loja: ${params.state.storeOrClient || params.roleState.storeName || 'não informado'}`,
+    `Auditor/responsável: ${params.state.auditor || 'não informado'}`,
+    `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
+    `Aparelho 2: ${params.state.deviceB || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    `Aprovado por: ${params.state.approvedBy || 'não aprovado'}${params.state.approvedAt ? ` em ${formatDateTime(params.state.approvedAt)}` : ''}`,
+    params.state.notes ? `Observações: ${params.state.notes}` : 'Observações: nenhuma',
+    '',
+    'Bloqueios:',
+    ...(params.summary.blockers.length ? params.summary.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio crítico registrado neste aparelho.']),
+    '',
+    'Avisos:',
+    ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
+    '',
+    'Checklist final:',
+    ...rows,
+    '',
+    'Regra honesta: esta auditoria não substitui teste físico real. Só marque Passou quando tiver evidência em celular, Supabase produção, papéis, impressão, backup e dois aparelhos.',
+  ].join('\n');
+}
+
 function buildTriageText(params: {
   items: CommercialTriageItem[];
   state: AssistedRealState;
@@ -2400,6 +2733,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [clientFeedbackState, setClientFeedbackState] = useState<ClientFeedbackState>(() => readClientFeedbackState());
   const [clientImprovementDraft, setClientImprovementDraft] = useState<ClientImprovementDraft>(() => emptyClientImprovementDraft());
   const [executiveHealthState, setExecutiveHealthState] = useState<ExecutiveHealthState>(() => readExecutiveHealthState());
+  const [regressionAuditState, setRegressionAuditState] = useState<RegressionAuditState>(() => readRegressionAuditState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -2511,6 +2845,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const clientFeedbackDoneSet = useMemo(() => new Set(clientFeedbackState.doneIds), [clientFeedbackState.doneIds]);
   const clientFeedbackSummary = useMemo(() => summarizeClientFeedback(clientFeedbackState), [clientFeedbackState]);
   const executiveHealthSummary = useMemo(() => buildExecutiveHealthSummary({ report, finalGate, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState, acceptance: finalAcceptance, executive: executiveHealthState }), [report, finalGate, triageSummary, assistedSummary, guidedDoneCount, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSaleSummary, clientFeedbackSummary, outbox, online, roleState, finalAcceptance, executiveHealthState]);
+  const regressionAuditSummary = useMemo(() => buildRegressionAuditSummary({ state: regressionAuditState, report, finalGate, triage: triageSummary, assisted: assistedSummary, executive: executiveHealthSummary, outbox, online, roleState }), [regressionAuditState, report, finalGate, triageSummary, assistedSummary, executiveHealthSummary, outbox, online, roleState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -3053,6 +3388,57 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Painel executivo copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+
+
+  function patchRegressionAudit(patch: Partial<RegressionAuditState>): void {
+    setRegressionAuditState((current) => saveRegressionAuditState({ ...current, ...patch }));
+  }
+
+  function setRegressionAuditResult(id: string, result: RegressionAuditResult): void {
+    setRegressionAuditState((current) => {
+      const nextResults = { ...current.results };
+      if (result === 'pending') delete nextResults[id];
+      else nextResults[id] = result;
+      return saveRegressionAuditState({ ...current, results: nextResults, approvedAt: '', approvedBy: '' });
+    });
+  }
+
+  function approveRegressionAudit(): void {
+    if (regressionAuditSummary.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Não dá para aprovar pré-venda com P0/P1 falhou, bloqueio, pendência local, offline ou fechamento bloqueado.' });
+      return;
+    }
+    if (regressionAuditSummary.pending > 0) {
+      setFeedback({ tone: 'info', text: 'Ainda existe item pendente. Marque Passou/Falhou/Bloqueado com evidência antes de aprovar final.' });
+      return;
+    }
+    if (roleState.role === 'viewer') {
+      setFeedback({ tone: 'error', text: 'Leitor não deve aprovar auditoria final. Use dono ou admin responsável.' });
+      return;
+    }
+    if (!regressionAuditState.auditor.trim()) {
+      setFeedback({ tone: 'info', text: 'Informe o responsável pela auditoria antes de aprovar.' });
+      return;
+    }
+    const next = saveRegressionAuditState({ ...regressionAuditState, approvedBy: regressionAuditState.auditor.trim(), approvedAt: new Date().toISOString() });
+    setRegressionAuditState(next);
+    setFeedback({ tone: regressionAuditSummary.decision === 'ready' ? 'success' : 'info', text: regressionAuditSummary.decision === 'ready' ? 'Auditoria final aprovada para pré-venda real com evidência.' : 'Auditoria aprovada com avisos. Mantenha acompanhamento no primeiro cliente.' });
+  }
+
+  function resetRegressionAudit(): void {
+    const ok = window.confirm('Zerar auditoria final deste aparelho? Isso não apaga venda, caixa, clientes, produtos, proposta, termo, suporte ou dados reais.');
+    if (!ok) return;
+    const next = saveRegressionAuditState(emptyRegressionAuditState());
+    setRegressionAuditState(next);
+    setFeedback({ tone: 'info', text: 'Auditoria final zerada neste aparelho. Dados reais preservados.' });
+  }
+
+  async function copyRegressionAudit(): Promise<void> {
+    const text = buildRegressionAuditText({ state: regressionAuditState, summary: regressionAuditSummary, report, snapshot, roleState, online });
+    await navigator.clipboard?.writeText(text);
+    setFeedback({ tone: 'success', text: 'Auditoria final copiada sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -3072,6 +3458,8 @@ ${buildPostSaleSupportText({ state: postSaleState, summary: postSaleSummary, ter
 ${buildClientFeedbackText({ state: clientFeedbackState, summary: clientFeedbackSummary, postSale: postSaleState, term: termState, proposal: proposalState, gate: finalGate, report, roleState, online, snapshot })}
 
 ${buildExecutiveHealthText({ state: executiveHealthState, summary: executiveHealthSummary, proposal: proposalState, term: termState, postSale: postSaleState, feedback: clientFeedbackState, report, roleState, online, snapshot })}
+
+${buildRegressionAuditText({ state: regressionAuditState, summary: regressionAuditSummary, report, snapshot, roleState, online })}
 
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
@@ -3486,6 +3874,62 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={resetExecutiveHealth}>Zerar painel</button>
         </div>
         <small className="mapp-final-honesty">Aprovado: {executiveHealthState.approvedAt ? `${executiveHealthState.approvedBy || 'responsável'} em ${formatDateTime(executiveHealthState.approvedAt)}` : 'não aprovado'}. Este painel não substitui teste real em celular, Supabase, impressão, backup e papéis.</small>
+      </section>
+
+
+      <section className={`mapp-section-block mapp-regression-audit-panel tone-${regressionAuditSummary.decision}`}>
+        <div className="mapp-section-title"><h2>Auditoria final de regressão / pré-venda real</h2><button type="button" onClick={() => void copyRegressionAudit()}>Copiar auditoria</button></div>
+        <div className="mapp-regression-hero">
+          <div>
+            <span>{regressionAuditSummary.title}</span>
+            <strong>{regressionAuditSummary.score}/100 · {regressionAuditSummary.stars}</strong>
+            <p>{regressionAuditSummary.subtitle}</p>
+          </div>
+          <b className={regressionAuditSummary.decision}>{regressionAuditSummary.decision === 'blocked' ? 'NÃO LIBERAR' : regressionAuditSummary.decision === 'attention' ? 'REVISAR' : 'LIBERAR'}</b>
+        </div>
+        <div className="mapp-regression-summary-grid">
+          <span><b>{regressionAuditSummary.passed}</b> Passou</span>
+          <span><b>{regressionAuditSummary.failed}</b> Falhou</span>
+          <span><b>{regressionAuditSummary.blocked}</b> Bloqueado</span>
+          <span><b>{regressionAuditSummary.pending}</b> Pendente</span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso da auditoria final ${regressionAuditSummary.percent}%`}><span style={{ width: `${regressionAuditSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={regressionAuditState.storeOrClient} onChange={(event) => patchRegressionAudit({ storeOrClient: event.target.value })} placeholder={executiveHealthState.clientName || roleState.storeName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Auditor/responsável<input value={regressionAuditState.auditor} onChange={(event) => patchRegressionAudit({ auditor: event.target.value })} placeholder="Ex.: implantador / suporte / dono" /></label>
+          <label>Aparelho 1<input value={regressionAuditState.deviceA} onChange={(event) => patchRegressionAudit({ deviceA: event.target.value })} placeholder="Ex.: PC da loja / celular do dono" /></label>
+          <label>Aparelho 2<input value={regressionAuditState.deviceB} onChange={(event) => patchRegressionAudit({ deviceB: event.target.value })} placeholder="Ex.: Android instalado / notebook" /></label>
+          <label>Observações da regressão<textarea value={regressionAuditState.notes} onChange={(event) => patchRegressionAudit({ notes: event.target.value })} placeholder="Anote falhas reais, prints, aparelhos, impressora, usuário/papel e decisão antes do cliente real." rows={3} /></label>
+        </div>
+        <div className="mapp-regression-step-list">
+          {REGRESSION_AUDIT_STEPS.map((step) => {
+            const result = normalizeRegressionAuditResult(regressionAuditState.results[step.id]);
+            return (
+              <article key={step.id} className={`mapp-regression-step priority-${step.priority.toLowerCase()} result-${result}`}>
+                <header><span>{step.priority}</span><strong>{step.group}</strong></header>
+                <h3>{step.title}</h3>
+                <p><b>Fazer:</b> {step.action}</p>
+                <p><b>Esperado:</b> {step.expected}</p>
+                <small><b>Evidência:</b> {step.evidence}</small>
+                <div className="mapp-regression-buttons">
+                  {(['passed', 'failed', 'blocked', 'pending'] as RegressionAuditResult[]).map((option) => (
+                    <button key={option} type="button" className={result === option ? 'is-active' : ''} onClick={() => setRegressionAuditResult(step.id, option)}>{regressionResultLabel(option)}</button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {regressionAuditSummary.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios antes da pré-venda real</strong>{regressionAuditSummary.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : <div className="mapp-final-alert-list"><strong>Sem bloqueio crítico nesta auditoria</strong><p>Continue com evidência real em dois aparelhos antes de deixar o cliente operar sozinho.</p></div>}
+        {regressionAuditSummary.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos finais</strong>{regressionAuditSummary.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={approveRegressionAudit} disabled={regressionAuditSummary.decision === 'blocked'}>Aprovar pré-venda real</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyRegressionAudit()}>Copiar auditoria final</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetRegressionAudit}>Zerar auditoria</button>
+        </div>
+        <small className="mapp-final-honesty">Aprovado: {regressionAuditState.approvedAt ? `${regressionAuditState.approvedBy || 'responsável'} em ${formatDateTime(regressionAuditState.approvedAt)}` : 'não aprovado'}. Não marque Passou sem evidência real.</small>
       </section>
 
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>

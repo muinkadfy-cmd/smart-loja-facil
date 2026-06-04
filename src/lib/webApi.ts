@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v139-painel-executivo-saude';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v139-painel-executivo-saude';
+export const WEB_APP_VERSION = 'pwa-supabase-v140-auditoria-final-regressao';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v140-auditoria-final-regressao';
 
 
 export interface WebTrainingModeState {
@@ -3050,6 +3050,51 @@ function readClientFeedbackProgress(): { done: number; total: number; percent: n
   return { done: 0, total, percent: 0, active: false, score: 0, openP0P1: 0, improvements: 0 };
 }
 
+function readFinalRegressionAuditProgress(): { passed: number; failed: number; blocked: number; pending: number; total: number; percent: number; criticalOpen: number; approved: boolean } {
+  const total = 12;
+  const criticalIds = new Set([
+    'regression-login-session',
+    'regression-products-customers',
+    'regression-sale-stock-receipt',
+    'regression-cash-flow',
+    'regression-permissions-roles',
+    'regression-sync-offline',
+    'regression-dashboard-mobile',
+    'regression-orders-cycle',
+    'regression-credit-payment',
+    'regression-receipts-print',
+    'regression-backup-restore-safe',
+    'regression-pwa-cache-deploy',
+  ]);
+  const keys = ['smart-loja:regression-audit-v140', 'smart-loja:regression-audit-v139'];
+  if (!canUseBrowserStorage()) return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false };
+  try {
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { results?: Record<string, unknown>; approvedAt?: unknown };
+      const results = parsed && typeof parsed === 'object' && parsed.results && typeof parsed.results === 'object' ? parsed.results : {};
+      let passed = 0;
+      let failed = 0;
+      let blocked = 0;
+      let criticalOpen = 0;
+      for (const [id, result] of Object.entries(results)) {
+        if (result === 'passed') passed += 1;
+        if (result === 'failed') failed += 1;
+        if (result === 'blocked') blocked += 1;
+        if (criticalIds.has(id) && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+      }
+      const pending = Math.max(0, total - passed - failed - blocked);
+      const approved = typeof parsed.approvedAt === 'string' && parsed.approvedAt.length > 0;
+      return { passed, failed, blocked, pending, total, percent: Math.round((passed / total) * 100), criticalOpen, approved };
+    }
+  } catch {
+    return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false };
+  }
+  return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false };
+}
+
+
 function readExecutiveHealthProgress(): { active: boolean; approved: boolean; scoreHint: number; blockers: number; warnings: number } {
   const keys = ['smart-loja:executive-health-v139', 'smart-loja:executive-health-v138'];
   if (!canUseBrowserStorage()) return { active: false, approved: false, scoreHint: 0, blockers: 0, warnings: 0 };
@@ -3241,6 +3286,21 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
         : 'Painel executivo ainda não iniciado. Use para juntar proposta, termo, pós-venda, feedback, riscos e decisão de escala.',
     level: executiveHealthProgress.approved ? 'ok' : 'warn',
     evidence: `aprovado=${executiveHealthProgress.approved ? 'sim' : 'não'}; chave=smart-loja:executive-health-v139`,
+  });
+
+
+  const regressionAuditProgress = readFinalRegressionAuditProgress();
+  pushCommercialCheck(checks, {
+    id: 'final-regression-audit-v140', area: 'Teste real', title: 'Auditoria final de regressão / pré-venda real',
+    detail: regressionAuditProgress.criticalOpen
+      ? `${regressionAuditProgress.criticalOpen} regressão(ões) P0/P1 com Falhou/Bloqueado. Não liberar cliente real.`
+      : regressionAuditProgress.approved
+        ? 'Auditoria final aprovada neste aparelho com checklist de regressão registrado.'
+        : regressionAuditProgress.passed >= regressionAuditProgress.total
+          ? 'Checklist final completo; falta ou confira aprovação registrada.'
+          : `Auditoria final em andamento: ${regressionAuditProgress.passed}/${regressionAuditProgress.total} item(ns) passaram.`,
+    level: regressionAuditProgress.criticalOpen ? 'danger' : regressionAuditProgress.approved ? 'ok' : 'warn',
+    evidence: `passou=${regressionAuditProgress.passed}; falhou=${regressionAuditProgress.failed}; bloqueado=${regressionAuditProgress.blocked}; pendente=${regressionAuditProgress.pending}; aprovado=${regressionAuditProgress.approved ? 'sim' : 'não'}; chave=smart-loja:regression-audit-v140`,
   });
 
   pushCommercialCheck(checks, {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v139-painel-executivo-saude';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v140-auditoria-final-regressao';
 const APP_SHELL = [
   '/',
   '/index.html',
