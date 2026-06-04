@@ -18,6 +18,7 @@ interface MobileShellProps {
   onRefresh: () => void;
   onOpenAlerts: () => void;
   onInstallUpdate: () => void;
+  onLogout: () => void;
   children: React.ReactNode;
 }
 
@@ -33,6 +34,7 @@ export function MobileShell({
   onRefresh,
   onOpenAlerts,
   onInstallUpdate,
+  onLogout,
   children,
 }: MobileShellProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -97,7 +99,11 @@ export function MobileShell({
           <span>Ambiente</span>
           <strong>{demoMode.enabled ? 'Demo' : trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v135 proposta'}</strong>
+          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v147 alertas'}</strong>
+          <button type="button" className="mapp-sidebar-logout" onClick={onLogout}>
+            <InlineIcon name="bloqueio_seguro" size={24} />
+            <span>Sair da conta</span>
+          </button>
         </div>
       </aside>
 
@@ -110,7 +116,7 @@ export function MobileShell({
             <span />
             <span />
           </button>
-          <MobileHeader status={status} settings={settings} alertsCount={alertsCount} onOpenAlerts={onOpenAlerts} onRefresh={onRefresh} />
+          <MobileHeader status={status} settings={settings} alertsCount={alertsCount} onOpenAlerts={onOpenAlerts} onRefresh={onRefresh} onLogout={onLogout} />
         </div>
 
         <main ref={pageRef} className="mapp-page" id="mapp-page-scroll">

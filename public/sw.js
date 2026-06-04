@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v146-backup-fotos-historico';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v147-alertas-logout-polimento';
 const APP_SHELL = [
   '/',
   '/index.html',

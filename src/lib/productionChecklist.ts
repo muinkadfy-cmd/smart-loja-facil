@@ -111,7 +111,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'PWA e cache',
     title: 'Celular instalado recebeu v139',
     detail: 'Depois do deploy, abrir o PWA instalado, conferir v139 no Diagnóstico Web e limpar cache antigo se necessário.',
-    expected: 'Versão pwa-supabase-v146-backup-fotos-historico e cache smart-loja-pwa-supabase-v146-backup-fotos-historico visíveis no celular.',
+    expected: 'Versão pwa-supabase-v147-alertas-logout-polimento e cache smart-loja-pwa-supabase-v147-alertas-logout-polimento visíveis no celular.',
     tone: 'cache',
   },
   {
@@ -297,7 +297,7 @@ export const PRODUCTION_CHECKLIST: ProductionCheckItem[] = [
     group: 'Cloudflare e PWA',
     title: 'Celular recebe a versão nova',
     detail: 'Depois do deploy, abrir o PWA já instalado, conferir aviso de atualização e versão no diagnóstico.',
-    expected: 'Versão pwa-supabase-v146-backup-fotos-historico, cache v146, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
+    expected: 'Versão pwa-supabase-v147-alertas-logout-polimento, cache v147, roteiro guiado, execução real assistida, Supabase preservado e atualização multiaparelhos aparecem corretamente.',
     tone: 'cache',
   },
   {
