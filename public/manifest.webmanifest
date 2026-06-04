@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v141",
-  "short_name": "Smart Loja v141",
-  "description": "Smart Loja Fácil PWA mobile-first v141 com implantação real dia 1, auditoria final, painel executivo, feedback/NPS, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
+  "name": "Smart Loja Fácil PWA v142",
+  "short_name": "Smart Loja v142",
+  "description": "Smart Loja Fácil PWA mobile-first v142 com correção pós-implantação dia 2, auditoria final, painel executivo, feedback/NPS, proposta comercial, tour guiado, dados fictícios separados, treinamento seguro, PWA/cache e Supabase preservado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

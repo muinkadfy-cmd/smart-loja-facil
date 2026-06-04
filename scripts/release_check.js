@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v141-implantacao-dia-1';
-const currentCache = 'smart-loja-pwa-supabase-v141-implantacao-dia-1';
+const currentVersion = 'pwa-supabase-v142-pos-implantacao-dia-2';
+const currentCache = 'smart-loja-pwa-supabase-v142-pos-implantacao-dia-2';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v141')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v141.');
+if (!mainSource.includes('smart-mobile-rebuild-v142')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v142.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -82,8 +82,11 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v141 implantação dia 1.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v141 implantação dia 1.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v142 pós-implantação dia 2.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v142 pós-implantação dia 2.');
+if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
+const diagnosticsSource = read('src/mobile-app/screens/DiagnosticsScreen.tsx');
+if (!diagnosticsSource.includes('Correção pós-implantação / Dia 2')) fail('Diagnóstico precisa renderizar a seção Correção pós-implantação / Dia 2.');
 
 try {
   const manifest = JSON.parse(read('public/manifest.webmanifest'));
@@ -124,4 +127,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v141 PWA passou. Checklist de implantação real dia 1, auditoria final de regressão, painel executivo de saúde comercial, feedback/NPS, pós-venda, termo de implantação, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');
+console.log('OK: release_check v142 PWA passou. Correção pós-implantação real dia 2, auditoria final de regressão, painel executivo de saúde comercial, feedback/NPS, pós-venda, termo de implantação, proposta comercial, tour guiado, modo treinamento, onboarding, aceite final, permissões por papel e Supabase preservado.');

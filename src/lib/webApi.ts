@@ -55,8 +55,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v141-implantacao-dia-1';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v141-implantacao-dia-1';
+export const WEB_APP_VERSION = 'pwa-supabase-v142-pos-implantacao-dia-2';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v142-pos-implantacao-dia-2';
 
 
 export interface WebTrainingModeState {
@@ -3141,6 +3141,51 @@ function readDayOneImplantationProgress(): { passed: number; failed: number; blo
 }
 
 
+function readDayTwoFollowUpProgress(): { passed: number; failed: number; blocked: number; pending: number; total: number; percent: number; criticalOpen: number; approved: boolean; active: boolean } {
+  const total = 12;
+  const criticalIds = new Set([
+    'day2-first-real-sale-after-day1',
+    'day2-cash-open-close-review',
+    'day2-second-device-sync',
+    'day2-permissions-users-review',
+    'day2-open-issues-prioritized',
+    'day2-client-opened-store',
+    'day2-printer-adjustment',
+    'day2-order-credit-real-doubt',
+    'day2-stock-products-review',
+    'day2-backup-support-path',
+    'day2-client-confidence',
+  ]);
+  const keys = ['smart-loja:day-two-follow-up-v142'];
+  if (!canUseBrowserStorage()) return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+  try {
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw) as { results?: Record<string, unknown>; approvedAt?: unknown; clientName?: unknown; supportOwner?: unknown; updatedAt?: unknown };
+      const results = parsed && typeof parsed === 'object' && parsed.results && typeof parsed.results === 'object' ? parsed.results : {};
+      let passed = 0;
+      let failed = 0;
+      let blocked = 0;
+      let criticalOpen = 0;
+      for (const [id, result] of Object.entries(results)) {
+        if (result === 'passed') passed += 1;
+        if (result === 'failed') failed += 1;
+        if (result === 'blocked') blocked += 1;
+        if (criticalIds.has(id) && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+      }
+      const pending = Math.max(0, total - passed - failed - blocked);
+      const approved = typeof parsed.approvedAt === 'string' && parsed.approvedAt.length > 0;
+      const active = approved || passed > 0 || failed > 0 || blocked > 0 || typeof parsed.clientName === 'string' || typeof parsed.supportOwner === 'string' || typeof parsed.updatedAt === 'string';
+      return { passed, failed, blocked, pending, total, percent: Math.round((passed / total) * 100), criticalOpen, approved, active };
+    }
+  } catch {
+    return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+  }
+  return { passed: 0, failed: 0, blocked: 0, pending: total, total, percent: 0, criticalOpen: 0, approved: false, active: false };
+}
+
+
 function readExecutiveHealthProgress(): { active: boolean; approved: boolean; scoreHint: number; blockers: number; warnings: number } {
   const keys = ['smart-loja:executive-health-v139', 'smart-loja:executive-health-v138'];
   if (!canUseBrowserStorage()) return { active: false, approved: false, scoreHint: 0, blockers: 0, warnings: 0 };
@@ -3363,6 +3408,20 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
     evidence: `passou=${dayOneProgress.passed}; falhou=${dayOneProgress.failed}; bloqueado=${dayOneProgress.blocked}; pendente=${dayOneProgress.pending}; aceito=${dayOneProgress.approved ? 'sim' : 'não'}; chave=smart-loja:day-one-implantation-v141`,
   });
 
+  const dayTwoProgress = readDayTwoFollowUpProgress();
+  pushCommercialCheck(checks, {
+    id: 'day-two-follow-up-v142', area: 'Teste real', title: 'Correção pós-implantação real Dia 2',
+    detail: dayTwoProgress.criticalOpen
+      ? `${dayTwoProgress.criticalOpen} item(ns) P0/P1 do Dia 2 com Falhou/Bloqueado. Não considerar cliente estabilizado.`
+      : dayTwoProgress.approved
+        ? 'Acompanhamento Dia 2 aprovado neste aparelho com plano de correção/evidência.'
+        : dayTwoProgress.active
+          ? `Dia 2 em acompanhamento: ${dayTwoProgress.passed}/${dayTwoProgress.total} item(ns) passaram.`
+          : 'Dia 2 ainda não iniciado. Use depois da primeira operação real para revisar venda, caixa, sync, impressão, dúvidas e suporte.',
+    level: dayTwoProgress.criticalOpen ? 'danger' : dayTwoProgress.approved ? 'ok' : 'warn',
+    evidence: `passou=${dayTwoProgress.passed}; falhou=${dayTwoProgress.failed}; bloqueado=${dayTwoProgress.blocked}; pendente=${dayTwoProgress.pending}; aprovado=${dayTwoProgress.approved ? 'sim' : 'não'}; chave=smart-loja:day-two-follow-up-v142`,
+  });
+
 
   pushCommercialCheck(checks, {
     id: 'service-worker', area: 'PWA/cache', title: 'Instalação PWA/cache',
@@ -3373,7 +3432,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v141 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v142 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

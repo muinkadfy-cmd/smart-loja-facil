@@ -564,6 +564,55 @@ interface DayOneImplantSummary {
 }
 
 
+type DayTwoFollowUpResult = 'pending' | 'passed' | 'failed' | 'blocked';
+type DayTwoFollowUpPriority = 'P0' | 'P1' | 'P2';
+type DayTwoFollowUpDecision = 'blocked' | 'attention' | 'stable';
+
+interface DayTwoFollowUpStep {
+  id: string;
+  phase: string;
+  title: string;
+  action: string;
+  expected: string;
+  evidence: string;
+  priority: DayTwoFollowUpPriority;
+}
+
+interface DayTwoFollowUpState {
+  results: Record<string, DayTwoFollowUpResult>;
+  clientName: string;
+  supportOwner: string;
+  contact: string;
+  reviewDate: string;
+  deviceA: string;
+  deviceB: string;
+  printer: string;
+  mainDoubt: string;
+  correctionPlan: string;
+  notes: string;
+  approvedBy: string;
+  approvedAt: string;
+  updatedAt: string;
+}
+
+interface DayTwoFollowUpSummary {
+  passed: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+  total: number;
+  percent: number;
+  criticalOpen: number;
+  decision: DayTwoFollowUpDecision;
+  title: string;
+  subtitle: string;
+  score: number;
+  stars: string;
+  blockers: string[];
+  warnings: string[];
+}
+
+
 
 const REGRESSION_AUDIT_KEY = 'smart-loja:regression-audit-v140';
 const LEGACY_REGRESSION_AUDIT_KEYS = ['smart-loja:regression-audit-v139'];
@@ -575,7 +624,7 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
     title: 'Login, sessão e troca de aparelho',
     action: 'Entrar, sair, recarregar o PWA instalado e confirmar que o usuário volta para a loja correta sem travar.',
     expected: 'Login, sessão e logout funcionam sem tela branca, loop ou loja errada.',
-    evidence: 'Print do Diagnóstico Web com usuário, papel, loja e versão v141.',
+    evidence: 'Print do Diagnóstico Web com usuário, papel, loja e versão v142.',
     priority: 'P0',
   },
   {
@@ -671,10 +720,10 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
   {
     id: 'regression-pwa-cache-deploy',
     group: '12. PWA/deploy',
-    title: 'PWA instalado recebeu v141',
-    action: 'Depois do deploy, abrir o app instalado, conferir versão/cache v141 e limpar cache antigo se necessário.',
-    expected: 'Diagnóstico mostra v141 e as telas novas aparecem no celular instalado.',
-    evidence: 'Print de versão/cache v141 no PWA instalado.',
+    title: 'PWA instalado recebeu v142',
+    action: 'Depois do deploy, abrir o app instalado, conferir versão/cache v142 e limpar cache antigo se necessário.',
+    expected: 'Diagnóstico mostra v142 e as telas novas aparecem no celular instalado.',
+    evidence: 'Print de versão/cache v142 no PWA instalado.',
     priority: 'P1',
   },
 ];
@@ -704,10 +753,10 @@ const DAY_ONE_IMPLANT_STEPS: DayOneImplantStep[] = [
   {
     id: 'day1-pwa-installed-cache',
     phase: '2. Login e nuvem',
-    title: 'PWA instalado recebeu v141',
-    action: 'Abrir o app instalado no celular, conferir versão/cache v141 e limpar cache antigo se necessário.',
-    expected: 'PWA mostra v141, abas novas aparecem e o app não fica preso em versão antiga.',
-    evidence: 'Print de versão/cache v141 no celular instalado.',
+    title: 'PWA instalado recebeu v142',
+    action: 'Abrir o app instalado no celular, conferir versão/cache v142 e limpar cache antigo se necessário.',
+    expected: 'PWA mostra v142, abas novas aparecem e o app não fica preso em versão antiga.',
+    evidence: 'Print de versão/cache v142 no celular instalado.',
     priority: 'P1',
   },
   {
@@ -790,6 +839,121 @@ const DAY_ONE_IMPLANT_STEPS: DayOneImplantStep[] = [
     expected: 'Cliente não fica sozinho sem suporte e falhas reais viram chamado com responsável e prazo.',
     evidence: 'Aceite, canal de suporte e próxima revisão anotados/copiadados.',
     priority: 'P1',
+  },
+];
+
+
+const DAY_TWO_FOLLOW_UP_KEY = 'smart-loja:day-two-follow-up-v142';
+const LEGACY_DAY_TWO_FOLLOW_UP_KEYS = ['smart-loja:day-two-follow-up-v142'];
+
+const DAY_TWO_FOLLOW_UP_STEPS: DayTwoFollowUpStep[] = [
+  {
+    id: 'day2-client-opened-store',
+    phase: '1. Abertura do segundo dia',
+    title: 'Cliente abriu o sistema sem ajuda pesada',
+    action: 'Confirmar se o cliente conseguiu abrir o PWA, entrar na loja certa e entender a tela inicial no início do segundo dia.',
+    expected: 'App abre rápido, mostra a loja certa e o cliente não fica perdido antes de vender.',
+    evidence: 'Horário de abertura, aparelho usado e print/relato do cliente.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-first-real-sale-after-day1',
+    phase: '2. Operação real',
+    title: 'Primeira venda do Dia 2 conferida',
+    action: 'Acompanhar ou revisar uma venda real do Dia 2 com produto, pagamento, estoque e comprovante.',
+    expected: 'Venda grava uma vez, estoque fica correto e o comprovante pode ser aberto/impresso/compartilhado.',
+    evidence: 'Número/horário da venda real conferida, sem expor dados sensíveis.',
+    priority: 'P0',
+  },
+  {
+    id: 'day2-cash-open-close-review',
+    phase: '2. Operação real',
+    title: 'Caixa do Dia 2 conferido',
+    action: 'Revisar abertura, entrada/saída, saldo esperado e fechamento ou conferência parcial do caixa.',
+    expected: 'Caixa não duplica movimento, não perde lançamento e o saldo fica explicado para usuário leigo.',
+    evidence: 'Saldo inicial/final ou movimento controlado anotado.',
+    priority: 'P0',
+  },
+  {
+    id: 'day2-second-device-sync',
+    phase: '3. Multiaparelho',
+    title: 'Segundo aparelho viu as alterações do Dia 2',
+    action: 'Criar/alterar dado real controlado no aparelho principal e conferir no segundo aparelho após puxar dados.',
+    expected: 'Venda, cliente, produto, caixa ou pedido aparece igual nos dois aparelhos sem duplicar.',
+    evidence: 'Aparelhos usados, horário da conferência e pendências zeradas.',
+    priority: 'P0',
+  },
+  {
+    id: 'day2-printer-adjustment',
+    phase: '4. Impressão/comprovante',
+    title: 'Impressão ou compartilhamento ajustado',
+    action: 'Conferir se o cliente conseguiu imprimir 58/80mm, gerar PDF/A4 ou enviar comprovante por WhatsApp conforme combinado.',
+    expected: 'Comprovante legível, sem corte importante e com caminho claro para reimprimir/compartilhar.',
+    evidence: 'Foto do papel, PDF gerado ou confirmação de envio.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-order-credit-real-doubt',
+    phase: '5. Pedidos e crediário',
+    title: 'Pedidos/crediário sem dúvida crítica',
+    action: 'Perguntar e testar se pedido, crediário, pagamento parcial e restante estão claros para o cliente.',
+    expected: 'Cliente entende valor original, pago, restante, status de pedido e próxima ação.',
+    evidence: 'Dúvida principal e resposta combinada registradas.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-stock-products-review',
+    phase: '6. Produtos/estoque',
+    title: 'Estoque e produtos revisados após uso real',
+    action: 'Conferir produto vendido, baixa de estoque, ajuste manual permitido e alerta de estoque baixo.',
+    expected: 'Estoque não ficou negativo por erro e o cliente entende quando precisa ajustar.',
+    evidence: 'Produto conferido, estoque antes/depois ou alerta observado.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-permissions-users-review',
+    phase: '7. Usuários/permissões',
+    title: 'Papéis usados no Dia 2 não furaram permissão',
+    action: 'Revisar se operador/leitor/admin fizeram apenas o que podiam, sem acessar configuração crítica indevida.',
+    expected: 'Permissões continuam coerentes e sem risco de leitor/operador alterar o que não deve.',
+    evidence: 'Papéis testados e ação bloqueada/liberada registrada.',
+    priority: 'P0',
+  },
+  {
+    id: 'day2-backup-support-path',
+    phase: '8. Segurança e suporte',
+    title: 'Backup e caminho de suporte combinados',
+    action: 'Confirmar se backup/diagnóstico foram copiados e se o cliente sabe onde chamar suporte.',
+    expected: 'Existe caminho de suporte claro e evidência antes de mexer em dados sensíveis.',
+    evidence: 'Canal de suporte, responsável e backup/diagnóstico anotados.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-open-issues-prioritized',
+    phase: '9. Correções pós-implantação',
+    title: 'Falhas e dúvidas viraram plano P0/P1/P2',
+    action: 'Registrar tudo que apareceu no Dia 2: erro, dúvida, impressão, sync, caixa, estoque, crediário ou melhoria visual.',
+    expected: 'Nada fica solto no WhatsApp; cada item tem prioridade, responsável, prazo e evidência esperada.',
+    evidence: 'Plano de correção preenchido com prioridade e próxima ação.',
+    priority: 'P0',
+  },
+  {
+    id: 'day2-client-confidence',
+    phase: '10. Cliente estabilizado',
+    title: 'Cliente consegue continuar com suporte combinado',
+    action: 'Confirmar se o cliente aceita continuar usando com acompanhamento ou se precisa pausar até corrigir P0/P1.',
+    expected: 'Sem P0/P1 aberto para operação sozinha; se houver, não considerar estabilizado.',
+    evidence: 'Aceite do cliente, observação e próxima revisão combinada.',
+    priority: 'P1',
+  },
+  {
+    id: 'day2-final-evidence-copy',
+    phase: '11. Evidência final Dia 2',
+    title: 'Relatório do Dia 2 copiado e guardado',
+    action: 'Copiar o relatório do Dia 2 e guardar junto do termo, proposta, auditoria final e pós-venda.',
+    expected: 'Suporte tem histórico claro do que passou, falhou, ficou pendente e qual é o próximo lote.',
+    evidence: 'Relatório copiado sem senha/chave privada.',
+    priority: 'P2',
   },
 ];
 
@@ -2613,7 +2777,7 @@ function buildRegressionAuditText(params: {
     return `[${regressionResultLabel(result)}] [${step.priority}] ${step.group} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v141',
+    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v142',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -2813,6 +2977,187 @@ function buildDayOneImplantText(params: {
   ].join('\n');
 }
 
+
+
+function emptyDayTwoFollowUpState(): DayTwoFollowUpState {
+  return {
+    results: {},
+    clientName: '',
+    supportOwner: '',
+    contact: '',
+    reviewDate: '',
+    deviceA: '',
+    deviceB: '',
+    printer: '',
+    mainDoubt: '',
+    correctionPlan: '',
+    notes: '',
+    approvedBy: '',
+    approvedAt: '',
+    updatedAt: '',
+  };
+}
+
+function normalizeDayTwoFollowUpResult(value: unknown): DayTwoFollowUpResult {
+  return value === 'passed' || value === 'failed' || value === 'blocked' ? value : 'pending';
+}
+
+function normalizeDayTwoFollowUpState(value: unknown): DayTwoFollowUpState {
+  const source = value && typeof value === 'object' ? value as Partial<DayTwoFollowUpState> : {};
+  const allowed = new Set(DAY_TWO_FOLLOW_UP_STEPS.map((step) => step.id));
+  const rawResults = source.results && typeof source.results === 'object' ? source.results as Record<string, unknown> : {};
+  const results: Record<string, DayTwoFollowUpResult> = {};
+  for (const [id, result] of Object.entries(rawResults)) {
+    if (allowed.has(id)) results[id] = normalizeDayTwoFollowUpResult(result);
+  }
+  return {
+    results,
+    clientName: typeof source.clientName === 'string' ? source.clientName.slice(0, 160) : '',
+    supportOwner: typeof source.supportOwner === 'string' ? source.supportOwner.slice(0, 140) : '',
+    contact: typeof source.contact === 'string' ? source.contact.slice(0, 160) : '',
+    reviewDate: typeof source.reviewDate === 'string' ? source.reviewDate.slice(0, 160) : '',
+    deviceA: typeof source.deviceA === 'string' ? source.deviceA.slice(0, 160) : '',
+    deviceB: typeof source.deviceB === 'string' ? source.deviceB.slice(0, 160) : '',
+    printer: typeof source.printer === 'string' ? source.printer.slice(0, 180) : '',
+    mainDoubt: typeof source.mainDoubt === 'string' ? source.mainDoubt.slice(0, 700) : '',
+    correctionPlan: typeof source.correctionPlan === 'string' ? source.correctionPlan.slice(0, 1000) : '',
+    notes: typeof source.notes === 'string' ? source.notes.slice(0, 1600) : '',
+    approvedBy: typeof source.approvedBy === 'string' ? source.approvedBy.slice(0, 140) : '',
+    approvedAt: typeof source.approvedAt === 'string' ? source.approvedAt : '',
+    updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : '',
+  };
+}
+
+function readDayTwoFollowUpState(): DayTwoFollowUpState {
+  if (typeof window === 'undefined' || !window.localStorage) return emptyDayTwoFollowUpState();
+  try {
+    for (const key of [DAY_TWO_FOLLOW_UP_KEY, ...LEGACY_DAY_TWO_FOLLOW_UP_KEYS]) {
+      const raw = window.localStorage.getItem(key);
+      if (raw) return normalizeDayTwoFollowUpState(JSON.parse(raw));
+    }
+    return emptyDayTwoFollowUpState();
+  } catch {
+    return emptyDayTwoFollowUpState();
+  }
+}
+
+function saveDayTwoFollowUpState(state: DayTwoFollowUpState): DayTwoFollowUpState {
+  const normalized = normalizeDayTwoFollowUpState({ ...state, updatedAt: new Date().toISOString() });
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.setItem(DAY_TWO_FOLLOW_UP_KEY, JSON.stringify(normalized));
+  }
+  return normalized;
+}
+
+function dayTwoResultLabel(result: DayTwoFollowUpResult): string {
+  if (result === 'passed') return 'Passou';
+  if (result === 'failed') return 'Falhou';
+  if (result === 'blocked') return 'Bloqueado';
+  return 'Pendente';
+}
+
+function buildDayTwoFollowUpSummary(params: {
+  state: DayTwoFollowUpState;
+  report: WebCommercialValidationReport | null;
+  dayOne: DayOneImplantSummary;
+  postSale: { total: number; open: number; solved: number; criticalOpen: number; percent: number };
+  feedback: { total: number; open: number; done: number; openP0P1: number; percent: number; npsLabel: string; tone: 'danger' | 'warn' | 'ok' };
+  outbox: WebOutboxStats;
+  online: boolean;
+  roleState: RoleState;
+}): DayTwoFollowUpSummary {
+  const total = DAY_TWO_FOLLOW_UP_STEPS.length;
+  let passed = 0;
+  let failed = 0;
+  let blocked = 0;
+  let criticalOpen = 0;
+  for (const step of DAY_TWO_FOLLOW_UP_STEPS) {
+    const result = normalizeDayTwoFollowUpResult(params.state.results[step.id]);
+    if (result === 'passed') passed += 1;
+    if (result === 'failed') failed += 1;
+    if (result === 'blocked') blocked += 1;
+    if ((step.priority === 'P0' || step.priority === 'P1') && (result === 'failed' || result === 'blocked')) criticalOpen += 1;
+  }
+  const pending = total - passed - failed - blocked;
+  const blockers: string[] = [];
+  const warnings: string[] = [];
+  const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
+  const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
+  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do Dia 2 com Falhou/Bloqueado.`);
+  addBlocker(params.dayOne.decision === 'blocked', 'Dia 1 ainda está bloqueado; não trate Dia 2 como estabilizado.');
+  addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes de fechar Dia 2.`);
+  addBlocker(!params.online, 'Aparelho está offline agora.');
+  addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
+  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 aberto(s) no pós-venda.`);
+  addBlocker(params.feedback.openP0P1 > 0, `${params.feedback.openP0P1} melhoria(s) P0/P1 aberta(s) no feedback.`);
+  addWarning(pending > 0, `${pending} item(ns) do Dia 2 ainda pendente(s).`);
+  addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
+  addWarning(params.dayOne.decision !== 'ready', 'Dia 1 não está aceito como pronto neste aparelho.');
+  addWarning(params.roleState.role === 'viewer', 'Leitor não deve aprovar acompanhamento do Dia 2.');
+  addWarning(!params.state.clientName.trim(), 'Informe cliente/loja acompanhado no Dia 2.');
+  addWarning(!params.state.supportOwner.trim(), 'Informe responsável pelo suporte no Dia 2.');
+  addWarning(!params.state.correctionPlan.trim(), 'Registre plano de correção/continuidade do Dia 2.');
+  const percent = Math.round((passed / total) * 100);
+  const penalty = blockers.length * 14 + warnings.length * 3 + failed * 8 + blocked * 10 + pending * 2;
+  const score = Math.max(0, Math.min(100, 100 - penalty));
+  const decision: DayTwoFollowUpDecision = blockers.length ? 'blocked' : pending || warnings.length || !params.state.approvedAt ? 'attention' : 'stable';
+  const title = decision === 'stable' ? 'Dia 2 estabilizado com evidência' : decision === 'attention' ? 'Dia 2 quase estabilizado' : 'Corrigir antes de deixar sozinho';
+  const subtitle = decision === 'stable'
+    ? 'Segundo dia acompanhado e registrado. Cliente pode continuar com suporte combinado.'
+    : decision === 'attention'
+      ? 'Sem bloqueio crítico, mas ainda falta marcação, evidência, plano ou aceite do Dia 2.'
+      : 'Existe falha, pendência, P0/P1 aberto ou risco operacional no segundo dia.';
+  return { passed, failed, blocked, pending, total, percent, criticalOpen, decision, title, subtitle, score, stars: executiveStars(score), blockers, warnings };
+}
+
+function buildDayTwoFollowUpText(params: {
+  state: DayTwoFollowUpState;
+  summary: DayTwoFollowUpSummary;
+  report: WebCommercialValidationReport | null;
+  snapshot: WebSyncSnapshot;
+  roleState: RoleState;
+  online: boolean;
+  dayOne: DayOneImplantSummary;
+}): string {
+  const rows = DAY_TWO_FOLLOW_UP_STEPS.map((step) => {
+    const result = normalizeDayTwoFollowUpResult(params.state.results[step.id]);
+    return `[${dayTwoResultLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
+  });
+  return [
+    'Smart Loja Fácil — correção pós-implantação real / Dia 2 v142',
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    `Decisão: ${params.summary.title}`,
+    `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
+    `Progresso: ${params.summary.passed}/${params.summary.total} passou; ${params.summary.failed} falhou; ${params.summary.blocked} bloqueado; ${params.summary.pending} pendente`,
+    `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
+    `Responsável suporte: ${params.state.supportOwner || 'não informado'}`,
+    `Contato: ${params.state.contact || 'não informado'}`,
+    `Data/revisão: ${params.state.reviewDate || 'não informado'}`,
+    `Aparelho principal: ${params.state.deviceA || 'não informado'}`,
+    `Segundo aparelho: ${params.state.deviceB || 'não informado'}`,
+    `Impressora/comprovante: ${params.state.printer || 'não informado'}`,
+    `Dúvida principal: ${params.state.mainDoubt || 'nenhuma registrada'}`,
+    `Plano de correção/continuidade: ${params.state.correctionPlan || 'não informado'}`,
+    `Papel atual: ${webRoleLabel(params.roleState.role)}`,
+    `Conexão: ${params.online ? 'online' : 'offline'}`,
+    `Dia 1: ${params.dayOne.score}/100 — ${params.dayOne.title}`,
+    `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
+    `Última sincronização: ${params.snapshot.module} — ${params.snapshot.detail}`,
+    `Aprovado por: ${params.state.approvedBy || 'não aprovado'}${params.state.approvedAt ? ` em ${formatDateTime(params.state.approvedAt)}` : ''}`,
+    params.state.notes ? `Observações: ${params.state.notes}` : 'Observações: nenhuma',
+    '',
+    'Bloqueios:',
+    ...(params.summary.blockers.length ? params.summary.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio crítico registrado neste aparelho.']),
+    '',
+    'Avisos:',
+    ...(params.summary.warnings.length ? params.summary.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso pendente registrado neste aparelho.']),
+    '',
+    'Checklist Dia 2:',
+    ...rows,
+    '',
+    'Regra honesta: Dia 2 só estabiliza quando venda real, caixa, impressão, sync, permissões, dúvidas e plano de correção estiverem conferidos com evidência.',
+  ].join('\n');
+}
 
 function buildTriageText(params: {
   items: CommercialTriageItem[];
@@ -3069,6 +3414,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const [executiveHealthState, setExecutiveHealthState] = useState<ExecutiveHealthState>(() => readExecutiveHealthState());
   const [regressionAuditState, setRegressionAuditState] = useState<RegressionAuditState>(() => readRegressionAuditState());
   const [dayOneImplantState, setDayOneImplantState] = useState<DayOneImplantState>(() => readDayOneImplantState());
+  const [dayTwoFollowUpState, setDayTwoFollowUpState] = useState<DayTwoFollowUpState>(() => readDayTwoFollowUpState());
 
   const refreshLocal = () => {
     setSnapshot(readWebSyncSnapshot());
@@ -3182,6 +3528,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
   const executiveHealthSummary = useMemo(() => buildExecutiveHealthSummary({ report, finalGate, triage: triageSummary, assisted: assistedSummary, guidedDone: guidedDoneCount, guidedTotal: GUIDED_COMMERCIAL_STEPS.length, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState, acceptance: finalAcceptance, executive: executiveHealthState }), [report, finalGate, triageSummary, assistedSummary, guidedDoneCount, tourPercent, proposalPercent, termPercent, termAccepted, onboardingPercent, postSaleSummary, clientFeedbackSummary, outbox, online, roleState, finalAcceptance, executiveHealthState]);
   const regressionAuditSummary = useMemo(() => buildRegressionAuditSummary({ state: regressionAuditState, report, finalGate, triage: triageSummary, assisted: assistedSummary, executive: executiveHealthSummary, outbox, online, roleState }), [regressionAuditState, report, finalGate, triageSummary, assistedSummary, executiveHealthSummary, outbox, online, roleState]);
   const dayOneImplantSummary = useMemo(() => buildDayOneImplantSummary({ state: dayOneImplantState, report, finalGate, regression: regressionAuditSummary, executive: executiveHealthSummary, outbox, online, roleState }), [dayOneImplantState, report, finalGate, regressionAuditSummary, executiveHealthSummary, outbox, online, roleState]);
+  const dayTwoFollowUpSummary = useMemo(() => buildDayTwoFollowUpSummary({ state: dayTwoFollowUpState, report, dayOne: dayOneImplantSummary, postSale: postSaleSummary, feedback: clientFeedbackSummary, outbox, online, roleState }), [dayTwoFollowUpState, report, dayOneImplantSummary, postSaleSummary, clientFeedbackSummary, outbox, online, roleState]);
 
   async function resendPending(): Promise<void> {
     setBusy(true);
@@ -3826,6 +4173,52 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
     setFeedback({ tone: 'success', text: 'Checklist Dia 1 copiado sem senha, sem chave privada e sem dados técnicos crus.' });
   }
 
+  function patchDayTwoFollowUp(patch: Partial<DayTwoFollowUpState>): void {
+    setDayTwoFollowUpState((current) => saveDayTwoFollowUpState({ ...current, ...patch }));
+  }
+
+  function setDayTwoFollowUpResult(id: string, result: DayTwoFollowUpResult): void {
+    setDayTwoFollowUpState((current) => {
+      const nextResults = { ...current.results };
+      if (result === 'pending') delete nextResults[id];
+      else nextResults[id] = result;
+      return saveDayTwoFollowUpState({ ...current, results: nextResults, approvedAt: '', approvedBy: '' });
+    });
+  }
+
+  function approveDayTwoFollowUp(): void {
+    if (dayTwoFollowUpSummary.decision === 'blocked') {
+      setFeedback({ tone: 'error', text: 'Dia 2 ainda tem bloqueio P0/P1, pendência local, offline ou risco de suporte. Corrija antes de aprovar.' });
+      return;
+    }
+    if (dayTwoFollowUpSummary.pending > 0) {
+      const ok = window.confirm('Ainda existe item pendente no Dia 2. Registrar mesmo assim como acompanhamento com atenção?');
+      if (!ok) return;
+    }
+    const approvedBy = dayTwoFollowUpState.supportOwner.trim() || dayTwoFollowUpState.contact.trim();
+    if (!approvedBy) {
+      setFeedback({ tone: 'error', text: 'Informe o responsável pelo suporte ou contato antes de aprovar o Dia 2.' });
+      return;
+    }
+    const next = saveDayTwoFollowUpState({ ...dayTwoFollowUpState, approvedBy, approvedAt: new Date().toISOString() });
+    setDayTwoFollowUpState(next);
+    setFeedback({ tone: dayTwoFollowUpSummary.decision === 'stable' ? 'success' : 'info', text: 'Dia 2 registrado com evidência neste aparelho. Guarde o relatório junto do pós-venda.' });
+  }
+
+  function resetDayTwoFollowUp(): void {
+    const ok = window.confirm('Zerar apenas o checklist do Dia 2 neste aparelho? Isso não apaga venda, caixa, estoque nem dados da loja.');
+    if (!ok) return;
+    const next = saveDayTwoFollowUpState(emptyDayTwoFollowUpState());
+    setDayTwoFollowUpState(next);
+    setFeedback({ tone: 'info', text: 'Checklist do Dia 2 zerado neste aparelho.' });
+  }
+
+  async function copyDayTwoFollowUp(): Promise<void> {
+    const text = buildDayTwoFollowUpText({ state: dayTwoFollowUpState, summary: dayTwoFollowUpSummary, report, snapshot, roleState, online, dayOne: dayOneImplantSummary });
+    await navigator.clipboard?.writeText(text).catch(() => undefined);
+    setFeedback({ tone: 'success', text: 'Relatório do Dia 2 copiado sem senha, sem chave privada e sem dados técnicos crus.' });
+  }
+
   async function copyDiagnostic(): Promise<void> {
     const text = report
       ? `${reportToText(report, snapshot)}\n\n${buildGuidedTestText({ doneIds: guidedDoneIds, report, snapshot, roleState, online })}\n\n${buildAssistedExecutionText({ state: assistedState, report, snapshot, roleState, online })}\n\n${buildTriageText({ items: triageItems, state: assistedState, report, snapshot, roleState, online })}
@@ -3850,6 +4243,8 @@ ${buildRegressionAuditText({ state: regressionAuditState, summary: regressionAud
 
 ${buildDayOneImplantText({ state: dayOneImplantState, summary: dayOneImplantSummary, report, snapshot, roleState, online })}
 
+${buildDayTwoFollowUpText({ state: dayTwoFollowUpState, summary: dayTwoFollowUpSummary, report, snapshot, roleState, online, dayOne: dayOneImplantSummary })}
+
 ${buildTrainingModeText({ training: trainingMode, roleState, online, snapshot, outbox })}
 
 Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desativado'}`
@@ -3873,6 +4268,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           `Saúde executiva: ${executiveHealthSummary.score}/100 ${executiveHealthSummary.title}; bloqueios=${executiveHealthSummary.blockers.length}; avisos=${executiveHealthSummary.warnings.length}`,
           `Auditoria final: ${regressionAuditSummary.score}/100 ${regressionAuditSummary.title}; pendente=${regressionAuditSummary.pending}; bloqueios=${regressionAuditSummary.blockers.length}`,
           `Implantação Dia 1: ${dayOneImplantSummary.score}/100 ${dayOneImplantSummary.title}; pendente=${dayOneImplantSummary.pending}; bloqueios=${dayOneImplantSummary.blockers.length}`,
+          `Pós-implantação Dia 2: ${dayTwoFollowUpSummary.score}/100 ${dayTwoFollowUpSummary.title}; pendente=${dayTwoFollowUpSummary.pending}; bloqueios=${dayTwoFollowUpSummary.blockers.length}`,
           `Última sincronização: ${snapshot.module} - ${snapshot.detail}`,
           `Largura: ${window.innerWidth}px`,
           `Altura: ${window.innerHeight}px`,
@@ -4380,6 +4776,67 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <button type="button" className="mapp-secondary-button" onClick={resetDayOneImplant}>Zerar Dia 1</button>
         </div>
         <small className="mapp-final-honesty">Aceito: {dayOneImplantState.acceptedAt ? `${dayOneImplantState.acceptedBy || 'responsável'} em ${formatDateTime(dayOneImplantState.acceptedAt)}` : 'não aceito'}. Não deixe cliente operar sozinho com P0/P1 aberto, pendência, offline ou comprovante não validado.</small>
+      </section>
+
+
+      <section className={`mapp-section-block mapp-day-one-panel tone-${dayTwoFollowUpSummary.decision}`}>
+        <div className="mapp-section-title"><h2>Correção pós-implantação / Dia 2</h2><button type="button" onClick={() => void copyDayTwoFollowUp()}>Copiar Dia 2</button></div>
+        <div className="mapp-regression-hero">
+          <div>
+            <span>{dayTwoFollowUpSummary.title}</span>
+            <strong>{dayTwoFollowUpSummary.score}/100 · {dayTwoFollowUpSummary.stars}</strong>
+            <p>{dayTwoFollowUpSummary.subtitle}</p>
+          </div>
+          <b className={dayTwoFollowUpSummary.decision}>{dayTwoFollowUpSummary.decision === 'blocked' ? 'CORRIGIR' : dayTwoFollowUpSummary.decision === 'attention' ? 'ACOMPANHAR' : 'ESTÁVEL'}</b>
+        </div>
+        <div className="mapp-regression-summary-grid">
+          <span><b>{dayTwoFollowUpSummary.passed}</b> Passou</span>
+          <span><b>{dayTwoFollowUpSummary.failed}</b> Falhou</span>
+          <span><b>{dayTwoFollowUpSummary.blocked}</b> Bloqueado</span>
+          <span><b>{dayTwoFollowUpSummary.pending}</b> Pendente</span>
+        </div>
+        <div className="mapp-guided-progress" aria-label={`Progresso da correção Dia 2 ${dayTwoFollowUpSummary.percent}%`}><span style={{ width: `${dayTwoFollowUpSummary.percent}%` }} /></div>
+        <div className="mapp-final-release-grid">
+          <label>Cliente/loja<input value={dayTwoFollowUpState.clientName} onChange={(event) => patchDayTwoFollowUp({ clientName: event.target.value })} placeholder={dayOneImplantState.clientName || roleState.storeName || 'Ex.: Jaque Confecções'} /></label>
+          <label>Responsável suporte<input value={dayTwoFollowUpState.supportOwner} onChange={(event) => patchDayTwoFollowUp({ supportOwner: event.target.value })} placeholder="Ex.: suporte / implantador / dono" /></label>
+          <label>Contato da loja<input value={dayTwoFollowUpState.contact} onChange={(event) => patchDayTwoFollowUp({ contact: event.target.value })} placeholder={dayOneImplantState.storeContact || 'Ex.: responsável no balcão / WhatsApp'} /></label>
+          <label>Data/revisão<input value={dayTwoFollowUpState.reviewDate} onChange={(event) => patchDayTwoFollowUp({ reviewDate: event.target.value })} placeholder="Ex.: Dia 2 às 9h / revisão depois do almoço" /></label>
+          <label>Aparelho principal<input value={dayTwoFollowUpState.deviceA} onChange={(event) => patchDayTwoFollowUp({ deviceA: event.target.value })} placeholder={dayOneImplantState.deviceA || 'Ex.: celular do dono / PC caixa'} /></label>
+          <label>Segundo aparelho<input value={dayTwoFollowUpState.deviceB} onChange={(event) => patchDayTwoFollowUp({ deviceB: event.target.value })} placeholder={dayOneImplantState.deviceB || 'Ex.: Android instalado / notebook'} /></label>
+          <label>Impressora/comprovante<input value={dayTwoFollowUpState.printer} onChange={(event) => patchDayTwoFollowUp({ printer: event.target.value })} placeholder={dayOneImplantState.printer || 'Ex.: Epson 80mm / PDF / WhatsApp'} /></label>
+          <label>Dúvida principal<textarea value={dayTwoFollowUpState.mainDoubt} onChange={(event) => patchDayTwoFollowUp({ mainDoubt: event.target.value })} placeholder="Qual foi a maior dúvida do cliente no segundo dia?" rows={2} /></label>
+          <label>Plano de correção/continuidade<textarea value={dayTwoFollowUpState.correctionPlan} onChange={(event) => patchDayTwoFollowUp({ correctionPlan: event.target.value })} placeholder="Liste P0/P1/P2, responsável, prazo e próxima revisão." rows={3} /></label>
+          <label>Observações Dia 2<textarea value={dayTwoFollowUpState.notes} onChange={(event) => patchDayTwoFollowUp({ notes: event.target.value })} placeholder="Anote venda real, caixa, sync, impressão, dúvidas, erros e acordos de suporte." rows={3} /></label>
+        </div>
+        <div className="mapp-regression-step-list">
+          {DAY_TWO_FOLLOW_UP_STEPS.map((step) => {
+            const result = normalizeDayTwoFollowUpResult(dayTwoFollowUpState.results[step.id]);
+            return (
+              <article key={step.id} className={`mapp-regression-step priority-${step.priority.toLowerCase()} result-${result}`}>
+                <header><span>{step.priority}</span><strong>{step.phase}</strong></header>
+                <h3>{step.title}</h3>
+                <p><b>Fazer:</b> {step.action}</p>
+                <p><b>Esperado:</b> {step.expected}</p>
+                <small><b>Evidência:</b> {step.evidence}</small>
+                <div className="mapp-regression-buttons">
+                  {(['passed', 'failed', 'blocked', 'pending'] as DayTwoFollowUpResult[]).map((option) => (
+                    <button key={option} type="button" className={result === option ? 'is-active' : ''} onClick={() => setDayTwoFollowUpResult(step.id, option)}>{dayTwoResultLabel(option)}</button>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {dayTwoFollowUpSummary.blockers.length ? (
+          <div className="mapp-final-alert-list danger"><strong>Bloqueios do Dia 2</strong>{dayTwoFollowUpSummary.blockers.map((item) => <p key={item}>• {item}</p>)}</div>
+        ) : <div className="mapp-final-alert-list"><strong>Sem bloqueio crítico no Dia 2</strong><p>Mesmo assim, só aprove com evidência de venda real, caixa, sync, impressão, dúvidas respondidas e plano de suporte.</p></div>}
+        {dayTwoFollowUpSummary.warnings.length ? <div className="mapp-final-alert-list warn"><strong>Avisos do Dia 2</strong>{dayTwoFollowUpSummary.warnings.map((item) => <p key={item}>• {item}</p>)}</div> : null}
+        <div className="mapp-button-grid mapp-guided-actions">
+          <button type="button" className="mapp-primary-button" onClick={approveDayTwoFollowUp} disabled={dayTwoFollowUpSummary.decision === 'blocked'}>Aprovar Dia 2</button>
+          <button type="button" className="mapp-secondary-button" onClick={() => void copyDayTwoFollowUp()}>Copiar relatório Dia 2</button>
+          <button type="button" className="mapp-secondary-button" onClick={resetDayTwoFollowUp}>Zerar Dia 2</button>
+        </div>
+        <small className="mapp-final-honesty">Aprovado: {dayTwoFollowUpState.approvedAt ? `${dayTwoFollowUpState.approvedBy || 'responsável'} em ${formatDateTime(dayTwoFollowUpState.approvedAt)}` : 'não aprovado'}. Não trate cliente como estável com P0/P1 aberto, sync pendente, offline, caixa/impressão sem conferência ou dúvida crítica solta.</small>
       </section>
 
 
