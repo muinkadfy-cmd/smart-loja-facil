@@ -11,12 +11,12 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ status, settings, alertsCount, onOpenAlerts, onRefresh, onLogout }: MobileHeaderProps): JSX.Element {
-  const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil').replace(/\s+Web$/i, '');
+  const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil').replace(/\s+Web$/i, '').trim() || 'Smart Loja Fácil';
   return (
     <header className="mapp-header">
       <div className="mapp-header-brand">
         <span className="mapp-brand-dot"><InlineIcon name="app_logo_cadeado_carrinho" size={24} /></span>
-        <strong>{storeName}</strong>
+        <strong className="mapp-header-store-name" title={storeName} aria-label={`Loja ${storeName}`}>{storeName}</strong>
       </div>
       <div className="mapp-header-actions">
         <button type="button" className="mapp-icon-button" onClick={onRefresh} aria-label="Atualizar dados">

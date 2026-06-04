@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v149-login-micro-polimento';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v150-header-loja-polido';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -4673,3 +4673,74 @@ img, svg { max-width: 100%; }
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
 }
+
+/* Lote 150 — micro ajuste do nome da loja no topo */
+.mapp-header {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+.mapp-header-brand {
+  flex: 1 1 auto;
+  max-width: 100%;
+  overflow: hidden;
+}
+.mapp-header-store-name,
+.mapp-header-brand strong {
+  display: block;
+  flex: 1 1 auto;
+  max-width: 100%;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  hyphens: none !important;
+  line-height: 1.05;
+}
+.mapp-header-actions {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+.mapp-store-card strong {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+@media (max-width: 860px) {
+  .mapp-header { gap: 8px; }
+  .mapp-header-brand {
+    gap: 8px;
+    min-width: 0;
+  }
+  .mapp-header-brand strong,
+  .mapp-header-store-name {
+    max-width: none;
+    font-size: clamp(1rem, 4.2vw, 1.34rem);
+    letter-spacing: -0.04em;
+  }
+  .mapp-header-actions { gap: 7px; }
+}
+@media (max-width: 430px) {
+  .mapp-mobile-top { padding-left: 10px; padding-right: 10px; gap: 7px; }
+  .mapp-menu-button,
+  .mapp-icon-button { width: 44px; height: 44px; border-radius: 15px; }
+  .mapp-brand-dot { width: 36px; height: 36px; border-radius: 13px; }
+  .mapp-brand-dot svg,
+  .mapp-brand-dot img,
+  .mapp-brand-dot .app-svg-icon { width: 20px !important; height: 20px !important; }
+  .mapp-header-brand strong,
+  .mapp-header-store-name { font-size: clamp(0.96rem, 4.05vw, 1.16rem); }
+  .mapp-logout-top-button { display: none; }
+}
+@media (max-width: 360px) {
+  .mapp-header-brand { gap: 6px; }
+  .mapp-header-brand strong,
+  .mapp-header-store-name { font-size: 0.95rem; letter-spacing: -0.035em; }
+  .mapp-brand-dot { display: none; }
+}
