@@ -8943,3 +8943,19 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     width: 100%;
   }
 }
+
+/* Mega Lote 178 — ícone premium de flor nos alertas externos */
+.mapp-external-push-flower {
+  background: linear-gradient(145deg, #fff7fb 0%, #ffe5f1 46%, #fff5d6 100%);
+  border: 1px solid rgba(236, 47, 138, 0.24);
+  box-shadow: 0 14px 30px rgba(236, 47, 138, 0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+  overflow: hidden;
+}
+
+.mapp-external-push-flower img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 5px 8px rgba(188, 34, 102, 0.18));
+}

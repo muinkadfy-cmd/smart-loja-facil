@@ -86,7 +86,7 @@ export function ExternalPushPanel({ onNavigate }: { onNavigate: (page: PageKey) 
   return (
     <section className={`mapp-external-push-panel tone-${readiness.level}`} aria-label="Alertas externos do celular">
       <div className="mapp-external-push-main">
-        <span className="mapp-external-push-icon" aria-hidden="true">🔔</span>
+        <span className="mapp-external-push-icon mapp-external-push-flower" aria-hidden="true"><img src="/icons/notification-flower-pink.png" alt="" /></span>
         <div>
           <strong>{readiness.title}</strong>
           <p>{readiness.detail}</p>

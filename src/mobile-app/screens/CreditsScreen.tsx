@@ -16,6 +16,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { notifyMobileAction } from '../components/actionToast';
+import { clearCreditFocusPayload, readCreditFocusPayload } from '../deepLinks';
 
 interface CreditsScreenProps {
   status: AppStatus | null;
@@ -141,6 +142,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [deepLinkFocusHandled, setDeepLinkFocusHandled] = useState(false);
 
   const loadCredits = async () => {
     setLoading(true);
@@ -326,6 +328,48 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     else setFeedback(null);
   }
 
+  useEffect(() => {
+    if (deepLinkFocusHandled || !credits.length || loading) return;
+    const focus = readCreditFocusPayload();
+    if (!focus) {
+      setDeepLinkFocusHandled(true);
+      return;
+    }
+    const targetCredit = credits.find((credit) =>
+      (focus.credit_id && credit.id === focus.credit_id)
+      || (focus.sale_number && Number(credit.sale_number) === Number(focus.sale_number))
+    );
+    if (!targetCredit) {
+      clearCreditFocusPayload();
+      setDeepLinkFocusHandled(true);
+      setFeedback({ tone: 'info', text: 'Abri o Crediário, mas não encontrei a conta do alerta. Use a busca pelo cliente ou venda.' });
+      return;
+    }
+
+    const targetInstallment = targetCredit.installments.find((installment) =>
+      (focus.installment_id && installment.id === focus.installment_id)
+      || (focus.installment_number && installment.number === focus.installment_number)
+    ) ?? creditOpenInstallments(targetCredit)[0] ?? targetCredit.installments[0];
+
+    setFilter(targetCredit.status === 'quitado' ? 'todos' : 'aberto');
+    setQuery(String(targetCredit.sale_number || targetCredit.customer_name || ''));
+    setVisibleCreditCount((count) => Math.max(count, COMPACT_CREDIT_LIMIT));
+    setExpandedCredits((current) => ({ ...current, [targetCredit.id]: true }));
+    window.setTimeout(() => {
+      document.querySelector(`[data-credit-id="${targetCredit.id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 160);
+
+    if (focus.action === 'receive' && targetInstallment && targetInstallment.status !== 'pago' && remainingOf(targetInstallment) > 0.009) {
+      openReceive(targetCredit, targetInstallment);
+    } else if (focus.action === 'receipt' && targetInstallment) {
+      openReceiptsForCredit(targetCredit, targetInstallment);
+    } else {
+      setFeedback({ tone: 'success', text: `Conta da venda #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberta a partir da notificação.` });
+    }
+    clearCreditFocusPayload();
+    setDeepLinkFocusHandled(true);
+  }, [credits, deepLinkFocusHandled, loading]);
+
   return (
     <div className="mapp-screen mapp-credits-screen">
       <section className="mapp-mini-stat-grid mapp-credits-stats">
@@ -468,7 +512,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             const visibleInstallments = isExpanded ? credit.installments : (nextInstallment ? [nextInstallment] : []);
             const hiddenInstallments = Math.max(0, credit.installments.length - visibleInstallments.length);
             return (
-              <article key={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'}`}>
+              <article key={credit.id} data-credit-id={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'}`}>
                 <button
                   type="button"
                   className="mapp-credit-note-head mapp-credit-note-toggle"

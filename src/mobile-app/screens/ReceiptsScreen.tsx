@@ -65,7 +65,7 @@ const receiptFilters: Array<{ key: ReceiptFilter; label: string }> = [
 
 const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
 
-type ReceiptFocusPayload = { sale_number?: number; credit_id?: string; created_at?: number };
+type ReceiptFocusPayload = { sale_number?: number; credit_id?: string; installment_id?: string; installment_number?: number; action?: string; created_at?: number };
 
 function receiptTitle(receipt: ReceiptView): string {
   if (receipt.source_kind === 'parcelas') return `Parcela ${receipt.installment_number || ''}/${receipt.installment_total || ''} · Venda #${String(receipt.sale_number || 0).padStart(4, '0')}`;
@@ -1114,8 +1114,14 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     const customerKey = `${customerName.toLowerCase()}|${contact}`;
     setExpandedCustomers((current) => ({ ...current, [customerKey]: true }));
     setExpandedCredits((current) => ({ ...current, [targetCredit.id]: true }));
-    selectPreview(creditPreview(targetCredit));
-    setFeedback({ tone: 'success', text: `Extrato da venda #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberto em Comprovantes. Toque em Visualizar ou Baixar PDF.` });
+    const targetInstallment = targetCredit.installments.find((installment) =>
+      (focus.installment_id && installment.id === focus.installment_id)
+      || (focus.installment_number && installment.number === focus.installment_number)
+    );
+    const preview = targetInstallment ? installmentPreview(targetCredit, targetInstallment) : creditPreview(targetCredit);
+    selectPreview(preview);
+    if (focus.action === 'receipt') setFullPreview(preview);
+    setFeedback({ tone: 'success', text: `${targetInstallment ? 'Recibo da parcela' : 'Extrato da venda'} #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberto em Comprovantes. Toque em Visualizar ou Baixar PDF.` });
     window.localStorage.removeItem(RECEIPTS_FOCUS_SALE_KEY);
     setFocusHandled(true);
   }, [credits, focusHandled, receiptStore]);

@@ -4,6 +4,7 @@ import { api } from './lib/api';
 import { getSupabaseClient } from './lib/supabaseClient';
 import { recordWebSyncSnapshot, subscribeWebStoreChanges } from './lib/webApi';
 import { MobileApp } from './mobile-app/MobileApp';
+import { cleanDeepLinkUrl, readSmartLojaDeepLink, storeCreditFocusFromDeepLink, storeReceiptFocusFromDeepLink, type SmartLojaDeepLink } from './mobile-app/deepLinks';
 import type { AppStatus, PageKey, Settings } from './types';
 
 export default function App(): JSX.Element {
@@ -15,6 +16,7 @@ export default function App(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
   const lastWebAutoRefreshRef = useRef(0);
+  const pendingDeepLinkRef = useRef<SmartLojaDeepLink | null>(null);
 
   const boot = useCallback(async () => {
     setLoading(true);
@@ -38,6 +40,52 @@ export default function App(): JSX.Element {
     setRefreshToken((value) => value + 1);
     void boot();
   }, [boot]);
+
+  const applyDeepLink = useCallback((url?: string): boolean => {
+    const link = readSmartLojaDeepLink(url);
+    if (!link) return false;
+    pendingDeepLinkRef.current = link;
+
+    if (link.page === 'credits') storeCreditFocusFromDeepLink(link);
+    if (link.page === 'receipts' || link.action === 'receipt' || link.action === 'pdf') storeReceiptFocusFromDeepLink(link);
+    if (link.page === 'products' && link.hash) window.location.hash = link.hash;
+
+    if (entered) {
+      setActivePage(link.page);
+      window.setTimeout(() => {
+        document.getElementById('mapp-page-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 80);
+      cleanDeepLinkUrl();
+    }
+    return true;
+  }, [entered]);
+
+  useEffect(() => {
+    applyDeepLink();
+    const handlePopState = () => { applyDeepLink(); };
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      const payload = event.data as { type?: string; url?: string } | undefined;
+      if (payload?.type === 'SMART_LOJA_PUSH_NAVIGATE' && payload.url) applyDeepLink(payload.url);
+    };
+    window.addEventListener('popstate', handlePopState);
+    navigator.serviceWorker?.addEventListener?.('message', handleServiceWorkerMessage);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      navigator.serviceWorker?.removeEventListener?.('message', handleServiceWorkerMessage);
+    };
+  }, [applyDeepLink]);
+
+  useEffect(() => {
+    if (!entered || !pendingDeepLinkRef.current) return;
+    const link = pendingDeepLinkRef.current;
+    setActivePage(link.page);
+    window.setTimeout(() => {
+      document.getElementById('mapp-page-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 80);
+    cleanDeepLinkUrl();
+  }, [entered]);
 
 
   const logout = useCallback(async () => {

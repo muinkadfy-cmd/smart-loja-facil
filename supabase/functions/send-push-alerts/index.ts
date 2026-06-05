@@ -48,15 +48,30 @@ function dateLabel(value: string): string {
 function buildPayload(alert: DueAlertRow): Record<string, unknown> {
   const open = Math.max(0, Number(alert.amount || 0) - Number(alert.paid_amount || 0));
   const overdue = alert.alert_kind === 'overdue';
+  const params = new URLSearchParams({
+    source: 'push',
+    view: 'credits',
+    credit: alert.credit_id,
+    installment: alert.installment_id,
+    installment_number: String(alert.installment_number),
+    action: 'receive',
+    type: overdue ? 'credit_overdue' : 'credit_due_today',
+  });
+  if (alert.sale_number) params.set('sale', String(alert.sale_number));
   return {
     title: overdue ? 'Parcela atrasada' : 'Parcela vence hoje',
     body: `${alert.customer_name} · parcela ${alert.installment_number} · ${brl(open)} · ${dateLabel(alert.due_date)}`,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/maskable-192.png',
+    icon: '/brand/jaque-logo-premium.png',
+    badge: '/icons/notification-flower-badge.png',
     tag: `credit-${alert.installment_id}-${alert.alert_kind}`,
     requireInteraction: overdue,
-    url: `/?source=push&view=credits&credit=${encodeURIComponent(alert.credit_id)}`,
+    url: `/?${params.toString()}`,
+    receiptUrl: `/?source=push&view=receipts&credit=${encodeURIComponent(alert.credit_id)}&installment=${encodeURIComponent(alert.installment_id)}&installment_number=${alert.installment_number}&action=receipt${alert.sale_number ? `&sale=${alert.sale_number}` : ''}`,
     type: overdue ? 'credit_overdue' : 'credit_due_today',
+    creditId: alert.credit_id,
+    saleNumber: alert.sale_number || undefined,
+    installmentId: alert.installment_id,
+    installmentNumber: alert.installment_number,
     alertId: alert.installment_id,
   };
 }
@@ -73,7 +88,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false } });
     const { data: alerts, error: alertsError } = await supabase
       .from('push_credit_due_alerts')
-      .select('store_id, credit_id, customer_name, installment_id, installment_number, amount, paid_amount, due_date, alert_kind')
+      .select('store_id, credit_id, customer_name, sale_id, sale_number, installment_id, installment_number, amount, paid_amount, due_date, alert_kind')
       .in('alert_kind', ['overdue', 'due_today'])
       .limit(300);
     if (alertsError) throw alertsError;

@@ -57,7 +57,7 @@ function writeNotificationState(state: NotificationState): void {
   }
 }
 
-export function NotificationCard({ item, read, onRead }: { item: NotificationItem; read: boolean; onRead: (id: string) => void }): JSX.Element {
+export function NotificationCard({ item, read, onRead, onOpen }: { item: NotificationItem; read: boolean; onRead: (id: string) => void; onOpen: (item: NotificationItem) => void }): JSX.Element {
   return (
     <article className={`mapp-notification-card tone-${item.tone} ${read ? 'is-read' : 'is-unread'}`}>
       <span className="mapp-notification-unread-dot" aria-hidden="true" />
@@ -67,8 +67,8 @@ export function NotificationCard({ item, read, onRead }: { item: NotificationIte
         <p>{item.description}</p>
       </div>
       <time className="mapp-notification-time">{item.time}</time>
-      <button type="button" onClick={() => onRead(item.id)} aria-label={`Marcar ${item.title} como lida`}>
-        {read ? 'Lida' : 'Ler'}
+      <button type="button" onClick={() => (item.page ? onOpen(item) : onRead(item.id))} aria-label={item.page ? `Abrir ${item.title}` : `Marcar ${item.title} como lida`}>
+        {item.page ? 'Abrir' : read ? 'Lida' : 'Ler'}
       </button>
     </article>
   );
@@ -178,6 +178,14 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
     window.setTimeout(() => setActionPending(false), 120);
   };
 
+  const openNotificationItem = (item: NotificationItem) => {
+    markRead(item.id);
+    if (item.page) {
+      onClose();
+      window.setTimeout(() => onNavigate(item.page as PageKey), 80);
+    }
+  };
+
   const clearRead = () => {
     if (unreadNotifications.length > 0) {
       const confirmed = window.confirm('Existem avisos não lidos. Deseja limpar mesmo assim?');
@@ -227,7 +235,7 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
         <div className="mapp-notification-list" aria-live="polite">
           {currentList.length ? (
             currentList.map((item) => (
-              <NotificationCard key={item.id} item={item} read={state.readIds.includes(item.id)} onRead={markRead} />
+              <NotificationCard key={item.id} item={item} read={state.readIds.includes(item.id)} onRead={markRead} onOpen={openNotificationItem} />
             ))
           ) : (
             <div className="mapp-notification-empty">

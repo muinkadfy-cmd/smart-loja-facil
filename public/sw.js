@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v177-alertas-externos-pwa';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v178-alertas-rotas-icone-flor';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -10,6 +10,8 @@ const APP_SHELL = [
   '/icons/maskable-512.png',
   '/icons/icon-192-maskable.png',
   '/icons/icon-512-maskable.png',
+  '/icons/notification-flower-badge.png',
+  '/icons/notification-flower-pink.png',
   '/brand/smart-loja-icon.png',
   '/brand/jaque-logo-premium.png',
 ];
@@ -89,6 +91,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(networkFirst(event.request));
 });
 
+function clean(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function readPushPayload(event) {
   try {
     return event.data ? event.data.json() : {};
@@ -101,20 +107,89 @@ function readPushPayload(event) {
   }
 }
 
+function routeForPayload(payload, action) {
+  const type = clean(payload.type || payload.alertType || payload.kind);
+  if (payload.url) return String(payload.url);
+  const params = new URLSearchParams({ source: 'push' });
+  const append = (name, value) => {
+    const text = clean(value);
+    if (text) params.set(name, text);
+  };
+
+  if (type.startsWith('credit_') || payload.creditId || payload.credit_id) {
+    params.set('view', 'credits');
+    append('credit', payload.creditId || payload.credit_id);
+    append('sale', payload.saleNumber || payload.sale_number);
+    append('installment', payload.installmentId || payload.installment_id || payload.installmentNumber || payload.installment_number);
+    params.set('action', action === 'receipt' ? 'receipt' : action === 'open' ? 'open' : 'receive');
+    return `/?${params.toString()}`;
+  }
+
+  if (type.startsWith('sale_') || payload.receiptId || payload.receipt_id) {
+    params.set('view', 'receipts');
+    append('sale', payload.saleNumber || payload.sale_number);
+    append('receipt', payload.receiptId || payload.receipt_id);
+    params.set('action', 'receipt');
+    return `/?${params.toString()}`;
+  }
+
+  if (type === 'low_stock' || payload.productId || payload.product_id) {
+    params.set('view', 'products');
+    append('product', payload.productId || payload.product_id);
+    params.set('action', 'filter');
+    return `/?${params.toString()}#baixo-estoque`;
+  }
+
+  if (type === 'cash_open' || type === 'cash_alert') {
+    params.set('view', 'cash');
+    return `/?${params.toString()}`;
+  }
+
+  if (type === 'backup_reminder') {
+    params.set('view', 'backup');
+    return `/?${params.toString()}`;
+  }
+
+  if (type === 'sync_error') {
+    params.set('view', 'diagnostics');
+    return `/?${params.toString()}`;
+  }
+
+  params.set('view', payload.view || 'dashboard');
+  return `/?${params.toString()}`;
+}
+
+function notificationActions(payload) {
+  const type = clean(payload.type || payload.alertType || payload.kind);
+  if (type.startsWith('credit_') || payload.creditId || payload.credit_id) {
+    return [
+      { action: 'open', title: 'Abrir conta' },
+      { action: 'receipt', title: 'Comprovante' },
+    ];
+  }
+  if (type === 'low_stock') return [{ action: 'open', title: 'Ver produto' }];
+  return [{ action: 'open', title: 'Abrir app' }];
+}
+
 self.addEventListener('push', (event) => {
   const payload = readPushPayload(event);
   const title = payload.title || 'Jaque Confecções e Presentes';
   const options = {
     body: payload.body || payload.message || 'Novo alerta importante da loja.',
-    icon: payload.icon || '/icons/icon-192.png',
-    badge: payload.badge || '/icons/maskable-192.png',
-    tag: payload.tag || 'smart-loja-alerta',
+    icon: payload.icon || '/brand/jaque-logo-premium.png',
+    badge: payload.badge || '/icons/notification-flower-badge.png',
+    image: payload.image || undefined,
+    tag: payload.tag || `smart-loja-${clean(payload.type) || 'alerta'}`,
     renotify: true,
     requireInteraction: Boolean(payload.requireInteraction),
+    actions: notificationActions(payload),
+    vibrate: [90, 40, 90],
     data: {
-      url: payload.url || '/?source=push&view=credits',
-      alertId: payload.alertId || '',
+      url: routeForPayload(payload, 'open'),
+      receiptUrl: routeForPayload(payload, 'receipt'),
+      alertId: payload.alertId || payload.alert_id || '',
       type: payload.type || 'alert',
+      payload,
     },
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -123,15 +198,19 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const targetUrl = new URL(data.url || '/?source=push&view=dashboard', self.location.origin).href;
+  const action = event.action || 'open';
+  const route = action === 'receipt' ? (data.receiptUrl || data.url) : data.url;
+  const targetUrl = new URL(route || '/?source=push&view=dashboard', self.location.origin).href;
   event.waitUntil((async () => {
     const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of clientList) {
       if ('focus' in client) {
         try {
+          client.postMessage?.({ type: 'SMART_LOJA_PUSH_NAVIGATE', url: targetUrl });
           await client.navigate(targetUrl);
           return client.focus();
         } catch {
+          client.postMessage?.({ type: 'SMART_LOJA_PUSH_NAVIGATE', url: targetUrl });
           return client.focus();
         }
       }

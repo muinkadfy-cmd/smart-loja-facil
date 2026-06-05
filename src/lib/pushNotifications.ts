@@ -43,9 +43,9 @@ type PushViteEnv = {
   VITE_PUSH_VAPID_PUBLIC_KEY?: string;
 };
 
-const PUSH_LOCAL_KEY = 'smart-loja:web-push-local-state-v177';
+const PUSH_LOCAL_KEY = 'smart-loja:web-push-local-state-v178';
 const PUSH_READY_EVENT = 'smart-loja:web-push-readiness-changed';
-const PUSH_DEFAULT_URL = '/?source=push&view=credits';
+const PUSH_DEFAULT_URL = '/?source=push&view=credits&type=credit_due_today&action=receive';
 
 const pushEnv = import.meta.env as unknown as PushViteEnv;
 
@@ -346,10 +346,10 @@ export async function sendWebPushTestNotification(): Promise<WebPushRegistration
   if (!registration) return { ok: false, title: 'PWA não registrado', detail: 'Abra o app novamente instalado no celular e tente o teste.', readiness };
   const options = {
     body: 'Teste de alerta externo: parcela vencida, estoque baixo e avisos importantes aparecerão assim.',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/maskable-192.png',
+    icon: '/brand/jaque-logo-premium.png',
+    badge: '/icons/notification-flower-badge.png',
     tag: 'smart-loja-push-test',
-    data: { url: PUSH_DEFAULT_URL },
+    data: { url: PUSH_DEFAULT_URL, type: 'credit_due_today' },
   } as NotificationOptions;
   await registration.showNotification('Jaque Confecções e Presentes', options);
   return { ok: true, title: 'Teste enviado', detail: 'Veja a barra de notificações do celular. Se não aparecer, confira permissão do app.', readiness: await getWebPushReadiness() };
