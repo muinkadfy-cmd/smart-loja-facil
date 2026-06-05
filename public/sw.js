@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v173-pdf-polido-loja-cadastrada';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v174-pdf-top-micro-polido';
 const APP_SHELL = [
   '/',
   '/index.html',

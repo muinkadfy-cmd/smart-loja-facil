@@ -265,42 +265,44 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
 
   // Cabeçalho fiel ao recibo preto/branco, com marca e título separados.
   const logoX = 50;
-  const logoY = 670;
-  const logoW = 188;
-  const logoH = 132;
+  const logoY = 672;
+  const logoW = 176;
+  const logoH = 124;
   commands.push('q', `${logoW} 0 0 ${logoH} ${logoX} ${logoY} cm`, '/Logo Do', 'Q');
-  pdfCenteredText(commands, logoX, 654, logoW, storeName.toUpperCase(), 8, true);
+  pdfCenteredText(commands, logoX, 656, logoW, storeName.toUpperCase(), 7.5, true);
 
   const titleLines = pdfTitleLines(data.title);
-  const titleBoxX = 305;
+  const titleBoxX = 302;
   const titleBoxW = 238;
-  let titleY = titleLines.length > 1 ? 756 : 742;
+  let titleY = titleLines.length > 1 ? 748 : 736;
   titleLines.forEach((line) => {
-    pdfCenteredText(commands, titleBoxX, titleY, titleBoxW, line, 21, true);
-    titleY -= 25;
+    pdfCenteredText(commands, titleBoxX, titleY, titleBoxW, line, 20, true);
+    titleY -= 24;
   });
-  pdfLine(commands, titleBoxX, titleY + 8, titleBoxX + titleBoxW, titleY + 8);
-  pdfTextAt(commands, titleBoxX, titleY - 8, data.subtitle, 8, false);
-  pdfTextAt(commands, titleBoxX, titleY - 22, `Status: ${data.status}`, 10, true);
+  const headerRuleY = titleY + 7;
+  pdfLine(commands, titleBoxX, headerRuleY, titleBoxX + titleBoxW, headerRuleY);
+  pdfTextAt(commands, titleBoxX, headerRuleY - 15, data.subtitle, 7.5, false);
+  pdfTextAt(commands, titleBoxX, headerRuleY - 29, `Status: ${data.status}`, 9, true);
 
   if (data.paidStamp) {
     commands.push('q', '0.15 w', '0 0 0 RG', '0 0 0 rg');
-    pdfRect(commands, 400, 666, 126, 42, true);
+    pdfRect(commands, 404, 642, 118, 42, true);
     commands.push('1 1 1 rg');
-    pdfCenteredText(commands, 400, 691, 126, 'PAGO', 19, true);
-    pdfCenteredText(commands, 400, 675, 126, data.paidStamp, 8, true);
+    pdfCenteredText(commands, 404, 667, 118, 'PAGO', 18, true);
+    pdfCenteredText(commands, 404, 651, 118, data.paidStamp, 7.5, true);
     commands.push('Q');
   } else {
     const statusClean = pdfSafeText(data.status).toUpperCase();
-    const badgeWidth = Math.min(178, Math.max(92, statusClean.length * 8 + 24));
-    pdfRect(commands, 306, 666, badgeWidth, 32, false);
-    pdfCenteredText(commands, 306, 676, badgeWidth, statusClean, 10, true);
+    const badgeWidth = Math.min(162, Math.max(86, statusClean.length * 7.2 + 22));
+    const badgeX = titleBoxX + titleBoxW - badgeWidth;
+    pdfRect(commands, badgeX, 642, badgeWidth, 26, false);
+    pdfCenteredText(commands, badgeX, 651, badgeWidth, statusClean, 9, true);
   }
 
   // Dados do cliente.
   const boxX = 46;
   const boxW = 502;
-  let y = 636;
+  let y = 624;
   pdfRect(commands, boxX, y - 88, boxW, 88, false);
   pdfTextAt(commands, boxX + 18, y - 26, 'CLIENTE', 9, true);
   pdfTextAt(commands, boxX + 128, y - 26, data.customer, 12, true);

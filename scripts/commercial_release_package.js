@@ -4,7 +4,7 @@ import path from 'node:path';
 const root = process.cwd();
 const outRoot = path.join(root, 'release-commercial');
 const packageDir = path.join(outRoot, 'smart-loja-facil-commercial-clean');
-const manifestPath = path.join(outRoot, 'commercial-release-manifest-v173.json');
+const manifestPath = path.join(outRoot, 'commercial-release-manifest-v174.json');
 
 const excludedDirs = new Set(['node_modules', 'dist', 'dist-codex-build', '.git', '.turbo', '.cache', '.wrangler', 'release-commercial']);
 const excludedDirFragments = ['src-tauri/target', 'src-tauri/.cargo-check', 'tools/QaWorkflow/bin', 'tools/QaWorkflow/obj'];
@@ -67,7 +67,7 @@ const riskyCopied = copied.filter((rel) => {
 });
 const manifest = {
   name: 'Jaque Confecções e Presentes - pacote comercial limpo',
-  version: 'v173',
+  version: 'v174',
   generated_at: new Date().toISOString(),
   package_dir: path.relative(root, packageDir).replace(/\\/g, '/'),
   copied_files: copied.length,
@@ -86,7 +86,7 @@ const manifest = {
 };
 fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-process.stdout.write('Commercial release package v173 — Jaque Confecções e Presentes\n');
+process.stdout.write('Commercial release package v174 — Jaque Confecções e Presentes\n');
 process.stdout.write(`Pacote limpo gerado em: ${manifest.package_dir}\n`);
 process.stdout.write(`Arquivos copiados: ${copied.length}\n`);
 process.stdout.write(`Itens ignorados: ${skipped.length}\n`);

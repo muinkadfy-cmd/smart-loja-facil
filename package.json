@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.173",
+  "version": "0.1.174",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com PDF polido e nome da loja cadastrada v173",
+  "description": "PWA da loja com PDF com topo micro polido v174",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
