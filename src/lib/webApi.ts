@@ -56,8 +56,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v172-pdf-fiel-compartilhar-arquivo';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v172-pdf-fiel-compartilhar-arquivo';
+export const WEB_APP_VERSION = 'pwa-supabase-v173-pdf-polido-loja-cadastrada';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v173-pdf-polido-loja-cadastrada';
 
 
 export interface WebTrainingModeState {
@@ -795,7 +795,7 @@ function mapStatusToCloud(value: unknown): 'active' | 'inactive' {
 function mapStore(row: Record<string, unknown>): WebStoreRow {
   return {
     id: stringValue(row.id),
-    name: stringValue(row.name, 'Smart Loja Fácil Web'),
+    name: stringValue(row.name, 'Jaque Confecções e Presentes'),
     owner_id: stringValue(row.owner_id),
     phone: stringValue(row.phone),
     whatsapp: stringValue(row.whatsapp),
@@ -842,7 +842,7 @@ function emptyDashboard(): DashboardData {
 function guestSettings(): Settings {
   const now = new Date().toISOString();
   return {
-    store_name: 'Smart Loja Fácil Web',
+    store_name: 'Jaque Confecções e Presentes',
     owner_name: 'Aguardando login',
     phone: '',
     whatsapp: '',
@@ -909,7 +909,7 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
   const client = await getClient();
   const selectFields = 'id, name, owner_id, phone, whatsapp, address, logo_url, receipt_message, low_stock_limit, status, updated_at';
 
-  const rpcResult = await client.rpc('create_owned_store', { store_name: 'Smart Loja Fácil Web' });
+  const rpcResult = await client.rpc('create_owned_store', { store_name: 'Jaque Confecções e Presentes' });
   if (!rpcResult.error) {
     const source = Array.isArray(rpcResult.data) ? rpcResult.data[0] : rpcResult.data;
     if (source && typeof source === 'object') {
@@ -925,7 +925,7 @@ async function createFirstStore(userId: string, email: string): Promise<WebStore
   const { data, error } = await client
     .from('stores')
     .insert({
-      name: 'Smart Loja Fácil Web',
+      name: 'Jaque Confecções e Presentes',
       owner_id: userId,
       receipt_message: 'Obrigado pela preferência!',
       low_stock_limit: 3,
@@ -1213,7 +1213,7 @@ export async function webSaveSettings(settings: Settings): Promise<Settings> {
   const { data, error } = await client
     .from('stores')
     .update({
-      name: settings.store_name.trim() || 'Smart Loja Fácil Web',
+      name: settings.store_name.trim() || 'Jaque Confecções e Presentes',
       phone: settings.phone.trim(),
       whatsapp: settings.whatsapp.trim(),
       address: settings.address.trim(),
@@ -2074,7 +2074,7 @@ export async function webRestoreBackupContent(fileContent: string, confirmation:
   try {
     snapshot = JSON.parse(fileContent) as WebBackupSnapshot;
   } catch {
-    throw new Error('Arquivo inválido. Selecione um backup JSON exportado pelo Smart Loja Fácil Web.');
+    throw new Error('Arquivo inválido. Selecione um backup JSON exportado pelo Jaque Confecções e Presentes.');
   }
 
   if (snapshot.kind !== 'smart-loja-facil-web-backup' || snapshot.version !== 1 || !snapshot.tables || !snapshot.store) {
@@ -3826,7 +3826,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v172 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v173 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });
@@ -3894,7 +3894,7 @@ function sampleReceiptHtml(format: '58mm' | '80mm' | 'a4'): string {
     ['Blusa feminina', '1', 'R$ 59,90'],
     ['Presente utilitário', '2', 'R$ 39,80'],
   ];
-  return `<section class="slf-receipt"><header class="slf-receipt-head"><div class="slf-receipt-brand"><div class="slf-receipt-logo">SL</div><div><div class="slf-receipt-title">Smart Loja Fácil</div><div class="slf-receipt-sub">Teste seguro de impressão ${format}</div></div></div><span class="slf-receipt-badge">AMOSTRA</span></header><div class="slf-receipt-grid"><div class="slf-receipt-info"><span>Cliente</span><strong>Consumidor final</strong></div><div class="slf-receipt-info"><span>Data</span><strong>${now}</strong></div></div><table class="slf-receipt-table"><thead><tr><th>Item</th><th class="num">Qtd</th><th class="num">Total</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${row[0]}</td><td class="num">${row[1]}</td><td class="num">${row[2]}</td></tr>`).join('')}</tbody></table><div class="slf-receipt-total"><div class="slf-receipt-total-row"><span>Subtotal</span><strong>R$ 99,70</strong></div><div class="slf-receipt-total-row final"><span>Total</span><strong>R$ 99,70</strong></div></div><div class="slf-receipt-note">Este é apenas um teste. Não grava venda, não baixa estoque e não altera caixa.</div><footer class="slf-receipt-footer">Smart Loja Fácil · teste comercial de impressão</footer></section>`;
+  return `<section class="slf-receipt"><header class="slf-receipt-head"><div class="slf-receipt-brand"><div class="slf-receipt-logo">SL</div><div><div class="slf-receipt-title">Jaque Confecções e Presentes</div><div class="slf-receipt-sub">Teste seguro de impressão ${format}</div></div></div><span class="slf-receipt-badge">AMOSTRA</span></header><div class="slf-receipt-grid"><div class="slf-receipt-info"><span>Cliente</span><strong>Consumidor final</strong></div><div class="slf-receipt-info"><span>Data</span><strong>${now}</strong></div></div><table class="slf-receipt-table"><thead><tr><th>Item</th><th class="num">Qtd</th><th class="num">Total</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${row[0]}</td><td class="num">${row[1]}</td><td class="num">${row[2]}</td></tr>`).join('')}</tbody></table><div class="slf-receipt-total"><div class="slf-receipt-total-row"><span>Subtotal</span><strong>R$ 99,70</strong></div><div class="slf-receipt-total-row final"><span>Total</span><strong>R$ 99,70</strong></div></div><div class="slf-receipt-note">Este é apenas um teste. Não grava venda, não baixa estoque e não altera caixa.</div><footer class="slf-receipt-footer">Jaque Confecções e Presentes · teste de impressão</footer></section>`;
 }
 
 export async function webPrintTestReceipt(printFormat: '58mm' | '80mm' | 'a4'): Promise<string> {

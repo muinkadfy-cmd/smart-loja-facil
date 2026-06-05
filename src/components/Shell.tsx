@@ -345,7 +345,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     }
 
     return result;
-  }, [alerts, notificationsEnabled]);
+  }, [alerts]);
 
   const activeAlerts = alerts.filter((alert) => alert.page === activePage && alert.level !== 'ok');
   const priorityAlerts = alerts.filter((alert) => alert.level !== 'ok');
@@ -366,6 +366,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     : 'Local';
   const liveSyncOk = !runtimeInfo.isWeb || (syncSnapshot.status !== 'pending' && syncSnapshot.status !== 'error');
   const roleCapabilities = useMemo(() => getWebRoleCapabilities(webIdentity.role), [webIdentity.role]);
+  const displayStoreName = webIdentity.storeName || status?.settings.store_name || settings?.store_name || 'Jaque Confecções e Presentes';
 
   useEffect(() => {
     const mainAlerts = alerts.filter((alert) => alert.level !== 'ok');
@@ -379,11 +380,11 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
       setToast({ title: incoming.title, detail: incoming.detail, page: incoming.page, level: incoming.level as 'danger' | 'warning' | 'info' });
       playOperationSound(incoming.level === 'danger' ? 'error' : 'warning');
       if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('Smart Loja Fácil', { body: `${incoming.title} - ${incoming.detail}` });
+        new Notification(displayStoreName, { body: `${incoming.title} - ${incoming.detail}` });
       }
       prevAlertSignature.current = signature;
     }
-  }, [alerts, notificationsEnabled]);
+  }, [alerts, notificationsEnabled, displayStoreName]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -489,8 +490,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
     <div className={`neo-shell ${runtimeInfo.isWeb ? 'neo-shell-web' : 'neo-shell-local'} neo-page-${activePage} ${sidebarOpen ? 'neo-nav-open' : ''} ${runtimeInfo.isWeb && !roleCapabilities.canOperate ? 'neo-role-readonly' : ''}`.trim()}>
       <div className="neo-windowbar">
         <div className="neo-windowbar-brand">
-          <AppIcon name="app_logo_cadeado_carrinho" size={32} alt="Smart Loja Fácil" className="neo-windowbar-logo" />
-          <strong>SMART LOJA <b>FÁCIL</b></strong>
+          <AppIcon name="app_logo_cadeado_carrinho" size={32} alt={displayStoreName} className="neo-windowbar-logo" />
+          <strong>{displayStoreName}</strong>
         </div>
         <div className="neo-windowbar-right">
           <span>{runtimeInfo.isWeb ? 'WEB' : 'DESKTOP'}</span>
@@ -504,10 +505,10 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
         <aside className={`neo-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="neo-sidebar-brand">
             <div className="neo-sidebar-brand-mark">
-              <AppIcon name="app_logo_cadeado_carrinho" size={48} alt="Smart Loja Fácil" className="neo-brand-logo-img" />
+              <AppIcon name="app_logo_cadeado_carrinho" size={48} alt={displayStoreName} className="neo-brand-logo-img" />
             </div>
             <div className="neo-sidebar-brand-copy">
-              <strong>Smart Loja Fácil</strong>
+              <strong>{displayStoreName}</strong>
               <small><i />{runtimeInfo.isWeb ? 'Online' : 'Local ativo'}</small>
             </div>
             <button type="button" className="neo-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fechar menu">×</button>
@@ -559,8 +560,8 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                 <span />
               </button>
               <div className="neo-mobile-branding">
-                <AppIcon name="app_logo_cadeado_carrinho" size={32} alt="Smart Loja Fácil" className="neo-mobile-brand-logo" />
-                <strong>Smart Loja Fácil</strong>
+                <AppIcon name="app_logo_cadeado_carrinho" size={32} alt={displayStoreName} className="neo-mobile-brand-logo" />
+                <strong>{displayStoreName}</strong>
               </div>
               <div className="neo-mobile-tools">
                 <button type="button" className="neo-notify-btn" onClick={() => setAlertsOpen((value) => !value)} aria-label="Notificações">
@@ -610,7 +611,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
                   <span className="neo-store-avatar">{avatarInitials}</span>
                   <span>
                     <small>Loja ativa</small>
-                    <strong>{webIdentity.storeName || status?.settings.store_name || 'Smart Loja'}</strong>
+                    <strong>{displayStoreName}</strong>
                   </span>
                   <i>⌄</i>
                 </button>

@@ -42,7 +42,7 @@ export function MobileShell({
   const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
   const pageRef = useRef<HTMLElement | null>(null);
   const route = getMobileRoute(activePage);
-  const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil Web').replace(/\s+Web$/i, '');
+  const storeName = (settings?.store_name || status?.settings.store_name || 'Jaque Confecções e Presentes').replace(/\s+Web$/i, '');
   const online = Boolean(status?.sqlite_ok);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export function MobileShell({
         <div className="mapp-sidebar-head">
           <span className="mapp-logo-badge"><InlineIcon name="app_logo_cadeado_carrinho" size={32} /></span>
           <div>
-            <strong>Smart Loja Fácil</strong>
+            <strong>{storeName}</strong>
             <small className={online ? 'is-online' : 'is-offline'}>{online ? 'Online' : 'Verificando'}</small>
           </div>
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu">×</button>

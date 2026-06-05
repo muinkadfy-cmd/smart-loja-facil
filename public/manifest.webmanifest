@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v172",
-  "short_name": "Smart Loja v172",
-  "description": "Smart Loja Fácil PWA mobile-first v172 com PDF fiel preto/branco e compartilhamento de arquivo.",
+  "name": "Jaque Confecções e Presentes v173",
+  "short_name": "Jaque v173",
+  "description": "PWA da loja Jaque Confecções e Presentes v173 com PDF polido e nome da loja cadastrada.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

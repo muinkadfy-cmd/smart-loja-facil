@@ -187,7 +187,7 @@ export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageP
   const paymentSummaryText = paymentSummary.length > 0
     ? paymentSummary.slice(0, 3).map((item) => `${paymentMethodLabel(item.method)} ${money(item.total)}`).join(' · ')
     : 'Sem recebimentos registrados hoje.';
-  const storeName = webIdentity.storeName || status?.settings.store_name || 'Smart Loja Fácil';
+  const storeName = webIdentity.storeName || status?.settings.store_name || 'Jaque Confecções e Presentes';
   const userLabel = runtimeInfo.isWeb
     ? webIdentity.email || status?.settings.owner_name || 'Aguardando login'
     : status?.settings.owner_name || 'Administrador';

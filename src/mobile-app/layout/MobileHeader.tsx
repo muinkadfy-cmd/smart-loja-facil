@@ -11,7 +11,7 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ status, settings, alertsCount, onOpenAlerts, onRefresh, onLogout }: MobileHeaderProps): JSX.Element {
-  const storeName = (settings?.store_name || status?.settings.store_name || 'Smart Loja Fácil').replace(/\s+Web$/i, '').trim() || 'Smart Loja Fácil';
+  const storeName = (settings?.store_name || status?.settings.store_name || 'Jaque Confecções e Presentes').replace(/\s+Web$/i, '').trim() || 'Jaque Confecções e Presentes';
   return (
     <header className="mapp-header">
       <div className="mapp-header-brand">

@@ -513,7 +513,7 @@ function AuditLogsScreen({ refreshToken, onRefresh }: { refreshToken: number; on
 
 function fallbackSettings(status: AppStatus | null): Settings {
   return status?.settings ?? {
-    store_name: 'Smart Loja Fácil',
+    store_name: 'Jaque Confecções e Presentes',
     owner_name: '',
     phone: '',
     whatsapp: '',

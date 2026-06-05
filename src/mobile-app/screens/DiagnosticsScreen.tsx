@@ -1785,7 +1785,7 @@ function buildFinalAcceptanceText(params: {
   const blockers = params.gate.blockers.length ? params.gate.blockers.map((item) => `- ${item}`) : ['- Nenhum bloqueio P0/P1 registrado no aparelho atual.'];
   const warnings = params.gate.warnings.length ? params.gate.warnings.map((item) => `- ${item}`) : ['- Nenhum aviso relevante registrado.'];
   return [
-    'Smart Loja Fácil — fechamento comercial / aceite final v139',
+    'Jaque Confecções e Presentes — fechamento comercial / aceite final v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.gate.title}`,
     `Nota final: ${params.gate.score}/10 ${params.gate.stars}`,
@@ -1879,7 +1879,7 @@ function buildFirstClientOnboardingText(params: {
     `Esperado: ${step.expected}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — kit de venda / onboarding do primeiro cliente v139',
+    'Jaque Confecções e Presentes — kit de venda / onboarding do primeiro cliente v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.report?.storeName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || 'não informado'}`,
@@ -1895,7 +1895,7 @@ function buildFirstClientOnboardingText(params: {
     ...rows,
     '',
     'Mensagem curta para o cliente:',
-    `Olá! Seu Smart Loja Fácil foi preparado para ${params.state.clientName || 'sua loja'}. No primeiro dia, use o app com acompanhamento: cadastre produtos/clientes, faça uma venda pequena, confira caixa/comprovante e me envie o diagnóstico se aparecer qualquer aviso.`,
+    `Olá! Seu Jaque Confecções e Presentes foi preparado para ${params.state.clientName || 'sua loja'}. No primeiro dia, use o app com acompanhamento: cadastre produtos/clientes, faça uma venda pequena, confira caixa/comprovante e me envie o diagnóstico se aparecer qualquer aviso.`,
   ].join('\n');
 }
 
@@ -1972,7 +1972,7 @@ function buildCommercialTourText(params: {
     `Prova: ${step.proof}`,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — tour de apresentação comercial v139',
+    'Jaque Confecções e Presentes — tour de apresentação comercial v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Apresentador: ${params.state.presenter || params.roleState.email || 'não informado'}`,
     `Cliente/público: ${params.state.audience || 'não informado'}`,
@@ -2075,7 +2075,7 @@ function buildCommercialProposalText(params: {
   const done = new Set(params.state.doneIds);
   const rows = COMMERCIAL_PROPOSAL_CHECKLIST.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} ${item.label} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — proposta comercial / planos e benefícios v139',
+    'Jaque Confecções e Presentes — proposta comercial / planos e benefícios v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.roleState.storeName || 'não informado'}`,
     `Plano sugerido: ${params.plan.name} (${params.plan.tag})`,
@@ -2197,7 +2197,7 @@ function buildImplementationTermText(params: {
   const done = new Set(params.state.doneIds);
   const rows = IMPLEMENTATION_TERM_ITEMS.map((item) => `${done.has(item.id) ? '[OK]' : '[PENDENTE]'} [${item.risk}] ${item.title} — ${item.detail}`);
   return [
-    'Smart Loja Fácil — termo simples de implantação e aceite v139',
+    'Jaque Confecções e Presentes — termo simples de implantação e aceite v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável do cliente: ${params.state.responsibleName || 'não informado'}`,
@@ -2364,7 +2364,7 @@ function buildPostSaleSupportText(params: {
     ].filter(Boolean).join(' · '))
     : ['Nenhum chamado registrado ainda. Registre qualquer falha ou ajuste combinado no primeiro cliente.'];
   return [
-    'Smart Loja Fácil — pós-venda / suporte e SLA do primeiro cliente v139',
+    'Jaque Confecções e Presentes — pós-venda / suporte e SLA do primeiro cliente v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Responsável suporte: ${params.state.supportOwner || params.term.responsibleName || 'não informado'}`,
@@ -2541,7 +2541,7 @@ function buildClientFeedbackText(params: {
     ].filter(Boolean).join(' · '))
     : ['Nenhuma melhoria registrada ainda. Depois do primeiro dia, transforme dor real em ação P0/P1/P2.'];
   return [
-    'Smart Loja Fácil — feedback do cliente / NPS e melhorias prioritárias v139',
+    'Jaque Confecções e Presentes — feedback do cliente / NPS e melhorias prioritárias v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Cliente/loja: ${params.state.clientName || params.postSale.clientName || params.term.clientName || params.proposal.clientName || params.roleState.storeName || 'não informado'}`,
     `Contato/responsável: ${params.state.contactName || params.postSale.supportOwner || 'não informado'}`,
@@ -2751,7 +2751,7 @@ function buildExecutiveHealthText(params: {
 }): string {
   const areaRows = params.summary.areas.map((area) => `[${area.tone.toUpperCase()}] ${area.title}: ${area.score}/100 — ${area.status} | Evidência: ${area.evidence} | Risco: ${area.risk}`);
   return [
-    'Smart Loja Fácil — painel executivo de saúde comercial v139',
+    'Jaque Confecções e Presentes — painel executivo de saúde comercial v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota executiva: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -2923,7 +2923,7 @@ function buildRegressionAuditText(params: {
     return `[${regressionResultLabel(result)}] [${step.priority}] ${step.group} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — auditoria final de regressão / pré-venda real v142',
+    'Jaque Confecções e Presentes — auditoria final de regressão / pré-venda real v142',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -3090,7 +3090,7 @@ function buildDayOneImplantText(params: {
     return `[${dayOneResultLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — checklist de implantação em cliente real / Dia 1 v141',
+    'Jaque Confecções e Presentes — checklist de implantação em cliente real / Dia 1 v141',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -3270,7 +3270,7 @@ function buildDayTwoFollowUpText(params: {
     return `[${dayTwoResultLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — correção pós-implantação real / Dia 2 v142',
+    'Jaque Confecções e Presentes — correção pós-implantação real / Dia 2 v142',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -3470,7 +3470,7 @@ function buildFirstClientCloseoutText(params: {
     return `[${firstClientCloseoutLabel(result)}] [${step.priority}] ${step.phase} — ${step.title}\nAção: ${step.action}\nEsperado: ${step.expected}\nEvidência: ${step.evidence}`;
   });
   return [
-    'Smart Loja Fácil — encerramento do primeiro cliente / pronto para replicar v144',
+    'Jaque Confecções e Presentes — encerramento do primeiro cliente / pronto para replicar v144',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${params.summary.title}`,
     `Nota: ${params.summary.score}/100 ${params.summary.stars}`,
@@ -3527,7 +3527,7 @@ function buildTriageText(params: {
     `Evidência: ${item.evidence}`,
   ].join(' · ')) : ['[OK] Nenhuma falha ou bloqueio registrado neste aparelho. Continue validando em dois aparelhos antes de vender.'];
   return [
-    'Smart Loja Fácil — plano de correção aceite v139',
+    'Jaque Confecções e Presentes — plano de correção aceite v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Decisão: ${summary.decision}`,
     `Resumo: P0=${summary.p0}; P1=${summary.p1}; P2=${summary.p2}; total=${summary.total}`,
@@ -3565,7 +3565,7 @@ function buildAssistedExecutionText(params: {
     ].join(' · ');
   });
   return [
-    'Smart Loja Fácil — execução real assistida v139',
+    'Jaque Confecções e Presentes — execução real assistida v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Responsável: ${params.state.tester || 'não informado'}`,
     `Aparelho 1: ${params.state.deviceA || 'não informado'}`,
@@ -3639,7 +3639,7 @@ function buildGuidedTestText(params: {
     step.expected,
   ].join(' · '));
   return [
-    'Smart Loja Fácil — roteiro guiado comercial v139',
+    'Jaque Confecções e Presentes — roteiro guiado comercial v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Progresso manual: ${doneCount}/${total} (${percent}%)`,
     `Teste automático: ${params.report ? `${params.report.score}/10 — ${readyText(params.report)}` : 'ainda não rodado'}`,
@@ -3692,7 +3692,7 @@ function buildTrainingModeText(params: {
   outbox: WebOutboxStats;
 }): string {
   return [
-    'Smart Loja Fácil — modo treinamento seguro v139',
+    'Jaque Confecções e Presentes — modo treinamento seguro v139',
     `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
     `Status: ${params.training.enabled ? 'ATIVO — gravações reais bloqueadas' : 'DESATIVADO — operação real liberada conforme permissões'}`,
     `Responsável: ${params.training.responsible || 'não informado'}`,
@@ -3719,7 +3719,7 @@ function buildTrainingModeText(params: {
 
 function reportToText(report: WebCommercialValidationReport, snapshot: WebSyncSnapshot): string {
   const lines = [
-    'Smart Loja Fácil — teste comercial v139',
+    'Jaque Confecções e Presentes — teste comercial v139',
     `Gerado em: ${formatDateTime(report.createdAt)}`,
     `App: ${report.appVersion}`,
     `Cache: ${report.cacheVersion}`,
@@ -4101,7 +4101,7 @@ export function DiagnosticsScreen({ status, onRefresh, onNavigate }: Diagnostics
 
   async function copyDemoMode(): Promise<void> {
     const lines = [
-      'Smart Loja Fácil — tour comercial guiado v139',
+      'Jaque Confecções e Presentes — tour comercial guiado v139',
       `Status: ${demoMode.enabled ? 'ativo' : 'desativado'}`,
       `Loja demo: ${demoMode.storeName || 'Loja Demonstração Fácil'}`,
       `Cenário: ${demoMode.scenario || 'demonstração comercial'}`,

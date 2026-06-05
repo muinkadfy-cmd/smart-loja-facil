@@ -53,7 +53,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
 
   return (
     <main className={['welcome-screen login-landing classic-login-landing master-login-v69 master-login-v70 master-login-v82', props.className].filter(Boolean).join(' ')}>
-      <section className="master-login-centered-shell" aria-label="Login do Smart Loja Fácil">
+      <section className="master-login-centered-shell" aria-label="Login da loja">
         <section className="master-login-form-card master-login-single-card master-login-centered-card" aria-label="Acesso web e mobile">
           <div className="master-login-form-head master-login-centered-head">
             <div className="master-login-security-strip" aria-label="Acesso protegido">
@@ -61,8 +61,8 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
               <span>Mobile</span>
               <span>Nuvem</span>
             </div>
-            <AppIcon name="app_logo_cadeado_carrinho" size={64} alt="Smart Loja Fácil" className="master-login-brand-icon" />
-            <strong>SMART LOJA <b>FÁCIL</b></strong>
+            <img src="/brand/jaque-logo-premium.png" alt="Jaque Confecções e Presentes" className="master-login-brand-icon master-login-jaque-logo" />
+            <strong>JAQUE <b>CONFECÇÕES E PRESENTES</b></strong>
             <small>Entre para vender, controlar estoque e acompanhar sua loja no celular.</small>
           </div>
 
