@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v169",
-  "short_name": "Smart Loja v169",
-  "description": "Smart Loja Fácil PWA mobile-first v169 com Vendas/PDV mobile 10/10, recibo padrão Jaque e PDF seguro.",
+  "name": "Smart Loja Fácil PWA v170",
+  "short_name": "Smart Loja v170",
+  "description": "Smart Loja Fácil PWA mobile-first v170 com Crediário mobile 10/10, avisos laterais e recibo padrão Jaque.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

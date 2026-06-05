@@ -6,6 +6,7 @@ import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt } from '../components/receiptShare';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface SalesScreenProps {
   status: AppStatus | null;
@@ -236,7 +237,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     setError(null);
     setFeedback(null);
     try {
-      await api.createSale({
+      const finishedSale = await api.createSale({
         request_id: requestId('mobile-sale'),
         customer_id: customerId || null,
         payment_method: paymentMethod,
@@ -257,6 +258,13 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       setFirstDueDate(todayInputValue());
       setDueDay(dayFromDateValue(todayInputValue()));
       setFeedback('Tudo certo: venda finalizada. Estoque, caixa e comprovante estão sendo enviados para a nuvem.');
+      notifyMobileAction({
+        title: 'Venda concluída',
+        message: `${finishedSale?.number ? `Venda #${String(finishedSale.number).padStart(4, '0')}` : 'Venda'} de ${formatCurrency(total)} finalizada. Estoque, caixa e comprovante foram atualizados.`,
+        tone: 'success',
+        page: 'receipts',
+        actionLabel: 'Comprovante',
+      });
       await loadData();
       onRefresh();
     } catch (err) {
@@ -270,6 +278,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     const receipt = findReceiptForSale(receipts, sale);
     const message = await shareSaleReceipt(sale, receipt);
     setFeedback(message);
+    notifyMobileAction({ title: 'Comprovante', message, tone: message.startsWith('Ainda') ? 'warning' : 'success', page: 'receipts', actionLabel: 'Abrir' });
   }
 
   function setDueDaySelection(day: number): void {

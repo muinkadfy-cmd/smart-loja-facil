@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface ReceiptsScreenProps {
   status: AppStatus | null;
@@ -820,6 +821,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     selectPreview(preview);
     setFullPreview(preview);
     setFeedback({ tone: 'success', text: 'Recibo aberto dentro do app com o padrão Jaque.' });
+    notifyMobileAction({ title: 'Recibo aberto', message: `${preview.title} pronto para conferir dentro do app.`, tone: 'success', page: 'receipts', actionLabel: 'Ver' });
   }
 
   useEffect(() => {
@@ -833,6 +835,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       const fileName = downloadPreviewPdf(preview);
       setFullPreview(preview);
       setFeedback({ tone: 'success', text: `PDF real baixado como ${fileName}. A prévia interna continua aberta no app para conferir ou tirar print.` });
+      notifyMobileAction({ title: 'PDF baixado', message: `${fileName} foi gerado como arquivo PDF real.`, tone: 'success', page: 'receipts', actionLabel: 'Abrir tela' });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -844,6 +847,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     selectPreview(preview);
     setFullPreview(preview);
     setFeedback({ tone: 'success', text: 'Visualização aberta dentro do próprio app. Não abre HTML solto no celular.' });
+    notifyMobileAction({ title: 'Visualização aberta', message: `${preview.title} aberto dentro do app, sem HTML solto.`, tone: 'success', page: 'receipts', actionLabel: 'Conferir' });
   }
 
   async function sharePreview(preview: ReceiptPreview): Promise<void> {
@@ -857,6 +861,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       try {
         await navigator.share({ title: preview.title, text });
         setFeedback({ tone: 'success', text: 'Comprovante enviado pelo compartilhamento do celular.' });
+        notifyMobileAction({ title: 'Comprovante enviado', message: 'Compartilhamento do celular aberto com o recibo preenchido.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
         return;
       } catch {
         // continua para WhatsApp/cópia quando o usuário cancela ou o navegador bloqueia.
@@ -866,10 +871,12 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     if (phone) {
       await api.openExternalUrl(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`);
       setFeedback({ tone: 'success', text: 'WhatsApp aberto com o comprovante preenchido.' });
+      notifyMobileAction({ title: 'WhatsApp aberto', message: 'Comprovante preenchido para enviar ao cliente.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
       return;
     }
     await navigator.clipboard?.writeText(text).catch(() => undefined);
     setFeedback({ tone: 'info', text: 'Texto do comprovante copiado. Cole no WhatsApp ou em outro app.' });
+    notifyMobileAction({ title: 'Texto copiado', message: 'Cole o comprovante no WhatsApp ou em outro aplicativo.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
   }
 
   const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);

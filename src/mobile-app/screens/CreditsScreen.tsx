@@ -14,6 +14,7 @@ import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface CreditsScreenProps {
   status: AppStatus | null;
@@ -210,7 +211,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     } catch {
       // Sem ação: se o navegador bloquear storage, a aba Comprovantes ainda abre normalmente.
     }
-    setFeedback({ tone: 'info', text: installment ? 'Abrindo o recibo desta parcela na aba Comprovantes.' : 'Abrindo o extrato desta nota na aba Comprovantes.' });
+    const message = installment ? 'Abrindo o recibo desta parcela na aba Comprovantes.' : 'Abrindo o extrato desta nota na aba Comprovantes.';
+    setFeedback({ tone: 'info', text: message });
+    notifyMobileAction({ title: installment ? 'Recibo da parcela' : 'Extrato da nota', message, tone: 'info', page: 'receipts', actionLabel: 'Ver' });
     onNavigate('receipts');
   }
 
@@ -281,6 +284,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       setReceive(null);
       setPaymentReview(null);
       setFeedback({ tone: 'success', text: 'Tudo certo: recebimento lançado. Caixa e crediário foram atualizados e sincronizados.' });
+      notifyMobileAction({
+        title: 'Parcela recebida',
+        message: `${receive.credit.customer_name} · parcela ${formatNumber(receive.installment.number)} lançada no caixa e no crediário.`,
+        tone: 'success',
+        page: 'receipts',
+        actionLabel: 'Comprovante',
+      });
       await loadCredits();
       onRefresh();
     } catch (error) {
@@ -313,12 +323,12 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         <StatCard label="Em aberto" value={formatCurrency(summary.openBalance)} detail={`${formatNumber(summary.openCount)} crediário(s)`} icon="crediario" tone="purple" />
         <StatCard label="Vencidos" value={formatCurrency(summary.overdueTotal)} detail={`${formatNumber(summary.overdueCount)} parcela(s)`} icon="auditoria_logs" tone="orange" />
         <StatCard label="Clientes" value={formatNumber(status?.dashboard.credits_active_customers)} detail="com crediário ativo" icon="clientes" tone="sky" />
-        <StatCard label="Próximo venc." value={summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'} detail={summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'} icon="comprovantes" tone="green" />
+        <StatCard label="Próx. venc." value={summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'} detail={summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'} icon="comprovantes" tone="green" />
       </section>
 
-      <section className="mapp-success-card">
-        <strong>Crediário focado em receber parcelas</strong>
-        <span>Use esta aba para consultar saldos e baixar parcelas com segurança. Extrato, A4/PDF, visualização para iPhone e envio ficam na aba Comprovantes.</span>
+      <section className="mapp-success-card mapp-credit-help-card">
+        <strong>Receba parcelas com conferência</strong>
+        <span>Toque na nota para abrir/recolher. Use Ver recibo para comprovante da parcela e Ver extrato para a nota inteira.</span>
       </section>
 
       {summary.overdueCount ? (
@@ -464,12 +474,19 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 <div className="mapp-credit-totals mapp-credit-totals-compact">
                   <div><span>Total</span><strong>{formatCurrency(credit.total)}</strong></div>
                   <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
-                  <div><span>Restante</span><strong>{formatCurrency(credit.balance)}</strong></div>
+                  <div><span>Saldo</span><strong>{formatCurrency(credit.balance)}</strong></div>
                   <div><span>Contato</span><strong>{credit.customer_whatsapp || credit.customer_phone || '-'}</strong></div>
                 </div>
                 <div className="mapp-credit-progress" aria-label={`${paidCount} de ${credit.installments.length} parcelas pagas`}>
                   <span style={{ width: `${credit.installments.length ? Math.round((paidCount / credit.installments.length) * 100) : 0}%` }} />
                 </div>
+                {nextInstallment ? (
+                  <div className="mapp-credit-next-strip">
+                    <span>Próxima cobrança</span>
+                    <strong>Parcela {formatNumber(nextInstallment.number)}/{formatNumber(credit.installments.length)}</strong>
+                    <small>{dateOnly(nextInstallment.due_date)} · {formatCurrency(remainingOf(nextInstallment))}</small>
+                  </div>
+                ) : null}
                 <div className="mapp-installment-list">
                   {visibleInstallments.map((installment) => {
                     const statusLabel = installmentStatusLabel(installment);
@@ -482,14 +499,14 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                           <div className="mapp-installment-values">
                             <span>Original <b>{formatCurrency(installment.amount)}</b></span>
                             <span>Pago <b>{formatCurrency(paidOf(installment))}</b></span>
-                            <span>Restante <b>{formatCurrency(remainingOf(installment))}</b></span>
+                            <span>Saldo <b>{formatCurrency(remainingOf(installment))}</b></span>
                           </div>
                         </div>
                         <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                         <div className="mapp-installment-actions mapp-installment-actions-slim">
-                          <button type="button" onClick={() => openReceiptsForCredit(credit, installment)}>Ver recibo</button>
+                          <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit, installment)}>Ver recibo</button>
                           {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
-                            <button type="button" onClick={() => openReceive(credit, installment)}>Receber</button>
+                            <button type="button" className="mapp-primary-button" onClick={() => openReceive(credit, installment)}>Receber</button>
                           ) : null}
                         </div>
                       </div>

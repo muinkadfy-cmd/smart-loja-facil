@@ -5,6 +5,7 @@ import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatNumber } from '../components/format';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface ProductsCustomersScreenProps {
   status: AppStatus | null;
@@ -662,6 +663,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         status: form.status,
       });
       setFeedback({ tone: 'success', text: hasProductPhoto(form) ? 'Produto e foto salvos. A miniatura deve aparecer nos aparelhos sincronizados.' : (form.id ? 'Produto atualizado e sincronizado.' : 'Produto cadastrado e sincronizado.') });
+      notifyMobileAction({ title: form.id ? 'Produto atualizado' : 'Produto cadastrado', message: `${name} está salvo e pronto para aparecer nos aparelhos sincronizados.`, tone: 'success', page: 'products', actionLabel: 'Ver produtos' });
       setForm(null);
       await loadProducts();
       onRefresh();
@@ -682,9 +684,11 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       if (nextStatus === 'inativo') {
         await api.inactivateProduct(product.id);
         setFeedback({ tone: 'success', text: 'Tudo certo: produto inativado. Ele saiu das vendas, mas continua no histórico.' });
+        notifyMobileAction({ title: 'Produto inativado', message: `${product.name} saiu do PDV, com histórico preservado.`, tone: 'warning', page: 'products', actionLabel: 'Ver produtos' });
       } else {
         await api.saveProduct({ ...product, status: 'ativo' });
         setFeedback({ tone: 'success', text: 'Produto reativado e pronto para vender.' });
+        notifyMobileAction({ title: 'Produto reativado', message: `${product.name} voltou para o PDV.`, tone: 'success', page: 'products', actionLabel: 'Ver produtos' });
       }
       await loadProducts();
       onRefresh();
@@ -707,6 +711,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     try {
       await api.adjustStock(stockAdjust.product.id, Math.round(delta), reason);
       setFeedback({ tone: 'success', text: `Tudo certo: estoque de ${stockAdjust.product.name} ajustado e sincronizado.` });
+      notifyMobileAction({ title: 'Estoque atualizado', message: `${stockAdjust.product.name}: ajuste de ${Math.round(delta)} unidade(s) sincronizado.`, tone: delta < 0 ? 'warning' : 'success', page: 'products', actionLabel: 'Ver estoque' });
       setStockAdjust(null);
       await loadProducts();
       onRefresh();
@@ -976,6 +981,7 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
         notes: form.notes.trim(),
       });
       setFeedback({ tone: 'success', text: form.id ? 'Cliente atualizado e sincronizado.' : 'Cliente cadastrado e sincronizado.' });
+      notifyMobileAction({ title: form.id ? 'Cliente atualizado' : 'Cliente cadastrado', message: `${name} está salvo e disponível para vendas/crediário.`, tone: 'success', page: 'customers', actionLabel: 'Ver clientes' });
       setForm(null);
       await loadCustomers();
       onRefresh();
@@ -996,9 +1002,11 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
       if (nextStatus === 'inativo') {
         await api.inactivateCustomer(customer.id);
         setFeedback({ tone: 'success', text: 'Tudo certo: cliente inativado. O histórico permanece preservado.' });
+        notifyMobileAction({ title: 'Cliente inativado', message: `${customer.name} saiu das listas principais, com histórico preservado.`, tone: 'warning', page: 'customers', actionLabel: 'Ver clientes' });
       } else {
         await api.saveCustomer({ ...customer, status: 'ativo' });
         setFeedback({ tone: 'success', text: 'Cliente reativado e disponível para vendas.' });
+        notifyMobileAction({ title: 'Cliente reativado', message: `${customer.name} voltou para vendas e crediário.`, tone: 'success', page: 'customers', actionLabel: 'Ver clientes' });
       }
       await loadCustomers();
       onRefresh();

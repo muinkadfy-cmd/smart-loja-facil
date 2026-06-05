@@ -12,6 +12,7 @@ import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScre
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
 import { NotificationCenter, type NotificationItem } from './components/NotificationCenter';
+import { MOBILE_ACTION_TOAST_EVENT, type MobileActionToastDetail } from './components/actionToast';
 import { getWebOutboxStats, readWebDemoMode, readWebSyncSnapshot, readWebTrainingMode, type WebOutboxStats, type WebSyncSnapshot } from '../lib/webApi';
 
 interface MobileAppProps {
@@ -65,6 +66,7 @@ function emptyOutboxStats(): WebOutboxStats {
 
 export function MobileApp({ activePage, status, settings, loading, error, refreshToken, onNavigate, onRefresh, onLogout }: MobileAppProps): JSX.Element {
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [actionToasts, setActionToasts] = useState<Array<MobileActionToastDetail & { id: string }>>([]);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [trainingModeActive, setTrainingModeActive] = useState(() => readWebTrainingMode().enabled);
   const [demoModeActive, setDemoModeActive] = useState(() => readWebDemoMode().enabled);
@@ -73,6 +75,22 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
   const [outboxStats, setOutboxStats] = useState<WebOutboxStats>(() => {
     try { return getWebOutboxStats(); } catch { return emptyOutboxStats(); }
   });
+
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<MobileActionToastDetail>).detail;
+      if (!detail?.title || !detail?.message) return;
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const toast: MobileActionToastDetail & { id: string } = { id, tone: 'success', ...detail };
+      setActionToasts((current) => [toast, ...current].slice(0, 3));
+      window.setTimeout(() => {
+        setActionToasts((current) => current.filter((item) => item.id !== id));
+      }, 5200);
+    };
+    window.addEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
+    return () => window.removeEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
+  }, []);
 
   useEffect(() => {
     const handler = () => setUpdateAvailable(true);
@@ -227,6 +245,25 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       ) : (
         <GenericDataScreen page={activePage} status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       )}
+
+      {actionToasts.length ? (
+        <div className="mapp-action-toast-stack" aria-live="polite" aria-label="Avisos das ações">
+          {actionToasts.map((toast) => (
+            <article key={toast.id} className={`mapp-action-toast tone-${toast.tone || 'success'}`}>
+              <span className="mapp-action-toast-dot" aria-hidden="true" />
+              <div>
+                <strong>{toast.title}</strong>
+                <p>{toast.message}</p>
+              </div>
+              {toast.page ? (
+                <button type="button" onClick={() => { navigate(toast.page as PageKey); setActionToasts((current) => current.filter((item) => item.id !== toast.id)); }}>
+                  {toast.actionLabel || 'Abrir'}
+                </button>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      ) : null}
       <NotificationCenter open={alertsOpen} notifications={notificationItems} onClose={() => setAlertsOpen(false)} onNavigate={navigate} onLogout={onLogout} title="Central de avisos" logoutLabel="Sair da conta" />
     </MobileShell>
   );

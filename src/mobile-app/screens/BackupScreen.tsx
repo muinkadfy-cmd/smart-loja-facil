@@ -6,6 +6,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatDateTime, formatNumber } from '../components/format';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface BackupScreenProps {
   refreshToken: number;
@@ -77,6 +78,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
     try {
       const info = await api.createBackup();
       setFeedback({ tone: 'success', text: `Tudo certo: backup criado/baixado: ${info.file_name}. Guarde esse arquivo fora do celular ou navegador.` });
+      notifyMobileAction({ title: 'Backup criado', message: `${info.file_name} foi baixado. Guarde fora do celular.`, tone: 'success', page: 'backup', actionLabel: 'Ver backup' });
       await loadBackups();
       onRefresh();
     } catch (error) {
@@ -96,6 +98,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
       } else {
         await api.restoreBackup(backup.id, confirmation);
         setFeedback({ tone: 'success', text: 'Backup restaurado com segurança. Recarregue e confira os dados principais.' });
+        notifyMobileAction({ title: 'Backup restaurado', message: 'Dados compatíveis repostos. Confira vendas, caixa e crediário.', tone: 'success', page: 'diagnostics', actionLabel: 'Conferir' });
         onRefresh();
       }
     } catch (error) {
@@ -116,6 +119,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
       const content = await file.text();
       await api.restoreWebBackupContent(content, confirmation);
       setFeedback({ tone: 'success', text: 'Backup importado. Os dados compatíveis foram repostos/atualizados sem apagar a loja inteira.' });
+      notifyMobileAction({ title: 'Backup importado', message: 'Dados compatíveis atualizados sem apagar a loja inteira.', tone: 'success', page: 'diagnostics', actionLabel: 'Conferir' });
       await loadBackups();
       onRefresh();
     } catch (error) {

@@ -7,6 +7,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { notifyMobileAction } from '../components/actionToast';
 
 interface CashScreenProps {
   status: AppStatus | null;
@@ -100,6 +101,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
       setNotes('');
       setMode('movement');
       setFeedback({ tone: 'success', text: 'Tudo certo: caixa aberto e sincronizado. Vendas, entradas e saídas já podem ser acompanhadas.' });
+      notifyMobileAction({ title: 'Caixa aberto', message: `Saldo inicial ${formatCurrency(amount)} registrado com segurança.`, tone: 'success', page: 'cash', actionLabel: 'Ver caixa' });
       onRefresh();
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -127,6 +129,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
       setMovementAmount('');
       setMovementReason('');
       setFeedback({ tone: 'success', text: `${movementLabel(movementType)} lançada e sincronizada no caixa.` });
+      notifyMobileAction({ title: `${movementLabel(movementType)} lançada`, message: `${formatCurrency(amount)} registrado no caixa.`, tone: movementType === 'saida' ? 'warning' : 'success', page: 'cash', actionLabel: 'Ver caixa' });
       onRefresh();
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
@@ -154,6 +157,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
       setNotes('');
       setMode('open');
       setFeedback({ tone: 'success', text: 'Caixa fechado com conferência. O histórico ficou preservado.' });
+      notifyMobileAction({ title: 'Caixa fechado', message: `Valor contado ${formatCurrency(amount)} registrado no histórico.`, tone: 'success', page: 'cash', actionLabel: 'Histórico' });
       onRefresh();
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
