@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v166",
-  "short_name": "Smart Loja v166",
-  "description": "Smart Loja Fácil PWA mobile-first v166 com Comprovantes em PDF real, visualização iPhone/Android e logo premium ajustada.",
+  "name": "Smart Loja Fácil PWA v167",
+  "short_name": "Smart Loja v167",
+  "description": "Smart Loja Fácil PWA mobile-first v167 com recibo padrão Jaque, visualização interna e PDF seguro.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

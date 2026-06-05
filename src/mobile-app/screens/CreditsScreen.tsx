@@ -199,17 +199,18 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
   }
 
-  function openReceiptsForCredit(credit: CreditSummary): void {
+  function openReceiptsForCredit(credit: CreditSummary, installment?: CreditInstallment): void {
     try {
       window.localStorage.setItem(RECEIPTS_FOCUS_SALE_KEY, JSON.stringify({
         sale_number: credit.sale_number,
         credit_id: credit.id,
+        installment_number: installment?.number,
         created_at: Date.now(),
       }));
     } catch {
       // Sem ação: se o navegador bloquear storage, a aba Comprovantes ainda abre normalmente.
     }
-    setFeedback({ tone: 'info', text: 'Abrindo o extrato desta nota na aba Comprovantes. Lá você consegue Visualizar, Baixar PDF e Enviar.' });
+    setFeedback({ tone: 'info', text: installment ? 'Abrindo o recibo desta parcela na aba Comprovantes.' : 'Abrindo o extrato desta nota na aba Comprovantes.' });
     onNavigate('receipts');
   }
 
@@ -485,11 +486,12 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                           </div>
                         </div>
                         <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
-                        {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
-                          <div className="mapp-installment-actions mapp-installment-actions-slim">
+                        <div className="mapp-installment-actions mapp-installment-actions-slim">
+                          <button type="button" onClick={() => openReceiptsForCredit(credit, installment)}>Ver recibo</button>
+                          {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
                             <button type="button" onClick={() => openReceive(credit, installment)}>Receber</button>
-                          </div>
-                        ) : null}
+                          ) : null}
+                        </div>
                       </div>
                     );
                   })}
@@ -510,7 +512,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                       Receber próxima parcela
                     </button>
                   ) : null}
-                  <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Visualizar extrato / PDF</button>
+                  <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Ver extrato da nota</button>
                 </div>
               </article>
             );
