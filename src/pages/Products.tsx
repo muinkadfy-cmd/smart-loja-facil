@@ -6,6 +6,16 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { money } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { whatsappChatUrl, whatsappWebUrl } from '../lib/links';
 import type { Customer, Product } from '../types';
 
@@ -192,9 +202,13 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
   const [rows, setRows] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [categoryFilter, setCategoryFilter] = useState('todas');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [customerQuery, setCustomerQuery] = useState('');
+  const debouncedCustomerQuery = useDebouncedValue(customerQuery);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [form, setForm] = useState<ProductForm>(freshProductForm());
   const [saving, setSaving] = useState(false);
@@ -221,10 +235,14 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     ['todas', ...Array.from(new Set(rows.map((row) => row.category).filter(Boolean))).sort((a, b) => a.localeCompare(b))]
   ), [rows]);
 
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [categoryFilter, debouncedQuery, statusFilter]);
+
   const filteredRows = useMemo(() => rows.filter((row) => {
     const matchesStatus = statusFilter === 'todos' || row.status === statusFilter;
     const matchesCategory = categoryFilter === 'todas' || row.category === categoryFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.name,
       row.category,
       row.internal_code,
@@ -238,12 +256,31 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       row.status,
     ]);
     return matchesStatus && matchesCategory && matchesQuery;
-  }), [categoryFilter, query, rows, statusFilter]);
+  }), [categoryFilter, debouncedQuery, rows, statusFilter]);
+
+  const visibleRows = useMemo(() => (
+    filteredRows.slice(0, limitForQuery(debouncedQuery, visibleLimit))
+  ), [debouncedQuery, filteredRows, visibleLimit]);
+
+  const searchTooShort = query.trim().length > 0 && !canRunListSearch(query);
+  const manySearchResults = debouncedQuery.trim().length > 0 && filteredRows.length > SEARCH_RESULT_LIMIT;
+  const canLoadMore = visibleRows.length < filteredRows.length && !debouncedQuery.trim();
 
   const selectedProduct = useMemo(
     () => rows.find((row) => row.id === selectedProductId) ?? null,
     [rows, selectedProductId],
   );
+
+  const visibleShareCustomers = useMemo(() => {
+    if (!canRunListSearch(debouncedCustomerQuery)) return customers.slice(0, INITIAL_LIST_LIMIT);
+    const filtered = customers.filter((customer) => matchesFilterQuery(debouncedCustomerQuery, [
+      customer.name,
+      customer.phone,
+      customer.whatsapp,
+      customer.address,
+    ]));
+    return filtered.slice(0, debouncedCustomerQuery.trim() ? SEARCH_RESULT_LIMIT : INITIAL_LIST_LIMIT);
+  }, [customers, debouncedCustomerQuery]);
 
   const summary = useMemo(() => {
     const active = rows.filter((row) => row.status === 'ativo');
@@ -534,7 +571,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
           </div>
 
           <DataTable<Product>
-            rows={filteredRows}
+            rows={visibleRows}
             empty="Nenhum produto cadastrado."
             getRowKey={(row) => row.id}
             selectedRowKey={selectedProductId}
@@ -552,7 +589,21 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
 
           <div className="classic-table-footer">
             <span>Página: 1</span>
-            <span>Exibindo 1 a {filteredRows.length} de {rows.length} registros</span>
+            <span>Exibindo {visibleRows.length} de {filteredRows.length} filtrados · {rows.length} no total</span>
+          </div>
+          <div className="classic-table-footer">
+            <span>
+              {searchTooShort
+                ? 'Digite ao menos 2 letras, SKU ou código de barras para buscar.'
+                : manySearchResults
+                  ? 'Encontramos muitos produtos. Digite mais detalhes para filtrar melhor.'
+                  : FRIENDLY_LIST_MESSAGES.firstResults}
+            </span>
+            {canLoadMore ? (
+              <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>
+                Carregar mais produtos
+              </button>
+            ) : null}
           </div>
         </article>
 
@@ -622,7 +673,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <h2>Ajuste de estoque</h2>
           </div>
           <form onSubmit={adjustStock} className="form-grid compact adjust-grid">
-            <label>Produto<select ref={stockAdjustSelectRef} value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione</option>{rows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
+            <label>Produto<select ref={stockAdjustSelectRef} value={adjust.productId} onChange={(event) => setAdjust({ ...adjust, productId: event.target.value })}><option value="">Selecione pela lista filtrada</option>{visibleRows.map((row) => <option key={row.id} value={row.id}>{row.name} {row.status === 'inativo' ? '(inativo)' : ''}</option>)}</select></label>
             <label>Quantidade (+/-)<input type="number" step="1" value={adjust.delta} onChange={(event) => setAdjust({ ...adjust, delta: Number(event.target.value) })} /></label>
             <label className="span-2">Motivo obrigatório<input value={adjust.reason} onChange={(event) => setAdjust({ ...adjust, reason: event.target.value })} placeholder="Ex: contagem manual, perda, entrada de mercadoria" /></label>
             <button className="secondary-btn">Ajustar estoque</button>
@@ -655,11 +706,12 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
               </div>
               <label className="product-whatsapp-customer">
                 Cliente para WhatsApp direto
+                <input value={customerQuery} onChange={(event) => setCustomerQuery(event.target.value)} placeholder="Digite nome ou telefone para encontrar o cliente mais rápido." />
                 <select value={selectedCustomerId} onChange={(event) => setSelectedCustomerId(event.target.value)}>
                   <option value="">Selecione um cliente com WhatsApp</option>
-                  {customers.map((customer) => <option key={customer.id} value={customer.id}>{customerLabel(customer)}</option>)}
+                  {visibleShareCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customerLabel(customer)}</option>)}
                 </select>
-                <small>O número precisa existir no WhatsApp. Use o campo WhatsApp do cadastro do cliente, ou telefone se for WhatsApp.</small>
+                <small>O número precisa existir no WhatsApp. Mostramos poucos clientes por vez para manter a tela rápida.</small>
               </label>
               <textarea className="product-copy-text" value={productCopyText(details)} readOnly />
               <div className="product-detail-actions">

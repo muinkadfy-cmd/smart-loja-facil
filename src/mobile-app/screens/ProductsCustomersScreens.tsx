@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { api } from '../../lib/api';
+import { INITIAL_LIST_LIMIT, LOAD_MORE_STEP, SEARCH_RESULT_LIMIT } from '../../lib/listLimits';
 import type { AppStatus, Customer, Product } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -13,7 +14,7 @@ interface ProductsCustomersScreenProps {
   onRefresh: () => void;
 }
 
-type FeedbackTone = 'success' | 'error' | 'info';
+type FeedbackTone = 'success' | 'error' | 'info' | 'warning';
 
 type Feedback = {
   tone: FeedbackTone;
@@ -116,6 +117,7 @@ const PRODUCT_COLOR_OPTIONS = ['Preto', 'Branco', 'Azul', 'Rosa', 'Vermelho', 'V
 const MAX_PRODUCT_PHOTO_SOURCE_BYTES = 12 * 1024 * 1024;
 const TARGET_PRODUCT_PHOTO_BYTES = 1.65 * 1024 * 1024;
 const PRODUCT_PHOTO_MAX_EDGE = 1600;
+const CRUD_VISIBLE_BATCH = INITIAL_LIST_LIMIT;
 
 
 function normalizeSkuPart(value: string, fallback: string): string {
@@ -588,6 +590,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const [savingStock, setSavingStock] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [photoPreview, setPhotoPreview] = useState<{ src: string; title: string } | null>(null);
+  const [visibleProductCount, setVisibleProductCount] = useState(CRUD_VISIBLE_BATCH);
   const productFormRef = useRef<HTMLElement>(null);
   const productNameInputRef = useRef<HTMLInputElement>(null);
   const stockAdjustRef = useRef<HTMLElement>(null);
@@ -685,6 +688,11 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       return matchesTerm && matchesFilter;
     });
   }, [filter, lowLimit, products, query]);
+  const visibleProducts = useMemo(() => filtered.slice(0, query.trim() ? Math.min(visibleProductCount, SEARCH_RESULT_LIMIT) : visibleProductCount), [filtered, query, visibleProductCount]);
+
+  useEffect(() => {
+    setVisibleProductCount(CRUD_VISIBLE_BATCH);
+  }, [filter, query]);
 
   const lowStock = products.filter((product) => product.status === 'ativo' && product.stock <= lowLimit).length;
   const activeProducts = products.filter((product) => product.status === 'ativo').length;
@@ -706,7 +714,9 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     setSaving(true);
     try {
       const prepared = withAutomaticProductCodes(form);
-      await api.saveProduct({
+      const previousPhoto = form.id ? products.find((product) => product.id === form.id)?.image_data ?? '' : '';
+      const requestedInlinePhoto = isProductPhotoData(prepared.image_data);
+      const savedProduct = await api.saveProduct({
         id: prepared.id,
         name,
         category: prepared.category.trim(),
@@ -722,7 +732,13 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         image_data: prepared.image_data.trim(),
         status: prepared.status,
       });
-      setFeedback({ tone: 'success', text: hasProductPhoto(form) ? 'Produto e foto salvos. A miniatura deve aparecer nos aparelhos sincronizados.' : (form.id ? 'Produto atualizado e sincronizado.' : 'Produto cadastrado e sincronizado.') });
+      const photoConfirmed = !requestedInlinePhoto || (savedProduct.image_data && savedProduct.image_data !== previousPhoto && !isProductPhotoData(savedProduct.image_data));
+      const feedbackText = requestedInlinePhoto && !photoConfirmed
+        ? 'Produto salvo. A foto não foi enviada agora; tente escolher a foto novamente quando a internet estiver estável.'
+        : hasProductPhoto(form)
+          ? 'Produto e foto salvos. A miniatura deve aparecer nos aparelhos sincronizados.'
+          : (form.id ? 'Produto atualizado e sincronizado.' : 'Produto cadastrado e sincronizado.');
+      setFeedback({ tone: requestedInlinePhoto && !photoConfirmed ? 'warning' : 'success', text: feedbackText });
       notifyMobileAction({ title: form.id ? 'Produto atualizado' : 'Produto cadastrado', message: `${name} está salvo e pronto para aparecer nos aparelhos sincronizados.`, tone: 'success', page: 'products', actionLabel: 'Ver produtos' });
       setForm(null);
       await loadProducts();
@@ -887,7 +903,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
 
       {filtered.length ? (
         <section className="mapp-crud-list" aria-label="Lista de produtos">
-          {filtered.map((product) => {
+          {visibleProducts.map((product) => {
             const price = product.promo_price ?? product.price;
             const low = product.stock <= lowLimit;
             return (
@@ -930,6 +946,11 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
               </article>
             );
           })}
+          {visibleProducts.length < filtered.length ? (
+            <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleProductCount((count) => count + LOAD_MORE_STEP)}>
+              Mostrar mais produtos ({formatNumber(visibleProducts.length)} de {formatNumber(filtered.length)})
+            </button>
+          ) : null}
         </section>
       ) : !loading ? (
         <EmptyState icon="produtos" title="Nenhum produto encontrado" detail={query ? 'Tente buscar por outro nome, código ou categoria.' : 'Cadastre o primeiro produto para começar a vender.'} actionLabel="Novo produto" actionPage="products" onNavigate={startNewProduct} />
@@ -961,6 +982,7 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [visibleCustomerCount, setVisibleCustomerCount] = useState(CRUD_VISIBLE_BATCH);
   const customerFormRef = useRef<HTMLElement>(null);
   const customerNameInputRef = useRef<HTMLInputElement>(null);
 
@@ -1015,6 +1037,11 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
       return matchesTerm && matchesFilter;
     });
   }, [customers, filter, query]);
+  const visibleCustomers = useMemo(() => filtered.slice(0, query.trim() ? Math.min(visibleCustomerCount, SEARCH_RESULT_LIMIT) : visibleCustomerCount), [filtered, query, visibleCustomerCount]);
+
+  useEffect(() => {
+    setVisibleCustomerCount(CRUD_VISIBLE_BATCH);
+  }, [filter, query]);
 
   const activeCustomers = customers.filter((customer) => customer.status === 'ativo').length;
   const withContact = customers.filter((customer) => customer.phone || customer.whatsapp).length;
@@ -1158,7 +1185,7 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
 
       {filtered.length ? (
         <section className="mapp-crud-list" aria-label="Lista de clientes">
-          {filtered.map((customer) => (
+          {visibleCustomers.map((customer) => (
             <article key={customer.id} className={`mapp-crud-card ${customer.status === 'inativo' ? 'is-inactive' : ''}`}>
               <span className="mapp-crud-icon tone-purple"><InlineIcon name="clientes" size={24} /></span>
               <div className="mapp-crud-main">
@@ -1185,6 +1212,11 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
               </div>
             </article>
           ))}
+          {visibleCustomers.length < filtered.length ? (
+            <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleCustomerCount((count) => count + LOAD_MORE_STEP)}>
+              Mostrar mais clientes ({formatNumber(visibleCustomers.length)} de {formatNumber(filtered.length)})
+            </button>
+          ) : null}
         </section>
       ) : !loading ? (
         <EmptyState icon="clientes" title="Nenhum cliente encontrado" detail={query ? 'Tente buscar por outro nome ou telefone.' : 'Cadastre o primeiro cliente para vender e acompanhar crediário.'} actionLabel="Novo cliente" actionPage="customers" onNavigate={startNewCustomer} />

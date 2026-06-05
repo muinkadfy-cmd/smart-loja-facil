@@ -4,6 +4,16 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { dateTime, money } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import type { CashMovement, CashSummary } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -25,6 +35,8 @@ function movementTypeLabel(type: string): string {
 export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [summary, setSummary] = useState<CashSummary | null>(null);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [typeFilter, setTypeFilter] = useState('todos');
   const [methodFilter, setMethodFilter] = useState('todas');
   const [openingAmount, setOpeningAmount] = useState(0);
@@ -51,10 +63,14 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const methods = useMemo(() => (
     ['todas', ...Array.from(new Set((summary?.movements ?? []).map((row) => row.method).filter(Boolean))).sort((a, b) => a.localeCompare(b))]
   ), [summary]);
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery, methodFilter, typeFilter]);
+
   const filteredMovements = useMemo(() => (summary?.movements ?? []).filter((row) => {
     const matchesType = typeFilter === 'todos' || row.type === typeFilter;
     const matchesMethod = methodFilter === 'todas' || row.method === methodFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.created_at,
       row.type,
       row.method,
@@ -62,7 +78,11 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
       row.amount,
     ]);
     return matchesType && matchesMethod && matchesQuery;
-  }), [methodFilter, query, summary, typeFilter]);
+  }), [debouncedQuery, methodFilter, summary, typeFilter]);
+
+  const visibleMovements = useMemo(() => filteredMovements.slice(0, limitForQuery(debouncedQuery, visibleLimit)), [debouncedQuery, filteredMovements, visibleLimit]);
+  const canLoadMore = visibleMovements.length < filteredMovements.length && !debouncedQuery.trim();
+  const manyResults = debouncedQuery.trim() && filteredMovements.length > SEARCH_RESULT_LIMIT;
 
   async function open(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -194,7 +214,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por motivo, forma, tipo ou horário"
-          summary={`${filteredMovements.length} de ${(summary?.movements ?? []).length} movimentos visíveis`}
+          summary={`${visibleMovements.length} de ${filteredMovements.length} movimentos visíveis`}
           selects={[
             {
               label: 'Tipo',
@@ -218,7 +238,7 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
           ]}
         />
         <DataTable<CashMovement>
-          rows={filteredMovements}
+          rows={visibleMovements}
           empty="Nenhum movimento no caixa hoje."
           columns={[
             { key: 'date', label: 'Hora', render: (row) => dateTime(row.created_at) },
@@ -228,6 +248,10 @@ export function CashPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             { key: 'amount', label: 'Valor', align: 'right', render: (row) => money(row.amount) },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>{manyResults ? FRIENDLY_LIST_MESSAGES.tooMany : FRIENDLY_LIST_MESSAGES.firstResults}</span>
+          {canLoadMore ? <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais movimentos</button> : null}
+        </div>
       </section>
     </div>
   );

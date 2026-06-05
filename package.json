@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.175",
+  "version": "0.1.177",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com produto, custo, SKU e barras automáticos v175",
+  "description": "PWA da loja com notificações externas e alertas de parcelas v177",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
@@ -13,9 +13,12 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "release:check": "node scripts/release_check.js",
+    "qa:commercial": "node scripts/qa/commercial_regression_checks.js",
+    "qa:load": "node scripts/qa/load_data_stress_test.js",
     "release:commercial:check": "node scripts/commercial_package_check.js --strict",
     "release:commercial:prepare": "node scripts/commercial_release_package.js",
-    "css:clean-legacy": "node scripts/lote118_clean_legacy_css.js"
+    "css:clean-legacy": "node scripts/lote118_clean_legacy_css.js",
+    "qa:push": "node scripts/qa/push_notification_readiness_test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

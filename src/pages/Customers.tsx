@@ -4,6 +4,16 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { money } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import type { Customer } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -32,6 +42,8 @@ const emptyCustomer: CustomerForm = {
 export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [rows, setRows] = useState<Customer[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [form, setForm] = useState<CustomerForm>({ ...emptyCustomer });
   const [saving, setSaving] = useState(false);
@@ -44,19 +56,32 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
     api.customers().then(setRows).catch(() => undefined);
   }, [refreshToken]);
 
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery, statusFilter]);
+
   const filteredRows = useMemo(() => rows.filter((row) => {
     const matchesStatus = statusFilter === 'todos' || row.status === statusFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.name,
       row.phone,
       row.whatsapp,
+      row.id,
       row.address,
       row.notes,
       row.credit_limit,
       row.status,
     ]);
     return matchesStatus && matchesQuery;
-  }), [query, rows, statusFilter]);
+  }), [debouncedQuery, rows, statusFilter]);
+
+  const visibleRows = useMemo(() => (
+    filteredRows.slice(0, limitForQuery(debouncedQuery, visibleLimit))
+  ), [debouncedQuery, filteredRows, visibleLimit]);
+
+  const searchTooShort = query.trim().length > 0 && !canRunListSearch(query);
+  const manySearchResults = debouncedQuery.trim().length > 0 && filteredRows.length > SEARCH_RESULT_LIMIT;
+  const canLoadMore = visibleRows.length < filteredRows.length && !debouncedQuery.trim();
 
   async function reload() {
     setRows(await api.customers());
@@ -173,8 +198,8 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
         <TableFilters
           query={query}
           onQueryChange={setQuery}
-          queryPlaceholder="Buscar por nome, telefone, WhatsApp ou observação"
-          summary={`${filteredRows.length} de ${rows.length} clientes visíveis`}
+          queryPlaceholder="Digite nome ou telefone para encontrar o cliente mais rápido."
+          summary={`${visibleRows.length} de ${filteredRows.length} clientes visíveis`}
           selects={[
             {
               label: 'Status',
@@ -189,7 +214,7 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
           ]}
         />
         <DataTable<Customer>
-          rows={filteredRows}
+          rows={visibleRows}
           empty="Nenhum cliente cadastrado."
           columns={[
             { key: 'name', label: 'Nome', render: (row) => row.name },
@@ -210,6 +235,20 @@ export function CustomersPage({ refreshToken, onChanged }: PageProps): JSX.Eleme
             },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>
+            {searchTooShort
+              ? 'Digite ao menos 2 letras ou um telefone para buscar.'
+              : manySearchResults
+                ? FRIENDLY_LIST_MESSAGES.tooMany
+                : FRIENDLY_LIST_MESSAGES.firstResults}
+          </span>
+          {canLoadMore ? (
+            <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>
+              Carregar mais clientes
+            </button>
+          ) : null}
+        </div>
       </section>
     </div>
   );

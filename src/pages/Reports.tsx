@@ -3,6 +3,7 @@ import { AppIcon } from '../components/AppIcon';
 import { DataTable } from '../components/DataTable';
 import { api } from '../lib/api';
 import { dateTime } from '../lib/format';
+import { FRIENDLY_LIST_MESSAGES, LOAD_MORE_STEP, SEARCH_RESULT_LIMIT } from '../lib/listLimits';
 import type { ReportColumn, ReportData, ReportKind, ReportMetric } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -45,6 +46,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [visibleRows, setVisibleRows] = useState(SEARCH_RESULT_LIMIT);
 
   const activeReport = useMemo(() => reportOptions.find((item) => item.value === form.report) ?? reportOptions[0], [form.report]);
   const periodLabel = form.from === form.to ? 'Hoje' : `${form.from.split('-').reverse().join('/')} até ${form.to.split('-').reverse().join('/')}`;
@@ -73,6 +75,7 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
     setError('');
     try {
       setData(await api.reportData(nextForm.report, nextForm.from, nextForm.to));
+      setVisibleRows(SEARCH_RESULT_LIMIT);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -200,11 +203,19 @@ export function ReportsPage({ refreshToken }: PageProps): JSX.Element {
               </div>
             </div>
             <DataTable<Record<string, string>>
-              rows={data.rows}
+              rows={data.rows.slice(0, visibleRows)}
               empty={data.empty_message}
               columns={tableColumns}
               getRowKey={(_, index) => `${data.report}-${index}`}
             />
+            <div className="classic-table-footer">
+              <span>{data.rows.length > visibleRows ? FRIENDLY_LIST_MESSAGES.firstResults : `${data.rows.length} linha(s) carregada(s).`}</span>
+              {data.rows.length > visibleRows ? (
+                <button type="button" className="secondary-btn small" onClick={() => setVisibleRows((count) => count + LOAD_MORE_STEP)}>
+                  Carregar mais
+                </button>
+              ) : null}
+            </div>
           </section>
         </>
       ) : (

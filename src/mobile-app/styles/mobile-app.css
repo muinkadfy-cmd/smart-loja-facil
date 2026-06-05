@@ -1472,6 +1472,8 @@ img, svg { max-width: 100%; }
 .mapp-form-feedback-success { background: #ecfbf2; border-color: #bdeccf; color: #137d48; }
 .mapp-form-feedback-error { background: #fff0f0; border-color: #ffd1d1; color: #9f1d1d; }
 .mapp-form-feedback-info { background: #eef6ff; border-color: #c9dcff; color: #174276; }
+.mapp-form-feedback-warning { background: #fff8eb; border-color: #f3d49c; color: #7b4b00; }
+.mapp-list-more-button { width: 100%; justify-content: center; min-height: 48px; }
 
 .mapp-crud-toolbar,
 .mapp-form-panel,
@@ -5811,7 +5813,7 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
   width: min(660px, calc(100% - 32px));
   max-height: min(82dvh, 720px);
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   gap: 12px;
   overflow: hidden;
   border: 1px solid rgba(213, 224, 238, 0.96);
@@ -6089,6 +6091,166 @@ html.smart-mobile-rebuild-v153.mapp-keyboard-open .master-login-form-card {
 .mapp-notification-empty strong {
   color: #203755;
   font-weight: 950;
+}
+
+
+
+/* Lote 177 — Alertas externos PWA Android/iOS */
+.mapp-notification-external-slot {
+  min-width: 0;
+}
+
+.mapp-external-push-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dbe6f4;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(18, 42, 76, 0.07);
+}
+
+.mapp-external-push-panel.tone-ok {
+  border-color: #b8ecd2;
+  background: linear-gradient(180deg, #f4fff9 0%, #ffffff 100%);
+}
+
+.mapp-external-push-panel.tone-warning {
+  border-color: #f5d79e;
+  background: linear-gradient(180deg, #fff8ec 0%, #ffffff 100%);
+}
+
+.mapp-external-push-panel.tone-danger {
+  border-color: #f0b9b9;
+  background: linear-gradient(180deg, #fff4f4 0%, #ffffff 100%);
+}
+
+.mapp-external-push-main {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+}
+
+.mapp-external-push-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #0f1b2e;
+  color: #fff;
+  font-size: 1.1rem;
+  box-shadow: 0 12px 24px rgba(15, 27, 46, 0.14);
+}
+
+.mapp-external-push-main strong {
+  display: block;
+  color: #101f35;
+  font-size: 0.94rem;
+  line-height: 1.08;
+  font-weight: 950;
+}
+
+.mapp-external-push-main p {
+  margin: 4px 0 0;
+  color: #607188;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  font-weight: 780;
+}
+
+.mapp-external-push-main small {
+  display: block;
+  margin-top: 5px;
+  color: #8a5a12;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.mapp-external-push-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.mapp-external-push-grid span {
+  min-width: 0;
+  border: 1px solid #e2eaf5;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 7px 8px;
+}
+
+.mapp-external-push-grid b,
+.mapp-external-push-grid strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapp-external-push-grid b {
+  color: #7a8799;
+  font-size: 0.66rem;
+  line-height: 1;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.mapp-external-push-grid strong {
+  margin-top: 4px;
+  color: #101f35;
+  font-size: 0.78rem;
+  line-height: 1.05;
+  font-weight: 950;
+}
+
+.mapp-external-push-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mapp-external-push-actions button {
+  min-width: 0;
+  min-height: 38px;
+  border: 1px solid #dbe5f1;
+  border-radius: 13px;
+  background: #fff;
+  color: #21344e;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.mapp-external-push-actions button.primary {
+  border: 0;
+  background: linear-gradient(135deg, #246bf2 0%, #1454d8 100%);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(36, 107, 242, 0.22);
+}
+
+.mapp-external-push-actions button.ghost {
+  background: #f8fbff;
+}
+
+.mapp-external-push-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 520px) {
+  .mapp-external-push-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mapp-external-push-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mapp-notification-modal button:focus-visible,

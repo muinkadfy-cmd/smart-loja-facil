@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import { parseBrazilianMoneyInput } from '../../lib/creditPaymentGuard';
+import { INITIAL_LIST_LIMIT, LOAD_MORE_STEP } from '../../lib/listLimits';
 import type { AppStatus, CashMovement, CashSummary } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -62,6 +63,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [visibleMovementCount, setVisibleMovementCount] = useState(INITIAL_LIST_LIMIT);
 
   const loadCash = async () => {
     setLoading(true);
@@ -86,6 +88,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
   const difference = useMemo(() => numberFromInput(closingAmount) - expectedTotal, [closingAmount, expectedTotal]);
   const hasOpenCash = Boolean(summary?.open_cash);
   const movements = summary?.movements ?? [];
+  const visibleMovements = movements.slice(0, visibleMovementCount);
 
   async function submitOpenCash(): Promise<void> {
     const amount = numberFromInput(openingAmount);
@@ -300,7 +303,7 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
         <div className="mapp-section-title"><h2>Movimentos de hoje</h2><button type="button" onClick={() => void loadCash()}>Atualizar</button></div>
         {movements.length ? (
           <div className="mapp-list-stack">
-            {movements.slice(0, 14).map((movement) => (
+            {visibleMovements.map((movement) => (
               <ListCard
                 key={movement.id}
                 icon={movement.type === 'saida' ? 'remover_menos' : 'dinheiro'}
@@ -310,6 +313,11 @@ export function CashScreen({ status, refreshToken, onRefresh }: CashScreenProps)
                 tone={toneForMovement(movement)}
               />
             ))}
+            {visibleMovements.length < movements.length ? (
+              <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleMovementCount((count) => count + LOAD_MORE_STEP)}>
+                Carregar mais movimentos ({formatNumber(visibleMovements.length)} de {formatNumber(movements.length)})
+              </button>
+            ) : null}
           </div>
         ) : !loading ? (
           <EmptyState icon="caixa" title="Sem movimentos hoje" detail="Abra o caixa ou lance a primeira entrada/saída para acompanhar aqui." actionLabel="Lançar movimento" actionPage="cash" onNavigate={() => setMode('movement')} />

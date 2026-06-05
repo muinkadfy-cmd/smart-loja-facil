@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
+import {
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  sortStockedFirst,
+  useDebouncedValue,
+} from '../../lib/listLimits';
 import type { Customer, OrderSummary, Product } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -57,7 +66,13 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
+  const [customerQuery, setCustomerQuery] = useState('');
+  const debouncedCustomerQuery = useDebouncedValue(customerQuery);
+  const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [filter, setFilter] = useState<OrderFilter>('todos');
+  const [orderVisibleLimit, setOrderVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerId, setCustomerId] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -85,14 +100,31 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
   }, [refreshToken]);
 
   const filteredProducts = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    const source = term
+    const term = debouncedQuery.trim().toLowerCase();
+    const source = term && canRunListSearch(debouncedQuery)
       ? products.filter((product) => [product.name, product.category, product.internal_code, product.barcode].some((value) => value.toLowerCase().includes(term)))
-      : products;
-    return source.slice(0, 8);
-  }, [products, query]);
+      : sortStockedFirst(products);
+    return source.slice(0, limitForQuery(debouncedQuery, productVisibleLimit));
+  }, [debouncedQuery, productVisibleLimit, products]);
 
   const filteredOrders = useMemo(() => orders.filter((order) => filter === 'todos' || order.status === filter), [filter, orders]);
+  const visibleOrders = useMemo(() => filteredOrders.slice(0, orderVisibleLimit), [filteredOrders, orderVisibleLimit]);
+  const filteredCustomers = useMemo(() => {
+    const term = debouncedCustomerQuery.trim().toLowerCase();
+    const source = term && canRunListSearch(debouncedCustomerQuery)
+      ? customers.filter((customer) => [customer.name, customer.phone, customer.whatsapp, customer.address].some((value) => String(value || '').toLowerCase().includes(term)))
+      : customers;
+    return source.slice(0, limitForQuery(debouncedCustomerQuery, customerVisibleLimit));
+  }, [customerVisibleLimit, customers, debouncedCustomerQuery]);
+  useEffect(() => {
+    setProductVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery]);
+  useEffect(() => {
+    setCustomerVisibleLimit(resetLimitForQuery(debouncedCustomerQuery));
+  }, [debouncedCustomerQuery]);
+  useEffect(() => {
+    setOrderVisibleLimit(INITIAL_LIST_LIMIT);
+  }, [filter]);
   const openCount = orders.filter((order) => order.status === 'aberto').length;
   const separatedCount = orders.filter((order) => order.status === 'separado').length;
   const deliveredToday = orders.filter((order) => order.status === 'entregue').length;
@@ -208,10 +240,12 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
           </div>
           <label className="mapp-wide-field">
             <span>Cliente</span>
+            <input value={customerQuery} onChange={(event) => setCustomerQuery(event.target.value)} placeholder="Digite nome ou telefone para encontrar o cliente mais rápido." />
             <select value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
               <option value="">Balcão / consumidor final</option>
-              {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+              {filteredCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
             </select>
+            {!debouncedCustomerQuery.trim() && filteredCustomers.length < customers.length ? <button type="button" className="mapp-secondary-button compact" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
           </label>
           <section className="mapp-panel mapp-pdv-search mapp-nested-panel">
             <div className="mapp-form-head">
@@ -219,6 +253,7 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
               <div><strong>Adicionar produtos</strong><p>Busque pelo nome, categoria, código ou barras.</p></div>
             </div>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto para pedido" />
+            {query.trim() && !canRunListSearch(query) ? <div className="mapp-inline-status">Digite ao menos 2 letras, SKU ou código de barras para buscar.</div> : null}
             <div className="mapp-product-pick-list">
               {filteredProducts.map((product) => (
                 <button key={product.id} type="button" onClick={() => addProduct(product)}>
@@ -235,6 +270,7 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
                 </button>
               ))}
             </div>
+            {!debouncedQuery.trim() && filteredProducts.length < products.length ? <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setProductVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais produtos</button> : null}
           </section>
           <section className="mapp-panel mapp-pdv-cart mapp-nested-panel">
             <div className="mapp-section-title"><h2>Itens do pedido</h2>{cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os itens deste pedido?')) setCart([]); }}>Limpar</button> : null}</div>
@@ -290,7 +326,7 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
 
       {filteredOrders.length ? (
         <section className="mapp-crud-list">
-          {filteredOrders.slice(0, 40).map((order) => (
+          {visibleOrders.map((order) => (
             <article key={order.id} className={`mapp-crud-card mapp-order-card status-${order.status}`}>
               <span className={`mapp-crud-icon tone-${statusTone(order.status)}`}><InlineIcon name="pedidos" size={24} /></span>
               <div className="mapp-crud-main">
@@ -311,6 +347,11 @@ export function OrdersScreen({ refreshToken, onRefresh }: OrdersScreenProps): JS
               </div>
             </article>
           ))}
+          {visibleOrders.length < filteredOrders.length ? (
+            <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setOrderVisibleLimit((count) => count + LOAD_MORE_STEP)}>
+              Carregar mais pedidos ({formatNumber(visibleOrders.length)} de {formatNumber(filteredOrders.length)})
+            </button>
+          ) : null}
         </section>
       ) : !loading ? (
         <EmptyState icon="pedidos" title="Nenhum pedido encontrado" detail="Crie pedidos para separar produtos e acompanhar entregas." actionLabel="Novo pedido" actionPage="orders" onNavigate={() => setShowForm(true)} />

@@ -3,6 +3,17 @@ import { AppIcon } from '../components/AppIcon';
 import { DataTable } from '../components/DataTable';
 import { api } from '../lib/api';
 import { makeRequestId, money } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  sortStockedFirst,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { useWebPermissions } from '../lib/useWebPermissions';
 import type { Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../types';
 
@@ -30,6 +41,19 @@ function saleStatusLabel(status: string): string {
   return status;
 }
 
+function matchesProductQuery(product: Product, query: string): boolean {
+  const term = query.trim().toLowerCase();
+  if (!term) return true;
+  return [
+    product.name,
+    product.category,
+    product.internal_code,
+    product.barcode,
+    product.color,
+    product.size,
+  ].some((value) => String(value || '').toLowerCase().includes(term));
+}
+
 export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -37,8 +61,14 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCartProductId, setSelectedCartProductId] = useState<string | null>(null);
+  const [productQuery, setProductQuery] = useState('');
+  const debouncedProductQuery = useDebouncedValue(productQuery);
+  const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [productId, setProductId] = useState('');
   const [qty, setQty] = useState(1);
+  const [customerQuery, setCustomerQuery] = useState('');
+  const debouncedCustomerQuery = useDebouncedValue(customerQuery);
+  const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerId, setCustomerId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
   const [installmentCount, setInstallmentCount] = useState(1);
@@ -106,6 +136,45 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const total = Math.max(0, subtotal - discount);
   const totalQty = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const cashChange = paymentMethod === 'dinheiro' ? Math.max(0, amountPaid - total) : 0;
+
+  useEffect(() => {
+    setProductVisibleLimit(resetLimitForQuery(debouncedProductQuery));
+  }, [debouncedProductQuery]);
+
+  useEffect(() => {
+    setCustomerVisibleLimit(resetLimitForQuery(debouncedCustomerQuery));
+  }, [debouncedCustomerQuery]);
+
+  const filteredProductOptions = useMemo(() => {
+    const sorted = sortStockedFirst(products);
+    if (!canRunListSearch(debouncedProductQuery)) return sorted.slice(0, INITIAL_LIST_LIMIT);
+    const filtered = sorted.filter((product) => matchesProductQuery(product, debouncedProductQuery));
+    return filtered.slice(0, limitForQuery(debouncedProductQuery, productVisibleLimit));
+  }, [debouncedProductQuery, productVisibleLimit, products]);
+
+  const filteredCustomerOptions = useMemo(() => {
+    if (!canRunListSearch(debouncedCustomerQuery)) return customers.slice(0, INITIAL_LIST_LIMIT);
+    const term = debouncedCustomerQuery.trim().toLowerCase();
+    const filtered = customers.filter((customer) => [
+      customer.name,
+      customer.phone,
+      customer.whatsapp,
+      customer.address,
+      customer.id,
+    ].some((value) => String(value || '').toLowerCase().includes(term)));
+    return filtered.slice(0, limitForQuery(debouncedCustomerQuery, customerVisibleLimit));
+  }, [customers, customerVisibleLimit, debouncedCustomerQuery]);
+
+  const canLoadMoreProducts = !debouncedProductQuery.trim() && filteredProductOptions.length < products.length;
+  const canLoadMoreCustomers = !debouncedCustomerQuery.trim() && filteredCustomerOptions.length < customers.length;
+  const tooManyProductResults = debouncedProductQuery.trim() && products.filter((product) => matchesProductQuery(product, debouncedProductQuery)).length > SEARCH_RESULT_LIMIT;
+  const tooManyCustomerResults = debouncedCustomerQuery.trim() && customers.filter((customer) => [
+    customer.name,
+    customer.phone,
+    customer.whatsapp,
+    customer.address,
+    customer.id,
+  ].some((value) => String(value || '').toLowerCase().includes(debouncedCustomerQuery.trim().toLowerCase()))).length > SEARCH_RESULT_LIMIT;
 
   useEffect(() => {
     if (paymentMethod === 'crediario') {
@@ -267,14 +336,17 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             </label>
             <label className="classic-sales-product-field">
               <span>Descrição do produto</span>
+              <input value={productQuery} onChange={(event) => setProductQuery(event.target.value)} placeholder="Digite nome, SKU ou código de barras para encontrar mais rápido." />
               <select value={productId} onChange={(event) => setProductId(event.target.value)} disabled={!canOperate}>
                 <option value="">Selecione um produto ou use o leitor de código de barras</option>
-                {products.map((product) => (
+                {filteredProductOptions.map((product) => (
                   <option key={product.id} value={product.id}>
-                    {product.name} | estoque {product.stock}
+                    {product.name} | estoque {product.stock}{product.stock <= 0 ? ' | Sem estoque' : ''}
                   </option>
                 ))}
               </select>
+              <small>{tooManyProductResults ? 'Encontramos muitos produtos. Digite mais detalhes para filtrar melhor.' : FRIENDLY_LIST_MESSAGES.firstResults}</small>
+              {canLoadMoreProducts ? <button type="button" className="ghost-btn small" onClick={() => setProductVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais produtos</button> : null}
             </label>
             <label>
               <span>Quantidade</span>
@@ -362,10 +434,13 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             </div>
             <label>
               <span>Selecionar cliente</span>
+              <input value={customerQuery} onChange={(event) => setCustomerQuery(event.target.value)} placeholder="Digite nome ou telefone para encontrar o cliente mais rápido." />
               <select ref={customerSelectRef} value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={!canOperate}>
                 <option value="">Consumidor final / balcão</option>
-                {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+                {filteredCustomerOptions.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
               </select>
+              <small>{tooManyCustomerResults ? FRIENDLY_LIST_MESSAGES.tooMany : 'Digite nome ou telefone para encontrar o cliente mais rápido.'}</small>
+              {canLoadMoreCustomers ? <button type="button" className="ghost-btn small" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
             </label>
             <div className="classic-customer-grid">
               <label>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { api } from '../../lib/api';
+import { INITIAL_LIST_LIMIT, LOAD_MORE_STEP } from '../../lib/listLimits';
 import type { BackupInfo } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -13,7 +14,8 @@ interface BackupScreenProps {
   onRefresh: () => void;
 }
 
-type Feedback = { tone: 'success' | 'error' | 'info'; text: string };
+type Feedback = { tone: 'success' | 'error' | 'info' | 'warning'; text: string };
+const LARGE_BACKUP_WARNING_BYTES = 50 * 1024 * 1024;
 
 function formatSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
@@ -51,6 +53,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
   const [backups, setBackups] = useState<BackupInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [visibleBackupCount, setVisibleBackupCount] = useState(INITIAL_LIST_LIMIT);
 
   const loadBackups = async () => {
     setLoading(true);
@@ -72,13 +75,20 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
   const safeCount = backups.filter((backup) => backup.integrity_ok).length;
   const totalSize = useMemo(() => backups.reduce((sum, backup) => sum + Number(backup.size_bytes || 0), 0), [backups]);
   const lastBackup = backups[0] ?? null;
+  const visibleBackups = backups.slice(0, visibleBackupCount);
 
   async function createBackup(): Promise<void> {
     setLoading(true);
     try {
       const info = await api.createBackup();
-      setFeedback({ tone: 'success', text: `Tudo certo: backup criado/baixado: ${info.file_name}. Guarde esse arquivo fora do celular ou navegador.` });
-      notifyMobileAction({ title: 'Backup criado', message: `${info.file_name} foi baixado. Guarde fora do celular.`, tone: 'success', page: 'backup', actionLabel: 'Ver backup' });
+      const largeBackup = Number(info.size_bytes || 0) > LARGE_BACKUP_WARNING_BYTES;
+      setFeedback({
+        tone: largeBackup ? 'warning' : 'success',
+        text: largeBackup
+          ? `Backup baixado: ${info.file_name}. Ele ficou grande (${formatSize(info.size_bytes)}); guarde fora do celular e teste a importação em ambiente seguro.`
+          : `Tudo certo: backup criado/baixado: ${info.file_name}. Guarde esse arquivo fora do celular ou navegador.`,
+      });
+      notifyMobileAction({ title: 'Backup criado', message: largeBackup ? `${info.file_name} ficou grande. Guarde fora do celular e teste antes de depender dele.` : `${info.file_name} foi baixado. Guarde fora do celular.`, tone: largeBackup ? 'warning' : 'success', page: 'backup', actionLabel: 'Ver backup' });
       await loadBackups();
       onRefresh();
     } catch (error) {
@@ -152,7 +162,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <div className="mapp-check-list">
           <span>✓ Clientes, produtos, vendas, caixa e estoque</span>
           <span>✓ Crediário, pedidos, comprovantes e histórico de movimentações</span>
-          <span>✓ Fotos: tenta salvar a imagem dentro do JSON; se não conseguir, mantém link/caminho da nuvem</span>
+          <span>✓ Fotos: mantém link/caminho da nuvem; para migrar de projeto, copie também o armazenamento de fotos</span>
           <span>✓ Confirmação dupla para restaurar</span>
         </div>
         <div className="mapp-form-actions">
@@ -165,7 +175,7 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         <span><InlineIcon name="bloqueio_seguro" size={24} /></span>
         <div>
           <strong>Restauração é ação crítica</strong>
-          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. Fotos de produtos preparadas pelo app entram no backup quando o navegador consegue ler a imagem. Se alguma ficar só por link/caminho, o armazenamento de fotos da nuvem também precisa ser migrado pelo suporte.</p>
+          <p>Use somente backup confiável da mesma loja. O sistema pede a palavra RESTAURAR para evitar toque sem querer. O JSON guarda os dados e os caminhos das fotos; em migração de projeto, o armazenamento de fotos da nuvem também precisa ser copiado pelo suporte.</p>
         </div>
         <button type="button" onClick={() => fileInputRef.current?.click()}>Importar</button>
       </section>
@@ -175,12 +185,17 @@ export function BackupScreen({ refreshToken, onRefresh }: BackupScreenProps): JS
         {lastBackup ? <div className="mapp-inline-status">Último backup: {lastBackup.file_name} · {formatDateTime(lastBackup.created_at)}</div> : null}
         {backups.length ? (
           <div className="mapp-list-stack">
-            {backups.slice(0, 16).map((backup) => (
+            {visibleBackups.map((backup) => (
               <article key={backup.id} className="mapp-backup-row">
                 <ListCard icon="backup" title={backup.file_name} subtitle={`${backup.integrity_ok ? 'Íntegro' : 'Revisar'} · ${formatDateTime(backup.created_at)}`} value={formatSize(backup.size_bytes)} tone={backup.integrity_ok ? 'green' : 'orange'} />
                 <button type="button" className="mapp-secondary-button" onClick={() => void restoreFromHistory(backup)}>Restaurar</button>
               </article>
             ))}
+            {visibleBackups.length < backups.length ? (
+              <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleBackupCount((count) => count + LOAD_MORE_STEP)}>
+                Ver mais backups ({formatNumber(visibleBackups.length)} de {formatNumber(backups.length)})
+              </button>
+            ) : null}
           </div>
         ) : !loading ? (
           <EmptyState icon="backup" title="Nenhum backup registrado" detail="Crie o primeiro backup antes de vender ou mexer em dados importantes." actionLabel="Criar backup" actionPage="backup" onNavigate={() => void createBackup()} />

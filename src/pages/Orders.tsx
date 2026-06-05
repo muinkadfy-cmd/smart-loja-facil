@@ -4,6 +4,17 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { makeRequestId, money } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  sortStockedFirst,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { getRuntimeInfo } from '../lib/runtime';
 import type { Customer, OrderSummary, Product } from '../types';
 
@@ -24,12 +35,27 @@ function orderStatusClass(status: OrderSummary['status']): string {
   return 'pill';
 }
 
+function matchesProductQuery(product: Product, query: string): boolean {
+  const term = query.trim().toLowerCase();
+  if (!term) return true;
+  return [product.name, product.category, product.internal_code, product.barcode, product.color, product.size]
+    .some((value) => String(value || '').toLowerCase().includes(term));
+}
+
 export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const runtimeInfo = useMemo(() => getRuntimeInfo(), []);
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [orderVisibleLimit, setOrderVisibleLimit] = useState(INITIAL_LIST_LIMIT);
+  const [productQuery, setProductQuery] = useState('');
+  const debouncedProductQuery = useDebouncedValue(productQuery);
+  const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
+  const [customerQuery, setCustomerQuery] = useState('');
+  const debouncedCustomerQuery = useDebouncedValue(customerQuery);
+  const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [statusFilter, setStatusFilter] = useState('todos');
   const [form, setForm] = useState({ customer_id: '', product_id: '', qty: 1 });
   const [cart, setCart] = useState<OrderCartItem[]>([]);
@@ -171,9 +197,21 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
   }
 
   const total = cart.reduce((sum, item) => sum + item.qty * item.unit_price, 0);
+  useEffect(() => {
+    setOrderVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery, statusFilter]);
+
+  useEffect(() => {
+    setProductVisibleLimit(resetLimitForQuery(debouncedProductQuery));
+  }, [debouncedProductQuery]);
+
+  useEffect(() => {
+    setCustomerVisibleLimit(resetLimitForQuery(debouncedCustomerQuery));
+  }, [debouncedCustomerQuery]);
+
   const filteredOrders = useMemo(() => orders.filter((row) => {
     const matchesStatus = statusFilter === 'todos' || row.status === statusFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.number,
       row.customer_name,
       row.total,
@@ -181,7 +219,28 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
       row.id,
     ]);
     return matchesStatus && matchesQuery;
-  }), [orders, query, statusFilter]);
+  }), [orders, debouncedQuery, statusFilter]);
+
+  const visibleOrders = useMemo(() => filteredOrders.slice(0, limitForQuery(debouncedQuery, orderVisibleLimit)), [debouncedQuery, filteredOrders, orderVisibleLimit]);
+
+  const filteredProductOptions = useMemo(() => {
+    const sorted = sortStockedFirst(products);
+    if (!canRunListSearch(debouncedProductQuery)) return sorted.slice(0, INITIAL_LIST_LIMIT);
+    return sorted.filter((product) => matchesProductQuery(product, debouncedProductQuery)).slice(0, limitForQuery(debouncedProductQuery, productVisibleLimit));
+  }, [debouncedProductQuery, productVisibleLimit, products]);
+
+  const filteredCustomerOptions = useMemo(() => {
+    if (!canRunListSearch(debouncedCustomerQuery)) return customers.slice(0, INITIAL_LIST_LIMIT);
+    const term = debouncedCustomerQuery.trim().toLowerCase();
+    return customers.filter((customer) => [customer.name, customer.phone, customer.whatsapp, customer.address, customer.id]
+      .some((value) => String(value || '').toLowerCase().includes(term)))
+      .slice(0, limitForQuery(debouncedCustomerQuery, customerVisibleLimit));
+  }, [customerVisibleLimit, customers, debouncedCustomerQuery]);
+
+  const canLoadMoreOrders = visibleOrders.length < filteredOrders.length && !debouncedQuery.trim();
+  const canLoadMoreProducts = filteredProductOptions.length < products.length && !debouncedProductQuery.trim();
+  const canLoadMoreCustomers = filteredCustomerOptions.length < customers.length && !debouncedCustomerQuery.trim();
+  const manyOrderResults = debouncedQuery.trim() && filteredOrders.length > SEARCH_RESULT_LIMIT;
 
   return (
     <div className="stack classic-legacy-page">
@@ -201,8 +260,8 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           </div>
         </div>
         <form className="form-grid compact" onSubmit={submit}>
-          <label>Cliente<select ref={orderCustomerSelectRef} value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcão</option>{customers.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
-          <label>Produto<select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })}><option value="">Selecione</option>{products.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>
+          <label>Cliente<input value={customerQuery} onChange={(e) => setCustomerQuery(e.target.value)} placeholder="Digite nome ou telefone para encontrar o cliente mais rápido." /><select ref={orderCustomerSelectRef} value={form.customer_id} onChange={(e) => setForm({ ...form, customer_id: e.target.value })}><option value="">Balcão</option>{filteredCustomerOptions.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}</select>{canLoadMoreCustomers ? <button type="button" className="ghost-btn small" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}</label>
+          <label>Produto<input value={productQuery} onChange={(e) => setProductQuery(e.target.value)} placeholder="Digite nome, SKU ou código de barras para encontrar mais rápido." /><select value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })}><option value="">Selecione</option>{filteredProductOptions.map((row) => <option key={row.id} value={row.id}>{row.name} · estoque {row.stock}{row.stock <= 0 ? ' · Sem estoque' : ''}</option>)}</select>{canLoadMoreProducts ? <button type="button" className="ghost-btn small" onClick={() => setProductVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais produtos</button> : null}</label>
           <label>Quantidade<input type="number" min="1" step="1" value={form.qty} onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })} /></label>
           <button type="button" className="secondary-btn" onClick={addItem}>Adicionar item</button>
           <div className="total-box"><span>Total previsto</span><strong>{money(total)}</strong></div>
@@ -234,7 +293,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por pedido, cliente, valor ou status"
-          summary={`${filteredOrders.length} de ${orders.length} pedidos visíveis`}
+          summary={`${visibleOrders.length} de ${filteredOrders.length} pedidos visíveis`}
           selects={[
             {
               label: 'Status',
@@ -251,7 +310,7 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           ]}
         />
         <DataTable<OrderSummary>
-          rows={filteredOrders}
+          rows={visibleOrders}
           empty="Nenhum pedido criado."
           columns={[
             { key: 'number', label: 'Pedido', render: (row) => `#${row.number}` },
@@ -275,6 +334,10 @@ export function OrdersPage({ refreshToken, onChanged }: PageProps): JSX.Element 
             },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>{manyOrderResults ? FRIENDLY_LIST_MESSAGES.tooMany : FRIENDLY_LIST_MESSAGES.firstResults}</span>
+          {canLoadMoreOrders ? <button type="button" className="secondary-btn small" onClick={() => setOrderVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais</button> : null}
+        </div>
       </section>
     </div>
   );

@@ -5,6 +5,15 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { dateTime } from '../lib/format';
+import {
+  FRIENDLY_LIST_MESSAGES,
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { getPreferredBackupFolder, setPreferredBackupFolder } from '../lib/preferences';
 import { getRuntimeInfo } from '../lib/runtime';
 import type { BackupInfo } from '../types';
@@ -22,6 +31,8 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [rows, setRows] = useState<BackupInfo[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [integrityFilter, setIntegrityFilter] = useState('todos');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -37,13 +48,20 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
   const safeCount = useMemo(() => rows.filter((row) => row.integrity_ok).length, [rows]);
   const lastBackup = rows[0] ?? null;
   const totalSize = useMemo(() => rows.reduce((sum, row) => sum + row.size_bytes, 0), [rows]);
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery, integrityFilter]);
+
   const filteredRows = useMemo(() => rows.filter((row) => {
     const matchesIntegrity = integrityFilter === 'todos'
       || (integrityFilter === 'ok' && row.integrity_ok)
       || (integrityFilter === 'falha' && !row.integrity_ok);
-    const matchesQuery = matchesFilterQuery(query, [row.file_name, row.created_at, row.size_bytes, row.integrity_ok ? 'ok' : 'falha']);
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [row.file_name, row.created_at, row.size_bytes, row.integrity_ok ? 'ok' : 'falha']);
     return matchesIntegrity && matchesQuery;
-  }), [integrityFilter, query, rows]);
+  }), [debouncedQuery, integrityFilter, rows]);
+
+  const visibleRows = useMemo(() => filteredRows.slice(0, limitForQuery(debouncedQuery, visibleLimit)), [debouncedQuery, filteredRows, visibleLimit]);
+  const canLoadMore = visibleRows.length < filteredRows.length && !debouncedQuery.trim();
 
   function askRestoreConfirmation(label: string): string | null {
     const first = window.confirm(`Restaurar o backup ${label}? O sistema criará um backup de segurança antes.`);
@@ -249,7 +267,7 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por nome do arquivo ou data"
-          summary={`${filteredRows.length} de ${rows.length} backups visíveis`}
+          summary={`${visibleRows.length} de ${filteredRows.length} backups visíveis`}
           selects={[
             {
               label: 'Integridade',
@@ -264,7 +282,7 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
           ]}
         />
         <DataTable<BackupInfo>
-          rows={filteredRows}
+          rows={visibleRows}
           empty={runtimeInfo.isWeb ? 'Nenhum backup web registrado neste navegador. Clique em Baixar backup JSON para gerar a primeira cópia.' : 'Nenhum backup criado ainda. Clique em Criar backup local para gerar a primeira cópia completa.'}
           columns={[
             { key: 'file', label: 'Arquivo', render: (row) => <div className="backup-file-cell"><strong>{row.file_name}</strong><small>{runtimeInfo.isWeb ? 'Baixado pelo navegador' : row.integrity_ok ? 'Pronto para restauração' : 'Integridade reprovada'}</small></div> },
@@ -279,6 +297,10 @@ export function BackupPage({ refreshToken, onChanged }: PageProps): JSX.Element 
             },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>{FRIENDLY_LIST_MESSAGES.firstResults}</span>
+          {canLoadMore ? <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>Ver mais backups</button> : null}
+        </div>
       </section>
     </div>
   );

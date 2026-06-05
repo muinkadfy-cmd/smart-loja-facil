@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { creditPaymentMethodLabel, remainingInstallmentAmount } from '../../lib/creditPaymentGuard';
+import { COMPACT_CREDIT_LIMIT, LOAD_MORE_STEP } from '../../lib/listLimits';
 import type { AppStatus, CreditInstallment, CreditSummary, PageKey, ReceiptSummary, Settings } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -931,7 +932,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [fullPreview, setFullPreview] = useState<ReceiptPreview | null>(null);
   const [filter, setFilter] = useState<ReceiptFilter>('todos');
   const [query, setQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(30);
+  const [visibleCount, setVisibleCount] = useState(COMPACT_CREDIT_LIMIT);
+  const [visibleCreditGroups, setVisibleCreditGroups] = useState(COMPACT_CREDIT_LIMIT);
   const [expandedCustomers, setExpandedCustomers] = useState<Record<string, boolean>>({});
   const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -1208,7 +1210,13 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
   }
 
   const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);
-  const hasAnyVisible = Boolean(visibleSavedReceipts.length || groupedCredits.length);
+  const visibleGroupedCredits = groupedCredits.slice(0, visibleCreditGroups);
+  const hasAnyVisible = Boolean(visibleSavedReceipts.length || visibleGroupedCredits.length);
+
+  useEffect(() => {
+    setVisibleCount(COMPACT_CREDIT_LIMIT);
+    setVisibleCreditGroups(COMPACT_CREDIT_LIMIT);
+  }, [filter, query]);
 
   return (
     <div className="mapp-screen mapp-receipts-screen">
@@ -1288,9 +1296,9 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
         </section>
       ) : null}
 
-      {groupedCredits.length ? (
+      {visibleGroupedCredits.length ? (
         <section className="mapp-credit-customer-list mapp-receipt-credit-list" aria-label="Comprovantes do crediário por cliente">
-          {groupedCredits.map((group) => {
+          {visibleGroupedCredits.map((group) => {
             const customerExpanded = expandedCustomers[group.customerKey] ?? true;
             return (
               <section key={group.customerKey} className="mapp-credit-customer-card mapp-receipt-customer-card">
@@ -1382,6 +1390,11 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
           })}
         </section>
       ) : null}
+      {visibleGroupedCredits.length < groupedCredits.length ? (
+        <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleCreditGroups((count) => count + LOAD_MORE_STEP)}>
+          Carregar mais comprovantes ({groupedCredits.length - visibleGroupedCredits.length} restantes)
+        </button>
+      ) : null}
 
       {visibleSavedReceipts.length ? (
         <section className="mapp-crud-list mapp-receipt-saved-list" aria-label="Comprovantes salvos">
@@ -1418,7 +1431,7 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
             );
           })}
           {filteredSavedReceipts.length > visibleCount ? (
-            <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleCount((count) => count + 30)}>
+            <button type="button" className="mapp-secondary-button mapp-load-more" onClick={() => setVisibleCount((count) => count + LOAD_MORE_STEP)}>
               Ver mais comprovantes ({filteredSavedReceipts.length - visibleCount} restantes)
             </button>
           ) : null}

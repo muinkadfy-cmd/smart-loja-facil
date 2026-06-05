@@ -56,8 +56,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v175-produto-custo-sku-barras';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v175-produto-custo-sku-barras';
+export const WEB_APP_VERSION = 'pwa-supabase-v177-alertas-externos-pwa';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v177-alertas-externos-pwa';
 
 
 export interface WebTrainingModeState {
@@ -1483,10 +1483,14 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     color: String(product.color ?? '').trim(),
     internal_code: String(product.internal_code ?? '').trim() || makeAutomaticProductSku(source),
     barcode: String(product.barcode ?? '').trim() || makeAutomaticProductBarcode(),
-    image_url: inlinePhoto ? '' : imageSource,
     status: mapStatusToCloud(product.status),
     client_request_id: requestId,
   };
+  const payloadWithImage = inlinePhoto
+    ? product.id
+      ? payload
+      : { ...payload, image_url: '' }
+    : { ...payload, image_url: imageSource };
 
   if (!product.id) {
     let existingQuery = await productsTable
@@ -1505,7 +1509,7 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     if (existingQuery.data) return mapProduct(existingQuery.data as Record<string, unknown>);
   }
 
-  const savePayload = productCostPriceColumnAvailable === false ? withoutProductCostPrice(payload) : payload;
+  const savePayload = productCostPriceColumnAvailable === false ? withoutProductCostPrice(payloadWithImage) : payloadWithImage;
   let request = product.id
     ? productsTable.update(savePayload).eq('id', product.id).eq('store_id', context.store.id)
     : productsTable.insert(savePayload);
@@ -1516,7 +1520,7 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
 
   if (error && isMissingProductCostPriceColumn(error)) {
     productCostPriceColumnAvailable = false;
-    const fallbackPayload = withoutProductCostPrice(payload);
+    const fallbackPayload = withoutProductCostPrice(payloadWithImage);
     request = product.id
       ? productsTable.update(fallbackPayload).eq('id', product.id).eq('store_id', context.store.id)
       : productsTable.insert(fallbackPayload);
@@ -1554,16 +1558,9 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     recordWebSyncSnapshot('synced', 'Produtos', 'Foto do produto enviada para a nuvem e vinculada ao cadastro.');
     return saved;
   } catch (photoError) {
-    const { data: fallbackData, error: fallbackError } = await productsTable
-      .update({ image_url: inlinePhoto })
-      .eq('id', saved.id)
-      .eq('store_id', context.store.id)
-      .select(productSelectFields())
-      .single();
     const detail = photoError instanceof Error ? photoError.message : String(photoError);
-    recordWebSyncSnapshot('pending', 'Fotos de produtos', `Produto salvo. Foto ficou em modo compatibilidade porque o Storage ainda não confirmou envio. Detalhe: ${detail}`);
-    if (fallbackError) throw new Error(`Produto salvo, mas a foto não foi vinculada. Detalhe: ${detail}. Fallback: ${fallbackError.message}`);
-    return mapProduct(fallbackData as Record<string, unknown>);
+    recordWebSyncSnapshot('pending', 'Fotos de produtos', `Produto salvo. A foto não foi guardada porque o armazenamento de fotos não confirmou envio. Tente salvar a foto novamente. Detalhe: ${detail}`);
+    return saved;
   }
 }
 
@@ -1745,6 +1742,10 @@ function csvEscape(value: string): string {
 
 
 const WEB_BACKUP_HISTORY_KEY = 'smart-loja:web-backup-history-v1';
+const WEB_BACKUP_FETCH_PAGE_SIZE = 1000;
+const WEB_BACKUP_INLINE_PHOTO_LIMIT = 25;
+const WEB_BACKUP_INLINE_PHOTO_MAX_TOTAL_BYTES = 8 * 1024 * 1024;
+const WEB_BACKUP_WARN_SIZE_BYTES = 50 * 1024 * 1024;
 
 const WEB_BACKUP_TABLES = [
   'customers',
@@ -1790,6 +1791,10 @@ type WebBackupPhotoSummary = {
   storage_or_public_url: number;
   storage_path: number;
   external_url: number;
+  manifest_only?: number;
+  skipped_inline_files?: number;
+  max_inline_files?: number;
+  max_inline_total_bytes?: number;
   backed_up_files?: number;
   backup_failed?: number;
   note: string;
@@ -1816,6 +1821,7 @@ type WebBackupSnapshot = {
   tables: Record<string, JsonRecord[]>;
   product_photo_summary?: WebBackupPhotoSummary;
   product_photo_files?: WebBackupProductPhotoFile[];
+  warnings?: string[];
 };
 
 function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhotoSummary {
@@ -1826,7 +1832,11 @@ function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhoto
     storage_or_public_url: 0,
     storage_path: 0,
     external_url: 0,
-    note: 'O backup web salva os cadastros e tenta embutir as fotos pequenas no JSON. Fotos que não puderem ser lidas ficam preservadas por link/caminho do Storage.',
+    manifest_only: 0,
+    skipped_inline_files: 0,
+    max_inline_files: WEB_BACKUP_INLINE_PHOTO_LIMIT,
+    max_inline_total_bytes: WEB_BACKUP_INLINE_PHOTO_MAX_TOTAL_BYTES,
+    note: 'O backup web salva os dados e preserva as fotos por link/caminho do Storage. Para migrar de projeto, copie tambem o bucket product-photos; fotos antigas em modo compatibilidade so entram no JSON quando forem pequenas e poucas.',
   };
 
   for (const product of products) {
@@ -1838,35 +1848,21 @@ function summarizeProductPhotosForBackup(products: JsonRecord[]): WebBackupPhoto
     } else if (value.startsWith('stores/')) {
       summary.storage_path += 1;
       summary.storage_or_public_url += 1;
+      summary.manifest_only = (summary.manifest_only ?? 0) + 1;
     } else if (/^https?:\/\//i.test(value)) {
       summary.external_url += 1;
       summary.storage_or_public_url += 1;
+      summary.manifest_only = (summary.manifest_only ?? 0) + 1;
     }
   }
 
   return summary;
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Não foi possível preparar a foto para o backup.'));
-    reader.readAsDataURL(blob);
-  });
-}
-
-async function photoSourceToBackupUrl(source: string): Promise<string> {
-  if (/^https?:\/\//i.test(source)) return source;
-  if (!source.startsWith('stores/')) return '';
-  const client = await getClient();
-  const { data } = client.storage.from(PRODUCT_PHOTO_BUCKET).getPublicUrl(source);
-  return data.publicUrl || '';
-}
-
 async function buildProductPhotoBackupFiles(products: JsonRecord[]): Promise<WebBackupProductPhotoFile[]> {
   const files: WebBackupProductPhotoFile[] = [];
   const backedUpAt = new Date().toISOString();
+  let totalBytes = 0;
 
   for (const product of products) {
     const productId = stringValue(product.id);
@@ -1877,29 +1873,17 @@ async function buildProductPhotoBackupFiles(products: JsonRecord[]): Promise<Web
     try {
       if (isInlineProductImageData(source)) {
         const parsed = productPhotoDataUrlToBlob(source);
-        if (parsed.bytes <= PRODUCT_PHOTO_MAX_BYTES) {
+        const canEmbedLegacyPhoto =
+          parsed.bytes <= PRODUCT_PHOTO_MAX_BYTES
+          && files.length < WEB_BACKUP_INLINE_PHOTO_LIMIT
+          && totalBytes + parsed.bytes <= WEB_BACKUP_INLINE_PHOTO_MAX_TOTAL_BYTES;
+        if (canEmbedLegacyPhoto) {
           files.push({ product_id: productId, product_name: productName, source: 'inline', data_url: source, mime_type: parsed.mimeType, size_bytes: parsed.bytes, backed_up_at: backedUpAt });
+          totalBytes += parsed.bytes;
         }
-        continue;
       }
-
-      const url = await photoSourceToBackupUrl(source);
-      if (!url) continue;
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) continue;
-      const blob = await response.blob();
-      if (!['image/png', 'image/jpeg', 'image/webp'].includes(blob.type) || blob.size > PRODUCT_PHOTO_MAX_BYTES) continue;
-      files.push({
-        product_id: productId,
-        product_name: productName,
-        source,
-        data_url: await blobToDataUrl(blob),
-        mime_type: blob.type,
-        size_bytes: blob.size,
-        backed_up_at: backedUpAt,
-      });
     } catch {
-      // Foto inacessível não deve travar o backup principal. O link/caminho continua salvo no cadastro do produto.
+      // Foto antiga em modo compatibilidade não deve travar o backup principal.
     }
   }
 
@@ -1937,13 +1921,7 @@ async function restoreProductPhotoFiles(files: WebBackupProductPhotoFile[] | und
       if (error) throw error;
       restored += 1;
     } catch {
-      const { error } = await client
-        .from('products')
-        .update({ image_url: dataUrl })
-        .eq('id', productId)
-        .eq('store_id', context.store.id);
-      if (error) failed += 1;
-      else restored += 1;
+      failed += 1;
     }
   }
 
@@ -2000,26 +1978,40 @@ function normalizeSnapshotRow(row: JsonRecord, storeId: string): JsonRecord {
 async function fetchStoreRows(table: WebBackupTableName, storeId: string): Promise<JsonRecord[]> {
   const client = await getClient();
   const orderColumn = WEB_BACKUP_ORDER_COLUMNS[table] ?? 'created_at';
-  const ordered = await client
-    .from(table)
-    .select('*')
-    .eq('store_id', storeId)
-    .order(orderColumn, { ascending: true });
+  const rows: JsonRecord[] = [];
+  let offset = 0;
+  let useOrderedQuery = true;
 
-  if (!ordered.error) return (ordered.data ?? []) as JsonRecord[];
+  while (true) {
+    const from = offset;
+    const to = offset + WEB_BACKUP_FETCH_PAGE_SIZE - 1;
+    let request = client
+      .from(table)
+      .select('*')
+      .eq('store_id', storeId);
+    if (useOrderedQuery) request = request.order(orderColumn, { ascending: true });
+    const page = await request.range(from, to);
 
-  // Algumas tabelas antigas não têm created_at. Exemplo real: cash_sessions usa opened_at.
-  // Se um projeto estiver com schema antigo/diferente, o backup não deve parar por causa da ordenação.
-  const fallback = await client
-    .from(table)
-    .select('*')
-    .eq('store_id', storeId);
+    if (page.error && useOrderedQuery) {
+      // Algumas tabelas antigas não têm created_at. Exemplo real: cash_sessions usa opened_at.
+      // Se um projeto estiver com schema antigo/diferente, o backup não deve parar por causa da ordenação.
+      useOrderedQuery = false;
+      rows.length = 0;
+      offset = 0;
+      continue;
+    }
 
-  if (fallback.error) {
-    throw new Error(`Não foi possível incluir ${table} no backup web: ${fallback.error.message}`);
+    if (page.error) {
+      throw new Error(`Não foi possível incluir ${table} no backup web: ${page.error.message}`);
+    }
+
+    const data = (page.data ?? []) as JsonRecord[];
+    rows.push(...data);
+    if (data.length < WEB_BACKUP_FETCH_PAGE_SIZE) break;
+    offset += WEB_BACKUP_FETCH_PAGE_SIZE;
   }
 
-  return (fallback.data ?? []) as JsonRecord[];
+  return rows;
 }
 
 async function upsertRows(table: WebBackupTableName, rows: JsonRecord[], storeId: string): Promise<number> {
@@ -2090,7 +2082,8 @@ export async function webCreateBackup(): Promise<BackupInfo> {
   const productPhotoSummary = summarizeProductPhotosForBackup(tables.products ?? []);
   const productPhotoFiles = await buildProductPhotoBackupFiles(tables.products ?? []);
   productPhotoSummary.backed_up_files = productPhotoFiles.length;
-  productPhotoSummary.backup_failed = Math.max(0, productPhotoSummary.inline_embedded_in_json + productPhotoSummary.storage_or_public_url - productPhotoFiles.length);
+  productPhotoSummary.skipped_inline_files = Math.max(0, productPhotoSummary.inline_embedded_in_json - productPhotoFiles.length);
+  productPhotoSummary.backup_failed = productPhotoSummary.skipped_inline_files;
 
   const createdAt = new Date().toISOString();
   const snapshot: WebBackupSnapshot = {
@@ -2105,7 +2098,21 @@ export async function webCreateBackup(): Promise<BackupInfo> {
     product_photo_summary: productPhotoSummary,
     product_photo_files: productPhotoFiles,
   };
-  const content = JSON.stringify(snapshot, null, 2);
+  let content = JSON.stringify(snapshot);
+  const backupWarnings: string[] = [];
+  if (new Blob([content]).size > WEB_BACKUP_WARN_SIZE_BYTES) {
+    backupWarnings.push('Backup grande para celular. Guarde fora do aparelho e teste a importacao em ambiente seguro antes de depender dele.');
+  }
+  if ((productPhotoSummary.manifest_only ?? 0) > 0) {
+    backupWarnings.push('Fotos de produtos ficam preservadas por link/caminho. Para migrar de projeto, copie tambem o armazenamento de fotos da nuvem.');
+  }
+  if ((productPhotoSummary.skipped_inline_files ?? 0) > 0) {
+    backupWarnings.push('Algumas fotos antigas em modo compatibilidade nao entraram no JSON por limite de seguranca.');
+  }
+  if (backupWarnings.length > 0) {
+    snapshot.warnings = backupWarnings;
+    content = JSON.stringify(snapshot);
+  }
   const fileName = `backup-smart-loja-web-${safeFileStamp(context.store.name)}-${createdAt.slice(0, 19).replace(/[:T]/g, '-')}.json`;
   downloadTextFile(fileName, content, 'application/json;charset=utf-8');
   const info: BackupInfo = {
@@ -2132,6 +2139,7 @@ export async function webCreateBackup(): Promise<BackupInfo> {
         app_version: WEB_APP_VERSION,
         cache_version: WEB_CACHE_VERSION,
         counts,
+        warnings: backupWarnings,
         product_photo_summary: productPhotoSummary,
         product_photo_files_count: productPhotoFiles.length,
         storage_note: productPhotoSummary.note,
@@ -3916,7 +3924,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v175 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v177 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

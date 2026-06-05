@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
+import {
+  INITIAL_LIST_LIMIT,
+  LOAD_MORE_STEP,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  sortStockedFirst,
+  useDebouncedValue,
+} from '../../lib/listLimits';
 import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../../types';
 import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
@@ -85,6 +94,11 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
   const [cash, setCash] = useState<CashSummary | null>(null);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
+  const [customerQuery, setCustomerQuery] = useState('');
+  const debouncedCustomerQuery = useDebouncedValue(customerQuery);
+  const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerId, setCustomerId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
   const [discount, setDiscount] = useState(0);
@@ -126,18 +140,38 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     void loadData();
   }, [refreshToken]);
 
+  useEffect(() => {
+    setProductVisibleLimit(resetLimitForQuery(debouncedQuery));
+  }, [debouncedQuery]);
+
+  useEffect(() => {
+    setCustomerVisibleLimit(resetLimitForQuery(debouncedCustomerQuery));
+  }, [debouncedCustomerQuery]);
+
   const filteredProducts = useMemo(() => {
-    const term = query.trim().toLowerCase();
-    const source = term
+    const term = debouncedQuery.trim().toLowerCase();
+    const source = term && canRunListSearch(debouncedQuery)
       ? products.filter((product) => [
         product.name,
         product.category,
         product.internal_code,
         product.barcode,
       ].some((value) => value.toLowerCase().includes(term)))
-      : products;
-    return source.slice(0, 8);
-  }, [products, query]);
+      : sortStockedFirst(products);
+    return source.slice(0, limitForQuery(debouncedQuery, productVisibleLimit));
+  }, [debouncedQuery, productVisibleLimit, products]);
+
+  const filteredCustomers = useMemo(() => {
+    const term = debouncedCustomerQuery.trim().toLowerCase();
+    const source = term && canRunListSearch(debouncedCustomerQuery)
+      ? customers.filter((customer) => [customer.name, customer.phone, customer.whatsapp, customer.address]
+        .some((value) => String(value || '').toLowerCase().includes(term)))
+      : customers;
+    return source.slice(0, limitForQuery(debouncedCustomerQuery, customerVisibleLimit));
+  }, [customerVisibleLimit, customers, debouncedCustomerQuery]);
+
+  const canLoadMoreProducts = !debouncedQuery.trim() && filteredProducts.length < products.length;
+  const canLoadMoreCustomers = !debouncedCustomerQuery.trim() && filteredCustomers.length < customers.length;
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.qty * item.unit_price, 0), [cart]);
   const total = Math.max(0, subtotal - Math.max(0, discount));
@@ -335,6 +369,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           <InlineIcon name="buscar" size={24} />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, código ou barras" />
         </label>
+        {query.trim() && !canRunListSearch(query) ? <div className="mapp-inline-status">Digite ao menos 2 letras, SKU ou código de barras para buscar.</div> : null}
         <div className="mapp-product-pick-list">
           {filteredProducts.map((product) => {
             const price = product.promo_price ?? product.price;
@@ -361,6 +396,11 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             <strong>Nenhum produto encontrado</strong>
             <small>Revise a busca ou cadastre o produto antes de vender.</small>
           </div>
+        ) : null}
+        {canLoadMoreProducts ? (
+          <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setProductVisibleLimit((count) => count + LOAD_MORE_STEP)}>
+            Carregar mais produtos
+          </button>
         ) : null}
       </section>
 
@@ -424,10 +464,12 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         </div>
         <label className="mapp-wide-field">
           <span>Cliente</span>
+          <input value={customerQuery} onChange={(event) => setCustomerQuery(event.target.value)} placeholder="Digite nome ou telefone para encontrar mais rápido." />
           <select value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
             <option value="">Consumidor final</option>
-            {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+            {filteredCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
           </select>
+          {canLoadMoreCustomers ? <button type="button" className="mapp-secondary-button compact" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
         </label>
         <div className="mapp-payment-segments">
           {(['dinheiro', 'pix', 'cartao', 'crediario'] as PaymentMethod[]).map((method) => (

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v175-produto-custo-sku-barras';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v177-alertas-externos-pwa';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -87,4 +87,56 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(networkFirst(event.request));
+});
+
+function readPushPayload(event) {
+  try {
+    return event.data ? event.data.json() : {};
+  } catch {
+    try {
+      return { title: 'Jaque Confecções e Presentes', body: event.data ? event.data.text() : 'Novo alerta da loja.' };
+    } catch {
+      return {};
+    }
+  }
+}
+
+self.addEventListener('push', (event) => {
+  const payload = readPushPayload(event);
+  const title = payload.title || 'Jaque Confecções e Presentes';
+  const options = {
+    body: payload.body || payload.message || 'Novo alerta importante da loja.',
+    icon: payload.icon || '/icons/icon-192.png',
+    badge: payload.badge || '/icons/maskable-192.png',
+    tag: payload.tag || 'smart-loja-alerta',
+    renotify: true,
+    requireInteraction: Boolean(payload.requireInteraction),
+    data: {
+      url: payload.url || '/?source=push&view=credits',
+      alertId: payload.alertId || '',
+      type: payload.type || 'alert',
+    },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const data = event.notification.data || {};
+  const targetUrl = new URL(data.url || '/?source=push&view=dashboard', self.location.origin).href;
+  event.waitUntil((async () => {
+    const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clientList) {
+      if ('focus' in client) {
+        try {
+          await client.navigate(targetUrl);
+          return client.focus();
+        } catch {
+          return client.focus();
+        }
+      }
+    }
+    if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    return undefined;
+  })());
 });

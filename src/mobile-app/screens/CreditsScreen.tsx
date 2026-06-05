@@ -9,6 +9,7 @@ import {
   type CreditPaymentMethod,
   type CreditPaymentReview,
 } from '../../lib/creditPaymentGuard';
+import { COMPACT_CREDIT_LIMIT, LOAD_MORE_STEP, SEARCH_RESULT_LIMIT, useDebouncedValue } from '../../lib/listLimits';
 import type { AppStatus, CreditInstallment, CreditSummary, PageKey } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
@@ -131,6 +132,8 @@ function customerInitials(name: string): string {
 export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: CreditsScreenProps): JSX.Element {
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleCreditCount, setVisibleCreditCount] = useState(COMPACT_CREDIT_LIMIT);
   const [filter, setFilter] = useState<CreditFilter>('aberto');
   const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [receive, setReceive] = useState<ReceiveState | null>(null);
@@ -173,7 +176,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   }, [credits]);
 
   const filteredCredits = useMemo(() => {
-    const term = query.trim().toLowerCase();
+    const term = debouncedQuery.trim().toLowerCase();
     return credits.filter((credit) => {
       const hasOverdue = credit.installments.some(isOverdue);
       const matchesFilter =
@@ -194,7 +197,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       ].some((value) => String(value || '').toLowerCase().includes(term));
       return matchesFilter && matchesTerm;
     });
-  }, [credits, filter, query]);
+  }, [credits, debouncedQuery, filter]);
+
+  useEffect(() => {
+    setVisibleCreditCount(debouncedQuery.trim() ? SEARCH_RESULT_LIMIT : COMPACT_CREDIT_LIMIT);
+  }, [debouncedQuery, filter]);
+
+  const visibleCredits = useMemo(() => filteredCredits.slice(0, visibleCreditCount), [filteredCredits, visibleCreditCount]);
 
   function toggleCreditExpanded(creditId: string): void {
     setExpandedCredits((current) => ({ ...current, [creditId]: !current[creditId] }));
@@ -223,7 +232,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       return;
     }
     const amount = remainingOf(installment);
-    setFeedback(null);
+    setFeedback({ tone: 'info', text: `Recebimento da parcela ${formatNumber(installment.number)} aberto sem sair do ponto atual da lista.` });
     setPaymentReview(null);
     setReceive({
       credit,
@@ -362,7 +371,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       </section>
 
       {receive ? (
-        <section className="mapp-form-panel mapp-receive-panel" aria-label="Receber parcela">
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { setReceive(null); setPaymentReview(null); }}>
+        <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Receber parcela" onClick={(event) => event.stopPropagation()}>
+          <span className="mapp-receive-drawer-grip" aria-hidden="true" />
           <div className="mapp-form-head">
             <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
             <div>
@@ -440,13 +451,15 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             ) : null}
           </div>
         </section>
+      </div>
       ) : null}
 
       {loading ? <div className="mapp-inline-status">Carregando crediário...</div> : null}
 
       {filteredCredits.length ? (
+        <>
         <section className="mapp-credit-list" aria-label="Crediários para receber">
-          {filteredCredits.map((credit) => {
+          {visibleCredits.map((credit) => {
             const openInstallments = creditOpenInstallments(credit);
             const nextInstallment = openInstallments[0] ?? credit.installments[0];
             const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
@@ -535,6 +548,12 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             );
           })}
         </section>
+        {visibleCredits.length < filteredCredits.length && !debouncedQuery.trim() ? (
+          <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleCreditCount((count) => count + LOAD_MORE_STEP)}>
+            Carregar mais crediários ({formatNumber(visibleCredits.length)} de {formatNumber(filteredCredits.length)})
+          </button>
+        ) : null}
+        </>
       ) : !loading ? (
         <EmptyState icon="crediario" title="Sem crediário encontrado" detail={query ? 'Tente buscar por outro cliente ou venda.' : 'Vendas no crediário aparecerão aqui.'} actionLabel="Abrir PDV" actionPage="sales" onNavigate={onNavigate} />
       ) : null}

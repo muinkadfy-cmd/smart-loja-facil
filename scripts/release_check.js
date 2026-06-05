@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v175-produto-custo-sku-barras';
-const currentCache = 'smart-loja-pwa-supabase-v175-produto-custo-sku-barras';
+const currentVersion = 'pwa-supabase-v177-alertas-externos-pwa';
+const currentCache = 'smart-loja-pwa-supabase-v177-alertas-externos-pwa';
 
 const requiredCore = [
   'package.json',
@@ -64,8 +64,41 @@ for (const file of requiredCore) {
 if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote é PWA web/mobile e não exige Tauri. Não incluir target/ nem bancos no GitHub.');
 
 const packageJson = JSON.parse(read('package.json'));
-for (const script of ['type-check', 'build', 'release:check', 'lint', 'release:commercial:check']) {
+for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
+}
+
+function parseEnvContent(content) {
+  const values = {};
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match) continue;
+    values[match[1]] = match[2].trim().replace(/^['"]|['"]$/g, '');
+  }
+  return values;
+}
+
+function isPlaceholderEnv(value) {
+  return !value || /SEU-|EXEMPLO|example|localhost|127\.0\.0\.1|undefined|null/i.test(value);
+}
+
+if (!exists('.env.production')) {
+  fail('Build de produção bloqueado: .env.production ausente. Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY antes de publicar.');
+} else {
+  const env = parseEnvContent(read('.env.production'));
+  const supabaseUrl = env.VITE_SUPABASE_URL || '';
+  const anonKey = env.VITE_SUPABASE_ANON_KEY || env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+  if (isPlaceholderEnv(supabaseUrl) || !/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(supabaseUrl)) {
+    fail('Build de produção bloqueado: VITE_SUPABASE_URL precisa ser uma URL real https://*.supabase.co em .env.production.');
+  }
+  if (isPlaceholderEnv(anonKey) || anonKey.length < 40) {
+    fail('Build de produção bloqueado: VITE_SUPABASE_ANON_KEY pública ausente ou inválida em .env.production.');
+  }
+  if (env.VITE_SUPABASE_SERVICE_ROLE_KEY || env.VITE_SERVICE_ROLE_KEY) {
+    fail('Build de produção bloqueado: service_role nunca pode existir em .env.production do PWA.');
+  }
 }
 
 const mainSource = read('src/main.tsx');
@@ -83,8 +116,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v175 produto custo SKU barras.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v175 produto custo SKU barras.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v177 alertas externos pwa.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v177 alertas externos pwa.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -137,4 +170,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v175 PWA passou. Produtos com custo, SKU e barras automáticos conferido.');
+console.log('OK: release_check v177 PWA passou. Alertas externos PWA conferidas.');

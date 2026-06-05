@@ -12,6 +12,7 @@ import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScre
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
 import { NotificationCenter, type NotificationItem } from './components/NotificationCenter';
+import { ExternalPushPanel } from './components/ExternalPushPanel';
 import { MOBILE_ACTION_TOAST_EVENT, type MobileActionToastDetail } from './components/actionToast';
 import { getWebOutboxStats, readWebDemoMode, readWebSyncSnapshot, readWebTrainingMode, type WebOutboxStats, type WebSyncSnapshot } from '../lib/webApi';
 
@@ -264,7 +265,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
           ))}
         </div>
       ) : null}
-      <NotificationCenter open={alertsOpen} notifications={notificationItems} onClose={() => setAlertsOpen(false)} onNavigate={navigate} onLogout={onLogout} title="Central de avisos" logoutLabel="Sair da conta" />
+      <NotificationCenter open={alertsOpen} notifications={notificationItems} onClose={() => setAlertsOpen(false)} onNavigate={navigate} onLogout={onLogout} title="Central de avisos" logoutLabel="Sair da conta" externalPanel={<ExternalPushPanel onNavigate={navigate} />} />
     </MobileShell>
   );
 }

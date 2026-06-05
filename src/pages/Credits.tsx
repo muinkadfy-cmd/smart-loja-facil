@@ -5,6 +5,16 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { dateTime, makeRequestId, money } from '../lib/format';
+import {
+  COMPACT_CREDIT_LIMIT,
+  FRIENDLY_LIST_MESSAGES,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { whatsappChatUrl } from '../lib/links';
 import { getPreferredPdfFolder, setPreferredPdfFolder } from '../lib/preferences';
 import type { CreditInstallment, CreditSummary, PaymentMethod, Settings } from '../types';
@@ -581,7 +591,10 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   const [rows, setRows] = useState<CreditSummary[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(COMPACT_CREDIT_LIMIT);
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [receiving, setReceiving] = useState<ReceiveState | null>(null);
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -701,9 +714,13 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
     };
   }, [rows]);
 
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery, COMPACT_CREDIT_LIMIT));
+  }, [debouncedQuery, statusFilter]);
+
   const filteredCredits = useMemo(() => rows.filter((row) => {
     const matchesStatus = statusFilter === 'todos' || row.status === statusFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.customer_name,
       row.customer_phone,
       row.customer_whatsapp,
@@ -714,7 +731,19 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
       row.created_at,
     ]);
     return matchesStatus && matchesQuery;
-  }), [query, rows, statusFilter]);
+  }), [debouncedQuery, rows, statusFilter]);
+
+  const visibleCredits = useMemo(() => filteredCredits.slice(0, limitForQuery(debouncedQuery, visibleLimit)), [debouncedQuery, filteredCredits, visibleLimit]);
+  const canLoadMoreCredits = visibleCredits.length < filteredCredits.length && !debouncedQuery.trim();
+  const manyCreditResults = debouncedQuery.trim() && filteredCredits.length > SEARCH_RESULT_LIMIT;
+
+  function nextImportantInstallment(credit: CreditSummary): CreditInstallment | null {
+    return [...credit.installments]
+      .filter((item) => item.status !== 'pago')
+      .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number)[0]
+      ?? credit.installments[0]
+      ?? null;
+  }
 
   return (
     <div className="stack classic-legacy-page">
@@ -750,7 +779,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
           query={query}
           onQueryChange={setQuery}
           queryPlaceholder="Buscar por cliente, venda, contato, saldo ou status"
-          summary={`${filteredCredits.length} de ${rows.length} crediários visíveis`}
+          summary={`${visibleCredits.length} de ${filteredCredits.length} crediários visíveis`}
           selects={[
             {
               label: 'Status',
@@ -765,7 +794,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
           ]}
         />
         <DataTable<CreditSummary>
-          rows={filteredCredits}
+          rows={visibleCredits}
           empty="Nenhum crediário em aberto. Venda no crediário para gerar parcelas."
           columns={[
             { key: 'customer', label: 'Cliente', render: (row) => row.customer_name },
@@ -775,19 +804,35 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             { key: 'status', label: 'Status', render: (row) => <span className={creditStatusClass(row.status)}>{creditStatusLabel(row.status)}</span> },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>{manyCreditResults ? FRIENDLY_LIST_MESSAGES.tooMany : FRIENDLY_LIST_MESSAGES.firstResults}</span>
+          {canLoadMoreCredits ? <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais crediários</button> : null}
+        </div>
       </section>
 
-      {filteredCredits.map((credit) => (
+      {visibleCredits.map((credit) => {
+        const expanded = Boolean(expandedCredits[credit.id]);
+        const nextInstallment = nextImportantInstallment(credit);
+        const visibleInstallments = expanded ? credit.installments : (nextInstallment ? [nextInstallment] : []);
+        return (
         <section className="panel classic-panel classic-legacy-table-panel" key={credit.id}>
           <div className="panel-head">
             <h2>{credit.customer_name}</h2>
             <div className="table-actions">
               <span className={creditStatusClass(credit.status)}>Saldo {money(credit.balance)}</span>
               <span className="pill">{credit.customer_whatsapp || credit.customer_phone || 'Sem contato'}</span>
+              <button type="button" className="ghost-btn small" onClick={() => setExpandedCredits((current) => ({ ...current, [credit.id]: !expanded }))}>
+                {expanded ? 'Recolher parcelas' : 'Ver todas as parcelas'}
+              </button>
             </div>
           </div>
+          {nextInstallment ? (
+            <div className="notice">
+              Próxima parcela importante: #{nextInstallment.number} · {dateOnly(nextInstallment.due_date)} · {money(Math.max(0, nextInstallment.amount - nextInstallment.paid_amount))} · {installmentStatusLabel(nextInstallment)}
+            </div>
+          ) : null}
           <DataTable<CreditInstallment>
-            rows={credit.installments}
+            rows={visibleInstallments}
             empty="Sem parcelas."
             columns={[
               { key: 'num', label: '#', render: (row) => row.number },
@@ -813,7 +858,8 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             ]}
           />
         </section>
-      ))}
+        );
+      })}
 
       <Modal open={Boolean(receiving)} title="Receber parcela" onClose={() => !saving && setReceiving(null)}>
         {receiving && (

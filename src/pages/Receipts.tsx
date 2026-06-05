@@ -6,6 +6,16 @@ import { TableFilters } from '../components/TableFilters';
 import { api } from '../lib/api';
 import { matchesFilterQuery } from '../lib/filter';
 import { dateTime, money } from '../lib/format';
+import {
+  COMPACT_CREDIT_LIMIT,
+  FRIENDLY_LIST_MESSAGES,
+  LOAD_MORE_STEP,
+  SEARCH_RESULT_LIMIT,
+  canRunListSearch,
+  limitForQuery,
+  resetLimitForQuery,
+  useDebouncedValue,
+} from '../lib/listLimits';
 import { whatsappChatUrl } from '../lib/links';
 import { getPreferredPdfFolder, setPreferredPdfFolder } from '../lib/preferences';
 import type { ReceiptSummary } from '../types';
@@ -49,6 +59,8 @@ function buildWhatsappText(receipt: ReceiptSummary): string {
 export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
   const [rows, setRows] = useState<ReceiptSummary[]>([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query);
+  const [visibleLimit, setVisibleLimit] = useState(COMPACT_CREDIT_LIMIT);
   const [typeFilter, setTypeFilter] = useState('todos');
   const [selected, setSelected] = useState<ReceiptSummary | null>(null);
   const [error, setError] = useState('');
@@ -63,9 +75,13 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
     ['todos', ...Array.from(new Set(rows.map((row) => row.receipt_type).filter(Boolean))).sort((a, b) => a.localeCompare(b))]
   ), [rows]);
 
+  useEffect(() => {
+    setVisibleLimit(resetLimitForQuery(debouncedQuery, COMPACT_CREDIT_LIMIT));
+  }, [debouncedQuery, typeFilter]);
+
   const filteredRows = useMemo(() => rows.filter((row) => {
     const matchesType = typeFilter === 'todos' || row.receipt_type === typeFilter;
-    const matchesQuery = matchesFilterQuery(query, [
+    const matchesQuery = !canRunListSearch(debouncedQuery) ? true : matchesFilterQuery(debouncedQuery, [
       row.receipt_type,
       row.sale_number,
       row.sale_id,
@@ -76,7 +92,11 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
       row.created_at,
     ]);
     return matchesType && matchesQuery;
-  }), [query, rows, typeFilter]);
+  }), [debouncedQuery, rows, typeFilter]);
+
+  const visibleRows = useMemo(() => filteredRows.slice(0, limitForQuery(debouncedQuery, visibleLimit)), [debouncedQuery, filteredRows, visibleLimit]);
+  const canLoadMore = visibleRows.length < filteredRows.length && !debouncedQuery.trim();
+  const manyResults = debouncedQuery.trim() && filteredRows.length > SEARCH_RESULT_LIMIT;
 
   async function printSelected() {
     if (!selected) return;
@@ -127,8 +147,8 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
         <TableFilters
           query={query}
           onQueryChange={setQuery}
-          queryPlaceholder="Buscar por cliente, venda, tipo ou data"
-          summary={`${filteredRows.length} de ${rows.length} comprovantes visíveis`}
+          queryPlaceholder="Buscar por cliente, telefone, venda, nota ou status"
+          summary={`${visibleRows.length} de ${filteredRows.length} comprovantes visíveis`}
           selects={[
             {
               label: 'Tipo',
@@ -139,7 +159,7 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
           ]}
         />
         <DataTable<ReceiptSummary>
-          rows={filteredRows}
+          rows={visibleRows}
           empty="Nenhum comprovante gerado."
           columns={[
             { key: 'type', label: 'Tipo', render: (row) => row.receipt_type },
@@ -161,6 +181,10 @@ export function ReceiptsPage({ refreshToken }: PageProps): JSX.Element {
             },
           ]}
         />
+        <div className="classic-table-footer">
+          <span>{manyResults ? FRIENDLY_LIST_MESSAGES.tooMany : FRIENDLY_LIST_MESSAGES.firstResults}</span>
+          {canLoadMore ? <button type="button" className="secondary-btn small" onClick={() => setVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais comprovantes</button> : null}
+        </div>
       </section>
       <Modal open={Boolean(selected)} title="Comprovante" onClose={() => setSelected(null)}>
         <div className="receipt-preview" dangerouslySetInnerHTML={{ __html: selected?.content ?? '' }} />

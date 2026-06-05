@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import type { DelphiIconName } from '../../lib/icons';
 import type { PageKey } from '../../types';
 import { InlineIcon } from './InlineIcon';
@@ -23,6 +23,7 @@ interface NotificationCenterProps {
   onLogout?: () => void;
   title?: string;
   logoutLabel?: string;
+  externalPanel?: ReactNode;
 }
 
 type NotificationTab = 'unread' | 'read';
@@ -111,6 +112,7 @@ export function NotificationActions({
   onOpenFull: () => void;
   onLogout?: () => void;
   logoutLabel?: string;
+  externalPanel?: ReactNode;
 }): JSX.Element {
   return (
     <footer className="mapp-notification-actions">
@@ -129,7 +131,7 @@ export function NotificationActions({
   );
 }
 
-export function NotificationCenter({ open, notifications, onClose, onNavigate, onLogout, title = 'Central de avisos', logoutLabel = 'Sair da conta' }: NotificationCenterProps): JSX.Element | null {
+export function NotificationCenter({ open, notifications, onClose, onNavigate, onLogout, title = 'Central de avisos', logoutLabel = 'Sair da conta', externalPanel }: NotificationCenterProps): JSX.Element | null {
   const [activeTab, setActiveTab] = useState<NotificationTab>('unread');
   const [state, setState] = useState<NotificationState>(() => readNotificationState());
   const [actionPending, setActionPending] = useState(false);
@@ -217,6 +219,8 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
             ×
           </button>
         </header>
+
+        {externalPanel ? <div className="mapp-notification-external-slot">{externalPanel}</div> : null}
 
         <NotificationTabs activeTab={activeTab} unreadCount={unreadNotifications.length} onTabChange={setActiveTab} onClear={clearRead} />
 
