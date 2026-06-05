@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v174-pdf-top-micro-polido';
-const currentCache = 'smart-loja-pwa-supabase-v174-pdf-top-micro-polido';
+const currentVersion = 'pwa-supabase-v175-produto-custo-sku-barras';
+const currentCache = 'smart-loja-pwa-supabase-v175-produto-custo-sku-barras';
 
 const requiredCore = [
   'package.json',
@@ -73,7 +73,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v174')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v174.');
+if (!mainSource.includes('smart-mobile-rebuild-v175')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v175.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -83,8 +83,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v174 PDF top micro polido.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v174 PDF top micro polido.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v175 produto custo SKU barras.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v175 produto custo SKU barras.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -137,4 +137,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v174 PWA passou. PDF com topo micro polido conferido.');
+console.log('OK: release_check v175 PWA passou. Produtos com custo, SKU e barras automáticos conferido.');

@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v174",
-  "short_name": "Jaque v174",
-  "description": "PWA da loja Jaque Confecções e Presentes v174 com PDF e topo micro polido.",
+  "name": "Jaque Confecções e Presentes v175",
+  "short_name": "Jaque v175",
+  "description": "PWA da loja Jaque Confecções e Presentes v175 com produto, custo, SKU e barras automáticos.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

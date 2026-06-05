@@ -56,8 +56,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v174-pdf-top-micro-polido';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v174-pdf-top-micro-polido';
+export const WEB_APP_VERSION = 'pwa-supabase-v175-produto-custo-sku-barras';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v175-produto-custo-sku-barras';
 
 
 export interface WebTrainingModeState {
@@ -261,10 +261,10 @@ const DEMO_CUSTOMERS: Customer[] = [
 ];
 
 const DEMO_PRODUCTS: Product[] = [
-  { id: 'demo-product-1', name: 'Vestido floral demo', category: 'Roupas femininas', price: 119.9, promo_price: 99.9, stock: 8, unit: 'un', size: 'M', color: 'Rosa', internal_code: 'DEMO-001', barcode: '789000000001', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_NOW },
-  { id: 'demo-product-2', name: 'Camiseta masculina demo', category: 'Roupas masculinas', price: 59.9, promo_price: null, stock: 12, unit: 'un', size: 'G', color: 'Preta', internal_code: 'DEMO-002', barcode: '789000000002', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_YESTERDAY },
-  { id: 'demo-product-3', name: 'Kit presente demo', category: 'Presentes', price: 79.9, promo_price: 69.9, stock: 2, unit: 'un', size: 'Único', color: 'Sortido', internal_code: 'DEMO-003', barcode: '789000000003', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
-  { id: 'demo-product-4', name: 'Lingerie básica demo', category: 'Lingeries', price: 39.9, promo_price: null, stock: 5, unit: 'un', size: 'P/M/G', color: 'Variada', internal_code: 'DEMO-004', barcode: '789000000004', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
+  { id: 'demo-product-1', name: 'Vestido floral demo', category: 'Roupas femininas', cost_price: 62.5, price: 119.9, promo_price: 99.9, stock: 8, unit: 'un', size: 'M', color: 'Rosa', internal_code: 'DEMO-001', barcode: '789000000001', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_NOW },
+  { id: 'demo-product-2', name: 'Camiseta masculina demo', category: 'Roupas masculinas', cost_price: 31.9, price: 59.9, promo_price: null, stock: 12, unit: 'un', size: 'G', color: 'Preta', internal_code: 'DEMO-002', barcode: '789000000002', image_data: '', status: 'ativo', created_at: DEMO_OLDER, updated_at: DEMO_YESTERDAY },
+  { id: 'demo-product-3', name: 'Kit presente demo', category: 'Presentes', cost_price: 44.5, price: 79.9, promo_price: 69.9, stock: 2, unit: 'un', size: 'Único', color: 'Sortido', internal_code: 'DEMO-003', barcode: '789000000003', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
+  { id: 'demo-product-4', name: 'Lingerie básica demo', category: 'Lingeries', cost_price: 19.9, price: 39.9, promo_price: null, stock: 5, unit: 'un', size: 'P/M/G', color: 'Variada', internal_code: 'DEMO-004', barcode: '789000000004', image_data: '', status: 'ativo', created_at: DEMO_YESTERDAY, updated_at: DEMO_NOW },
 ];
 
 const DEMO_SALES: SaleSummary[] = [
@@ -1356,11 +1356,64 @@ async function uploadProductPhotoForWeb(params: {
   return data.publicUrl || path;
 }
 
+
+const PRODUCT_SELECT_BASE = 'id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at';
+const PRODUCT_SELECT_WITH_COST = 'id, name, category, cost_price, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at';
+let productCostPriceColumnAvailable: boolean | null = null;
+
+function isMissingProductCostPriceColumn(error: unknown): boolean {
+  const record = error as { code?: string; message?: string; details?: string; hint?: string };
+  const text = [record?.code, record?.message, record?.details, record?.hint].filter(Boolean).join(' ').toLowerCase();
+  return text.includes('cost_price') && (text.includes('column') || text.includes('schema cache') || text.includes('does not exist') || text.includes('could not find'));
+}
+
+function productSelectFields(): string {
+  return productCostPriceColumnAvailable === false ? PRODUCT_SELECT_BASE : PRODUCT_SELECT_WITH_COST;
+}
+
+function withoutProductCostPrice<T extends Record<string, unknown>>(payload: T): Omit<T, 'cost_price'> {
+  const { cost_price: _ignored, ...rest } = payload;
+  return rest;
+}
+
+
+function normalizeProductCodePart(value: unknown, fallback: string): string {
+  const text = String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '')
+    .toUpperCase()
+    .slice(0, 4);
+  return text || fallback;
+}
+
+function makeAutomaticProductSku(source: Record<string, unknown>, seed = Date.now()): string {
+  const name = normalizeProductCodePart(source.name, 'PROD');
+  const category = normalizeProductCodePart(source.category, 'LOJA');
+  const suffix = Math.abs(seed).toString(36).toUpperCase().slice(-5).padStart(5, '0');
+  return `${category}-${name}-${suffix}`;
+}
+
+function ean13Checksum(first12: string): string {
+  const sum = first12.split('').reduce((total, digit, index) => {
+    const value = Number(digit) || 0;
+    return total + value * (index % 2 === 0 ? 1 : 3);
+  }, 0);
+  return String((10 - (sum % 10)) % 10);
+}
+
+function makeAutomaticProductBarcode(seed = Date.now()): string {
+  const raw = `${Math.abs(seed)}${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`.replace(/\D/g, '');
+  const first12 = (`20${raw}`).slice(0, 12).padEnd(12, '0');
+  return `${first12}${ean13Checksum(first12)}`;
+}
+
 function mapProduct(row: Record<string, unknown>): Product {
   return {
     id: stringValue(row.id),
     name: stringValue(row.name),
     category: stringValue(row.category),
+    cost_price: numberValue(row.cost_price),
     price: numberValue(row.price),
     promo_price: row.promo_price === null || row.promo_price === undefined ? null : numberValue(row.promo_price),
     stock: numberValue(row.stock),
@@ -1379,12 +1432,26 @@ function mapProduct(row: Record<string, unknown>): Product {
 export async function webProducts(): Promise<Product[]> {
   const context = await getWebStoreContext({ createIfMissing: true });
   const client = await getClient();
-  const { data, error } = await client
-    .from('products')
-    .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at, deleted_at')
+  const productsTable = client.from('products') as any;
+  let query = productsTable
+    .select(`${productSelectFields()}, deleted_at`)
     .eq('store_id', context.store.id)
     .is('deleted_at', null)
     .order('name', { ascending: true });
+
+  let { data, error } = await query;
+  if (error && isMissingProductCostPriceColumn(error)) {
+    productCostPriceColumnAvailable = false;
+    const fallback = await productsTable
+      .select(`${PRODUCT_SELECT_BASE}, deleted_at`)
+      .eq('store_id', context.store.id)
+      .is('deleted_at', null)
+      .order('name', { ascending: true });
+    data = fallback.data;
+    error = fallback.error;
+  } else if (!error && productCostPriceColumnAvailable !== false) {
+    productCostPriceColumnAvailable = true;
+  }
 
   if (error) throw new Error(`Não foi possível carregar produtos do Supabase: ${error.message}`);
   return (data ?? []).map((row: Record<string, unknown>) => mapProduct(row));
@@ -1395,6 +1462,7 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
   requireWebRole(context, ['owner', 'admin', 'operator'], 'salvar produtos');
   assertWebTrainingModeAllowsWrite('salvar produto ou foto real');
   const client = await getClient();
+  const productsTable = client.from('products') as any;
   const name = String(product.name ?? '').trim();
   if (!name) throw new Error('Informe o nome do produto antes de salvar.');
 
@@ -1406,36 +1474,60 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
     store_id: context.store.id,
     name,
     category: String(product.category ?? '').trim(),
+    cost_price: numberValue((product as Record<string, unknown>).cost_price),
     price: numberValue(product.price),
     promo_price: product.promo_price === null || product.promo_price === undefined ? null : numberValue(product.promo_price),
     stock: numberValue(product.stock),
     unit: String(product.unit ?? 'un').trim() || 'un',
     size: String(product.size ?? '').trim(),
     color: String(product.color ?? '').trim(),
-    internal_code: String(product.internal_code ?? '').trim() || `WEB-${Date.now().toString(36).toUpperCase()}`,
-    barcode: String(product.barcode ?? '').trim(),
+    internal_code: String(product.internal_code ?? '').trim() || makeAutomaticProductSku(source),
+    barcode: String(product.barcode ?? '').trim() || makeAutomaticProductBarcode(),
     image_url: inlinePhoto ? '' : imageSource,
     status: mapStatusToCloud(product.status),
     client_request_id: requestId,
   };
 
   if (!product.id) {
-    const { data: existing } = await client
-      .from('products')
-      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+    let existingQuery = await productsTable
+      .select(productSelectFields())
       .eq('store_id', context.store.id)
       .eq('client_request_id', requestId)
       .maybeSingle();
-    if (existing) return mapProduct(existing as Record<string, unknown>);
+    if (existingQuery.error && isMissingProductCostPriceColumn(existingQuery.error)) {
+      productCostPriceColumnAvailable = false;
+      existingQuery = await productsTable
+        .select(PRODUCT_SELECT_BASE)
+        .eq('store_id', context.store.id)
+        .eq('client_request_id', requestId)
+        .maybeSingle();
+    }
+    if (existingQuery.data) return mapProduct(existingQuery.data as Record<string, unknown>);
   }
 
-  const request = product.id
-    ? client.from('products').update(payload).eq('id', product.id).eq('store_id', context.store.id)
-    : client.from('products').insert(payload);
+  const savePayload = productCostPriceColumnAvailable === false ? withoutProductCostPrice(payload) : payload;
+  let request = product.id
+    ? productsTable.update(savePayload).eq('id', product.id).eq('store_id', context.store.id)
+    : productsTable.insert(savePayload);
 
-  const { data, error } = await request
-    .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+  let { data, error } = await request
+    .select(productSelectFields())
     .single();
+
+  if (error && isMissingProductCostPriceColumn(error)) {
+    productCostPriceColumnAvailable = false;
+    const fallbackPayload = withoutProductCostPrice(payload);
+    request = product.id
+      ? productsTable.update(fallbackPayload).eq('id', product.id).eq('store_id', context.store.id)
+      : productsTable.insert(fallbackPayload);
+    const fallback = await request
+      .select(PRODUCT_SELECT_BASE)
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  } else if (!error && productCostPriceColumnAvailable !== false) {
+    productCostPriceColumnAvailable = true;
+  }
 
   if (error) throw new Error(`Não foi possível salvar o produto no Supabase: ${error.message}`);
 
@@ -1451,24 +1543,22 @@ export async function webSaveProduct(product: Partial<Product>): Promise<Product
       requestId,
       imageData: inlinePhoto,
     });
-    const { data: updated, error: updateError } = await client
-      .from('products')
+    const { data: updated, error: updateError } = await productsTable
       .update({ image_url: imageUrl })
       .eq('id', saved.id)
       .eq('store_id', context.store.id)
-      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+      .select(productSelectFields())
       .single();
     if (updateError) throw new Error(`Foto enviada, mas não consegui vincular ao produto: ${updateError.message}`);
     saved = mapProduct(updated as Record<string, unknown>);
     recordWebSyncSnapshot('synced', 'Produtos', 'Foto do produto enviada para a nuvem e vinculada ao cadastro.');
     return saved;
   } catch (photoError) {
-    const { data: fallbackData, error: fallbackError } = await client
-      .from('products')
+    const { data: fallbackData, error: fallbackError } = await productsTable
       .update({ image_url: inlinePhoto })
       .eq('id', saved.id)
       .eq('store_id', context.store.id)
-      .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+      .select(productSelectFields())
       .single();
     const detail = photoError instanceof Error ? photoError.message : String(photoError);
     recordWebSyncSnapshot('pending', 'Fotos de produtos', `Produto salvo. Foto ficou em modo compatibilidade porque o Storage ainda não confirmou envio. Detalhe: ${detail}`);
@@ -1482,12 +1572,12 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
   requireWebRole(context, ['owner', 'admin', 'operator'], 'inativar produtos');
   assertWebTrainingModeAllowsWrite('inativar produto real');
   const client = await getClient();
-  const { data, error } = await client
-    .from('products')
+  const productsTable = client.from('products') as any;
+  const { data, error } = await productsTable
     .update({ status: 'inactive' })
     .eq('id', productId)
     .eq('store_id', context.store.id)
-    .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+    .select(productSelectFields())
     .single();
 
   if (error) throw new Error(`Não foi possível inativar o produto no Supabase: ${error.message}`);
@@ -1499,6 +1589,7 @@ export async function webAdjustStock(productId: string, delta: number, reason: s
   requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
   assertWebTrainingModeAllowsWrite('ajustar estoque real');
   const client = await getClient();
+  const productsTable = client.from('products') as any;
   if (!reason.trim()) throw new Error('Informe o motivo do ajuste de estoque.');
 
   const { data: current, error: loadError } = await client
@@ -1513,12 +1604,11 @@ export async function webAdjustStock(productId: string, delta: number, reason: s
   const afterStock = beforeStock + delta;
   if (afterStock < 0) throw new Error('O ajuste não pode deixar o estoque negativo no Supabase.');
 
-  const { data, error } = await client
-    .from('products')
+  const { data, error } = await productsTable
     .update({ stock: afterStock })
     .eq('id', productId)
     .eq('store_id', context.store.id)
-    .select('id, name, category, price, promo_price, stock, unit, size, color, internal_code, barcode, image_url, status, created_at, updated_at')
+    .select(productSelectFields())
     .single();
 
   if (error) throw new Error(`Não foi possível ajustar o estoque no Supabase: ${error.message}`);
@@ -3826,7 +3916,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v174 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v175 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

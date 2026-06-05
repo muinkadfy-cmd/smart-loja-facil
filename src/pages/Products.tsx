@@ -14,6 +14,7 @@ interface ProductForm {
   id: string;
   name: string;
   category: string;
+  cost_price: number;
   price: number;
   promo_price: number | null;
   stock: number;
@@ -43,6 +44,7 @@ const emptyProduct: ProductForm = {
   id: '',
   name: '',
   category: presetCategories[0],
+  cost_price: 0,
   price: 0,
   promo_price: null,
   stock: 0,
@@ -89,7 +91,8 @@ function productDetailLines(product: Product): string[] {
   const lines = [
     `Produto: ${product.name}`,
     `Categoria: ${product.category || '-'}`,
-    `Preço: ${productDisplayPrice(product)}`,
+    `Preço de custo: ${money(product.cost_price || 0)}`,
+    `Preço de venda: ${productDisplayPrice(product)}`,
   ];
   if (product.promo_price && product.promo_price < product.price) {
     lines.push(`Preço original: ${money(product.price)}`);
@@ -143,6 +146,48 @@ function safePhotoFileName(product: Product): string {
   return `${base}.${extension}`;
 }
 
+
+function normalizeSkuPart(value: string, fallback: string): string {
+  const text = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '')
+    .toUpperCase()
+    .slice(0, 4);
+  return text || fallback;
+}
+
+function ean13Checksum(first12: string): string {
+  const sum = first12.split('').reduce((total, digit, index) => total + (Number(digit) || 0) * (index % 2 === 0 ? 1 : 3), 0);
+  return String((10 - (sum % 10)) % 10);
+}
+
+function generateProductBarcode(seed = Date.now()): string {
+  const raw = `${Math.abs(seed)}${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`.replace(/\D/g, '');
+  const first12 = (`20${raw}`).slice(0, 12).padEnd(12, '0');
+  return `${first12}${ean13Checksum(first12)}`;
+}
+
+function generateProductSku(name = '', category = '', seed = Date.now()): string {
+  const categoryPart = normalizeSkuPart(category, 'LOJA');
+  const namePart = normalizeSkuPart(name, 'PROD');
+  const suffix = Math.abs(seed).toString(36).toUpperCase().slice(-5).padStart(5, '0');
+  return `${categoryPart}-${namePart}-${suffix}`;
+}
+
+function withAutomaticProductCodes(form: ProductForm, force = false): ProductForm {
+  const seed = Date.now();
+  return {
+    ...form,
+    internal_code: force || !form.internal_code.trim() ? generateProductSku(form.name, form.category, seed) : form.internal_code,
+    barcode: force || !form.barcode.trim() ? generateProductBarcode(seed) : form.barcode,
+  };
+}
+
+function freshProductForm(): ProductForm {
+  return withAutomaticProductCodes({ ...emptyProduct }, true);
+}
+
 export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [rows, setRows] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -151,7 +196,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
   const [categoryFilter, setCategoryFilter] = useState('todas');
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProductForm>({ ...emptyProduct });
+  const [form, setForm] = useState<ProductForm>(freshProductForm());
   const [saving, setSaving] = useState(false);
   const [adjust, setAdjust] = useState({ productId: '', delta: 0, reason: '' });
   const [preview, setPreview] = useState<{ src: string; title: string } | null>(null);
@@ -220,7 +265,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
   }
 
   function resetForm() {
-    setForm({ ...emptyProduct });
+    setForm(freshProductForm());
   }
 
   function scrollToPanel(panel: HTMLElement | null, focusTarget?: HTMLElement | null) {
@@ -268,6 +313,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
       id: product.id,
       name: product.name,
       category: product.category,
+      cost_price: product.cost_price || 0,
       price: product.price,
       promo_price: product.promo_price,
       stock: product.stock,
@@ -306,7 +352,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     setError('');
     setMessage('');
     try {
-      await api.saveProduct(form as Partial<Product>);
+      await api.saveProduct(withAutomaticProductCodes(form) as Partial<Product>);
       const editing = Boolean(form.id);
       resetForm();
       await reload();
@@ -498,6 +544,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
               { key: 'name', label: 'Nome do produto', render: (row) => row.name },
               { key: 'category', label: 'Categoria', render: (row) => row.category || '-' },
               { key: 'stock', label: 'Estoque', align: 'right', render: (row) => row.stock },
+              { key: 'cost', label: 'Custo', align: 'right', render: (row) => money(row.cost_price || 0) },
               { key: 'price', label: 'Preço venda', align: 'right', render: (row) => money(row.promo_price ?? row.price) },
               { key: 'status', label: 'Status', render: (row) => <span className={row.stock <= 5 ? 'classic-low-stock' : 'classic-ok-stock'}>{row.stock <= 5 ? 'Estoque baixo' : row.status}</span> },
             ]}
@@ -551,14 +598,16 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
                   {presetCategories.map((category) => <option key={category} value={category} />)}
                 </datalist>
               </label>
-              <label>Preço<input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: Number(event.target.value) })} /></label>
+              <label>Preço de custo<input type="number" min="0" step="0.01" value={form.cost_price} onChange={(event) => setForm({ ...form, cost_price: Number(event.target.value) })} /></label>
+              <label>Preço de venda<input type="number" min="0" step="0.01" value={form.price} onChange={(event) => setForm({ ...form, price: Number(event.target.value) })} /></label>
               <label>Preço promocional<input type="number" min="0" step="0.01" value={form.promo_price ?? ''} onChange={(event) => setForm({ ...form, promo_price: event.target.value === '' ? null : Number(event.target.value) })} /></label>
               <label>Estoque<input type="number" step="1" value={form.stock} onChange={(event) => setForm({ ...form, stock: Number(event.target.value) })} /></label>
               <label>Unidade<input value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })} /></label>
               <label>Tamanho<input value={form.size} onChange={(event) => setForm({ ...form, size: event.target.value })} /></label>
               <label>Cor<input value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} /></label>
-              <label>Código interno<input value={form.internal_code} readOnly placeholder="Gerado automaticamente ao salvar" /></label>
-              <label>Código de barras<input value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value })} /></label>
+              <label>SKU automático<input value={form.internal_code} onChange={(event) => setForm({ ...form, internal_code: event.target.value.toUpperCase() })} placeholder="Gerado automaticamente" /></label>
+              <label>Código de barras<input value={form.barcode} onChange={(event) => setForm({ ...form, barcode: event.target.value.replace(/\D/g, '') })} placeholder="Gerado automaticamente" /></label>
+              <button type="button" className="ghost-btn" onClick={() => setForm((current) => withAutomaticProductCodes(current, true))}>Gerar SKU e barras</button>
               <label>Status<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as Product['status'] })}><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></label>
               <div className="table-actions">
                 <button className="primary-btn" disabled={saving}>{saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Cadastrar produto'}</button>
@@ -596,7 +645,8 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
                 <span>{details.category || 'Sem categoria'} - {productDisplayPrice(details)}</span>
               </div>
               <div className="product-detail-grid">
-                <div><span>Preço</span><strong>{productDisplayPrice(details)}</strong></div>
+                <div><span>Custo</span><strong>{money(details.cost_price || 0)}</strong></div>
+                <div><span>Venda</span><strong>{productDisplayPrice(details)}</strong></div>
                 {details.promo_price && details.promo_price < details.price && <div><span>Preço original</span><strong>{money(details.price)}</strong></div>}
                 {details.color && <div><span>Cor</span><strong>{details.color}</strong></div>}
                 {details.size && <div><span>Tamanho</span><strong>{details.size}</strong></div>}

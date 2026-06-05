@@ -66,7 +66,7 @@ export interface Customer {
 }
 
 export interface Product {
-  id: string; name: string; category: string; price: number; promo_price: number | null; stock: number; unit: string; size: string; color: string; internal_code: string; barcode: string; image_data: string; status: 'ativo' | 'inativo'; created_at: string; updated_at: string;
+  id: string; name: string; category: string; cost_price: number; price: number; promo_price: number | null; stock: number; unit: string; size: string; color: string; internal_code: string; barcode: string; image_data: string; status: 'ativo' | 'inativo'; created_at: string; updated_at: string;
 }
 
 export interface SaleSummary {

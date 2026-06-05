@@ -29,6 +29,7 @@ type ProductFormState = {
   category: string;
   internal_code: string;
   barcode: string;
+  cost_price: string;
   price: string;
   promo_price: string;
   stock: string;
@@ -55,6 +56,7 @@ const emptyProductForm: ProductFormState = {
   category: '',
   internal_code: '',
   barcode: '',
+  cost_price: '',
   price: '',
   promo_price: '',
   stock: '0',
@@ -114,6 +116,48 @@ const PRODUCT_COLOR_OPTIONS = ['Preto', 'Branco', 'Azul', 'Rosa', 'Vermelho', 'V
 const MAX_PRODUCT_PHOTO_SOURCE_BYTES = 12 * 1024 * 1024;
 const TARGET_PRODUCT_PHOTO_BYTES = 1.65 * 1024 * 1024;
 const PRODUCT_PHOTO_MAX_EDGE = 1600;
+
+
+function normalizeSkuPart(value: string, fallback: string): string {
+  const text = value
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '')
+    .toUpperCase()
+    .slice(0, 4);
+  return text || fallback;
+}
+
+function ean13Checksum(first12: string): string {
+  const sum = first12.split('').reduce((total, digit, index) => total + (Number(digit) || 0) * (index % 2 === 0 ? 1 : 3), 0);
+  return String((10 - (sum % 10)) % 10);
+}
+
+function generateProductBarcode(seed = Date.now()): string {
+  const raw = `${Math.abs(seed)}${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`.replace(/\D/g, '');
+  const first12 = (`20${raw}`).slice(0, 12).padEnd(12, '0');
+  return `${first12}${ean13Checksum(first12)}`;
+}
+
+function generateProductSku(name = '', category = '', seed = Date.now()): string {
+  const categoryPart = normalizeSkuPart(category, 'LOJA');
+  const namePart = normalizeSkuPart(name, 'PROD');
+  const suffix = Math.abs(seed).toString(36).toUpperCase().slice(-5).padStart(5, '0');
+  return `${categoryPart}-${namePart}-${suffix}`;
+}
+
+function withAutomaticProductCodes(form: ProductFormState, force = false): ProductFormState {
+  const seed = Date.now();
+  return {
+    ...form,
+    internal_code: force || !form.internal_code.trim() ? generateProductSku(form.name, form.category, seed) : form.internal_code,
+    barcode: force || !form.barcode.trim() ? generateProductBarcode(seed) : form.barcode,
+  };
+}
+
+function freshProductForm(): ProductFormState {
+  return withAutomaticProductCodes({ ...emptyProductForm }, true);
+}
 
 function moneyToNumber(value: string): number {
   const normalized = value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
@@ -223,7 +267,8 @@ function productToForm(product: Product): ProductFormState {
     name: product.name,
     category: product.category,
     internal_code: product.internal_code,
-    barcode: product.barcode,
+    barcode: product.barcode || generateProductBarcode(),
+    cost_price: product.cost_price ? String(product.cost_price) : '',
     price: String(product.price || ''),
     promo_price: product.promo_price === null || product.promo_price === undefined ? '' : String(product.promo_price),
     stock: String(product.stock ?? 0),
@@ -308,7 +353,7 @@ function ProductForm({
         <span className="mapp-form-icon tone-sky"><InlineIcon name="produtos" size={24} /></span>
         <div>
           <strong>{form.id ? 'Editar produto' : 'Novo produto'}</strong>
-          <p>Preencha só o essencial para vender no celular e no computador.</p>
+          <p>Informe custo e venda. Se deixar SKU ou barras em branco, o app gera sozinho.</p>
         </div>
       </div>
 
@@ -350,11 +395,18 @@ function ProductForm({
           </select>
         </label>
         <label>
-          <span>Código interno</span>
-          <input value={form.internal_code} onChange={(event) => onChange({ ...form, internal_code: event.target.value })} placeholder="Opcional" />
+          <span>SKU automático</span>
+          <div className="mapp-input-with-action">
+            <input value={form.internal_code} onChange={(event) => onChange({ ...form, internal_code: event.target.value.toUpperCase() })} placeholder="Gerado automaticamente" />
+            <button type="button" onClick={() => onChange(withAutomaticProductCodes(form, true))}>Gerar</button>
+          </div>
         </label>
         <label>
-          <span>Preço *</span>
+          <span>Preço de custo</span>
+          <input inputMode="decimal" value={form.cost_price} onChange={(event) => onChange({ ...form, cost_price: event.target.value })} placeholder="0,00" />
+        </label>
+        <label>
+          <span>Preço de venda *</span>
           <input inputMode="decimal" value={form.price} onChange={(event) => onChange({ ...form, price: event.target.value })} placeholder="0,00" />
         </label>
         <label>
@@ -433,8 +485,11 @@ function ProductForm({
           </div>
         </div>
         <label className="span-2">
-          <span>Código de barras</span>
-          <input value={form.barcode} onChange={(event) => onChange({ ...form, barcode: event.target.value })} placeholder="Opcional" />
+          <span>Código de barras automático</span>
+          <div className="mapp-input-with-action">
+            <input inputMode="numeric" value={form.barcode} onChange={(event) => onChange({ ...form, barcode: event.target.value.replace(/\D/g, '') })} placeholder="Gerado automaticamente" />
+            <button type="button" onClick={() => onChange({ ...form, barcode: generateProductBarcode() })}>Gerar</button>
+          </div>
         </label>
         <label>
           <span>Status</span>
@@ -548,7 +603,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   }
 
   function startNewProduct() {
-    openProductForm({ ...emptyProductForm }, 'Pronto para cadastrar um novo produto.');
+    openProductForm(freshProductForm(), 'Pronto para cadastrar um novo produto.');
   }
 
   const handleProductPhotoSelected = async (file: File) => {
@@ -602,7 +657,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     if (window.location.hash === '#novo-produto') {
       const timer = window.setTimeout(() => {
         setStockAdjust(null);
-        setForm({ ...emptyProductForm });
+        setForm(freshProductForm());
         setFeedback({ tone: 'info', text: 'Pronto para cadastrar um novo produto.' });
         scrollPanelIntoPage(productFormRef, productNameInputRef);
         clearNavigationIntent();
@@ -637,6 +692,9 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const stockValue = products
     .filter((product) => product.status === 'ativo')
     .reduce((sum, product) => sum + product.stock * (product.promo_price ?? product.price), 0);
+  const stockCostValue = products
+    .filter((product) => product.status === 'ativo')
+    .reduce((sum, product) => sum + product.stock * Number(product.cost_price || 0), 0);
 
   const saveProduct = async () => {
     if (!form) return;
@@ -647,20 +705,22 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     }
     setSaving(true);
     try {
+      const prepared = withAutomaticProductCodes(form);
       await api.saveProduct({
-        id: form.id,
+        id: prepared.id,
         name,
-        category: form.category.trim(),
-        internal_code: form.internal_code.trim(),
-        barcode: form.barcode.trim(),
-        price: moneyToNumber(form.price),
-        promo_price: form.promo_price.trim() ? moneyToNumber(form.promo_price) : null,
-        stock: intToNumber(form.stock),
-        unit: form.unit.trim() || 'un',
-        size: form.size.trim(),
-        color: form.color.trim(),
-        image_data: form.image_data.trim(),
-        status: form.status,
+        category: prepared.category.trim(),
+        internal_code: prepared.internal_code.trim(),
+        barcode: prepared.barcode.trim(),
+        cost_price: moneyToNumber(prepared.cost_price),
+        price: moneyToNumber(prepared.price),
+        promo_price: prepared.promo_price.trim() ? moneyToNumber(prepared.promo_price) : null,
+        stock: intToNumber(prepared.stock),
+        unit: prepared.unit.trim() || 'un',
+        size: prepared.size.trim(),
+        color: prepared.color.trim(),
+        image_data: prepared.image_data.trim(),
+        status: prepared.status,
       });
       setFeedback({ tone: 'success', text: hasProductPhoto(form) ? 'Produto e foto salvos. A miniatura deve aparecer nos aparelhos sincronizados.' : (form.id ? 'Produto atualizado e sincronizado.' : 'Produto cadastrado e sincronizado.') });
       notifyMobileAction({ title: form.id ? 'Produto atualizado' : 'Produto cadastrado', message: `${name} está salvo e pronto para aparecer nos aparelhos sincronizados.`, tone: 'success', page: 'products', actionLabel: 'Ver produtos' });
@@ -737,7 +797,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         <StatCard label="Produtos" value={formatNumber(products.length)} detail="no catálogo" icon="produtos" tone="sky" />
         <StatCard label="Ativos" value={formatNumber(activeProducts)} detail="prontos para venda" icon="loja_ativa" tone="green" />
         <StatCard label="Estoque baixo" value={formatNumber(lowStock)} detail="precisam atenção" icon="auditoria_logs" tone="orange" />
-        <StatCard label="Valor em estoque" value={formatCurrency(stockValue)} detail={`${formatNumber(inactiveProducts)} inativo(s)`} icon="caixa" tone="purple" />
+        <StatCard label="Venda em estoque" value={formatCurrency(stockValue)} detail={`Custo: ${formatCurrency(stockCostValue)}`} icon="caixa" tone="purple" />
       </section>
 
       {lowStock ? (
@@ -853,6 +913,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
                   <div className="mapp-crud-meta">
                     <span>{product.internal_code || 'Sem código'}</span>
                     <span>{product.barcode || 'Sem barras'}</span>
+                    <span>Custo {formatCurrency(product.cost_price || 0)}</span>
                     <span>{productPhotoLabel(product.image_data)}</span>
                   </div>
                 </div>
