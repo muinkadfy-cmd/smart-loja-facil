@@ -7529,3 +7529,81 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     height: 72dvh;
   }
 }
+
+/* Mega Lote 168 - visualização interna do recibo padrão Jaque */
+.mapp-receipt-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #050505;
+  padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom);
+}
+
+.mapp-receipt-fullscreen-toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 64px;
+  padding: 8px 0;
+  color: #fff;
+}
+
+.mapp-receipt-fullscreen-toolbar > div {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.mapp-receipt-fullscreen-toolbar strong,
+.mapp-receipt-fullscreen-toolbar span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapp-receipt-fullscreen-toolbar strong {
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.mapp-receipt-fullscreen-toolbar span {
+  color: rgba(255,255,255,.7);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.mapp-receipt-fullscreen-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 18px 18px 0 0;
+  background: #050505;
+  box-shadow: 0 -10px 40px rgba(0,0,0,.35);
+}
+
+@media (max-width: 420px) {
+  .mapp-receipt-fullscreen {
+    padding-inline: 0;
+  }
+
+  .mapp-receipt-fullscreen-toolbar {
+    grid-template-columns: 76px minmax(0, 1fr) 76px;
+    padding-inline: 8px;
+  }
+
+  .mapp-receipt-fullscreen-toolbar .mapp-secondary-button,
+  .mapp-receipt-fullscreen-toolbar .mapp-primary-button {
+    min-height: 42px;
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+
+  .mapp-receipt-fullscreen-frame {
+    border-radius: 0;
+  }
+}

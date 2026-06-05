@@ -21,7 +21,7 @@ type ReceiptFilter = 'todos' | 'vendas' | 'crediario' | 'parcelas' | 'pedidos' |
 type ReceiptPreviewKind = 'salvo' | 'nota' | 'parcela';
 type ReceiptStoreInfo = Pick<Settings, 'store_name' | 'phone' | 'whatsapp' | 'receipt_message'> & { logo_url?: string };
 
-const DEFAULT_RECEIPT_LOGO_URL = '/brand/jaque-receipt-logo.png';
+const DEFAULT_RECEIPT_LOGO_URL = '/brand/jaque-receipt-logo-wide.png';
 
 type ReceiptView = ReceiptSummary & {
   source_kind?: ReceiptFilter;
@@ -63,7 +63,7 @@ const receiptFilters: Array<{ key: ReceiptFilter; label: string }> = [
 
 const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
 
-type ReceiptFocusPayload = { sale_number?: number; credit_id?: string; installment_number?: number; created_at?: number };
+type ReceiptFocusPayload = { sale_number?: number; credit_id?: string; created_at?: number };
 
 function receiptTitle(receipt: ReceiptView): string {
   if (receipt.source_kind === 'parcelas') return `Parcela ${receipt.installment_number || ''}/${receipt.installment_total || ''} · Venda #${String(receipt.sale_number || 0).padStart(4, '0')}`;
@@ -113,6 +113,161 @@ function escapeHtml(value: unknown): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function openHtmlDocument(html: string, fileStem: string): 'opened' | 'downloaded' {
+  const safeName = `${fileStem || 'comprovante'}.html`.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-');
+  const documentHtml = html || '<!doctype html><html lang="pt-BR"><body><p>Comprovante sem prévia HTML salva.</p></body></html>';
+  const blob = new Blob([documentHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const cleanup = () => window.setTimeout(() => URL.revokeObjectURL(url), 5 * 60 * 1000);
+
+  const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  if (popup) {
+    cleanup();
+    window.setTimeout(() => { try { popup.focus(); } catch { /* sem ação */ } }, 80);
+    return 'opened';
+  }
+
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.target = '_blank';
+  anchor.rel = 'noopener noreferrer';
+  anchor.download = safeName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  cleanup();
+  return 'downloaded';
+}
+
+function wrapPdfLines(text: string, max = 84): string[] {
+  const normalized = text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E\n]/g, ' ')
+    .replace(/[ 	]+/g, ' ')
+    .trim();
+  const lines: string[] = [];
+  for (const sourceLine of normalized.split(/\n+/)) {
+    let line = sourceLine.trim();
+    while (line.length > max) {
+      const cut = line.slice(0, max + 1).lastIndexOf(' ');
+      const index = cut > 24 ? cut : max;
+      lines.push(line.slice(0, index).trim());
+      line = line.slice(index).trim();
+    }
+    if (line) lines.push(line);
+  }
+  return lines.slice(0, 54);
+}
+
+function pdfEscape(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+const PDF_LOGO_JPEG_BASE64 = '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';
+const PDF_LOGO_SIZE = 96;
+
+function asciiBytes(value: string): Uint8Array {
+  const bytes = new Uint8Array(value.length);
+  for (let index = 0; index < value.length; index += 1) bytes[index] = value.charCodeAt(index) & 0xff;
+  return bytes;
+}
+
+function base64Bytes(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index) & 0xff;
+  return bytes;
+}
+
+function concatBytes(parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const output = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    output.set(part, offset);
+    offset += part.length;
+  }
+  return output;
+}
+
+function downloadPreviewPdf(preview: ReceiptPreview): string {
+  const title = `${preview.title} - ${preview.customer}`;
+  const bodyText = htmlToText(preview.html);
+  const lines = wrapPdfLines([
+    title,
+    `Status: ${preview.status}`,
+    `Total: ${formatCurrency(preview.total)}`,
+    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
+    '',
+    bodyText,
+  ].join('\n'), 88);
+  const contentLines = [
+    'q',
+    '58 0 0 58 48 748 cm',
+    '/Logo Do',
+    'Q',
+    'BT',
+    '/F1 18 Tf',
+    '118 798 Td',
+    `(${pdfEscape('Smart Loja Facil')}) Tj`,
+    '/F1 10 Tf',
+    '0 -16 Td',
+    `(${pdfEscape('Comprovante / extrato em PDF')}) Tj`,
+    'ET',
+    'BT',
+    '/F1 11 Tf',
+    '48 718 Td',
+    '14 TL',
+  ];
+  for (const line of lines) contentLines.push(`(${pdfEscape(line)}) Tj`, 'T*');
+  contentLines.push('ET');
+  const stream = contentLines.join('\n');
+  const streamBytes = asciiBytes(stream);
+  const logoBytes = base64Bytes(PDF_LOGO_JPEG_BASE64);
+  const objects: Uint8Array[][] = [
+    [asciiBytes('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n')],
+    [asciiBytes('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n')],
+    [asciiBytes('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> /XObject << /Logo 6 0 R >> >> /Contents 5 0 R >>\nendobj\n')],
+    [asciiBytes('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n')],
+    [asciiBytes(`5 0 obj\n<< /Length ${streamBytes.length} >>\nstream\n`), streamBytes, asciiBytes('\nendstream\nendobj\n')],
+    [
+      asciiBytes(`6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PDF_LOGO_SIZE} /Height ${PDF_LOGO_SIZE} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`),
+      logoBytes,
+      asciiBytes('\nendstream\nendobj\n'),
+    ],
+  ];
+  const parts: Uint8Array[] = [asciiBytes('%PDF-1.4\n% Smart Loja Facil\n')];
+  const offsets = [0];
+  let currentLength = parts[0].length;
+  for (const objectParts of objects) {
+    offsets.push(currentLength);
+    for (const objectPart of objectParts) {
+      parts.push(objectPart);
+      currentLength += objectPart.length;
+    }
+  }
+  const xrefAt = currentLength;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index <= objects.length; index += 1) xref += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
+  xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`;
+  parts.push(asciiBytes(xref));
+  const fileName = `${preview.fileStem || 'comprovante'}.pdf`.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-');
+  const pdfBytes = concatBytes(parts);
+  const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+  const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return fileName;
 }
 
 function readReceiptFocusPayload(): ReceiptFocusPayload | null {
@@ -216,7 +371,7 @@ function customerInitials(name: string): string {
 
 function normalizeReceiptStore(settings: Settings | null | undefined): ReceiptStoreInfo {
   const source = settings as (Settings & { logo_url?: string }) | null | undefined;
-  const name = source?.store_name?.trim() || 'Minha loja';
+  const name = source?.store_name?.trim() || 'Jaque Confecções e Presentes';
   return {
     store_name: name,
     phone: source?.phone?.trim() || '',
@@ -227,147 +382,91 @@ function normalizeReceiptStore(settings: Settings | null | undefined): ReceiptSt
 }
 
 function buildReceiptBrand(store: ReceiptStoreInfo): string {
-  const name = store.store_name || 'Jaque Confecções e Presentes';
-  const contact = store.whatsapp || store.phone || '(43) 99607-9372';
   const logoUrl = store.logo_url || DEFAULT_RECEIPT_LOGO_URL;
-  return `<div class="slf-paper-brand"><img class="slf-paper-logo" src="${escapeHtml(logoUrl)}" alt="Logo ${escapeHtml(name)}"><div class="slf-paper-store">${escapeHtml(name)}</div><div class="slf-paper-contact">☎ ${escapeHtml(contact)}</div></div>`;
+  return `<img class="slf-logo-img" src="${escapeHtml(logoUrl)}" alt="Logo Jaque Confecções e Presentes">`;
 }
 
-type PaperReceiptTone = 'paid' | 'partial' | 'pending' | 'overdue' | 'danger' | 'neutral';
-
-type PaperReceiptRow = {
-  qtd: string;
-  produto: string;
-  unit?: number | string;
-  total?: number | string;
-  tone?: PaperReceiptTone;
-};
-
-function formatReceiptCellMoney(value: number | string | undefined): string {
-  if (typeof value === 'number') return formatCurrency(value);
-  return value ? String(value) : '';
-}
-
-function buildPaperRows(rows: PaperReceiptRow[], minRows = 7): string {
-  const normalizedRows = rows.length ? rows : [{ qtd: '1', produto: 'Registro sem itens detalhados', total: '' }];
-  const filledRows = [...normalizedRows];
-  while (filledRows.length < minRows) filledRows.push({ qtd: '', produto: '', unit: '', total: '' });
-  return filledRows.map((row, index) => {
-    const emptyClass = row.qtd || row.produto || row.unit || row.total ? '' : ' empty';
-    const toneClass = row.tone ? ` status-${row.tone}` : '';
-    return `<tr class="${emptyClass}"><td data-label="Qtd.">${escapeHtml(row.qtd)}</td><td data-label="Produto" class="${toneClass}">${escapeHtml(row.produto)}</td><td class="num" data-label="R$ un">${escapeHtml(formatReceiptCellMoney(row.unit))}</td><td class="num" data-label="Total">${escapeHtml(formatReceiptCellMoney(row.total))}</td></tr>`;
-  }).join('');
-}
-
-function receiptToneLabel(tone: PaperReceiptTone): string {
-  if (tone === 'paid') return 'PAGO';
-  if (tone === 'partial') return 'PARCIAL';
-  if (tone === 'overdue' || tone === 'danger') return 'ATRASADO';
-  if (tone === 'pending') return 'ABERTO';
-  return 'RECIBO';
-}
-
-function buildPaymentOptions(method?: string): string {
-  const normalized = String(method || '').toLowerCase();
-  const isPix = normalized.includes('pix');
-  const isCash = normalized.includes('dinheiro');
-  const isCredit = normalized.includes('credito') || normalized.includes('crédito') || normalized.includes('cartao') || normalized.includes('cartão');
-  const isDebit = normalized.includes('debito') || normalized.includes('débito');
-  const item = (label: string, selected: boolean) => `<span class="${selected ? 'selected' : ''}">♥ ${escapeHtml(label)}</span>`;
-  return `<div class="slf-paper-payment-options">${item('Pix', isPix)}${item('Dinheiro', isCash)}${item('Crédito', isCredit)}${item('Débito', isDebit)}</div>`;
-}
-
-function buildStatusStamp(tone: PaperReceiptTone, label: string, date?: string): string {
-  const finalLabel = label || receiptToneLabel(tone);
-  if (tone === 'paid') {
-    return `<div class="slf-paid-stamp"><strong>${escapeHtml(finalLabel.toUpperCase())}</strong>${date ? `<span>${escapeHtml(date)}</span>` : ''}</div>`;
+function formatReceiptContact(store: ReceiptStoreInfo): string {
+  const primary = store.whatsapp || store.phone || '';
+  const digits = primary.replace(/\D/g, '');
+  if (digits.length >= 10) {
+    const local = digits.startsWith('55') ? digits.slice(2) : digits;
+    if (local.length >= 10) return `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7, 11)}`;
   }
-  return `<div class="slf-status-ribbon ${tone}">${escapeHtml(finalLabel.toUpperCase())}${date ? ` · ${escapeHtml(date)}` : ''}</div>`;
+  return primary || '(43) 99607-9372';
 }
 
-function buildPaperReceiptHtml(options: {
-  store: ReceiptStoreInfo;
-  title: string;
-  statusLabel: string;
-  tone: PaperReceiptTone;
-  customer: string;
-  phone?: string;
-  address?: string;
-  rows: PaperReceiptRow[];
-  paymentMethod?: string;
-  total: number;
-  notes: string;
-  stampDate?: string;
-}): string {
-  const contact = options.phone || '-';
-  const address = options.address || '-';
-  const statusStamp = buildStatusStamp(options.tone, options.statusLabel, options.stampDate);
-  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(options.title)}</title>${buildReceiptStyles()}</head><body>
-    <main class="slf-paper-shell" aria-label="${escapeHtml(options.title)}">
-      <section class="slf-paper-receipt tone-${options.tone}">
-        <div class="slf-paper-cut"></div>
-        <header class="slf-paper-top">
-          ${buildReceiptBrand(options.store)}
-          <h1>${escapeHtml(options.title)}</h1>
-        </header>
-        <section class="slf-paper-fields" aria-label="Dados do cliente">
-          <div><span>Cliente:</span><strong>${escapeHtml(options.customer || 'Cliente')}</strong></div>
-          <div><span>Fone:</span><strong>${escapeHtml(contact)}</strong></div>
-          <div><span>Endereço:</span><strong>${escapeHtml(address)}</strong></div>
-        </section>
-        <div class="slf-paper-table-wrap">
-          <table class="slf-paper-table" aria-label="Itens do recibo">
-            <thead><tr><th>Qtd.</th><th>Produto</th><th>R$ un</th><th>Total</th></tr></thead>
-            <tbody>${buildPaperRows(options.rows)}</tbody>
-          </table>
-          ${statusStamp}
-        </div>
-        <section class="slf-paper-pay-total">
-          <div class="slf-paper-pay"><strong>Pagamento</strong>${buildPaymentOptions(options.paymentMethod)}</div>
-          <div class="slf-paper-total"><span>Total</span><strong>${formatCurrency(options.total)}</strong></div>
-        </section>
-        <section class="slf-paper-notes"><strong>Anotações</strong><p>${escapeHtml(options.notes)}</p></section>
-      </section>
-    </main>
-  </body></html>`;
+function receiptStoreName(store: ReceiptStoreInfo): string {
+  return (store.store_name || 'Jaque Confecções e Presentes').replace(/\s+/g, ' ').trim();
+}
+
+function receiptStatusStamp(status: string, tone: ReceiptVisualTone, dateLabel?: string): string {
+  if (tone !== 'paid') return '';
+  return `<div class="slf-paid-stamp"><strong>PAGO</strong>${dateLabel ? `<span>${escapeHtml(dateLabel)}</span>` : ''}</div>`;
+}
+
+function receiptStatusToken(label: string, tone: ReceiptVisualTone): string {
+  const icon = tone === 'paid' ? '✓' : tone === 'partial' ? '◔' : tone === 'overdue' || tone === 'danger' ? '!' : '⌛';
+  return `<span class="slf-status-token ${tone}"><b>${icon}</b>${escapeHtml(label.toUpperCase())}</span>`;
+}
+
+function buildPaymentRow(method: string): string {
+  const normalized = method.toLowerCase();
+  const options = [
+    ['pix', 'Pix'],
+    ['dinheiro', 'Dinheiro'],
+    ['credito', 'Crédito'],
+    ['debito', 'Débito'],
+  ];
+  return `<div class="slf-payment-row">${options.map(([key, label]) => {
+    const active = normalized.includes(key) || (key === 'credito' && normalized.includes('cart')) || (key === 'debito' && normalized.includes('cart'));
+    return `<span class="${active ? 'active' : ''}">♥ ${label}</span>`;
+  }).join('')}</div>`;
+}
+
+function receiptTitleForInstallment(status: string, tone: ReceiptVisualTone): string {
+  if (tone === 'paid') return 'COMPROVANTE DE PAGAMENTO';
+  if (tone === 'partial') return 'COMPROVANTE PARCIAL';
+  if (tone === 'overdue' || tone === 'danger') return 'PARCELA ATRASADA';
+  return 'PARCELA EM ABERTO';
 }
 
 function buildReceiptStyles(): string {
   return `
     <style>
       *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      :root{color-scheme:light;--pink:#e94183;--pink-dark:#b7195e;--pink-soft:#ffe5ef;--rose:#f7a6be;--gold:#f4b13d;--gold-soft:#fff2ce;--ink:#111827;--muted:#596579;--line:#1f2937}
-      html,body{margin:0;min-height:100%;background:#f8fafc;color:var(--ink);font-family:Arial,Helvetica,sans-serif;overflow-x:hidden}
-      body{padding:clamp(10px,3vw,22px)}
-      .slf-paper-shell{width:100%;display:flex;justify-content:center;align-items:flex-start}
-      .slf-paper-receipt{position:relative;width:min(100%,430px);background:#fff;border:2px solid #202020;border-radius:3px;padding:16px 14px 14px;box-shadow:0 18px 42px rgba(15,23,42,.16);overflow:hidden}
-      .slf-paper-cut{position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--pink),var(--rose),var(--gold))}
-      .slf-paper-top{display:grid;gap:4px;justify-items:center;text-align:center;margin-bottom:8px;position:relative;min-height:82px}
-      .slf-paper-brand{display:grid;justify-items:center;gap:2px;min-width:0;width:100%}
-      .slf-paper-logo{display:block;max-width:188px;width:54%;height:64px;object-fit:contain;object-position:center;filter:drop-shadow(0 3px 5px rgba(185,25,94,.16))}
-      .slf-paper-store{font-size:10px;line-height:1.1;font-weight:950;color:var(--pink-dark);letter-spacing:.02em;text-transform:uppercase;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .slf-paper-contact{position:absolute;right:2px;top:26px;font-size:11px;font-weight:900;color:#111827;white-space:nowrap;background:#fff;border-radius:999px;padding:2px 0 2px 6px}
-      .slf-paper-top h1{margin:2px 0 0;font-size:14px;letter-spacing:.055em;text-transform:uppercase;color:#111827;font-weight:950;border-top:1px dashed #cbd5e1;padding-top:7px;width:100%}
-      .slf-paper-fields{display:grid;gap:3px;margin:5px 0 6px}
-      .slf-paper-fields div{min-height:26px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;border:2px solid #2b2b2b;background:#fff}
-      .slf-paper-fields span{align-self:stretch;display:inline-flex;align-items:center;margin:2px 5px 2px 3px;border-radius:999px;background:linear-gradient(135deg,#ff9db3,#f06c96);color:#531024;padding:3px 7px;font-size:12px;font-weight:900}
-      .slf-paper-fields strong{min-width:0;padding:2px 6px;font-size:14px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1d2a44}
-      .slf-paper-table-wrap{position:relative;min-width:0}
-      .slf-paper-table{width:100%;border-collapse:collapse;table-layout:fixed;border:2px solid #202020;font-size:12px}
-      .slf-paper-table th{background:linear-gradient(180deg,#f4879f,#e36687);color:#28121b;border:2px solid #202020;padding:6px 4px;text-align:center;font-size:13px;font-weight:900}
-      .slf-paper-table th:nth-child(1){width:42px}.slf-paper-table th:nth-child(3){width:58px}.slf-paper-table th:nth-child(4){width:68px}
-      .slf-paper-table td{height:31px;border:2px solid #202020;padding:4px 5px;vertical-align:middle;color:#13213b;background:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .slf-paper-table td:nth-child(1){text-align:center;font-weight:900}.slf-paper-table .num{text-align:right;font-weight:900;white-space:nowrap}.slf-paper-table tr.empty td{color:transparent}
-      .status-paid{color:#111!important;font-weight:950}.status-partial{color:#b45309!important;font-weight:950}.status-pending{color:#1d4ed8!important;font-weight:950}.status-overdue,.status-danger{color:#b91c1c!important;font-weight:950}
-      .slf-paid-stamp{position:absolute;right:54px;top:46%;transform:rotate(-4deg);display:grid;justify-items:center;gap:1px;min-width:112px;border:4px solid rgba(17,17,17,.92);border-radius:8px;padding:6px 10px;background:rgba(255,255,255,.72);box-shadow:inset 0 0 0 2px rgba(17,17,17,.12);color:#111;text-align:center;z-index:2;mix-blend-mode:multiply}
-      .slf-paid-stamp strong{font-size:27px;letter-spacing:.08em;line-height:1;font-weight:950}.slf-paid-stamp span{font-size:11px;font-weight:950;letter-spacing:.02em}.slf-status-ribbon{position:absolute;right:8px;top:8px;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:950;z-index:2;border:1px solid #cbd5e1;background:#f8fafc}.slf-status-ribbon.partial{background:#fff7ed;color:#b45309;border-color:#fed7aa}.slf-status-ribbon.pending{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.slf-status-ribbon.overdue,.slf-status-ribbon.danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
-      .slf-paper-pay-total{display:grid;grid-template-columns:minmax(0,1fr) 112px;border-left:2px solid #202020;border-right:2px solid #202020;border-bottom:2px solid #202020}
-      .slf-paper-pay,.slf-paper-total{min-height:54px;display:grid;align-content:center;border-right:2px solid #202020}.slf-paper-total{border-right:0;text-align:center}.slf-paper-pay>strong,.slf-paper-total>span{display:block;background:linear-gradient(180deg,#f4879f,#e36687);border-bottom:2px solid #202020;padding:5px 6px;text-align:center;color:#28121b;font-size:15px;line-height:1;font-weight:900}.slf-paper-payment-options{display:flex;align-items:center;justify-content:space-around;gap:4px;min-height:29px;padding:4px 5px;font-size:10px;font-weight:850;color:#1f2937;white-space:nowrap}.slf-paper-payment-options span{display:inline-flex;align-items:center;gap:2px;color:#ef7897}.slf-paper-payment-options span.selected{color:#111;font-weight:950;text-decoration:underline;text-decoration-color:var(--pink);text-decoration-thickness:2px}.slf-paper-total strong{display:flex;align-items:center;justify-content:center;min-height:29px;padding:2px 4px;font-size:24px;color:#1d2a44;font-weight:950;letter-spacing:-.04em}
-      .slf-paper-notes{border:2px solid #202020;border-top:0;min-height:64px;text-align:center}.slf-paper-notes strong{display:block;padding:5px 6px;font-size:15px;font-weight:500;border-bottom:1px solid #202020}.slf-paper-notes p{margin:0;padding:8px 10px;font-size:13px;line-height:1.35;color:#1d2a44;text-align:left;font-weight:800;white-space:pre-wrap}
-      .tone-paid .slf-paper-receipt,.slf-paper-receipt.tone-paid{border-color:#111}.tone-partial .slf-paper-cut{background:linear-gradient(90deg,#f59e0b,#f97316)}.tone-overdue .slf-paper-cut,.tone-danger .slf-paper-cut{background:linear-gradient(90deg,#ef4444,#b91c1c)}.tone-pending .slf-paper-cut{background:linear-gradient(90deg,#2563eb,#93c5fd)}
-      @media (max-width:520px){body{padding:0;background:#eef4fb}.slf-paper-receipt{width:100%;max-width:100%;min-height:100dvh;border-left:0;border-right:0;border-radius:0;padding:14px 12px 18px;box-shadow:none}.slf-paper-top{min-height:76px}.slf-paper-logo{height:58px;width:58%;max-width:176px}.slf-paper-contact{top:22px;font-size:10px}.slf-paper-top h1{font-size:13px}.slf-paper-fields span{font-size:11px;padding-inline:6px}.slf-paper-fields strong{font-size:13px}.slf-paper-table{font-size:11px}.slf-paper-table th{font-size:12px;padding:5px 3px}.slf-paper-table th:nth-child(1){width:38px}.slf-paper-table th:nth-child(3){width:54px}.slf-paper-table th:nth-child(4){width:64px}.slf-paper-table td{height:30px;padding:3px 4px}.slf-paid-stamp{right:32px;top:43%;min-width:98px;padding:5px 8px}.slf-paid-stamp strong{font-size:23px}.slf-paper-pay-total{grid-template-columns:minmax(0,1fr) 105px}.slf-paper-payment-options{font-size:9px}.slf-paper-total strong{font-size:22px}.slf-paper-notes p{font-size:12px}}
-      @media print{body{padding:0;background:#fff}.slf-paper-shell{display:block}.slf-paper-receipt{width:104mm;max-width:104mm;min-height:144mm;border-radius:0;box-shadow:none;margin:0 auto;page-break-inside:avoid}.slf-paper-logo{height:24mm;max-width:52mm}.slf-paper-top{min-height:30mm}.slf-paper-contact{top:10mm}.slf-paper-table td{height:8.5mm}.slf-paper-notes{min-height:18mm}}
+      :root{color-scheme:light;--ink:#050505;--paper:#fff;--line:#111;--muted:#4b5563;--pink:#f04f7d;--pink-dark:#c01655;--gold:#f5b23b;--green:#058344;--orange:#b85c00;--blue:#174ea6;--red:#b91c1c}
+      body{margin:0;background:#050505;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Courier New',monospace;min-height:100vh;overflow-x:hidden;padding:12px}
+      .slf-mode-tip{display:none}
+      .slf-app-shell{width:min(760px,100%);margin:0 auto;padding-bottom:18px}
+      .slf-appbar{height:58px;display:grid;grid-template-columns:56px 1fr 112px;gap:10px;align-items:center;color:#fff;margin-bottom:10px}
+      .slf-appbar-btn{width:52px;height:52px;border:1px solid rgba(255,255,255,.34);border-radius:14px;display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.03)}
+      .slf-appbar-title{text-align:center;font-size:clamp(16px,4vw,26px);font-weight:950;letter-spacing:.1em;line-height:1.05;text-transform:uppercase;white-space:normal}.slf-appbar-actions{display:flex;gap:8px;justify-content:end}
+      .slf-receipt{position:relative;background:var(--paper);border:2px solid var(--line);border-radius:0;padding:clamp(14px,3.5vw,30px);box-shadow:0 18px 48px rgba(0,0,0,.24);overflow:hidden;clip-path:polygon(0 12px,1.5% 0,3% 12px,4.5% 0,6% 12px,7.5% 0,9% 12px,10.5% 0,12% 12px,13.5% 0,15% 12px,16.5% 0,18% 12px,19.5% 0,21% 12px,22.5% 0,24% 12px,25.5% 0,27% 12px,28.5% 0,30% 12px,31.5% 0,33% 12px,34.5% 0,36% 12px,37.5% 0,39% 12px,40.5% 0,42% 12px,43.5% 0,45% 12px,46.5% 0,48% 12px,49.5% 0,51% 12px,52.5% 0,54% 12px,55.5% 0,57% 12px,58.5% 0,60% 12px,61.5% 0,63% 12px,64.5% 0,66% 12px,67.5% 0,69% 12px,70.5% 0,72% 12px,73.5% 0,75% 12px,76.5% 0,78% 12px,79.5% 0,81% 12px,82.5% 0,84% 12px,85.5% 0,87% 12px,88.5% 0,90% 12px,91.5% 0,93% 12px,94.5% 0,96% 12px,97.5% 0,100% 12px,100% calc(100% - 12px),97.5% 100%,96% calc(100% - 12px),94.5% 100%,93% calc(100% - 12px),91.5% 100%,90% calc(100% - 12px),88.5% 100%,87% calc(100% - 12px),85.5% 100%,84% calc(100% - 12px),82.5% 100%,81% calc(100% - 12px),79.5% 100%,78% calc(100% - 12px),76.5% 100%,75% calc(100% - 12px),73.5% 100%,72% calc(100% - 12px),70.5% 100%,69% calc(100% - 12px),67.5% 100%,66% calc(100% - 12px),64.5% 100%,63% calc(100% - 12px),61.5% 100%,60% calc(100% - 12px),58.5% 100%,57% calc(100% - 12px),55.5% 100%,54% calc(100% - 12px),52.5% 100%,51% calc(100% - 12px),49.5% 100%,48% calc(100% - 12px),46.5% 100%,45% calc(100% - 12px),43.5% 100%,42% calc(100% - 12px),40.5% 100%,39% calc(100% - 12px),37.5% 100%,36% calc(100% - 12px),34.5% 100%,33% calc(100% - 12px),31.5% 100%,30% calc(100% - 12px),28.5% 100%,27% calc(100% - 12px),25.5% 100%,24% calc(100% - 12px),22.5% 100%,21% calc(100% - 12px),19.5% 100%,18% calc(100% - 12px),16.5% 100%,15% calc(100% - 12px),13.5% 100%,12% calc(100% - 12px),10.5% 100%,9% calc(100% - 12px),7.5% 100%,6% calc(100% - 12px),4.5% 100%,3% calc(100% - 12px),1.5% 100%,0 calc(100% - 12px))}
+      .slf-head{display:grid;grid-template-columns:minmax(150px,35%) 1fr;gap:18px;align-items:center;border:0;margin:0 0 14px;padding-top:16px}.slf-logo-img{display:block;width:min(210px,100%);max-height:128px;object-fit:contain;margin-inline:auto}.slf-doc-title{min-width:0}.slf-doc-title h1{font-size:clamp(30px,7.4vw,64px);line-height:1.05;margin:0;text-transform:uppercase;letter-spacing:.07em;font-weight:950}.slf-doc-title p{font-size:clamp(12px,2.5vw,18px);margin:8px 0 0;border-top:2px dashed var(--line);padding-top:8px;color:#111;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.slf-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:950;border:2px solid var(--line);background:#fff;color:#111;text-transform:uppercase}.slf-badge.paid{background:#050505;color:#fff}.slf-badge.partial{border-color:var(--orange);color:var(--orange);background:#fff9ed}.slf-badge.pending{border-color:var(--blue);color:var(--blue);background:#eff6ff}.slf-badge.overdue,.slf-badge.danger{border-color:var(--red);color:var(--red);background:#fff1f2}.slf-badge.neutral{background:#fff;color:#111}
+      .slf-customer-box{border:2px solid var(--line);border-radius:10px;margin:12px 0 14px;padding:10px 14px}.slf-customer-row{display:grid;grid-template-columns:42px 120px 1fr;align-items:center;gap:12px;padding:10px 0;border-bottom:1.5px dashed #777}.slf-customer-row:last-child{border-bottom:0}.slf-customer-icon{width:34px;height:34px;border-radius:999px;background:#050505;color:#fff;display:grid;place-items:center;font-family:Arial,sans-serif;font-size:17px}.slf-customer-label{font-weight:950;text-transform:uppercase;font-size:15px;letter-spacing:.04em}.slf-customer-value{font-size:clamp(16px,3vw,24px);font-weight:950;overflow-wrap:anywhere}
+      .slf-table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0 14px;border:2px solid var(--line);border-radius:10px;overflow:hidden;font-size:clamp(12px,2.2vw,16px)}.slf-table th{background:#050505;color:#fff;text-align:center;font-weight:950;letter-spacing:.07em;text-transform:uppercase;padding:12px 8px;border-right:1px dashed #555}.slf-table th:last-child{border-right:0}.slf-table td{padding:12px 8px;border-top:1px dashed #aaa;border-right:1px dashed #aaa;vertical-align:middle;text-align:center}.slf-table td:last-child{border-right:0}.slf-table .num{text-align:right;white-space:nowrap}.slf-table .left{text-align:left}.slf-status-token{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--line);border-radius:7px;padding:6px 10px;min-width:112px;font-weight:950;background:#fff;color:#111}.slf-status-token b{width:22px;height:22px;border-radius:999px;display:grid;place-items:center;background:#050505;color:#fff;font-family:Arial,sans-serif;font-size:14px}.slf-status-token.paid{background:#050505;color:#fff}.slf-status-token.paid b{background:#fff;color:#050505}.slf-status-token.partial{border-color:var(--orange);color:var(--orange)}.slf-status-token.pending{border-color:#111;color:#111}.slf-status-token.overdue,.slf-status-token.danger{border-color:var(--red);color:var(--red);background:#fff1f2}
+      .slf-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 14px}.slf-summary-card{border:2px solid var(--line);border-radius:10px;min-height:118px;text-align:center;padding:14px 10px;display:grid;align-content:center;gap:9px}.slf-summary-card .icon{width:44px;height:44px;margin:0 auto;border-radius:999px;background:#050505;color:#fff;display:grid;place-items:center;font-family:Arial,sans-serif;font-size:20px}.slf-summary-card span{font-weight:950;text-transform:uppercase;letter-spacing:.06em}.slf-summary-card strong{font-size:clamp(24px,5vw,38px);line-height:1;white-space:nowrap}.slf-payment{border:2px solid var(--line);border-radius:8px;margin:12px 0 0;overflow:hidden}.slf-payment-head{display:grid;grid-template-columns:1fr 170px;background:#050505;color:#fff;text-align:center;font-weight:950;font-size:17px;text-transform:uppercase}.slf-payment-head span{padding:10px;border-right:1px solid #fff}.slf-payment-head span:last-child{border-right:0}.slf-payment-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:12px;font-family:Arial,sans-serif;color:#111}.slf-payment-row span{font-weight:700;color:#333}.slf-payment-row span.active{color:var(--pink-dark);font-weight:950}.slf-payment-total{font-size:clamp(28px,5vw,44px);font-weight:950;padding:10px;text-align:center;border-left:2px solid var(--line)}
+      .slf-note{border:2px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0 0;background:#fff}.slf-note-title{background:#050505;color:#fff;padding:10px 14px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;font-size:17px}.slf-note ul{margin:0;padding:14px 18px 14px 30px;line-height:1.55;font-size:clamp(12px,2.1vw,16px)}.slf-note.ok .slf-note-title{background:#050505}.slf-note.danger .slf-note-title{background:#7f1d1d}.slf-note.warn .slf-note-title{background:#92400e}.slf-paid-stamp{position:absolute;right:8%;top:42%;transform:rotate(-4deg);border:4px solid #050505;color:#050505;border-radius:10px;padding:8px 22px;text-align:center;opacity:.82;font-weight:950;letter-spacing:.08em;font-size:clamp(26px,6vw,54px);line-height:.9;z-index:2;pointer-events:none}.slf-paid-stamp span{display:block;font-size:clamp(10px,2vw,16px);margin-top:8px}.slf-footer{margin-top:14px;text-align:center;color:#111;font-weight:900;font-size:12px}.slf-print-tip{margin-top:10px;border:2px dashed #111;border-radius:10px;padding:10px;text-align:center;font-size:12px;color:#111;background:#fff}
+      @media (max-width:720px){body{padding:0;background:#050505}.slf-app-shell{width:100%;padding:0 8px 10px}.slf-appbar{height:54px;grid-template-columns:48px 1fr 96px;margin-bottom:4px}.slf-appbar-btn{width:44px;height:44px;border-radius:12px;font-size:21px}.slf-appbar-title{font-size:15px;letter-spacing:.06em}.slf-receipt{padding:12px 10px}.slf-head{grid-template-columns:36% 1fr;gap:10px;padding-top:14px}.slf-logo-img{max-height:94px}.slf-doc-title h1{font-size:clamp(25px,8vw,34px);letter-spacing:.04em}.slf-doc-title p{font-size:11px}.slf-customer-box{padding:8px 10px}.slf-customer-row{grid-template-columns:32px 76px 1fr;gap:8px;padding:8px 0}.slf-customer-icon{width:28px;height:28px;font-size:14px}.slf-customer-label{font-size:11px}.slf-customer-value{font-size:14px}.slf-table{font-size:11px}.slf-table th,.slf-table td{padding:8px 4px}.slf-status-token{min-width:76px;padding:5px 6px;font-size:10px;gap:4px}.slf-status-token b{width:18px;height:18px;font-size:11px}.slf-summary-grid{grid-template-columns:1fr;gap:8px}.slf-summary-card{min-height:84px;display:grid;grid-template-columns:42px 1fr;align-items:center;text-align:left;padding:10px}.slf-summary-card .icon{margin:0;width:36px;height:36px}.slf-summary-card strong{font-size:24px}.slf-payment-head{grid-template-columns:1fr 120px;font-size:14px}.slf-payment-row{font-size:12px;gap:8px}.slf-payment-total{font-size:26px}.slf-note ul{font-size:12px;padding:12px 12px 12px 25px}.slf-paid-stamp{right:6%;top:46%;font-size:30px;padding:7px 15px}}
+      @media print{body{background:#fff;padding:0}.slf-appbar,.slf-mode-tip,.slf-print-tip{display:none!important}.slf-app-shell{width:100%;padding:0}.slf-receipt{box-shadow:none;border:1px solid #111;width:100%;max-width:100%;clip-path:none;page-break-inside:avoid}.slf-paid-stamp{opacity:.75}}
     </style>`;
+}
+
+function buildReceiptDocument(store: ReceiptStoreInfo, title: string, subtitle: string, createdAt: string, status: string, tone: ReceiptVisualTone, body: string, stampDate?: string): string {
+  const storeName = receiptStoreName(store);
+  const contact = formatReceiptContact(store);
+  const generatedAt = createdAt ? formatDateTime(createdAt) : new Date().toLocaleString('pt-BR');
+  const appTitle = storeName.toUpperCase().replace(/\s+E\s+/, ' E ');
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title>${buildReceiptStyles()}</head><body><div class="slf-app-shell"><div class="slf-appbar"><div class="slf-appbar-btn">☰</div><strong class="slf-appbar-title">${escapeHtml(appTitle)}</strong><div class="slf-appbar-actions"><div class="slf-appbar-btn">↻</div><div class="slf-appbar-btn">♢</div></div></div><main class="slf-receipt">${receiptStatusStamp(status, tone, stampDate)}<header class="slf-head"><div>${buildReceiptBrand(store)}</div><div class="slf-doc-title"><h1>${escapeHtml(title)}</h1><p>▣ ${escapeHtml(generatedAt)} · WhatsApp ${escapeHtml(contact)}</p><span class="slf-badge ${tone}">${escapeHtml(status.toUpperCase())}</span></div></header>${body}<footer class="slf-footer">${escapeHtml(store.receipt_message || 'Obrigado pela preferência.')} · Smart Loja Fácil</footer><div class="slf-print-tip">Visualização interna do app. Use PDF para baixar arquivo ou Enviar para compartilhar.</div></main></div></body></html>`;
+}
+
+function buildCustomerBox(name: string, phone: string, address = '-'): string {
+  return `<section class="slf-customer-box"><div class="slf-customer-row"><span class="slf-customer-icon">●</span><span class="slf-customer-label">Cliente</span><strong class="slf-customer-value">${escapeHtml(name || 'Cliente')}</strong></div><div class="slf-customer-row"><span class="slf-customer-icon">☎</span><span class="slf-customer-label">Telefone</span><strong class="slf-customer-value">${escapeHtml(phone || '-')}</strong></div><div class="slf-customer-row"><span class="slf-customer-icon">◆</span><span class="slf-customer-label">Endereço</span><strong class="slf-customer-value">${escapeHtml(address || '-')}</strong></div></section>`;
+}
+
+function buildSummaryCards(cards: Array<{ icon: string; label: string; value: string }>): string {
+  return `<section class="slf-summary-grid">${cards.map((card) => `<div class="slf-summary-card"><span class="icon">${escapeHtml(card.icon)}</span><span>${escapeHtml(card.label)}</span><strong>${escapeHtml(card.value)}</strong></div>`).join('')}</section>`;
 }
 
 function dueDateHint(installment: CreditInstallment): string {
@@ -380,45 +479,32 @@ function dueDateHint(installment: CreditInstallment): string {
 
 function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary, installment: CreditInstallment): string {
   const paid = paidOf(installment);
+  const rest = remainingOf(installment);
   const status = installmentStatusLabel(installment);
   const tone = receiptStatusTone(status);
-  const method = installment.payment_method ? creditPaymentMethodLabel(String(installment.payment_method)) : '';
+  const paidDate = installment.paid_at ? formatDateTime(installment.paid_at) : '';
+  const method = installment.payment_method ? creditPaymentMethodLabel(String(installment.payment_method)) : 'Não informado';
+  const title = receiptTitleForInstallment(status, tone);
   const dueHint = dueDateHint(installment);
-  const paidDate = installment.paid_at ? dateOnly(String(installment.paid_at).slice(0, 10)) : '';
-  const displayTotal = tone === 'paid' || tone === 'partial' ? Math.max(paid, 0) : Number(installment.amount || 0);
-  const title = tone === 'paid'
-    ? 'COMPROVANTE DE PAGAMENTO'
-    : tone === 'partial'
-      ? 'COMPROVANTE PARCIAL'
-      : tone === 'overdue'
-        ? 'AVISO DE PARCELA ATRASADA'
-        : 'RECIBO DE CREDIÁRIO';
-  const notes = tone === 'paid'
-    ? `Parcela ${installment.number}/${credit.installments.length} paga em ${paidDate || 'data não informada'}. Forma: ${method || 'não informada'}. Venda #${String(credit.sale_number || 0).padStart(4, '0')}.`
-    : tone === 'partial'
-      ? `Parcela ${installment.number}/${credit.installments.length} com pagamento parcial. Valor da parcela: ${formatCurrency(installment.amount)}. Pago até agora: ${formatCurrency(paid)}. Vencimento: ${dateOnly(installment.due_date)}.`
-      : tone === 'overdue'
-        ? `Parcela ${installment.number}/${credit.installments.length} atrasada. Vencimento: ${dateOnly(installment.due_date)}${dueHint ? ` (${dueHint})` : ''}. Venda #${String(credit.sale_number || 0).padStart(4, '0')}.`
-        : `Parcela ${installment.number}/${credit.installments.length} em aberto. Vencimento: ${dateOnly(installment.due_date)}. Venda #${String(credit.sale_number || 0).padStart(4, '0')}.`;
-  return buildPaperReceiptHtml({
-    store,
-    title,
-    statusLabel: tone === 'paid' ? 'PAGO' : status,
-    tone,
-    customer: credit.customer_name || 'Cliente',
-    phone: credit.customer_whatsapp || credit.customer_phone || '',
-    rows: [{
-      qtd: '1',
-      produto: `Parcela ${installment.number}/${credit.installments.length} · Nota #${String(credit.sale_number || 0).padStart(4, '0')} · vence ${dateOnly(installment.due_date)}`,
-      unit: installment.amount,
-      total: displayTotal,
-      tone,
-    }],
-    paymentMethod: method,
-    total: displayTotal,
-    notes,
-    stampDate: tone === 'paid' ? `PAGO EM ${paidDate || new Date().toLocaleDateString('pt-BR')}` : undefined,
-  });
+  const noteTone = tone === 'paid' ? 'ok' : tone === 'overdue' || tone === 'danger' ? 'danger' : tone === 'partial' ? 'warn' : '';
+  const body = `
+    ${buildCustomerBox(credit.customer_name || 'Cliente', credit.customer_whatsapp || credit.customer_phone || '-')}
+    <table class="slf-table" aria-label="Resumo da parcela"><thead><tr><th>Parcela</th><th>Vencimento</th><th class="num">Valor</th><th>Status</th></tr></thead><tbody>
+      <tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td>${receiptStatusToken(status, tone)}</td></tr>
+    </tbody></table>
+    ${buildSummaryCards([
+      { icon: '▣', label: 'Valor da parcela', value: formatCurrency(installment.amount) },
+      { icon: '◉', label: tone === 'paid' ? 'Pago em' : 'Total pago', value: tone === 'paid' && paidDate ? dateOnly(installment.paid_at || '') : formatCurrency(paid) },
+      { icon: '$', label: 'Situação', value: status },
+    ])}
+    <section class="slf-payment"><div class="slf-payment-head"><span>Pagamento</span><span>Total</span></div><div style="display:grid;grid-template-columns:1fr 170px;align-items:stretch">${buildPaymentRow(method)}<div class="slf-payment-total">${formatCurrency(tone === 'paid' ? paid : installment.amount)}</div></div></section>
+    <section class="slf-note ${noteTone}"><div class="slf-note-title">Anotações</div><ul>
+      <li>Venda/nota #${String(credit.sale_number || 0).padStart(4, '0')} · Parcela ${installment.number}/${credit.installments.length}.</li>
+      <li>Vencimento: ${escapeHtml(dateOnly(installment.due_date))}${dueHint ? ` · ${escapeHtml(dueHint)}` : ''}.</li>
+      <li>Status: ${escapeHtml(status)}${tone === 'paid' && paidDate ? ` em ${escapeHtml(paidDate)}` : ''}.</li>
+      ${rest > 0.009 ? `<li>Valor ainda a acompanhar no crediário: ${formatCurrency(rest)}.</li>` : '<li>Parcela quitada sem saldo pendente.</li>'}
+    </ul></section>`;
+  return buildReceiptDocument(store, title, `Parcela ${installment.number}/${credit.installments.length}`, installment.paid_at || installment.due_date || credit.created_at, status, tone, body, tone === 'paid' && paidDate ? paidDate : undefined);
 }
 
 function savedReceiptHtmlBody(html: string): string {
@@ -430,70 +516,53 @@ function savedReceiptHtmlBody(html: string): string {
 function buildSavedReceiptHtml(store: ReceiptStoreInfo, receipt: ReceiptView): string {
   const status = receiptStatusLabel(receipt.status);
   const tone = receiptStatusTone(status);
-  const bodyText = htmlToText(receipt.content || '').slice(0, 240);
-  const title = receipt.source_kind === 'crediario' || receipt.source_kind === 'parcelas'
-    ? 'COMPROVANTE DE CREDIÁRIO'
-    : 'COMPROVANTE DE VENDA';
-  const notes = [
-    `Venda/nota #${String(receipt.sale_number || 0).padStart(4, '0')} · emitido em ${formatDateTime(receipt.created_at)}.`,
-    bodyText ? `Detalhes salvos: ${bodyText}` : '',
-  ].filter(Boolean).join('\n');
-  return buildPaperReceiptHtml({
-    store,
-    title,
-    statusLabel: status,
-    tone,
-    customer: receipt.customer_name || 'Consumidor',
-    phone: receipt.customer_whatsapp || '',
-    rows: [{ qtd: '1', produto: `Venda/nota #${String(receipt.sale_number || 0).padStart(4, '0')}`, unit: receipt.total, total: receipt.total, tone }],
-    paymentMethod: receipt.receipt_type,
-    total: Number(receipt.total || 0),
-    notes,
-    stampDate: tone === 'paid' ? `PAGO EM ${dateOnly(String(receipt.created_at).slice(0, 10))}` : undefined,
-  });
+  const bodyText = htmlToText(savedReceiptHtmlBody(receipt.content || '')).slice(0, 520);
+  const body = `
+    ${buildCustomerBox(receipt.customer_name || 'Consumidor', receipt.customer_whatsapp || '-')}
+    <table class="slf-table" aria-label="Comprovante da venda"><thead><tr><th>Qtd.</th><th>Produto</th><th class="num">R$ un</th><th class="num">Total</th></tr></thead><tbody>
+      <tr><td>1</td><td class="left">Venda #${String(receipt.sale_number || 0).padStart(4, '0')}</td><td class="num">${formatCurrency(receipt.total)}</td><td class="num">${formatCurrency(receipt.total)}</td></tr>
+    </tbody></table>
+    <section class="slf-payment"><div class="slf-payment-head"><span>Pagamento</span><span>Total</span></div><div style="display:grid;grid-template-columns:1fr 170px;align-items:stretch">${buildPaymentRow(receipt.receipt_type || '')}<div class="slf-payment-total">${formatCurrency(receipt.total)}</div></div></section>
+    <section class="slf-note ${tone === 'paid' ? 'ok' : tone === 'overdue' || tone === 'danger' ? 'danger' : tone === 'partial' ? 'warn' : ''}"><div class="slf-note-title">Anotações</div><ul>
+      <li>Comprovante da venda #${String(receipt.sale_number || 0).padStart(4, '0')} emitido em ${escapeHtml(formatDateTime(receipt.created_at))}.</li>
+      <li>Status: ${escapeHtml(status)}. Total do comprovante: ${formatCurrency(receipt.total)}.</li>
+      ${bodyText ? `<li>${escapeHtml(bodyText)}</li>` : '<li>Registro salvo em Comprovantes para reimpressão e envio ao cliente.</li>'}
+    </ul></section>`;
+  return buildReceiptDocument(store, 'COMPROVANTE DE VENDA', 'Venda salva', receipt.created_at, status, tone, body, tone === 'paid' ? formatDateTime(receipt.created_at) : undefined);
 }
 
 function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSummary): string {
   const paid = creditPaidTotal(credit);
   const balance = Math.max(0, Number(credit.balance || 0));
   const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
+  const partialCount = credit.installments.filter((installment) => installmentStatusLabel(installment).toLowerCase().includes('parcial')).length;
   const overdueCount = credit.installments.filter(isOverdue).length;
-  const partialCount = credit.installments.filter((installment) => installmentStatusLabel(installment).includes('Parcial')).length;
   const statusDetails = creditNoteStatusDetails(credit);
+  const status = statusDetails.tone === 'paid' ? 'Nota paga' : statusDetails.tone === 'overdue' ? 'Nota atrasada' : statusDetails.tone === 'partial' ? 'Com pagamento parcial' : 'Nota em aberto';
   const tone = statusDetails.tone;
-  const status = tone === 'paid' ? 'QUITADA' : tone === 'overdue' ? 'ATRASADA' : tone === 'partial' ? 'PARCIAL' : 'ABERTA';
-  const rows: PaperReceiptRow[] = credit.installments.map((installment) => {
-    const label = installmentStatusLabel(installment);
-    const rowTone = receiptStatusTone(label);
-    const paidValue = paidOf(installment);
-    return {
-      qtd: String(installment.number),
-      produto: `Parcela ${installment.number}/${credit.installments.length} · ${label} · vence ${dateOnly(installment.due_date)}`,
-      unit: installment.amount,
-      total: rowTone === 'paid' || rowTone === 'partial' ? Math.max(paidValue, 0) : installment.amount,
-      tone: rowTone,
-    };
-  });
-  const notes = [
-    `Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} emitida em ${formatDateTime(credit.created_at)}.`,
-    `Parcelas pagas: ${paidCount}/${credit.installments.length}. Total da nota: ${formatCurrency(credit.total)}. Total pago: ${formatCurrency(paid)}.`,
-    balance > 0.009 ? `Acompanhar saldo em aberto no Crediário: ${formatCurrency(balance)}.` : 'Nota quitada, sem saldo em aberto.',
-    overdueCount > 0 ? `${formatNumber(overdueCount)} parcela(s) atrasada(s).` : '',
-    partialCount > 0 ? `${formatNumber(partialCount)} parcela(s) com pagamento parcial.` : '',
-  ].filter(Boolean).join('\n');
-  return buildPaperReceiptHtml({
-    store,
-    title: 'EXTRATO DA NOTA',
-    statusLabel: status,
-    tone,
-    customer: credit.customer_name || 'Cliente',
-    phone: credit.customer_whatsapp || credit.customer_phone || '',
-    rows,
-    paymentMethod: 'crediario',
-    total: Number(credit.total || 0),
-    notes,
-    stampDate: tone === 'paid' ? `QUITADO EM ${new Date().toLocaleDateString('pt-BR')}` : undefined,
-  });
+  const noteTone = tone === 'paid' ? 'ok' : tone === 'overdue' ? 'danger' : tone === 'partial' ? 'warn' : '';
+  const body = `
+    ${buildCustomerBox(credit.customer_name || 'Cliente', credit.customer_whatsapp || credit.customer_phone || '-')}
+    <table class="slf-table" aria-label="Parcelas do crediário"><thead><tr><th>Parcela</th><th>Vencimento</th><th class="num">Valor</th><th>Status</th></tr></thead><tbody>
+      ${credit.installments.map((installment) => {
+        const label = installmentStatusLabel(installment);
+        const rowTone = receiptStatusTone(label);
+        return `<tr><td>${installment.number}/${credit.installments.length}</td><td>${escapeHtml(dateOnly(installment.due_date))}</td><td class="num">${formatCurrency(installment.amount)}</td><td>${receiptStatusToken(label, rowTone)}</td></tr>`;
+      }).join('')}
+    </tbody></table>
+    ${buildSummaryCards([
+      { icon: '▤', label: 'Total da nota', value: formatCurrency(credit.total) },
+      { icon: '◉', label: 'Total pago', value: formatCurrency(paid) },
+      { icon: '$', label: 'Saldo em aberto', value: formatCurrency(balance) },
+    ])}
+    <section class="slf-note ${noteTone}"><div class="slf-note-title">Anotações</div><ul>
+      <li>Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} emitida em ${escapeHtml(formatDateTime(credit.created_at))}.</li>
+      <li>Parcelas pagas: ${paidCount}/${credit.installments.length}. Total da nota: ${formatCurrency(credit.total)}. Total pago: ${formatCurrency(paid)}.</li>
+      <li>Acompanhar saldo em aberto no crediário: ${formatCurrency(balance)}.</li>
+      ${partialCount ? `<li>${formatNumber(partialCount)} parcela(s) com pagamento parcial.</li>` : ''}
+      ${overdueCount ? `<li>${formatNumber(overdueCount)} parcela(s) atrasada(s), destacada(s) em vermelho.</li>` : ''}
+    </ul></section>`;
+  return buildReceiptDocument(store, 'EXTRATO DO CREDIÁRIO', 'Nota inteira', credit.created_at, status, tone, body, tone === 'paid' ? formatDateTime(credit.created_at) : undefined);
 }
 
 function installmentShareText(credit: CreditSummary, installment: CreditInstallment): string {
@@ -548,6 +617,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [savedReceipts, setSavedReceipts] = useState<ReceiptView[]>([]);
   const [credits, setCredits] = useState<CreditSummary[]>([]);
   const [selected, setSelected] = useState<ReceiptPreview | null>(null);
+  const [fullPreview, setFullPreview] = useState<ReceiptPreview | null>(null);
   const [filter, setFilter] = useState<ReceiptFilter>('todos');
   const [query, setQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(30);
@@ -731,11 +801,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     const customerKey = `${customerName.toLowerCase()}|${contact}`;
     setExpandedCustomers((current) => ({ ...current, [customerKey]: true }));
     setExpandedCredits((current) => ({ ...current, [targetCredit.id]: true }));
-    const targetInstallment = focus.installment_number
-      ? targetCredit.installments.find((item) => Number(item.number) === Number(focus.installment_number))
-      : null;
-    selectPreview(targetInstallment ? installmentPreview(targetCredit, targetInstallment) : creditPreview(targetCredit));
-    setFeedback({ tone: 'success', text: `${targetInstallment ? 'Recibo da parcela' : 'Extrato da nota'} #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberto dentro do app. Confira na prévia e use Salvar PDF quando precisar.` });
+    selectPreview(creditPreview(targetCredit));
+    setFeedback({ tone: 'success', text: `Extrato da venda #${String(targetCredit.sale_number || 0).padStart(4, '0')} aberto em Comprovantes. Toque em Visualizar ou Baixar PDF.` });
     window.localStorage.removeItem(RECEIPTS_FOCUS_SALE_KEY);
     setFocusHandled(true);
   }, [credits, focusHandled, receiptStore]);
@@ -751,7 +818,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
   function selectAndOpenPreview(preview: ReceiptPreview): void {
     selectPreview(preview);
-    setFeedback({ tone: 'success', text: 'Recibo aberto dentro do app. Confira o layout antes de salvar PDF ou enviar.' });
+    setFullPreview(preview);
+    setFeedback({ tone: 'success', text: 'Recibo aberto dentro do app com o padrão Jaque.' });
   }
 
   useEffect(() => {
@@ -762,8 +830,9 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     setSaving(true);
     try {
       selectPreview(preview);
-      const result = await api.exportHtmlPdf(preview.html, preview.fileStem, true, undefined, printFormat);
-      setFeedback({ tone: 'success', text: `${result} Use a opção do navegador para salvar como PDF real.` });
+      const fileName = downloadPreviewPdf(preview);
+      setFullPreview(preview);
+      setFeedback({ tone: 'success', text: `PDF real baixado como ${fileName}. A prévia interna continua aberta no app para conferir ou tirar print.` });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     } finally {
@@ -773,7 +842,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
   function openFullPreview(preview: ReceiptPreview): void {
     selectPreview(preview);
-    setFeedback({ tone: 'success', text: 'Visualização aberta dentro do próprio app. Nada de HTML solto: confira, tire print ou salve em PDF.' });
+    setFullPreview(preview);
+    setFeedback({ tone: 'success', text: 'Visualização aberta dentro do próprio app. Não abre HTML solto no celular.' });
   }
 
   async function sharePreview(preview: ReceiptPreview): Promise<void> {
@@ -818,7 +888,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
       <section className="mapp-success-card">
         <strong>Comprovantes organizados por cliente, nota e parcela</strong>
-        <span>Agora esta aba abre o recibo dentro do app. Visualizar não baixa HTML solto; Salvar PDF usa o mesmo layout do recibo.</span>
+        <span>Agora esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa como arquivo .pdf e Enviar compartilha o texto do recibo.</span>
       </section>
 
       <section className="mapp-filters-card mapp-receipts-filter-card">
@@ -834,6 +904,25 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
           ))}
         </div>
       </section>
+
+      {fullPreview ? (
+        <section className="mapp-receipt-fullscreen" role="dialog" aria-modal="true" aria-label={`Visualização do ${fullPreview.title}`}>
+          <div className="mapp-receipt-fullscreen-toolbar">
+            <button type="button" className="mapp-secondary-button" onClick={() => setFullPreview(null)}>Voltar</button>
+            <div>
+              <strong>{fullPreview.title}</strong>
+              <span>{fullPreview.customer} · {fullPreview.status}</span>
+            </div>
+            <button type="button" className="mapp-primary-button" onClick={() => void exportPreview(fullPreview, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
+          </div>
+          <iframe
+            title={`Recibo em tela cheia - ${fullPreview.title}`}
+            className="mapp-receipt-fullscreen-frame"
+            sandbox=""
+            srcDoc={fullPreview.html || '<p>Comprovante sem prévia HTML salva.</p>'}
+          />
+        </section>
+      ) : null}
 
       {selected ? (
         <section className="mapp-form-panel mapp-receipt-preview" ref={previewPanelRef}>
@@ -852,12 +941,12 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
           <iframe
             title={`Prévia segura do ${selected.title}`}
             className="mapp-receipt-frame"
-            sandbox="allow-same-origin"
+            sandbox=""
             srcDoc={selected.html || '<p>Comprovante sem prévia HTML salva.</p>'}
           />
           <div className="mapp-button-grid mapp-receipt-button-grid">
             <button type="button" className="mapp-primary-button" onClick={() => openFullPreview(selected)}>Visualizar</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'Salvar PDF'}</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'Baixar PDF'}</button>
             <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected)}>Enviar / compartilhar</button>
             <button type="button" className="mapp-secondary-button" onClick={() => setSelected(null)}>Fechar prévia</button>
           </div>

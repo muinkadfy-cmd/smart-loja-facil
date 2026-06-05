@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v167-recibo-padrao-jaque';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v168-recibo-preto-branco-jaque';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -12,8 +12,6 @@ const APP_SHELL = [
   '/icons/icon-512-maskable.png',
   '/brand/smart-loja-icon.png',
   '/brand/jaque-logo-premium.png',
-  '/brand/jaque-receipt-logo.png',
-  '/brand/jaque-receipt-logo-wide.png',
 ];
 
 async function precacheAppShell(cache) {
