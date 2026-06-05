@@ -167,8 +167,9 @@ function pdfEscape(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 }
 
-const PDF_LOGO_JPEG_BASE64 = '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';
-const PDF_LOGO_SIZE = 96;
+const PDF_LOGO_JPEG_BASE64 = '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';
+const PDF_LOGO_WIDTH = 173;
+const PDF_LOGO_HEIGHT = 120;
 
 function asciiBytes(value: string): Uint8Array {
   const bytes = new Uint8Array(value.length);
@@ -194,51 +195,175 @@ function concatBytes(parts: Uint8Array[]): Uint8Array {
   return output;
 }
 
-function downloadPreviewPdf(preview: ReceiptPreview): string {
-  const title = `${preview.title} - ${preview.customer}`;
-  const bodyText = htmlToText(preview.html);
-  const lines = wrapPdfLines([
-    title,
-    `Status: ${preview.status}`,
-    `Total: ${formatCurrency(preview.total)}`,
-    `Gerado em: ${new Date().toLocaleString('pt-BR')}`,
-    '',
-    bodyText,
-  ].join('\n'), 88);
-  const contentLines = [
-    'q',
-    '58 0 0 58 48 748 cm',
-    '/Logo Do',
-    'Q',
-    'BT',
-    '/F1 18 Tf',
-    '118 798 Td',
-    `(${pdfEscape('Smart Loja Facil')}) Tj`,
-    '/F1 10 Tf',
-    '0 -16 Td',
-    `(${pdfEscape('Comprovante / extrato em PDF')}) Tj`,
-    'ET',
-    'BT',
-    '/F1 11 Tf',
-    '48 718 Td',
-    '14 TL',
+function pdfSafeText(value: unknown): string {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/[\s]+/g, ' ')
+    .trim();
+}
+
+function pdfTextCommand(value: unknown): string {
+  return pdfEscape(pdfSafeText(value));
+}
+
+function pdfTextAt(commands: string[], x: number, y: number, text: unknown, size = 10, bold = false): void {
+  commands.push('BT', `/${bold ? 'F2' : 'F1'} ${size} Tf`, `${x} ${y} Td`, `(${pdfTextCommand(text)}) Tj`, 'ET');
+}
+
+function pdfCenteredText(commands: string[], x: number, y: number, width: number, text: unknown, size = 10, bold = false): void {
+  const safe = pdfSafeText(text);
+  const estimate = safe.length * size * 0.52;
+  pdfTextAt(commands, x + Math.max(0, (width - estimate) / 2), y, safe, size, bold);
+}
+
+function pdfRect(commands: string[], x: number, y: number, width: number, height: number, fill = false): void {
+  commands.push(`${x} ${y} ${width} ${height} re ${fill ? 'f' : 'S'}`);
+}
+
+function pdfLine(commands: string[], x1: number, y1: number, x2: number, y2: number): void {
+  commands.push(`${x1} ${y1} m ${x2} ${y2} l S`);
+}
+
+function pdfMoney(value: number): string {
+  return formatCurrency(Number(value || 0)).replace(/\s+/g, ' ');
+}
+
+function pdfStatusLabel(status: string): string {
+  const label = receiptStatusLabel(status);
+  if (label.toLowerCase().includes('emit')) return 'Pendente';
+  return label;
+}
+function pdfTitleLines(title: string): string[] {
+  const clean = pdfSafeText(title).toUpperCase();
+  if (clean.includes('EXTRATO')) return ['EXTRATO DO', 'CREDIARIO'];
+  if (clean.includes('PAGAMENTO')) return ['COMPROVANTE', 'DE PAGAMENTO'];
+  if (clean.includes('PARCIAL')) return ['COMPROVANTE', 'PARCIAL'];
+  if (clean.includes('ATRAS')) return ['PARCELA', 'ATRASADA'];
+  if (clean.includes('ABERTO')) return ['PARCELA', 'EM ABERTO'];
+  if (clean.includes('VENDA')) return ['COMPROVANTE', 'DE VENDA'];
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return [clean];
+  const middle = Math.ceil(words.length / 2);
+  return [words.slice(0, middle).join(' '), words.slice(middle).join(' ')];
+}
+
+function buildPdfReceiptFile(preview: ReceiptPreview): { fileName: string; blob: Blob } {
+  const data = getPdfReceiptData(preview);
+  const commands: string[] = [
+    '2 w',
+    '0 0 0 RG',
+    '0 0 0 rg',
   ];
-  for (const line of lines) contentLines.push(`(${pdfEscape(line)}) Tj`, 'T*');
-  contentLines.push('ET');
-  const stream = contentLines.join('\n');
+
+  const pageX = 34;
+  const pageW = 527;
+  pdfRect(commands, pageX, 48, pageW, 748, false);
+
+  // Logo e cabeçalho fiel ao recibo preto/branco, sem sobreposição.
+  commands.push('q', '176 0 0 122 54 670 cm', '/Logo Do', 'Q');
+  const titleLines = pdfTitleLines(data.title);
+  let titleY = titleLines.length > 1 ? 760 : 744;
+  titleLines.forEach((line) => {
+    pdfTextAt(commands, 306, titleY, line, 24, true);
+    titleY -= 28;
+  });
+  pdfLine(commands, 306, titleY + 8, 544, titleY + 8);
+  pdfTextAt(commands, 306, titleY - 10, data.subtitle, 9, false);
+  pdfTextAt(commands, 306, titleY - 24, `Status: ${data.status}`, 10, true);
+
+  if (data.paidStamp) {
+    commands.push('q', '0.15 w', '0 0 0 RG', '0 0 0 rg');
+    pdfRect(commands, 400, 666, 126, 42, true);
+    commands.push('1 1 1 rg');
+    pdfCenteredText(commands, 400, 691, 126, 'PAGO', 19, true);
+    pdfCenteredText(commands, 400, 675, 126, data.paidStamp, 8, true);
+    commands.push('Q');
+  } else {
+    const statusClean = pdfSafeText(data.status).toUpperCase();
+    const badgeWidth = Math.min(178, Math.max(92, statusClean.length * 8 + 24));
+    pdfRect(commands, 306, 666, badgeWidth, 32, false);
+    pdfCenteredText(commands, 306, 676, badgeWidth, statusClean, 10, true);
+  }
+
+  // Dados do cliente.
+  const boxX = 46;
+  const boxW = 502;
+  let y = 636;
+  pdfRect(commands, boxX, y - 88, boxW, 88, false);
+  pdfTextAt(commands, boxX + 18, y - 26, 'CLIENTE', 9, true);
+  pdfTextAt(commands, boxX + 128, y - 26, data.customer, 12, true);
+  pdfLine(commands, boxX + 12, y - 38, boxX + boxW - 12, y - 38);
+  pdfTextAt(commands, boxX + 18, y - 56, 'TELEFONE', 9, true);
+  pdfTextAt(commands, boxX + 128, y - 56, data.phone, 11, true);
+  pdfLine(commands, boxX + 12, y - 68, boxX + boxW - 12, y - 68);
+  pdfTextAt(commands, boxX + 18, y - 80, 'ENDERECO', 9, true);
+  pdfTextAt(commands, boxX + 128, y - 80, data.address || '-', 10, false);
+
+  // Tabela.
+  y = 520;
+  const tableX = 46;
+  const tableW = 502;
+  const col = [tableX, tableX + 82, tableX + 222, tableX + 332, tableX + tableW];
+  const headerH = 30;
+  const rows = data.rows.slice(0, 10);
+  const rowH = rows.length > 7 ? 24 : 32;
+  commands.push('0 0 0 rg');
+  pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
+  commands.push('1 1 1 rg');
+  pdfCenteredText(commands, col[0], y - 20, col[1] - col[0], 'PARCELA', 9, true);
+  pdfCenteredText(commands, col[1], y - 20, col[2] - col[1], 'VENCIMENTO', 9, true);
+  pdfCenteredText(commands, col[2], y - 20, col[3] - col[2], 'VALOR', 9, true);
+  pdfCenteredText(commands, col[3], y - 20, col[4] - col[3], 'STATUS', 9, true);
+  commands.push('0 0 0 rg');
+  pdfRect(commands, tableX, y - headerH - rows.length * rowH, tableW, headerH + rows.length * rowH, false);
+  for (let i = 1; i < col.length - 1; i += 1) pdfLine(commands, col[i], y, col[i], y - headerH - rows.length * rowH);
+  rows.forEach((row, index) => {
+    const rowTop = y - headerH - index * rowH;
+    pdfLine(commands, tableX, rowTop - rowH, tableX + tableW, rowTop - rowH);
+    pdfCenteredText(commands, col[0], rowTop - 20, col[1] - col[0], row.parcela, 10, false);
+    pdfCenteredText(commands, col[1], rowTop - 20, col[2] - col[1], row.vencimento, 10, false);
+    pdfCenteredText(commands, col[2], rowTop - 20, col[3] - col[2], row.valor, 10, false);
+    addPdfStatusToken(commands, col[3] + 20, rowTop - 20, row.status);
+  });
+
+  // Cards de resumo.
+  y = y - headerH - rows.length * rowH - 24;
+  const cardW = 154;
+  const cardH = 58;
+  const cards = [
+    [data.totalLabel, data.totalValue],
+    [data.paidLabel, data.paidValue],
+    [data.balanceLabel, data.balanceValue],
+  ];
+  cards.forEach(([label, value], index) => {
+    const x = tableX + index * (cardW + 20);
+    pdfRect(commands, x, y - cardH, cardW, cardH, false);
+    pdfCenteredText(commands, x, y - 20, cardW, label, 9, true);
+    pdfLine(commands, x + 12, y - 30, x + cardW - 12, y - 30);
+    pdfCenteredText(commands, x, y - 48, cardW, value, 14, true);
+  });
+
+  y = y - cardH - 18;
+  y = addPdfNotes(commands, tableX, y, tableW, data.notes);
+  pdfCenteredText(commands, tableX, Math.max(44, y), tableW, 'Obrigado pela preferencia - Gerado pelo Smart Loja Facil', 9, false);
+
+  const stream = commands.join('\n');
   const streamBytes = asciiBytes(stream);
   const logoBytes = base64Bytes(PDF_LOGO_JPEG_BASE64);
   const objects: Uint8Array[][] = [
     [asciiBytes('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n')],
     [asciiBytes('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n')],
-    [asciiBytes('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> /XObject << /Logo 6 0 R >> >> /Contents 5 0 R >>\nendobj\n')],
+    [asciiBytes('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 7 0 R >> /XObject << /Logo 6 0 R >> >> /Contents 5 0 R >>\nendobj\n')],
     [asciiBytes('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n')],
     [asciiBytes(`5 0 obj\n<< /Length ${streamBytes.length} >>\nstream\n`), streamBytes, asciiBytes('\nendstream\nendobj\n')],
     [
-      asciiBytes(`6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PDF_LOGO_SIZE} /Height ${PDF_LOGO_SIZE} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`),
+      asciiBytes(`6 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PDF_LOGO_WIDTH} /Height ${PDF_LOGO_HEIGHT} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`),
       logoBytes,
       asciiBytes('\nendstream\nendobj\n'),
     ],
+    [asciiBytes('7 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n')],
   ];
   const parts: Uint8Array[] = [asciiBytes('%PDF-1.4\n% Smart Loja Facil\n')];
   const offsets = [0];
@@ -255,20 +380,188 @@ function downloadPreviewPdf(preview: ReceiptPreview): string {
   for (let index = 1; index <= objects.length; index += 1) xref += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
   xref += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF`;
   parts.push(asciiBytes(xref));
-  const fileName = `${preview.fileStem || 'comprovante'}.pdf`.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-');
+  const fileName = uniquePdfFileName(preview.fileStem || 'comprovante');
   const pdfBytes = concatBytes(parts);
   const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
-  const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
+  return { fileName, blob: new Blob([pdfBuffer], { type: 'application/pdf' }) };
+}
+
+function triggerPdfDownload(file: { fileName: string; blob: Blob }): void {
+  const url = URL.createObjectURL(file.blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = fileName;
+  anchor.download = file.fileName;
   anchor.rel = 'noopener';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-  return fileName;
+}
+
+
+type PdfReceiptRow = { parcela: string; vencimento: string; valor: string; status: string };
+type PdfReceiptData = {
+  title: string;
+  subtitle: string;
+  customer: string;
+  phone: string;
+  address: string;
+  rows: PdfReceiptRow[];
+  totalLabel: string;
+  totalValue: string;
+  paidLabel: string;
+  paidValue: string;
+  balanceLabel: string;
+  balanceValue: string;
+  status: string;
+  notes: string[];
+  paidStamp?: string;
+};
+
+function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
+  const now = new Date().toLocaleString('pt-BR');
+  if (preview.kind === 'nota') {
+    const credit = preview.credit;
+    const paid = creditPaidTotal(credit);
+    const balance = Math.max(0, Number(credit.balance || 0));
+    const status = pdfStatusLabel(preview.status);
+    const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+    const partialCount = credit.installments.filter((item) => installmentStatusLabel(item).toLowerCase().includes('parcial')).length;
+    const overdueCount = credit.installments.filter(isOverdue).length;
+    return {
+      title: 'EXTRATO DO CREDIARIO',
+      subtitle: `Nota #${String(credit.sale_number || 0).padStart(4, '0')} - ${formatDateTime(credit.created_at)}`,
+      customer: credit.customer_name || preview.customer || 'Cliente',
+      phone: credit.customer_whatsapp || credit.customer_phone || preview.phone || '-',
+      address: '-',
+      rows: credit.installments.map((installment) => ({
+        parcela: `${installment.number}/${credit.installments.length}`,
+        vencimento: dateOnly(installment.due_date),
+        valor: pdfMoney(installment.amount),
+        status: installmentStatusLabel(installment),
+      })),
+      totalLabel: 'TOTAL DA NOTA',
+      totalValue: pdfMoney(credit.total),
+      paidLabel: 'TOTAL PAGO',
+      paidValue: pdfMoney(paid),
+      balanceLabel: 'SALDO',
+      balanceValue: pdfMoney(balance),
+      status,
+      notes: [
+        `Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} gerado em ${now}.`,
+        `Parcelas pagas: ${paidCount}/${credit.installments.length}.`,
+        `Total da nota: ${pdfMoney(credit.total)}. Total pago: ${pdfMoney(paid)}.`,
+        balance > 0.009 ? `Saldo para acompanhar no crediario: ${pdfMoney(balance)}.` : 'Nota quitada sem saldo pendente.',
+        partialCount ? `${partialCount} parcela(s) com pagamento parcial.` : '',
+        overdueCount ? `${overdueCount} parcela(s) atrasada(s).` : '',
+      ].filter(Boolean),
+      paidStamp: balance <= 0.009 ? now : undefined,
+    };
+  }
+  if (preview.kind === 'parcela') {
+    const credit = preview.credit;
+    const installment = preview.installment;
+    const paid = paidOf(installment);
+    const rest = remainingOf(installment);
+    const status = installmentStatusLabel(installment);
+    const paidDate = installment.paid_at ? formatDateTime(installment.paid_at) : undefined;
+    return {
+      title: status === 'Paga' ? 'COMPROVANTE DE PAGAMENTO' : status.toLowerCase().includes('parcial') ? 'COMPROVANTE PARCIAL' : status.toLowerCase().includes('venc') ? 'PARCELA ATRASADA' : 'PARCELA EM ABERTO',
+      subtitle: `Venda #${String(credit.sale_number || 0).padStart(4, '0')} - Parcela ${installment.number}/${credit.installments.length}`,
+      customer: credit.customer_name || preview.customer || 'Cliente',
+      phone: credit.customer_whatsapp || credit.customer_phone || preview.phone || '-',
+      address: '-',
+      rows: [{
+        parcela: `${installment.number}/${credit.installments.length}`,
+        vencimento: dateOnly(installment.due_date),
+        valor: pdfMoney(installment.amount),
+        status,
+      }],
+      totalLabel: 'VALOR',
+      totalValue: pdfMoney(installment.amount),
+      paidLabel: 'PAGO',
+      paidValue: pdfMoney(paid),
+      balanceLabel: 'SALDO',
+      balanceValue: pdfMoney(rest),
+      status,
+      notes: [
+        `Venda/nota #${String(credit.sale_number || 0).padStart(4, '0')} - parcela ${installment.number}/${credit.installments.length}.`,
+        `Vencimento: ${dateOnly(installment.due_date)}.`,
+        `Status: ${status}${paidDate ? ` em ${paidDate}` : ''}.`,
+        rest > 0.009 ? `Saldo da parcela: ${pdfMoney(rest)}.` : 'Parcela quitada sem saldo pendente.',
+      ],
+      paidStamp: status === 'Paga' ? (paidDate || now) : undefined,
+    };
+  }
+
+  const status = pdfStatusLabel(preview.status);
+  const bodyText = htmlToText(preview.html).slice(0, 240);
+  return {
+    title: preview.title || 'COMPROVANTE DE VENDA',
+    subtitle: `Comprovante salvo - ${formatDateTime(preview.createdAt)}`,
+    customer: preview.customer || 'Consumidor',
+    phone: preview.phone || '-',
+    address: '-',
+    rows: [{ parcela: '1', vencimento: dateOnly(preview.createdAt), valor: pdfMoney(preview.total), status }],
+    totalLabel: 'TOTAL',
+    totalValue: pdfMoney(preview.total),
+    paidLabel: 'STATUS',
+    paidValue: status,
+    balanceLabel: 'DATA',
+    balanceValue: dateOnly(preview.createdAt),
+    status,
+    notes: [
+      `Comprovante gerado em ${now}.`,
+      `Status: ${status}. Total: ${pdfMoney(preview.total)}.`,
+      bodyText || 'Registro salvo em Comprovantes.',
+    ],
+    paidStamp: status.toLowerCase().includes('pago') ? now : undefined,
+  };
+}
+
+function addPdfStatusToken(commands: string[], x: number, y: number, label: string): void {
+  const clean = pdfSafeText(label).toUpperCase();
+  const isPaid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
+  const isPartial = clean.includes('PARCIAL');
+  const isOverdue = clean.includes('VENC') || clean.includes('ATRAS');
+  const width = isPartial ? 72 : isOverdue ? 78 : 64;
+  commands.push('0 0 0 RG', `${isPaid ? '0 0 0 rg' : '1 1 1 rg'}`);
+  pdfRect(commands, x, y - 5, width, 18, isPaid);
+  commands.push(isPaid ? '1 1 1 rg' : '0 0 0 rg');
+  pdfCenteredText(commands, x, y, width, isPaid ? 'PAGA' : isPartial ? 'PARCIAL' : isOverdue ? 'VENCIDA' : 'PENDENTE', 8, true);
+  commands.push('0 0 0 rg');
+}
+
+function addPdfNotes(commands: string[], x: number, y: number, width: number, notes: string[]): number {
+  const height = Math.max(68, 24 + notes.length * 14);
+  commands.push('0 0 0 rg');
+  pdfRect(commands, x, y - height, width, height, false);
+  commands.push('0 0 0 rg');
+  pdfRect(commands, x, y - 20, width, 20, true);
+  commands.push('1 1 1 rg');
+  pdfTextAt(commands, x + 12, y - 14, 'ANOTACOES', 10, true);
+  commands.push('0 0 0 rg');
+  let cursor = y - 38;
+  notes.slice(0, 7).forEach((note) => {
+    const wrapped = wrapPdfLines(`- ${note}`, 82).slice(0, 2);
+    wrapped.forEach((line) => {
+      pdfTextAt(commands, x + 12, cursor, line, 8, false);
+      cursor -= 12;
+    });
+  });
+  return y - height - 14;
+}
+
+function uniquePdfFileName(stem: string): string {
+  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
+  const safeStem = (stem || 'comprovante').replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return `${safeStem}-${stamp}.pdf`;
+}
+
+function downloadPreviewPdf(preview: ReceiptPreview): string {
+  const file = buildPdfReceiptFile(preview);
+  triggerPdfDownload(file);
+  return file.fileName;
 }
 
 function readReceiptFocusPayload(): ReceiptFocusPayload | null {
@@ -289,9 +582,14 @@ function readReceiptFocusPayload(): ReceiptFocusPayload | null {
 }
 
 function htmlToText(html: string): string {
-  if (typeof window === 'undefined') return html.replace(/<[^>]+>/g, ' ');
+  const cleanHtml = String(html || '')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+    .replace(/<template[\s\S]*?<\/template>/gi, ' ');
+  if (typeof window === 'undefined') return cleanHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const element = document.createElement('div');
-  element.innerHTML = html;
+  element.innerHTML = cleanHtml;
   return element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 }
 
@@ -855,28 +1153,46 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       ? creditGeneralShareText(preview.credit)
       : preview.kind === 'parcela'
         ? installmentShareText(preview.credit, preview.installment)
-        : `${preview.title}\nStatus: ${preview.status}\nCliente: ${preview.customer}\nTotal: ${formatCurrency(preview.total)}`;
-    const text = `${baseText}\n\n${htmlToText(preview.html).slice(0, 650)}`;
-    if (navigator.share) {
+        : `${preview.title}
+Status: ${preview.status}
+Cliente: ${preview.customer}
+Total: ${formatCurrency(preview.total)}`;
+    const pdfFile = buildPdfReceiptFile(preview);
+    const shareFile = new File([pdfFile.blob], pdfFile.fileName, { type: 'application/pdf' });
+    const sharePayload = {
+      title: preview.title,
+      text: `${baseText}
+
+Segue o comprovante em PDF.`,
+      files: [shareFile],
+    } as ShareData & { files: File[] };
+    const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
+
+    if (navigator.share && mobileNavigator.canShare?.(sharePayload)) {
       try {
-        await navigator.share({ title: preview.title, text });
-        setFeedback({ tone: 'success', text: 'Comprovante enviado pelo compartilhamento do celular.' });
-        notifyMobileAction({ title: 'Comprovante enviado', message: 'Compartilhamento do celular aberto com o recibo preenchido.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+        await navigator.share(sharePayload);
+        setFeedback({ tone: 'success', text: 'PDF pronto aberto no compartilhamento do celular. Escolha WhatsApp e envie o arquivo.' });
+        notifyMobileAction({ title: 'PDF pronto para enviar', message: 'Compartilhamento abriu com o arquivo PDF anexado.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
         return;
       } catch {
-        // continua para WhatsApp/cópia quando o usuário cancela ou o navegador bloqueia.
+        // Quando o usuário cancela ou o navegador bloqueia, baixa o PDF como fallback.
       }
     }
+
+    triggerPdfDownload(pdfFile);
     const phone = safeWhatsapp(preview.phone || '');
+    const fallbackText = `${baseText}
+
+O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no WhatsApp para enviar o comprovante pronto.`;
     if (phone) {
-      await api.openExternalUrl(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`);
-      setFeedback({ tone: 'success', text: 'WhatsApp aberto com o comprovante preenchido.' });
-      notifyMobileAction({ title: 'WhatsApp aberto', message: 'Comprovante preenchido para enviar ao cliente.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+      await api.openExternalUrl(`https://wa.me/${phone}?text=${encodeURIComponent(fallbackText)}`);
+      setFeedback({ tone: 'info', text: 'Este navegador não permitiu anexar PDF automaticamente. Baixei o PDF e abri o WhatsApp com orientação para anexar o arquivo.' });
+      notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o PDF baixado no WhatsApp. Alguns navegadores bloqueiam anexo automático.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
       return;
     }
-    await navigator.clipboard?.writeText(text).catch(() => undefined);
-    setFeedback({ tone: 'info', text: 'Texto do comprovante copiado. Cole no WhatsApp ou em outro app.' });
-    notifyMobileAction({ title: 'Texto copiado', message: 'Cole o comprovante no WhatsApp ou em outro aplicativo.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
+    await navigator.clipboard?.writeText(fallbackText).catch(() => undefined);
+    setFeedback({ tone: 'info', text: 'PDF baixado. Texto de apoio copiado para colar no WhatsApp ou em outro app.' });
+    notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o arquivo baixado ao compartilhar.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
   }
 
   const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);
@@ -895,7 +1211,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
       <section className="mapp-success-card">
         <strong>Comprovantes organizados por cliente, nota e parcela</strong>
-        <span>Agora esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa como arquivo .pdf e Enviar compartilha o texto do recibo.</span>
+        <span>Agora esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa como arquivo .pdf e Enviar tenta compartilhar o PDF pronto; se o navegador bloquear, baixa o PDF e orienta anexar no WhatsApp.</span>
       </section>
 
       <section className="mapp-filters-card mapp-receipts-filter-card">
