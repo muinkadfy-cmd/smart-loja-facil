@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v168-recibo-preto-branco-jaque';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v169-vendas-pdv-mobile-10';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -1,7 +1,7 @@
 {
-  "name": "Smart Loja Fácil PWA v168",
-  "short_name": "Smart Loja v168",
-  "description": "Smart Loja Fácil PWA mobile-first v168 com comprovantes no recibo preto/branco padrão Jaque, visualização interna e PDF seguro.",
+  "name": "Smart Loja Fácil PWA v169",
+  "short_name": "Smart Loja v169",
+  "description": "Smart Loja Fácil PWA mobile-first v169 com Vendas/PDV mobile 10/10, recibo padrão Jaque e PDF seguro.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../../types';
-import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
@@ -144,6 +143,16 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const totalQty = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const change = paymentMethod === 'dinheiro' ? Math.max(0, amountPaid - total) : 0;
   const selectedCustomer = customers.find((customer) => customer.id === customerId) ?? null;
+  const availableProductsCount = products.filter((product) => product.stock > 0).length;
+  const outOfStockCount = products.length - availableProductsCount;
+  const isCreditSale = paymentMethod === 'crediario';
+  const canFinishSale = cart.length > 0 && (!isCreditSale || Boolean(customerId)) && total > 0;
+  const currentStep = cart.length === 0 ? 1 : canFinishSale ? 4 : 3;
+  const paymentHelper = isCreditSale
+    ? selectedCustomer
+      ? `${normalizeInstallmentCount(installmentCount)}x · primeiro vencimento ${firstDueDate ? new Date(`${firstDueDate}T00:00:00`).toLocaleDateString('pt-BR') : 'não definido'}`
+      : 'Selecione um cliente cadastrado para liberar o crediário.'
+    : `Recebimento em ${paymentLabel(paymentMethod)}${paymentMethod === 'dinheiro' && change > 0 ? ` · troco ${formatCurrency(change)}` : ''}`;
 
   useEffect(() => {
     if (paymentMethod === 'crediario') return;
@@ -277,7 +286,28 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     <div className="mapp-screen mapp-sales-screen">
       <section className="mapp-mini-stat-grid mapp-sales-stats">
         <StatCard label="Vendas hoje" value={formatCurrency(status?.dashboard.today_sales_total)} detail={`${formatNumber(status?.dashboard.today_sales_count)} venda(s)`} icon="vendas_pdv" tone="blue" />
-        <StatCard label="Itens no carrinho" value={formatNumber(totalQty)} detail={formatCurrency(total)} icon="caixa" tone="green" />
+        <StatCard label="Carrinho agora" value={formatNumber(totalQty)} detail={totalQty ? `${formatCurrency(total)} para finalizar` : 'Nenhum item selecionado'} icon="caixa" tone={totalQty ? 'green' : 'slate'} />
+      </section>
+
+      <section className="mapp-sales-flow-summary" aria-label="Resumo do fluxo de venda">
+        <div className="mapp-sales-flow-copy">
+          <span>PDV guiado</span>
+          <strong>{currentStep === 4 ? 'Venda pronta para conferir' : currentStep === 3 ? 'Confira pagamento e cliente' : 'Comece escolhendo o produto'}</strong>
+          <small>{cart.length ? `${formatNumber(totalQty)} item(ns) · ${formatCurrency(total)}` : 'Busque, toque no produto e finalize em poucos passos.'}</small>
+        </div>
+        <div className="mapp-sales-flow-steps">
+          {[
+            ['1', 'Produto'],
+            ['2', 'Carrinho'],
+            ['3', 'Pagamento'],
+            ['4', 'Finalizar'],
+          ].map(([number, label]) => (
+            <span key={number} className={Number(number) <= currentStep ? 'active' : ''}>
+              <b>{number}</b>
+              {label}
+            </span>
+          ))}
+        </div>
       </section>
 
       {loading ? <div className="mapp-inline-status">Carregando PDV...</div> : null}
@@ -285,19 +315,23 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       {error ? <div className="mapp-form-feedback mapp-form-feedback-error">{error}</div> : null}
 
       <section className="mapp-panel mapp-pdv-search">
-        <div className="mapp-form-head">
+        <div className="mapp-form-head mapp-pdv-head">
           <span className="mapp-form-icon tone-blue"><InlineIcon name="buscar" size={32} /></span>
           <div>
-            <strong>Passo 1: escolha produto</strong>
-            <p>Dica: busque por nome, código, categoria ou barras.</p>
+            <strong>1. Escolha o produto</strong>
+            <p>{availableProductsCount} produto(s) disponíveis{outOfStockCount ? ` · ${outOfStockCount} sem estoque` : ''}</p>
           </div>
         </div>
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Digite para buscar produto" />
+        <label className="mapp-pdv-search-box" aria-label="Buscar produto">
+          <InlineIcon name="buscar" size={24} />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, código ou barras" />
+        </label>
         <div className="mapp-product-pick-list">
           {filteredProducts.map((product) => {
             const price = product.promo_price ?? product.price;
+            const inCartQty = cart.find((item) => item.product_id === product.id)?.qty ?? 0;
             return (
-              <button key={product.id} type="button" onClick={() => addProduct(product)}>
+              <button key={product.id} type="button" className={product.stock <= 0 ? 'is-out-of-stock' : ''} onClick={() => addProduct(product)}>
                 {product.image_data ? (
                   <span className="mapp-product-mini-thumb">
                     <img src={product.image_data} alt={product.name} loading="lazy" />
@@ -306,17 +340,27 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                   <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
                 )}
                 <strong>{product.name}</strong>
-                <small>{product.internal_code || product.category || 'Produto'} · Estoque {formatNumber(product.stock)}</small>
+                <small>{product.internal_code || product.category || 'Produto'} · estoque {formatNumber(product.stock)}{inCartQty ? ` · no carrinho ${formatNumber(inCartQty)}` : ''}</small>
                 <b>{formatCurrency(price)}</b>
+                <em>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</em>
               </button>
             );
           })}
         </div>
+        {!filteredProducts.length ? (
+          <div className="mapp-pdv-compact-empty">
+            <strong>Nenhum produto encontrado</strong>
+            <small>Revise a busca ou cadastre o produto antes de vender.</small>
+          </div>
+        ) : null}
       </section>
 
       <section className="mapp-panel mapp-pdv-cart">
-        <div className="mapp-section-title">
-          <h2>Passo 2: confira carrinho</h2>
+        <div className="mapp-section-title mapp-section-title-compact">
+          <div>
+            <h2>2. Carrinho</h2>
+            <small>{cart.length ? `${formatNumber(totalQty)} item(ns) selecionados` : 'Carrinho vazio'}</small>
+          </div>
           {cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar</button> : null}
         </div>
         {cart.length ? (
@@ -334,7 +378,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                   <strong>{item.name}</strong>
                   <small>{formatCurrency(item.unit_price)} cada · estoque {formatNumber(item.stock)}</small>
                 </div>
-                <div className="mapp-stepper">
+                <div className="mapp-stepper" aria-label={`Quantidade de ${item.name}`}>
                   <button type="button" onClick={() => updateQty(item.product_id, -1)}>-</button>
                   <b>{formatNumber(item.qty)}</b>
                   <button type="button" onClick={() => updateQty(item.product_id, 1)}>+</button>
@@ -344,12 +388,24 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             ))}
           </div>
         ) : (
-          <EmptyState icon="vendas_pdv" title="Carrinho vazio" detail="Adicione produtos para montar a venda." actionLabel="Buscar produto" actionPage="sales" onNavigate={() => undefined} />
+          <div className="mapp-pdv-compact-empty mapp-pdv-cart-empty">
+            <span><InlineIcon name="vendas_pdv" size={24} /></span>
+            <div>
+              <strong>Nenhum produto no carrinho</strong>
+              <small>Toque em um produto acima para montar a venda.</small>
+            </div>
+          </div>
         )}
       </section>
 
       <section className="mapp-panel mapp-pdv-checkout">
-        <div className="mapp-section-title"><h2>Passo 3: escolha pagamento</h2><button type="button" onClick={() => setPaymentMethod('dinheiro')}>Padrão</button></div>
+        <div className="mapp-section-title mapp-section-title-compact">
+          <div>
+            <h2>3. Pagamento</h2>
+            <small>{paymentHelper}</small>
+          </div>
+          <button type="button" onClick={() => setPaymentMethod('dinheiro')}>Padrão</button>
+        </div>
         <div className={cash?.open_cash ? 'mapp-cash-readiness is-open' : 'mapp-cash-readiness'}>
           <span><InlineIcon name="caixa" size={24} /></span>
           <div>
@@ -371,7 +427,10 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             </button>
           ))}
         </div>
-        <div className="mapp-form-grid">
+        {isCreditSale && !customerId ? (
+          <div className="mapp-pdv-warning">Selecione um cliente cadastrado para vender no crediário e gerar parcelas.</div>
+        ) : null}
+        <div className="mapp-form-grid mapp-pdv-money-grid">
           <label>
             <span>Desconto</span>
             <input inputMode="decimal" type="number" min="0" step="0.01" value={discount} onChange={(event) => setDiscount(Number(event.target.value) || 0)} />
@@ -435,13 +494,19 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           <div><span>Troco</span><strong>{formatCurrency(change)}</strong></div>
           <small>{selectedCustomer ? `Cliente: ${selectedCustomer.name}` : 'Venda para consumidor final'}</small>
         </section>
-        <button type="button" className="mapp-primary-button mapp-finish-sale" disabled={saving || cart.length === 0} onClick={() => void finishSale()}>
-          {saving ? 'Enviando para a nuvem...' : 'Passo 4: finalizar venda'}
+        <button type="button" className="mapp-primary-button mapp-finish-sale" disabled={saving || !canFinishSale} onClick={() => void finishSale()}>
+          {saving ? 'Enviando para a nuvem...' : '4. Finalizar venda'}
         </button>
       </section>
 
-      <section className="mapp-section-block">
-        <div className="mapp-section-title"><h2>Vendas recentes</h2><button type="button" onClick={() => void loadData()}>Atualizar</button></div>
+      <section className="mapp-section-block mapp-recent-sales-block">
+        <div className="mapp-section-title mapp-section-title-compact">
+          <div>
+            <h2>Vendas recentes</h2>
+            <small>Toque em uma venda para abrir ações e comprovante.</small>
+          </div>
+          <button type="button" onClick={() => void loadData()}>Atualizar</button>
+        </div>
         {sales.length ? (
           <div className="mapp-list-stack">
             {sales.slice(0, 6).map((sale) => (
@@ -470,7 +535,10 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             ))}
           </div>
         ) : (
-          <EmptyState icon="vendas_pdv" title="Nenhuma venda registrada" detail="Finalize uma venda para acompanhar aqui." actionLabel="Nova venda" actionPage="sales" onNavigate={() => undefined} />
+          <div className="mapp-pdv-compact-empty">
+            <strong>Nenhuma venda registrada</strong>
+            <small>Finalize uma venda para acompanhar aqui.</small>
+          </div>
         )}
       </section>
     </div>
