@@ -36,7 +36,7 @@ interface MobileAlertItem {
   action: string;
   page: PageKey;
   tone: MobileAlertTone;
-  icon: 'offline_local' | 'bloqueio_seguro' | 'estoque_baixo' | 'vendas_pdv' | 'atualizar' | 'loja_ativa' | 'backup' | 'painel_da_loja';
+  icon: 'offline_local' | 'bloqueio_seguro' | 'estoque_baixo' | 'vendas_pdv' | 'atualizar' | 'loja_ativa' | 'backup' | 'painel_da_loja' | 'produtos';
 }
 
 
@@ -149,6 +149,16 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     if (syncSnapshot.status === 'pending') items.push({ title: 'Sincronização pendente', detail: syncSnapshot.detail || 'Existe algo aguardando envio para a nuvem.', action: 'Resolver', page: 'diagnostics', tone: 'warning', icon: 'offline_local' });
     if (syncSnapshot.status === 'syncing') items.push({ title: 'Sincronizando agora', detail: 'O app está enviando ou buscando dados da loja. Aguarde concluir antes de fechar.', action: 'Ver status', page: 'diagnostics', tone: 'info', icon: 'atualizar' });
     if ((dashboard?.low_stock_count ?? 0) > 0) items.push({ title: 'Estoque baixo', detail: `${dashboard?.low_stock_count ?? 0} produto(s) precisam de reposição.`, action: 'Ver produtos', page: 'products', tone: 'warning', icon: 'estoque_baixo' });
+    for (const insight of (dashboard?.product_insights ?? []).slice(0, 3)) {
+      items.push({
+        title: insight.title,
+        detail: `${insight.product_name}: ${insight.detail}`,
+        action: insight.action_label || 'Ver produto',
+        page: 'products',
+        tone: insight.tone === 'danger' ? 'danger' : insight.tone === 'warning' ? 'warning' : insight.tone === 'success' ? 'success' : 'info',
+        icon: insight.kind === 'low_stock_hot' ? 'estoque_baixo' : 'produtos',
+      });
+    }
     if ((dashboard?.today_sales_count ?? 0) === 0) items.push({ title: 'Nenhuma venda hoje', detail: 'Abra o PDV para registrar a primeira venda do dia.', action: 'Abrir PDV', page: 'sales', tone: 'info', icon: 'vendas_pdv' });
     if (updateAvailable) items.push({ title: 'Nova versão disponível', detail: 'Atualize o PWA neste aparelho para evitar cache antigo.', action: 'Atualizar', page: 'diagnostics', tone: 'info', icon: 'atualizar' });
     if (demoModeActive) items.push({ title: 'Ambiente demo ativo', detail: 'O app está usando dados fictícios separados da loja real.', action: 'Ver demo', page: 'diagnostics', tone: 'info', icon: 'loja_ativa' });
@@ -159,7 +169,17 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
   const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;
   const notificationItems = useMemo<NotificationItem[]>(() => {
     const lowStock = status?.dashboard.low_stock_count ?? 0;
+    const productInsightItems: NotificationItem[] = (status?.dashboard.product_insights ?? []).slice(0, 3).map((insight) => ({
+      id: `product-insight-${insight.id}`,
+      title: insight.title,
+      description: `${insight.product_name}: ${insight.detail}`,
+      time: 'Agora',
+      tone: insight.tone === 'danger' ? 'orange' : insight.tone === 'warning' ? 'orange' : insight.tone === 'success' ? 'green' : 'blue',
+      icon: insight.kind === 'low_stock_hot' ? 'estoque_baixo' : 'produtos',
+      page: 'products',
+    }));
     return [
+      ...productInsightItems,
       {
         id: `stock-low-${lowStock}`,
         title: 'Estoque baixo',

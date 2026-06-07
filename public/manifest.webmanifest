@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v179",
-  "short_name": "Jaque v179",
-  "description": "PWA da loja Jaque Confecções e Presentes v179 com extrato do crediário com produtos e cliente rápido.",
+  "name": "Jaque Confecções e Presentes v180",
+  "short_name": "Jaque v180",
+  "description": "PWA da loja Jaque Confecções e Presentes v180 com inteligência de produtos e alertas de destaque.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

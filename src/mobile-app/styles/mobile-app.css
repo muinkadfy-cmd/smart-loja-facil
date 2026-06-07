@@ -9089,3 +9089,81 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     padding-inline: 14px;
   }
 }
+
+/* Mega Lote 180 — inteligência de produtos e alertas de destaque */
+.mapp-product-intel-block {
+  border: 1px solid rgba(236, 72, 153, 0.16);
+  background: linear-gradient(180deg, rgba(255, 247, 252, 0.96), rgba(255, 255, 255, 0.98));
+}
+
+.mapp-product-intel-list {
+  display: grid;
+  gap: 10px;
+}
+
+.mapp-product-intel-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  background: #fff;
+  padding: 11px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+}
+
+.mapp-product-intel-card b {
+  grid-column: 2;
+  justify-self: start;
+  font-size: 0.78rem;
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
+  padding: 5px 9px;
+}
+
+.mapp-product-intel-card.warning { border-color: rgba(245, 158, 11, 0.28); }
+.mapp-product-intel-card.danger { border-color: rgba(239, 68, 68, 0.30); }
+.mapp-product-intel-card.success { border-color: rgba(16, 185, 129, 0.28); }
+.mapp-product-intel-card.profit { border-color: rgba(236, 72, 153, 0.30); }
+
+.mapp-product-intel-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #ffe4ef, #fff4c7);
+  box-shadow: inset 0 0 0 1px rgba(236, 72, 153, 0.18);
+}
+
+.mapp-product-intel-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.mapp-product-intel-copy strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.mapp-product-intel-copy em {
+  font-style: normal;
+  color: #be185d;
+  font-weight: 800;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mapp-product-intel-copy small {
+  color: #64748b;
+  font-size: 0.77rem;
+  line-height: 1.25;
+}

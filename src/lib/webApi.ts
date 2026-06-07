@@ -23,6 +23,7 @@ import type {
   PaymentMethod,
   PaymentSummary,
   Product,
+  ProductInsight,
   OrderSummary,
   ReceiptSummary,
   ReportData,
@@ -57,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v179-crediario-produtos-cliente-rapido';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v179-crediario-produtos-cliente-rapido';
+export const WEB_APP_VERSION = 'pwa-supabase-v180-produtos-inteligentes-alertas';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v180-produtos-inteligentes-alertas';
 
 
 export interface WebTrainingModeState {
@@ -339,6 +340,48 @@ export function webDemoDashboard(): DashboardData {
     low_stock_count: DEMO_PRODUCTS.filter((product) => product.stock <= 3).length,
     payment_today,
     recent_sales: demoClone(DEMO_SALES),
+    product_insights: [
+      {
+        id: 'demo-insight-hot-kit',
+        product_id: 'demo-product-3',
+        product_name: 'Kit presente demo',
+        category: 'Presentes',
+        kind: 'low_stock_hot',
+        tone: 'danger',
+        title: 'Produto campeão com estoque baixo',
+        detail: 'Vendeu 9 unidades nos últimos 7 dias e restam só 2. Repor evita perder venda.',
+        action_label: 'Repor estoque',
+        sold_7d: 9,
+        sold_previous_7d: 4,
+        sold_30d: 22,
+        revenue_30d: 1537.8,
+        profit_30d: 558.8,
+        stock: 2,
+        low_stock_limit: 3,
+        last_sold_at: DEMO_NOW,
+        priority: 98,
+      },
+      {
+        id: 'demo-insight-top-vestido',
+        product_id: 'demo-product-1',
+        product_name: 'Vestido floral demo',
+        category: 'Roupas femininas',
+        kind: 'top_seller',
+        tone: 'success',
+        title: 'Produto em destaque',
+        detail: 'É um dos produtos mais vendidos dos últimos 30 dias. Vale deixar em evidência no PDV.',
+        action_label: 'Ver produto',
+        sold_7d: 6,
+        sold_previous_7d: 5,
+        sold_30d: 18,
+        revenue_30d: 1798.2,
+        profit_30d: 673.2,
+        stock: 8,
+        low_stock_limit: 3,
+        last_sold_at: DEMO_YESTERDAY,
+        priority: 78,
+      },
+    ],
   };
 }
 
@@ -837,6 +880,7 @@ function emptyDashboard(): DashboardData {
     low_stock_count: 0,
     payment_today: [],
     recent_sales: [],
+    product_insights: [],
   };
 }
 
@@ -1026,6 +1070,235 @@ function seriesLabels(period: DashboardSalesPeriod): DashboardSalesPoint[] {
   });
 }
 
+
+function daysAgoIso(days: number): string {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - days);
+  return date.toISOString();
+}
+
+interface ProductInsightStats {
+  productId: string;
+  productName: string;
+  sold7d: number;
+  soldPrevious7d: number;
+  sold30d: number;
+  revenue30d: number;
+  profit30d: number;
+  lastSoldAt: string | null;
+}
+
+function makeProductInsightId(kind: ProductInsight['kind'], productId: string): string {
+  return `product-${kind}-${productId || 'sem-id'}`;
+}
+
+function productInsightPriority(kind: ProductInsight['kind'], stats: ProductInsightStats, stock: number, lowStockLimit: number): number {
+  if (kind === 'low_stock_hot') return 100 + stats.sold7d + Math.max(0, lowStockLimit - stock);
+  if (kind === 'rising') return 82 + stats.sold7d;
+  if (kind === 'top_seller') return 70 + stats.sold30d;
+  if (kind === 'high_margin') return 58 + Math.min(25, Math.round(stats.profit30d / 20));
+  return 28 + Math.max(0, lowStockLimit - stock);
+}
+
+function buildProductInsight(params: {
+  kind: ProductInsight['kind'];
+  product: Record<string, unknown>;
+  stats: ProductInsightStats;
+  lowStockLimit: number;
+}): ProductInsight {
+  const productId = stringValue(params.product.id) || params.stats.productId;
+  const productName = stringValue(params.product.name, params.stats.productName || 'Produto');
+  const category = stringValue(params.product.category);
+  const stock = Math.max(0, Math.round(numberValue(params.product.stock)));
+  const lowStockLimit = Math.max(0, Math.round(params.lowStockLimit || 0));
+  const kind = params.kind;
+  const priority = productInsightPriority(kind, params.stats, stock, lowStockLimit);
+
+  if (kind === 'low_stock_hot') {
+    return {
+      id: makeProductInsightId(kind, productId), product_id: productId, product_name: productName, category,
+      kind, tone: 'danger', title: 'Produto campeão com estoque baixo',
+      detail: `Vendeu ${params.stats.sold7d} un. nos últimos 7 dias e restam ${stock}. Repor evita perder venda.`,
+      action_label: 'Repor estoque', sold_7d: params.stats.sold7d, sold_previous_7d: params.stats.soldPrevious7d,
+      sold_30d: params.stats.sold30d, revenue_30d: params.stats.revenue30d, profit_30d: params.stats.profit30d,
+      stock, low_stock_limit: lowStockLimit, last_sold_at: params.stats.lastSoldAt, priority,
+    };
+  }
+  if (kind === 'rising') {
+    const diff = Math.max(0, params.stats.sold7d - params.stats.soldPrevious7d);
+    return {
+      id: makeProductInsightId(kind, productId), product_id: productId, product_name: productName, category,
+      kind, tone: 'warning', title: 'Produto subindo nas vendas',
+      detail: `Vendeu ${diff} un. a mais que na semana anterior. Vale destacar na vitrine e conferir estoque.`,
+      action_label: 'Ver tendência', sold_7d: params.stats.sold7d, sold_previous_7d: params.stats.soldPrevious7d,
+      sold_30d: params.stats.sold30d, revenue_30d: params.stats.revenue30d, profit_30d: params.stats.profit30d,
+      stock, low_stock_limit: lowStockLimit, last_sold_at: params.stats.lastSoldAt, priority,
+    };
+  }
+  if (kind === 'high_margin') {
+    return {
+      id: makeProductInsightId(kind, productId), product_id: productId, product_name: productName, category,
+      kind, tone: 'profit', title: 'Produto com bom lucro',
+      detail: `Gerou lucro estimado de R$ ${params.stats.profit30d.toFixed(2).replace('.', ',')} nos últimos 30 dias.`,
+      action_label: 'Destacar no PDV', sold_7d: params.stats.sold7d, sold_previous_7d: params.stats.soldPrevious7d,
+      sold_30d: params.stats.sold30d, revenue_30d: params.stats.revenue30d, profit_30d: params.stats.profit30d,
+      stock, low_stock_limit: lowStockLimit, last_sold_at: params.stats.lastSoldAt, priority,
+    };
+  }
+  if (kind === 'dormant') {
+    return {
+      id: makeProductInsightId(kind, productId), product_id: productId, product_name: productName, category,
+      kind, tone: 'info', title: 'Produto parado em estoque',
+      detail: stock > 0 ? `Tem ${stock} un. em estoque e não vendeu nos últimos 30 dias. Pode virar promoção.` : 'Sem movimento recente.',
+      action_label: 'Criar ação', sold_7d: params.stats.sold7d, sold_previous_7d: params.stats.soldPrevious7d,
+      sold_30d: params.stats.sold30d, revenue_30d: params.stats.revenue30d, profit_30d: params.stats.profit30d,
+      stock, low_stock_limit: lowStockLimit, last_sold_at: params.stats.lastSoldAt, priority,
+    };
+  }
+  return {
+    id: makeProductInsightId(kind, productId), product_id: productId, product_name: productName, category,
+    kind, tone: 'success', title: 'Produto em destaque',
+    detail: `Vendeu ${params.stats.sold30d} un. nos últimos 30 dias. Vale deixar fácil no PDV e repor antes de acabar.`,
+    action_label: 'Ver produto', sold_7d: params.stats.sold7d, sold_previous_7d: params.stats.soldPrevious7d,
+    sold_30d: params.stats.sold30d, revenue_30d: params.stats.revenue30d, profit_30d: params.stats.profit30d,
+    stock, low_stock_limit: lowStockLimit, last_sold_at: params.stats.lastSoldAt, priority,
+  };
+}
+
+async function webProductInsights(storeId: string, lowStockLimit: number): Promise<ProductInsight[]> {
+  const client = await getClient();
+  const now = new Date();
+  const start30 = daysAgoIso(29);
+  const start7 = daysAgoIso(6);
+  const startPrevious7 = daysAgoIso(13);
+
+  const { data: sales } = await client
+    .from('sales')
+    .select('id, created_at, status')
+    .eq('store_id', storeId)
+    .gte('created_at', startPrevious7)
+    .neq('status', 'canceled')
+    .order('created_at', { ascending: false })
+    .limit(600);
+
+  const saleRows = (sales ?? []) as Record<string, unknown>[];
+  const saleDateById = new Map<string, string>();
+  for (const row of saleRows) {
+    const id = stringValue(row.id);
+    if (id) saleDateById.set(id, toIso(row.created_at));
+  }
+  const saleIds = Array.from(saleDateById.keys());
+
+  const { data: products } = await client
+    .from('products')
+    .select('id, name, category, stock, cost_price, price, status, updated_at')
+    .eq('store_id', storeId)
+    .neq('status', 'inactive')
+    .order('updated_at', { ascending: false })
+    .limit(500);
+
+  const productRows = ((products ?? []) as Record<string, unknown>[]).filter((row) => {
+    const status = stringValue(row.status).toLowerCase();
+    return status !== 'inativo' && status !== 'inactive';
+  });
+  const productsById = new Map<string, Record<string, unknown>>();
+  for (const product of productRows) {
+    const id = stringValue(product.id);
+    if (id) productsById.set(id, product);
+  }
+
+  const statsByProduct = new Map<string, ProductInsightStats>();
+  if (saleIds.length > 0) {
+    const { data: items } = await client
+      .from('sale_items')
+      .select('sale_id, product_id, product_name, qty, unit_price, total, created_at')
+      .eq('store_id', storeId)
+      .in('sale_id', saleIds)
+      .order('created_at', { ascending: false })
+      .limit(1200);
+
+    for (const item of (items ?? []) as Record<string, unknown>[]) {
+      const saleId = stringValue(item.sale_id);
+      const productId = stringValue(item.product_id);
+      if (!productId) continue;
+      const saleDateIso = saleDateById.get(saleId) || toIso(item.created_at);
+      const saleDate = new Date(saleDateIso);
+      if (Number.isNaN(saleDate.getTime())) continue;
+      const qty = Math.max(0, numberValue(item.qty));
+      const total = numberValue(item.total, qty * numberValue(item.unit_price));
+      const product = productsById.get(productId);
+      const costPrice = product ? Math.max(0, numberValue(product.cost_price)) : 0;
+      const current = statsByProduct.get(productId) ?? {
+        productId,
+        productName: stringValue(item.product_name, product ? stringValue(product.name, 'Produto') : 'Produto'),
+        sold7d: 0,
+        soldPrevious7d: 0,
+        sold30d: 0,
+        revenue30d: 0,
+        profit30d: 0,
+        lastSoldAt: null,
+      };
+      if (saleDate >= new Date(start30)) {
+        current.sold30d += qty;
+        current.revenue30d += total;
+        current.profit30d += Math.max(0, total - (costPrice * qty));
+      }
+      if (saleDate >= new Date(start7)) current.sold7d += qty;
+      if (saleDate >= new Date(startPrevious7) && saleDate < new Date(start7)) current.soldPrevious7d += qty;
+      if (!current.lastSoldAt || saleDate > new Date(current.lastSoldAt)) current.lastSoldAt = saleDate.toISOString();
+      statsByProduct.set(productId, current);
+    }
+  }
+
+  const insights = new Map<string, ProductInsight>();
+  const sortedStats = Array.from(statsByProduct.values()).sort((a, b) => b.sold30d - a.sold30d || b.revenue30d - a.revenue30d);
+  for (const stats of sortedStats) {
+    const product = productsById.get(stats.productId) ?? { id: stats.productId, name: stats.productName, stock: 0, category: '' };
+    const stock = Math.max(0, Math.round(numberValue(product.stock)));
+    if (stats.sold7d > 0 && stock <= lowStockLimit) {
+      const insight = buildProductInsight({ kind: 'low_stock_hot', product, stats, lowStockLimit });
+      insights.set(insight.id, insight);
+      continue;
+    }
+    if (stats.sold7d >= 2 && stats.sold7d > stats.soldPrevious7d && stats.sold7d >= Math.max(2, stats.soldPrevious7d * 1.5)) {
+      const insight = buildProductInsight({ kind: 'rising', product, stats, lowStockLimit });
+      insights.set(insight.id, insight);
+      continue;
+    }
+    if (stats.sold30d >= 2) {
+      const insight = buildProductInsight({ kind: 'top_seller', product, stats, lowStockLimit });
+      insights.set(insight.id, insight);
+    }
+    if (stats.profit30d >= 60 && stats.sold30d >= 2) {
+      const insight = buildProductInsight({ kind: 'high_margin', product, stats, lowStockLimit });
+      insights.set(insight.id, insight);
+    }
+  }
+
+  const hasDormantInsight = Array.from(insights.values()).some((item) => item.kind === 'dormant');
+  if (!hasDormantInsight) {
+    const dormantCutoff = now.getTime() - (30 * 86400000);
+    const dormant = productRows
+      .map((product) => {
+        const id = stringValue(product.id);
+        const stats = statsByProduct.get(id) ?? { productId: id, productName: stringValue(product.name, 'Produto'), sold7d: 0, soldPrevious7d: 0, sold30d: 0, revenue30d: 0, profit30d: 0, lastSoldAt: null };
+        return { product, stats, stock: Math.max(0, Math.round(numberValue(product.stock))) };
+      })
+      .filter((item) => item.stock > 0 && (!item.stats.lastSoldAt || new Date(item.stats.lastSoldAt).getTime() < dormantCutoff))
+      .sort((a, b) => b.stock - a.stock)
+      .slice(0, 1);
+    for (const item of dormant) {
+      const insight = buildProductInsight({ kind: 'dormant', product: item.product, stats: item.stats, lowStockLimit });
+      insights.set(insight.id, insight);
+    }
+  }
+
+  return Array.from(insights.values())
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 6);
+}
+
 export async function webDashboard(): Promise<DashboardData> {
   const context = await getWebStoreContext({ createIfMissing: true });
   const client = await getClient();
@@ -1035,6 +1308,11 @@ export async function webDashboard(): Promise<DashboardData> {
   dashboard.products_total = await countRows('products', context.store.id, { status: 'active' });
   dashboard.low_stock_count = await countRows('products', context.store.id, { lowStockLimit: context.store.low_stock_limit });
   dashboard.orders_open = await countRows('orders', context.store.id, { status: 'open' });
+  try {
+    dashboard.product_insights = await webProductInsights(context.store.id, context.store.low_stock_limit);
+  } catch {
+    dashboard.product_insights = [];
+  }
 
   try {
     const { data: credits } = await client
@@ -3951,7 +4229,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v179 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v180 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

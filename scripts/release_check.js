@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v179-crediario-produtos-cliente-rapido';
-const currentCache = 'smart-loja-pwa-supabase-v179-crediario-produtos-cliente-rapido';
+const currentVersion = 'pwa-supabase-v180-produtos-inteligentes-alertas';
+const currentCache = 'smart-loja-pwa-supabase-v180-produtos-inteligentes-alertas';
 
 const requiredCore = [
   'package.json',
@@ -116,8 +116,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v179 crediario produtos cliente rapido.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v179 crediario produtos cliente rapido.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v180 produtos inteligentes alertas.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v180 produtos inteligentes alertas.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -170,4 +170,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v179 PWA passou. Extrato do crediario com produtos e cliente rapido conferidos.');
+console.log('OK: release_check v180 PWA passou. Produtos inteligentes e alertas de destaque conferidos.');

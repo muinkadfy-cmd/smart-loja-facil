@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-import type { AppStatus, DashboardData, PageKey, PaymentMethod, ReceiptSummary, SaleSummary } from '../../types';
+import type { AppStatus, DashboardData, PageKey, PaymentMethod, ProductInsight, ReceiptSummary, SaleSummary } from '../../types';
 import { ActionTile } from '../components/ActionTile';
 import { EmptyState } from '../components/EmptyState';
 import { ListCard } from '../components/ListCard';
@@ -25,6 +25,7 @@ function emptyDashboard(): DashboardData {
     low_stock_count: 0,
     payment_today: [],
     recent_sales: [],
+    product_insights: [],
   };
 }
 
@@ -33,6 +34,20 @@ function paymentLabel(method: PaymentMethod): string {
   if (method === 'pix') return 'Pix';
   if (method === 'cartao') return 'Cartão';
   return 'Crediário';
+}
+
+function productInsightToneClass(tone: ProductInsight['tone']): string {
+  if (tone === 'danger') return 'danger';
+  if (tone === 'warning') return 'warning';
+  if (tone === 'profit') return 'profit';
+  if (tone === 'success') return 'success';
+  return 'info';
+}
+
+function productInsightMetric(insight: ProductInsight): string {
+  if (insight.kind === 'dormant') return `${formatNumber(insight.stock)} em estoque`;
+  if (insight.kind === 'high_margin') return `Lucro ${formatCurrency(insight.profit_30d)}`;
+  return `${formatNumber(insight.sold_7d)} un. em 7 dias`;
 }
 
 export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): JSX.Element {
@@ -89,6 +104,35 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
           <span>Continue acompanhando produtos e vendas.</span>
         </section>
       )}
+
+      {(dashboard.product_insights ?? []).length ? (
+        <section className="mapp-section-block mapp-product-intel-block">
+          <div className="mapp-section-title">
+            <h2>Produtos em destaque</h2>
+            <button type="button" onClick={() => onNavigate('products')}>Ver produtos</button>
+          </div>
+          <div className="mapp-product-intel-list">
+            {(dashboard.product_insights ?? []).slice(0, 3).map((insight) => (
+              <button
+                type="button"
+                key={insight.id}
+                className={`mapp-product-intel-card ${productInsightToneClass(insight.tone)}`}
+                onClick={() => { window.location.hash = `produto-${insight.product_id}`; onNavigate('products'); }}
+              >
+                <span className="mapp-product-intel-icon">
+                  <span aria-hidden="true">{insight.kind === 'low_stock_hot' ? '⚠️' : insight.kind === 'dormant' ? '💡' : '🔥'}</span>
+                </span>
+                <span className="mapp-product-intel-copy">
+                  <strong>{insight.title}</strong>
+                  <em>{insight.product_name}</em>
+                  <small>{insight.detail}</small>
+                </span>
+                <b>{productInsightMetric(insight)}</b>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mapp-section-block">
         <div className="mapp-section-title">

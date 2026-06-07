@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { dateTime, money } from '../lib/format';
 import { getRuntimeInfo } from '../lib/runtime';
 import { getWebStoreContext, webRoleLabel, type WebStoreRole } from '../lib/webApi';
-import type { AppStatus, DashboardData, DashboardSalesPeriod, DashboardSalesPoint, PageKey, Product } from '../types';
+import type { AppStatus, DashboardData, DashboardSalesPeriod, DashboardSalesPoint, PageKey, Product, ProductInsight } from '../types';
 
 interface PageProps {
   status: AppStatus | null;
@@ -85,6 +85,22 @@ function paymentMethodLabel(method: string): string {
   if (method === 'cartao') return 'Cartão';
   if (method === 'crediario') return 'Crediário';
   return 'Dinheiro';
+}
+
+function productInsightToneLabel(tone: ProductInsight['tone']): string {
+  if (tone === 'danger') return 'Crítico';
+  if (tone === 'warning') return 'Atenção';
+  if (tone === 'profit') return 'Lucro';
+  if (tone === 'success') return 'Destaque';
+  return 'Ação';
+}
+
+function productInsightToneClass(tone: ProductInsight['tone']): string {
+  if (tone === 'danger') return 'danger';
+  if (tone === 'warning') return 'warning';
+  if (tone === 'profit') return 'profit';
+  if (tone === 'success') return 'success';
+  return 'info';
 }
 
 export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageProps): JSX.Element {
@@ -187,6 +203,7 @@ export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageP
   const paymentSummaryText = paymentSummary.length > 0
     ? paymentSummary.slice(0, 3).map((item) => `${paymentMethodLabel(item.method)} ${money(item.total)}`).join(' · ')
     : 'Sem recebimentos registrados hoje.';
+  const productInsights = data?.product_insights ?? [];
   const storeName = webIdentity.storeName || status?.settings.store_name || 'Jaque Confecções e Presentes';
   const userLabel = runtimeInfo.isWeb
     ? webIdentity.email || status?.settings.owner_name || 'Aguardando login'
@@ -360,6 +377,38 @@ export function Dashboard({ status, refreshToken, onChanged, onNavigate }: PageP
           <button type="button" onClick={() => onNavigate('reports')}>Relatórios</button>
         </div>
       </section>
+
+      {productInsights.length > 0 ? (
+        <section className="neo-surface neo-product-intel-surface" aria-label="Inteligência de produtos">
+          <div className="neo-section-head neo-section-head-space">
+            <div>
+              <h2>Produtos em destaque</h2>
+              <p>Alertas automáticos com base nas vendas recentes, estoque e margem cadastrada.</p>
+            </div>
+            <button type="button" className="neo-dashboard-primary-action" onClick={() => onNavigate('products')}>Abrir produtos</button>
+          </div>
+          <div className="neo-product-intel-grid">
+            {productInsights.slice(0, 4).map((insight) => (
+              <button
+                type="button"
+                key={insight.id}
+                className={`neo-product-intel-card ${productInsightToneClass(insight.tone)}`}
+                onClick={() => { window.location.hash = `produto-${insight.product_id}`; onNavigate('products'); }}
+              >
+                <span className="neo-product-intel-badge">{productInsightToneLabel(insight.tone)}</span>
+                <strong>{insight.title}</strong>
+                <em>{insight.product_name}</em>
+                <small>{insight.detail}</small>
+                <span className="neo-product-intel-metrics">
+                  <b>{insight.sold_7d} un. em 7 dias</b>
+                  <b>{money(insight.revenue_30d)} em 30 dias</b>
+                  <b>Estoque {insight.stock}</b>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="neo-dashboard-updated">
         <AppIcon name="atualizar" size={16} className="app-icon-chip" />

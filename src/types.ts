@@ -39,6 +39,30 @@ export interface AppStatus {
   dashboard: DashboardData;
 }
 
+export type ProductInsightKind = 'top_seller' | 'rising' | 'low_stock_hot' | 'dormant' | 'high_margin';
+export type ProductInsightTone = 'success' | 'warning' | 'danger' | 'info' | 'profit';
+
+export interface ProductInsight {
+  id: string;
+  product_id: string;
+  product_name: string;
+  category: string;
+  kind: ProductInsightKind;
+  tone: ProductInsightTone;
+  title: string;
+  detail: string;
+  action_label: string;
+  sold_7d: number;
+  sold_previous_7d: number;
+  sold_30d: number;
+  revenue_30d: number;
+  profit_30d: number;
+  stock: number;
+  low_stock_limit: number;
+  last_sold_at: string | null;
+  priority: number;
+}
+
 export interface DashboardData {
   today_sales_total: number;
   today_sales_count: number;
@@ -50,6 +74,7 @@ export interface DashboardData {
   low_stock_count: number;
   payment_today: PaymentSummary[];
   recent_sales: SaleSummary[];
+  product_insights?: ProductInsight[];
 }
 
 export type DashboardSalesPeriod = 'today' | '7d' | '30d' | 'month';
