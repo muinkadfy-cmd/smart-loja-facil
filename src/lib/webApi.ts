@@ -28,6 +28,7 @@ import type {
   ReportData,
   ReportKind,
   SaleSummary,
+  SaleItemSummary,
   Settings,
 } from '../types';
 
@@ -56,8 +57,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v178-alertas-rotas-icone-flor';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v178-alertas-rotas-icone-flor';
+export const WEB_APP_VERSION = 'pwa-supabase-v179-crediario-produtos-cliente-rapido';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v179-crediario-produtos-cliente-rapido';
 
 
 export interface WebTrainingModeState {
@@ -2383,6 +2384,15 @@ function mapSale(row: Record<string, unknown>): SaleSummary {
   };
 }
 
+function mapSaleItem(row: Record<string, unknown>): SaleItemSummary {
+  return {
+    product_name: stringValue(row.product_name, 'Produto'),
+    qty: numberValue(row.qty),
+    unit_price: numberValue(row.unit_price),
+    total: numberValue(row.total),
+  };
+}
+
 async function enrichSaleSummariesWithProducts(storeId: string, sales: SaleSummary[]): Promise<SaleSummary[]> {
   if (sales.length === 0) return sales;
   const client = await getClient();
@@ -2668,7 +2678,7 @@ function mapInstallment(row: Record<string, unknown>): CreditInstallment {
   };
 }
 
-function mapCredit(row: Record<string, unknown>, installments: CreditInstallment[], salesById: Map<string, number>, customersById: Map<string, { phone: string; whatsapp: string }>): CreditSummary {
+function mapCredit(row: Record<string, unknown>, installments: CreditInstallment[], salesById: Map<string, number>, customersById: Map<string, { phone: string; whatsapp: string }>, saleItemsBySaleId: Map<string, SaleItemSummary[]>): CreditSummary {
   const customerId = stringValue(row.customer_id);
   const contact = customersById.get(customerId);
   const saleId = stringValue(row.sale_id);
@@ -2684,6 +2694,7 @@ function mapCredit(row: Record<string, unknown>, installments: CreditInstallment
     status: creditStatusFromCloud(row.status),
     created_at: toIso(row.created_at),
     installments,
+    sale_items: saleItemsBySaleId.get(saleId) ?? [],
   };
 }
 
@@ -2704,6 +2715,7 @@ export async function webCredits(): Promise<CreditSummary[]> {
   const installmentsByCreditId = new Map<string, CreditInstallment[]>();
   const salesById = new Map<string, number>();
   const customersById = new Map<string, { phone: string; whatsapp: string }>();
+  const saleItemsBySaleId = new Map<string, SaleItemSummary[]>();
   if (creditIds.length > 0) {
     const { data: installmentRows } = await client.from('credit_installments').select('id, credit_id, number, amount, paid_amount, due_date, paid_at, status, payment_method').eq('store_id', context.store.id).in('credit_id', creditIds).order('number', { ascending: true });
     for (const installment of installmentRows ?? []) {
@@ -2721,6 +2733,21 @@ export async function webCredits(): Promise<CreditSummary[]> {
       salesById.set(stringValue(row.id), numberValue(row.number));
     }
   }
+  if (saleIds.length > 0) {
+    const { data: saleItems } = await client
+      .from('sale_items')
+      .select('sale_id, product_name, qty, unit_price, total, created_at')
+      .eq('store_id', context.store.id)
+      .in('sale_id', saleIds)
+      .order('created_at', { ascending: true });
+    for (const item of saleItems ?? []) {
+      const row = item as Record<string, unknown>;
+      const saleId = stringValue(row.sale_id);
+      const list = saleItemsBySaleId.get(saleId) ?? [];
+      list.push(mapSaleItem(row));
+      saleItemsBySaleId.set(saleId, list);
+    }
+  }
   if (customerIds.length > 0) {
     const { data: customers } = await client.from('customers').select('id, phone, whatsapp').eq('store_id', context.store.id).in('id', customerIds);
     for (const customer of customers ?? []) {
@@ -2728,7 +2755,7 @@ export async function webCredits(): Promise<CreditSummary[]> {
       customersById.set(stringValue(row.id), { phone: stringValue(row.phone), whatsapp: stringValue(row.whatsapp) });
     }
   }
-  return credits.map((row: Record<string, unknown>) => mapCredit(row, installmentsByCreditId.get(stringValue(row.id)) ?? [], salesById, customersById));
+  return credits.map((row: Record<string, unknown>) => mapCredit(row, installmentsByCreditId.get(stringValue(row.id)) ?? [], salesById, customersById, saleItemsBySaleId));
 }
 
 export async function webReceiveInstallment(payload: unknown): Promise<CreditSummary> {
@@ -3924,7 +3951,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v178 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v179 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

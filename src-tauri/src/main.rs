@@ -154,6 +154,14 @@ struct SaleInput {
 struct SaleItemInput { product_id: String, qty: f64, unit_price: f64 }
 
 #[derive(Debug, Serialize)]
+struct SaleItemSummary {
+    product_name: String,
+    qty: f64,
+    unit_price: f64,
+    total: f64,
+}
+
+#[derive(Debug, Serialize)]
 struct CreditSummary {
     id: String,
     customer_name: String,
@@ -166,6 +174,7 @@ struct CreditSummary {
     status: String,
     created_at: String,
     installments: Vec<CreditInstallment>,
+    sale_items: Vec<SaleItemSummary>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1806,7 +1815,13 @@ fn list_credits(app: AppHandle) -> CmdResult<Vec<CreditSummary>> {
     let mut out = Vec::new();
     for credit in base {
         let mut istmt = connection.prepare("SELECT id,number,amount,paid_amount,due_date,paid_at,status,payment_method FROM credit_installments WHERE credit_id=?1 ORDER BY number").map_err(|e| e.to_string())?;
-        let installments = istmt.query_map(params![credit.0], |row| Ok(CreditInstallment { id: row.get(0)?, number: row.get(1)?, amount: row.get(2)?, paid_amount: row.get(3)?, due_date: row.get(4)?, paid_at: row.get(5)?, status: row.get(6)?, payment_method: row.get(7)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
+        let installments = istmt.query_map(params![credit.0.clone()], |row| Ok(CreditInstallment { id: row.get(0)?, number: row.get(1)?, amount: row.get(2)?, paid_amount: row.get(3)?, due_date: row.get(4)?, paid_at: row.get(5)?, status: row.get(6)?, payment_method: row.get(7)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
+        let sale_items = if credit.4.trim().is_empty() {
+            Vec::new()
+        } else {
+            let mut item_stmt = connection.prepare("SELECT product_name,qty,unit_price,total FROM sale_items WHERE sale_id=?1 ORDER BY created_at").map_err(|e| e.to_string())?;
+            item_stmt.query_map(params![credit.4.clone()], |row| Ok(SaleItemSummary { product_name: row.get(0)?, qty: row.get(1)?, unit_price: row.get(2)?, total: row.get(3)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+        };
         out.push(CreditSummary {
             id: credit.0,
             customer_name: credit.1,
@@ -1818,7 +1833,8 @@ fn list_credits(app: AppHandle) -> CmdResult<Vec<CreditSummary>> {
             balance: credit.7,
             status: credit.8,
             created_at: credit.9,
-            installments
+            installments,
+            sale_items,
         });
     }
     Ok(out)

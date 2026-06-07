@@ -8959,3 +8959,133 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   display: block;
   filter: drop-shadow(0 5px 8px rgba(188, 34, 102, 0.18));
 }
+
+/* Mega Lote 179 — cliente rápido no PDV e acabamento do fluxo de crediário */
+.mapp-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.mapp-customer-quick-actions .mapp-secondary-button.compact {
+  min-height: 40px;
+  border-radius: 14px;
+  padding-inline: 12px;
+}
+
+.mapp-customer-quick-actions .mapp-secondary-button.strong {
+  border-color: rgba(205, 53, 116, .32);
+  background: linear-gradient(135deg, rgba(255, 245, 249, .98), rgba(255, 255, 255, .96));
+  color: #9f124d;
+  font-weight: 900;
+}
+
+.mapp-pdv-warning-action {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+}
+
+.mapp-pdv-warning-action button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 14px;
+  background: #111827;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 12px 26px rgba(17, 24, 39, .18);
+}
+
+.mapp-bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, .48);
+  backdrop-filter: blur(6px);
+}
+
+.mapp-bottom-sheet {
+  width: min(620px, 100%);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border-radius: 26px 26px 18px 18px;
+  border: 1px solid rgba(148, 163, 184, .28);
+  background: #fff;
+  box-shadow: 0 -24px 70px rgba(15, 23, 42, .30);
+  padding: 18px;
+}
+
+.mapp-bottom-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.mapp-bottom-sheet-head strong {
+  display: block;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.mapp-bottom-sheet-head p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.mapp-bottom-sheet-head button,
+.mapp-bottom-sheet-actions .mapp-secondary-button {
+  border: 1px solid rgba(148, 163, 184, .28);
+  background: #f8fafc;
+  color: #334155;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 850;
+}
+
+.mapp-bottom-sheet-actions {
+  position: sticky;
+  bottom: -18px;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+  margin: 16px -18px -18px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(255,255,255,.88), #fff 36%);
+  border-top: 1px solid rgba(148, 163, 184, .18);
+}
+
+.mapp-quick-customer-grid label {
+  min-width: 0;
+}
+
+.mapp-quick-customer-grid input {
+  min-height: 46px;
+}
+
+@media (max-width: 520px) {
+  .mapp-bottom-sheet-backdrop {
+    padding: 8px;
+  }
+
+  .mapp-bottom-sheet {
+    border-radius: 24px 24px 16px 16px;
+    padding: 14px;
+  }
+
+  .mapp-bottom-sheet-actions {
+    grid-template-columns: 1fr;
+    margin-inline: -14px;
+    padding-inline: 14px;
+  }
+}

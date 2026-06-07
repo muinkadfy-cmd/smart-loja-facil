@@ -32,6 +32,15 @@ type CartItem = {
   image_data: string;
 };
 
+type QuickCustomerForm = {
+  name: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+};
+
+const emptyQuickCustomerForm: QuickCustomerForm = { name: '', phone: '', whatsapp: '', address: '' };
+
 function todayInputValue(): string {
   const date = new Date();
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
@@ -100,6 +109,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const debouncedCustomerQuery = useDebouncedValue(customerQuery);
   const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerId, setCustomerId] = useState('');
+  const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
+  const [quickCustomer, setQuickCustomer] = useState<QuickCustomerForm>(emptyQuickCustomerForm);
+  const [savingQuickCustomer, setSavingQuickCustomer] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
   const [discount, setDiscount] = useState(0);
   const [amountPaid, setAmountPaid] = useState(0);
@@ -231,6 +243,48 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       if (nextQty === 0) return [];
       return { ...item, qty: nextQty };
     }));
+  }
+
+  function openQuickCustomerForm(): void {
+    setError(null);
+    setFeedback(null);
+    setPaymentMethod('crediario');
+    setQuickCustomerOpen(true);
+  }
+
+  async function saveQuickCustomer(): Promise<void> {
+    if (savingQuickCustomer) return;
+    const name = quickCustomer.name.trim();
+    if (!name) {
+      setError('Informe o nome do cliente para salvar e continuar a venda no crediário.');
+      return;
+    }
+    setSavingQuickCustomer(true);
+    setError(null);
+    setFeedback(null);
+    try {
+      const saved = await api.saveCustomer({
+        name,
+        phone: quickCustomer.phone.trim(),
+        whatsapp: quickCustomer.whatsapp.trim() || quickCustomer.phone.trim(),
+        address: quickCustomer.address.trim(),
+        credit_limit: 0,
+        status: 'ativo',
+        notes: 'Cliente criado rapidamente dentro da venda.',
+      });
+      setCustomers((current) => [saved, ...current.filter((customer) => customer.id !== saved.id)]);
+      setCustomerId(saved.id);
+      setCustomerQuery(saved.name);
+      setQuickCustomer(emptyQuickCustomerForm);
+      setQuickCustomerOpen(false);
+      setFeedback(`Cliente ${saved.name} cadastrado e selecionado nesta venda. Agora é só conferir as parcelas e finalizar.`);
+      notifyMobileAction({ title: 'Cliente cadastrado', message: `${saved.name} já ficou selecionado para esta venda no crediário.`, tone: 'success', page: 'sales', actionLabel: 'Continuar' });
+      onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingQuickCustomer(false);
+    }
   }
 
   async function finishSale(): Promise<void> {
@@ -469,7 +523,10 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             <option value="">Consumidor final</option>
             {filteredCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
           </select>
-          {canLoadMoreCustomers ? <button type="button" className="mapp-secondary-button compact" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
+          <div className="mapp-inline-actions mapp-customer-quick-actions">
+            {canLoadMoreCustomers ? <button type="button" className="mapp-secondary-button compact" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
+            <button type="button" className="mapp-secondary-button compact strong" onClick={openQuickCustomerForm}>+ Criar cliente rápido</button>
+          </div>
         </label>
         <div className="mapp-payment-segments">
           {(['dinheiro', 'pix', 'cartao', 'crediario'] as PaymentMethod[]).map((method) => (
@@ -479,7 +536,10 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           ))}
         </div>
         {isCreditSale && !customerId ? (
-          <div className="mapp-pdv-warning">Selecione um cliente cadastrado para vender no crediário e gerar parcelas.</div>
+          <div className="mapp-pdv-warning mapp-pdv-warning-action">
+            <span>Selecione um cliente cadastrado para vender no crediário ou cadastre sem sair da venda.</span>
+            <button type="button" onClick={openQuickCustomerForm}>Criar cliente agora</button>
+          </div>
         ) : null}
         <div className="mapp-form-grid mapp-pdv-money-grid">
           <label>
@@ -549,6 +609,42 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           {saving ? 'Enviando para a nuvem...' : '4. Finalizar venda'}
         </button>
       </section>
+
+      {quickCustomerOpen ? (
+        <div className="mapp-bottom-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Criar cliente rápido" onClick={() => setQuickCustomerOpen(false)}>
+          <section className="mapp-bottom-sheet mapp-quick-customer-sheet" onClick={(event) => event.stopPropagation()}>
+            <div className="mapp-bottom-sheet-head">
+              <div>
+                <strong>Criar cliente para esta venda</strong>
+                <p>Salva e já seleciona no crediário sem perder o carrinho.</p>
+              </div>
+              <button type="button" onClick={() => setQuickCustomerOpen(false)}>Fechar</button>
+            </div>
+            <div className="mapp-form-grid mapp-quick-customer-grid">
+              <label className="span-2">
+                <span>Nome do cliente *</span>
+                <input value={quickCustomer.name} onChange={(event) => setQuickCustomer((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Maria Silva" autoFocus />
+              </label>
+              <label>
+                <span>Telefone</span>
+                <input inputMode="tel" value={quickCustomer.phone} onChange={(event) => setQuickCustomer((current) => ({ ...current, phone: event.target.value }))} placeholder="(43) 99999-0000" />
+              </label>
+              <label>
+                <span>WhatsApp</span>
+                <input inputMode="tel" value={quickCustomer.whatsapp} onChange={(event) => setQuickCustomer((current) => ({ ...current, whatsapp: event.target.value }))} placeholder="Pode deixar igual telefone" />
+              </label>
+              <label className="span-2">
+                <span>Endereço</span>
+                <input value={quickCustomer.address} onChange={(event) => setQuickCustomer((current) => ({ ...current, address: event.target.value }))} placeholder="Rua, número, bairro" />
+              </label>
+            </div>
+            <div className="mapp-bottom-sheet-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setQuickCustomerOpen(false)}>Cancelar</button>
+              <button type="button" className="mapp-primary-button" disabled={savingQuickCustomer} onClick={() => void saveQuickCustomer()}>{savingQuickCustomer ? 'Salvando...' : 'Salvar e usar na venda'}</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       <section className="mapp-section-block mapp-recent-sales-block">
         <div className="mapp-section-title mapp-section-title-compact">

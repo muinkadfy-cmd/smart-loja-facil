@@ -101,3 +101,32 @@ th { color: var(--app-muted); font-size: .78rem; text-transform: uppercase; lett
   border-radius: var(--app-radius);
   background: #fbfdff;
 }
+
+/* Mega Lote 179 — cliente rápido dentro da venda web */
+.classic-customer-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.classic-quick-customer-box {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+  padding: 14px;
+  border: 1px solid rgba(219, 39, 119, .20);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 245, 249, .96), rgba(255, 255, 255, .98));
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .06);
+}
+
+.classic-quick-customer-box > strong {
+  color: #9f124d;
+  font-weight: 950;
+}
+
+.classic-quick-customer-box > small {
+  color: #64748b;
+  line-height: 1.35;
+}

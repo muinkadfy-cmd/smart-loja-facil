@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import { creditPaymentMethodLabel, remainingInstallmentAmount } from '../../lib/creditPaymentGuard';
 import { COMPACT_CREDIT_LIMIT, LOAD_MORE_STEP } from '../../lib/listLimits';
-import type { AppStatus, CreditInstallment, CreditSummary, PageKey, ReceiptSummary, Settings } from '../../types';
+import type { AppStatus, CreditInstallment, CreditSummary, PageKey, ReceiptSummary, SaleItemSummary, Settings } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
@@ -314,14 +314,49 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   pdfTextAt(commands, boxX + 18, y - 80, 'ENDERECO', 9, true);
   pdfTextAt(commands, boxX + 128, y - 80, data.address || '-', 10, false);
 
-  // Tabela.
+  // Tabelas.
   y = 520;
   const tableX = 46;
   const tableW = 502;
-  const col = [tableX, tableX + 82, tableX + 222, tableX + 332, tableX + tableW];
   const headerH = 30;
-  const rows = data.rows.slice(0, 10);
-  const rowH = rows.length > 7 ? 24 : 32;
+  const productRows = (data.productRows ?? []).slice(0, 7);
+  if (productRows.length > 0) {
+    const productCol = [tableX, tableX + 54, tableX + 262, tableX + 382, tableX + tableW];
+    const productRowH = productRows.length > 4 ? 22 : 28;
+    commands.push('0 0 0 rg');
+    pdfRect(commands, tableX, y - 22, tableW, 22, true);
+    commands.push('1 1 1 rg');
+    pdfTextAt(commands, tableX + 12, y - 15, 'PRODUTOS COMPRADOS', 10, true);
+    y -= 30;
+    commands.push('0 0 0 rg');
+    pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
+    commands.push('1 1 1 rg');
+    pdfCenteredText(commands, productCol[0], y - 20, productCol[1] - productCol[0], 'QTD', 8, true);
+    pdfCenteredText(commands, productCol[1], y - 20, productCol[2] - productCol[1], 'PRODUTO', 8, true);
+    pdfCenteredText(commands, productCol[2], y - 20, productCol[3] - productCol[2], 'R$ UN', 8, true);
+    pdfCenteredText(commands, productCol[3], y - 20, productCol[4] - productCol[3], 'TOTAL', 8, true);
+    commands.push('0 0 0 rg');
+    pdfRect(commands, tableX, y - headerH - productRows.length * productRowH, tableW, headerH + productRows.length * productRowH, false);
+    for (let i = 1; i < productCol.length - 1; i += 1) pdfLine(commands, productCol[i], y, productCol[i], y - headerH - productRows.length * productRowH);
+    productRows.forEach((row, index) => {
+      const rowTop = y - headerH - index * productRowH;
+      pdfLine(commands, tableX, rowTop - productRowH, tableX + tableW, rowTop - productRowH);
+      pdfCenteredText(commands, productCol[0], rowTop - 17, productCol[1] - productCol[0], row.qtd, 8, false);
+      pdfTextAt(commands, productCol[1] + 8, rowTop - 17, pdfSafeText(row.produto).slice(0, 28), 8, false);
+      pdfCenteredText(commands, productCol[2], rowTop - 17, productCol[3] - productCol[2], row.unitario, 8, false);
+      pdfCenteredText(commands, productCol[3], rowTop - 17, productCol[4] - productCol[3], row.total, 8, false);
+    });
+    y = y - headerH - productRows.length * productRowH - 18;
+  }
+
+  const col = [tableX, tableX + 82, tableX + 222, tableX + 332, tableX + tableW];
+  const rows = data.rows.slice(0, productRows.length > 0 ? 7 : 10);
+  const rowH = rows.length > 7 ? 24 : 30;
+  commands.push('0 0 0 rg');
+  pdfRect(commands, tableX, y - 22, tableW, 22, true);
+  commands.push('1 1 1 rg');
+  pdfTextAt(commands, tableX + 12, y - 15, productRows.length > 0 ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', 10, true);
+  y -= 30;
   commands.push('0 0 0 rg');
   pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
   commands.push('1 1 1 rg');
@@ -335,14 +370,14 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   rows.forEach((row, index) => {
     const rowTop = y - headerH - index * rowH;
     pdfLine(commands, tableX, rowTop - rowH, tableX + tableW, rowTop - rowH);
-    pdfCenteredText(commands, col[0], rowTop - 20, col[1] - col[0], row.parcela, 10, false);
-    pdfCenteredText(commands, col[1], rowTop - 20, col[2] - col[1], row.vencimento, 10, false);
-    pdfCenteredText(commands, col[2], rowTop - 20, col[3] - col[2], row.valor, 10, false);
-    addPdfStatusToken(commands, col[3] + 20, rowTop - 20, row.status);
+    pdfCenteredText(commands, col[0], rowTop - 19, col[1] - col[0], row.parcela, 9, false);
+    pdfCenteredText(commands, col[1], rowTop - 19, col[2] - col[1], row.vencimento, 9, false);
+    pdfCenteredText(commands, col[2], rowTop - 19, col[3] - col[2], row.valor, 9, false);
+    addPdfStatusToken(commands, col[3] + 20, rowTop - 19, row.status);
   });
 
   // Cards de resumo.
-  y = y - headerH - rows.length * rowH - 24;
+  y = y - headerH - rows.length * rowH - 20;
   const cardW = 154;
   const cardH = 58;
   const cards = [
@@ -413,6 +448,7 @@ function triggerPdfDownload(file: { fileName: string; blob: Blob }): void {
 
 
 type PdfReceiptRow = { parcela: string; vencimento: string; valor: string; status: string };
+type PdfProductRow = { qtd: string; produto: string; unitario: string; total: string };
 type PdfReceiptData = {
   title: string;
   subtitle: string;
@@ -420,6 +456,7 @@ type PdfReceiptData = {
   phone: string;
   address: string;
   rows: PdfReceiptRow[];
+  productRows?: PdfProductRow[];
   totalLabel: string;
   totalValue: string;
   paidLabel: string;
@@ -453,6 +490,12 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
         valor: pdfMoney(installment.amount),
         status: installmentStatusLabel(installment),
       })),
+      productRows: creditSaleItems(credit).map((item) => ({
+        qtd: formatProductQty(item.qty),
+        produto: item.product_name,
+        unitario: pdfMoney(item.unit_price),
+        total: pdfMoney(item.total),
+      })),
       totalLabel: 'TOTAL DA NOTA',
       totalValue: pdfMoney(credit.total),
       paidLabel: 'TOTAL PAGO',
@@ -462,6 +505,7 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
       status,
       notes: [
         `Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} gerado em ${now}.`,
+        creditSaleItems(credit).length ? `Produtos na venda: ${creditSaleItems(credit).map((item) => `${formatProductQty(item.qty)}x ${item.product_name}`).join('; ')}.` : 'Produtos da venda não encontrados no histórico.',
         `Parcelas pagas: ${paidCount}/${credit.installments.length}.`,
         `Total da nota: ${pdfMoney(credit.total)}. Total pago: ${pdfMoney(paid)}.`,
         balance > 0.009 ? `Saldo para acompanhar no crediario: ${pdfMoney(balance)}.` : 'Nota quitada sem saldo pendente.',
@@ -781,6 +825,26 @@ function buildSummaryCards(cards: Array<{ icon: string; label: string; value: st
   return `<section class="slf-summary-grid">${cards.map((card) => `<div class="slf-summary-card"><span class="icon">${escapeHtml(card.icon)}</span><span>${escapeHtml(card.label)}</span><strong>${escapeHtml(card.value)}</strong></div>`).join('')}</section>`;
 }
 
+function formatProductQty(value: number): string {
+  const qty = Number(value || 0);
+  if (!Number.isFinite(qty)) return '1';
+  return Number.isInteger(qty) ? formatNumber(qty) : qty.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+}
+
+function creditSaleItems(credit: CreditSummary): SaleItemSummary[] {
+  return (credit.sale_items ?? []).filter((item) => String(item.product_name || '').trim());
+}
+
+function buildCreditProductsTableHtml(credit: CreditSummary): string {
+  const items = creditSaleItems(credit);
+  if (!items.length) {
+    return `<section class="slf-note"><div class="slf-note-title">Produtos comprados</div><ul><li>Produtos desta venda ainda não foram encontrados no histórico. O extrato mantém as parcelas e totais da nota.</li></ul></section>`;
+  }
+  return `<table class="slf-table" aria-label="Produtos comprados no crediário"><thead><tr><th>Qtd.</th><th>Produto</th><th class="num">R$ un</th><th class="num">Total</th></tr></thead><tbody>
+    ${items.slice(0, 12).map((item) => `<tr><td>${escapeHtml(formatProductQty(item.qty))}</td><td class="left">${escapeHtml(item.product_name)}</td><td class="num">${formatCurrency(item.unit_price)}</td><td class="num">${formatCurrency(item.total)}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
 function dueDateHint(installment: CreditInstallment): string {
   const dueDate = new Date(`${installment.due_date}T00:00:00`);
   if (Number.isNaN(dueDate.getTime())) return '';
@@ -855,6 +919,9 @@ function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSu
   const noteTone = tone === 'paid' ? 'ok' : tone === 'overdue' ? 'danger' : tone === 'partial' ? 'warn' : '';
   const body = `
     ${buildCustomerBox(credit.customer_name || 'Cliente', credit.customer_whatsapp || credit.customer_phone || '-')}
+    <section class="slf-note"><div class="slf-note-title">Produtos comprados</div></section>
+    ${buildCreditProductsTableHtml(credit)}
+    <section class="slf-note"><div class="slf-note-title">Parcelas da nota</div></section>
     <table class="slf-table" aria-label="Parcelas do crediário"><thead><tr><th>Parcela</th><th>Vencimento</th><th class="num">Valor</th><th>Status</th></tr></thead><tbody>
       ${credit.installments.map((installment) => {
         const label = installmentStatusLabel(installment);
@@ -893,9 +960,11 @@ function installmentShareText(credit: CreditSummary, installment: CreditInstallm
 function creditGeneralShareText(credit: CreditSummary): string {
   const paidCount = credit.installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
   const overdueCount = credit.installments.filter(isOverdue).length;
+  const productLines = creditSaleItems(credit).map((item) => `${formatProductQty(item.qty)}x ${item.product_name} · ${formatCurrency(item.total)}`);
   return [
     `Extrato do crediário / nota #${String(credit.sale_number || 0).padStart(4, '0')}`,
     `Cliente: ${credit.customer_name || 'Cliente'}`,
+    productLines.length ? `Produtos:\n${productLines.join('\n')}` : 'Produtos: não encontrados no histórico',
     `Total: ${formatCurrency(credit.total)}`,
     `Pago: ${formatCurrency(creditPaidTotal(credit))}`,
     `Restante: ${formatCurrency(credit.balance)}`,
@@ -903,6 +972,7 @@ function creditGeneralShareText(credit: CreditSummary): string {
     overdueCount ? `Atenção: ${overdueCount} parcela(s) vencida(s).` : 'Sem parcela vencida no momento.',
   ].join('\n');
 }
+
 
 function buildInstallmentReceiptViews(store: ReceiptStoreInfo, credits: CreditSummary[]): ReceiptView[] {
   return credits.flatMap((credit) => credit.installments.map((installment) => ({

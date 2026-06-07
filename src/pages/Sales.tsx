@@ -19,6 +19,8 @@ import type { Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } fr
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
 interface CartItem { product_id: string; name: string; qty: number; unit_price: number; internal_code?: string; }
+interface QuickCustomerForm { name: string; phone: string; whatsapp: string; address: string; }
+const emptyQuickCustomerForm: QuickCustomerForm = { name: '', phone: '', whatsapp: '', address: '' };
 
 function todayInputValue(): string {
   const now = new Date();
@@ -70,6 +72,9 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const debouncedCustomerQuery = useDebouncedValue(customerQuery);
   const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerId, setCustomerId] = useState('');
+  const [quickCustomer, setQuickCustomer] = useState<QuickCustomerForm>(emptyQuickCustomerForm);
+  const [showQuickCustomer, setShowQuickCustomer] = useState(false);
+  const [savingQuickCustomer, setSavingQuickCustomer] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
   const [installmentCount, setInstallmentCount] = useState(1);
   const [firstDueDate, setFirstDueDate] = useState(todayInputValue());
@@ -283,6 +288,42 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     }
   }
 
+  async function saveQuickCustomer() {
+    if (!canOperate || savingQuickCustomer) return;
+    const name = quickCustomer.name.trim();
+    if (!name) {
+      setMessage('');
+      setError('Informe o nome do cliente para cadastrar e continuar a venda no crediário.');
+      return;
+    }
+    setSavingQuickCustomer(true);
+    setError('');
+    setMessage('');
+    try {
+      const saved = await api.saveCustomer({
+        name,
+        phone: quickCustomer.phone.trim(),
+        whatsapp: quickCustomer.whatsapp.trim() || quickCustomer.phone.trim(),
+        address: quickCustomer.address.trim(),
+        credit_limit: 0,
+        status: 'ativo',
+        notes: 'Cliente criado rapidamente dentro da venda.',
+      });
+      setCustomers((current) => [saved, ...current.filter((customer) => customer.id !== saved.id)]);
+      setCustomerId(saved.id);
+      setCustomerQuery(saved.name);
+      setPaymentMethod('crediario');
+      setQuickCustomer(emptyQuickCustomerForm);
+      setShowQuickCustomer(false);
+      setMessage(`Cliente ${saved.name} cadastrado e selecionado nesta venda.`);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingQuickCustomer(false);
+    }
+  }
+
   async function finishSale(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (cart.length === 0 || saving) return;
@@ -431,6 +472,10 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                 <AppIcon name="clientes" size={16} className="app-icon-button-inline" />
                 Buscar cliente (F3)
               </button>
+              <button type="button" className="secondary-btn" onClick={() => { setPaymentMethod('crediario'); setShowQuickCustomer((current) => !current); }} disabled={!canOperate}>
+                <AppIcon name="novo_item_adicionar" size={16} className="app-icon-button-inline" />
+                Criar cliente rápido
+              </button>
             </div>
             <label>
               <span>Selecionar cliente</span>
@@ -442,6 +487,20 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <small>{tooManyCustomerResults ? FRIENDLY_LIST_MESSAGES.tooMany : 'Digite nome ou telefone para encontrar o cliente mais rápido.'}</small>
               {canLoadMoreCustomers ? <button type="button" className="ghost-btn small" onClick={() => setCustomerVisibleLimit((count) => count + LOAD_MORE_STEP)}>Carregar mais clientes</button> : null}
             </label>
+            {showQuickCustomer ? (
+              <div className="classic-quick-customer-box">
+                <strong>Novo cliente sem sair da venda</strong>
+                <small>Salva, seleciona e mantém o carrinho pronto para finalizar no crediário.</small>
+                <div className="classic-customer-grid">
+                  <label className="span-2"><span>Nome *</span><input value={quickCustomer.name} onChange={(event) => setQuickCustomer((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do cliente" /></label>
+                  <label><span>Telefone</span><input value={quickCustomer.phone} onChange={(event) => setQuickCustomer((current) => ({ ...current, phone: event.target.value }))} placeholder="(43) 99999-0000" /></label>
+                  <label><span>WhatsApp</span><input value={quickCustomer.whatsapp} onChange={(event) => setQuickCustomer((current) => ({ ...current, whatsapp: event.target.value }))} placeholder="Pode deixar igual telefone" /></label>
+                  <label className="span-2"><span>Endereço</span><input value={quickCustomer.address} onChange={(event) => setQuickCustomer((current) => ({ ...current, address: event.target.value }))} placeholder="Endereço opcional" /></label>
+                </div>
+                <button type="button" className="primary-btn" onClick={() => void saveQuickCustomer()} disabled={savingQuickCustomer || !canOperate}>{savingQuickCustomer ? 'Salvando...' : 'Salvar e usar na venda'}</button>
+              </div>
+            ) : null}
+
             <div className="classic-customer-grid">
               <label>
                 <span>Código</span>

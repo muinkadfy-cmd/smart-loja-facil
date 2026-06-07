@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v178-alertas-rotas-icone-flor';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v179-crediario-produtos-cliente-rapido';
 const APP_SHELL = [
   '/',
   '/index.html',

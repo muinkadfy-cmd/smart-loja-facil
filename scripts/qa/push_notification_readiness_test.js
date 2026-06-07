@@ -30,4 +30,4 @@ for (const [file, tokens] of required) {
 }
 
 if (failed) process.exit(1);
-process.stdout.write('OK: push_notification_readiness_test passou. Estrutura de Web Push v178 presente.\n');
+process.stdout.write('OK: push_notification_readiness_test passou. Estrutura de Web Push preservada no v179.\n');

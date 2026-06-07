@@ -73,8 +73,15 @@ export interface SaleSummary {
   id: string; number: number; customer_name: string; payment_method: PaymentMethod; total: number; status: string; created_at: string; thumbnail_url?: string; first_product_name?: string; item_count?: number;
 }
 
+export interface SaleItemSummary {
+  product_name: string;
+  qty: number;
+  unit_price: number;
+  total: number;
+}
+
 export interface CreditSummary {
-  id: string; customer_name: string; customer_phone: string; customer_whatsapp: string; sale_id: string; sale_number: number; total: number; balance: number; status: string; created_at: string; installments: CreditInstallment[];
+  id: string; customer_name: string; customer_phone: string; customer_whatsapp: string; sale_id: string; sale_number: number; total: number; balance: number; status: string; created_at: string; installments: CreditInstallment[]; sale_items?: SaleItemSummary[];
 }
 
 export interface CreditInstallment {
