@@ -1,4 +1,4 @@
-# Mega Lote 186 — Comprovantes PDF/PNG com fontes maiores e leitura melhor
+# Mega Lote 186 — Comprovantes PDF/PNG com produtos mais legíveis e responsivos
 
 ## Objetivo
 Aumentar a fonte e melhorar a legibilidade de todos os comprovantes gerados em PDF e PNG, mantendo o mesmo padrão visual e a mesma base de layout entre PDF, PNG, Atividades recentes, Vendas recentes e aba Comprovantes.
@@ -19,7 +19,7 @@ Aumentar a fonte e melhorar a legibilidade de todos os comprovantes gerados em P
 - Aumentei respiro entre blocos.
 - Mantive PDF e PNG usando a mesma função `renderReceiptCanvas`, garantindo padrão único.
 - Mantive desconto no comprovante quando existir.
-- Atualizei versão/cache para v186.
+- Atualizei versão/cache para v187.
 
 ## Arquivos alterados
 - `src/mobile-app/components/receiptShare.ts`
