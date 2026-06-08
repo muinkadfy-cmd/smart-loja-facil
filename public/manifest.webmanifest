@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v188",
-  "short_name": "Jaque v188",
-  "description": "PWA da loja Jaque Confecções e Presentes v188 com comprovantes PDF/PNG e PNG polido no padrão do recibo.",
+  "name": "Jaque Confecções e Presentes v189",
+  "short_name": "Jaque v189",
+  "description": "PWA da loja Jaque Confecções e Presentes v189 com cupom de parceria PNG editável, compartilhamento e comprovantes.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -75,6 +75,18 @@
       "short_name": "PDV",
       "description": "Abrir vendas e PDV",
       "url": "/?source=pwa&view=sales",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Cupom PNG",
+      "short_name": "Cupom",
+      "description": "Criar cupom de parceria em PNG para compartilhar",
+      "url": "/?source=pwa&view=coupons",
       "icons": [
         {
           "src": "/icons/icon-192.png",

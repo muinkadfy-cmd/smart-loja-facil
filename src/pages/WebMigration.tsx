@@ -11,6 +11,7 @@ const pageNames: Record<PageKey, string> = {
   credits: 'Crediário',
   orders: 'Pedidos',
   receipts: 'Comprovantes',
+  coupons: 'Cupom',
   reports: 'Relatórios',
   backup: 'Backup',
   settings: 'Configurações',

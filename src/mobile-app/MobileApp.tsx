@@ -8,6 +8,7 @@ import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
 import { GenericDataScreen } from './screens/GenericDataScreen';
 import { OrdersScreen } from './screens/OrdersScreen';
 import { ReceiptsScreen } from './screens/ReceiptsScreen';
+import { CouponScreen } from './screens/CouponScreen';
 import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScreens';
 import { SalesScreen } from './screens/SalesScreen';
 import { MobileShell } from './layout/MobileShell';
@@ -259,6 +260,8 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
         <CreditsScreen status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       ) : activePage === 'receipts' ? (
         <ReceiptsScreen status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
+      ) : activePage === 'coupons' ? (
+        <CouponScreen settings={settings} />
       ) : activePage === 'backup' ? (
         <BackupScreen refreshToken={refreshToken} onRefresh={onRefresh} />
       ) : activePage === 'diagnostics' ? (

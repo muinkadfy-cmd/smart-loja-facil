@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v188-comprovantes-acoes-fontes';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v189-cupom-fidelidade-png';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -147,6 +147,11 @@ function routeForPayload(payload, action) {
 
   if (type === 'backup_reminder') {
     params.set('view', 'backup');
+    return `/?${params.toString()}`;
+  }
+
+  if (type === 'coupon' || type === 'coupon_ready') {
+    params.set('view', 'coupons');
     return `/?${params.toString()}`;
   }
 

@@ -7,6 +7,7 @@ export type PageKey =
   | 'credits'
   | 'orders'
   | 'receipts'
+  | 'coupons'
   | 'reports'
   | 'backup'
   | 'settings'

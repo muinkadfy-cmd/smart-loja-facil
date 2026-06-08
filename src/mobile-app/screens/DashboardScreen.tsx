@@ -157,6 +157,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
           <ActionTile label="Novo pedido" icon="pedidos" page="orders" tone="orange" intent="novo-pedido" onNavigate={onNavigate} />
           <ActionTile label="Novo produto" icon="produtos" page="products" tone="sky" intent="novo-produto" onNavigate={onNavigate} />
           <ActionTile label="Novo cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} />
+          <ActionTile label="Cupom PNG" icon="etiquetas" page="coupons" tone="orange" onNavigate={onNavigate} />
         </div>
       </section>
 

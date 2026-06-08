@@ -9189,3 +9189,262 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-receipt-button-grid {
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
+
+/* Mega Lote 189 — aba Cupom PNG fidelidade Jaque + Ótica */
+.mapp-coupon-screen {
+  gap: 16px;
+}
+
+.mapp-coupon-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid rgba(236, 72, 153, 0.20);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 88% 16%, rgba(255, 212, 90, 0.34), transparent 28%),
+    linear-gradient(135deg, #fff7fb 0%, #ffffff 54%, #fff1f6 100%);
+  box-shadow: 0 18px 46px rgba(146, 16, 66, 0.08);
+}
+
+.mapp-coupon-hero-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 22px;
+  color: #be123c;
+  background: linear-gradient(135deg, #ffe4ef, #fff7fb);
+  border: 1px solid rgba(236, 72, 153, 0.22);
+  box-shadow: 0 14px 30px rgba(190, 18, 60, 0.12);
+}
+
+.mapp-coupon-hero strong {
+  display: block;
+  color: #3a1118;
+  font-size: clamp(1.22rem, 4.8vw, 1.68rem);
+  font-weight: 950;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+}
+
+.mapp-coupon-hero p {
+  margin: 5px 0 0;
+  color: #6d3d50;
+  font-weight: 770;
+  line-height: 1.34;
+}
+
+.mapp-coupon-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #8a1238;
+  background: #fff0f6;
+  border: 1px solid #ffd1e2;
+  font-size: 0.78rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.mapp-coupon-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.86fr) minmax(360px, 1.14fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.mapp-coupon-form-panel {
+  border-color: rgba(236, 72, 153, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,247,251,0.96));
+}
+
+.mapp-coupon-form-panel .mapp-form-icon {
+  color: #be123c;
+  background: #fff0f6;
+  border: 1px solid #ffd1e2;
+}
+
+.mapp-coupon-discount-picks {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+}
+
+.mapp-coupon-discount-picks::-webkit-scrollbar { display: none; }
+
+.mapp-coupon-discount-picks button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  min-width: 58px;
+  border: 1px solid #ffd1e2;
+  border-radius: 999px;
+  background: #fff;
+  color: #9f1239;
+  font-weight: 950;
+  box-shadow: 0 8px 18px rgba(190, 18, 60, 0.06);
+}
+
+.mapp-coupon-discount-picks button.active {
+  color: #fff;
+  border-color: #e11d48;
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  box-shadow: 0 12px 26px rgba(190, 18, 60, 0.20);
+}
+
+.mapp-coupon-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mapp-coupon-actions .mapp-primary-button {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  box-shadow: 0 14px 34px rgba(190, 18, 60, 0.22);
+}
+
+.mapp-coupon-safe-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 13px;
+  border: 1px solid #e4edf7;
+  border-radius: 17px;
+  background: #f8fbff;
+  color: #53627a;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.34;
+}
+
+.mapp-coupon-safe-note .app-svg-icon,
+.mapp-coupon-safe-note img,
+.mapp-coupon-safe-note svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: #16a05d;
+}
+
+.mapp-coupon-preview-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(236, 72, 153, 0.18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 221, 70, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.99), rgba(255,247,251,0.98));
+  box-shadow: 0 18px 48px rgba(146, 16, 66, 0.10);
+}
+
+.mapp-coupon-preview-head,
+.mapp-coupon-preview-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mapp-coupon-preview-head strong {
+  display: block;
+  color: #3a1118;
+  font-size: 1.05rem;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.mapp-coupon-preview-head span,
+.mapp-coupon-preview-foot span {
+  color: #7b4960;
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.mapp-coupon-preview-head b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #9f1239;
+  background: #fff0f6;
+  border: 1px solid #ffd1e2;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.mapp-coupon-preview-frame {
+  overflow: hidden;
+  border-radius: 25px;
+  border: 1px solid #ffd1e2;
+  background: #fff7fb;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.74), 0 16px 42px rgba(122, 0, 33, 0.12);
+}
+
+.mapp-coupon-preview-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+}
+
+.mapp-coupon-preview-foot {
+  flex-wrap: wrap;
+  padding: 0 4px 2px;
+}
+
+.mapp-coupon-preview-foot b {
+  color: #3a1118;
+  font-weight: 950;
+}
+
+@media (max-width: 980px) {
+  .mapp-coupon-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-coupon-preview-card {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .mapp-coupon-hero {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 15px;
+    border-radius: 24px;
+  }
+
+  .mapp-coupon-hero-chip {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .mapp-coupon-hero-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 19px;
+  }
+
+  .mapp-coupon-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-coupon-preview-card {
+    padding: 10px;
+    border-radius: 23px;
+  }
+
+  .mapp-coupon-preview-frame {
+    border-radius: 20px;
+  }
+}

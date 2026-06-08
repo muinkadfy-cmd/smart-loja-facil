@@ -30,6 +30,7 @@ export const MOBILE_ROUTES: MobileRoute[] = [
   { key: 'credits', label: 'Crediário', shortLabel: 'Crediário', subtitle: 'Contas a receber e parcelas.', icon: 'crediario', tone: 'purple', primaryAction: 'Ver parcelas' },
   { key: 'reports', label: 'Relatórios', shortLabel: 'Relatórios', subtitle: 'Indicadores simples para decisão.', icon: 'relatorios', tone: 'blue', primaryAction: 'Ver relatório' },
   { key: 'receipts', label: 'Comprovantes', shortLabel: 'Comprov.', subtitle: 'Comprovantes gerados e reimpressão.', icon: 'comprovantes', tone: 'sky', primaryAction: 'Ver comprovantes' },
+  { key: 'coupons', label: 'Cupom', shortLabel: 'Cupom', subtitle: 'Cupom de parceria em PNG para compartilhar com cliente.', icon: 'etiquetas', tone: 'orange', primaryAction: 'Criar cupom' },
   { key: 'backup', label: 'Backup', shortLabel: 'Backup', subtitle: 'Cópias de segurança e restauração.', icon: 'backup', tone: 'mint', primaryAction: 'Criar backup' },
   { key: 'settings', label: 'Configurações', shortLabel: 'Config.', subtitle: 'Dados da loja e preferências.', icon: 'configuracoes', tone: 'slate', primaryAction: 'Editar loja' },
   { key: 'audit', label: 'Logs / Diagnóstico', shortLabel: 'Logs', subtitle: 'Acompanhe ações e segurança.', icon: 'auditoria_logs', tone: 'slate', primaryAction: 'Copiar logs' },
@@ -48,7 +49,7 @@ export const MOBILE_ROUTE_GROUPS: MobileRouteGroup[] = [
     id: 'operation',
     label: 'Operação',
     helper: 'Venda, caixa, pedidos e recebimentos do dia.',
-    routes: ['sales', 'cash', 'orders', 'credits', 'receipts'],
+    routes: ['sales', 'cash', 'orders', 'credits', 'receipts', 'coupons'],
   },
   {
     id: 'management',
