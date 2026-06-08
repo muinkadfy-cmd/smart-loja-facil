@@ -33,6 +33,12 @@ const INNER_W = RECEIPT_W - 84;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
+const PRODUCT_COLUMNS = [82, INNER_W - 82 - 150 - 164, 150, 164];
+const PRODUCT_NAME_SIZE = 25;
+const PRODUCT_NAME_WEIGHT = 900;
+const PRODUCT_ROW_MIN_H = 94;
+const PRODUCT_ROW_LINE_GAP = 9;
+const PRODUCT_MAX_LINES = 3;
 
 export function saleReceiptTitle(sale: SaleSummary): string {
   return `Comprovante #${String(sale.number || 0).padStart(4, '0')}`;
@@ -209,6 +215,15 @@ function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: n
   return lines.length ? lines : ['-'];
 }
 
+function productDescriptionLines(ctx: CanvasRenderingContext2D, text: string): string[] {
+  return wrapCanvasText(ctx, text, PRODUCT_COLUMNS[1] - 34, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT).slice(0, PRODUCT_MAX_LINES);
+}
+
+function productRowHeight(ctx: CanvasRenderingContext2D, text: string): number {
+  const lineCount = Math.max(1, productDescriptionLines(ctx, text).length);
+  return Math.max(PRODUCT_ROW_MIN_H, 34 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 18);
+}
+
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
   return await new Promise((resolve) => {
     const image = new Image();
@@ -282,9 +297,12 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
 
 async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasElement> {
   const productRows = data.productRows.slice(0, 8);
-  const productRowH = 74;
-  const notesH = Math.max(176, 56 + data.notes.length * 40 + (data.discount > 0 ? 12 : 0));
-  const receiptH = 282 + 178 + 34 + 52 + 52 + productRows.length * productRowH + 34 + 150 + 34 + notesH + 96;
+  const measurer = document.createElement('canvas').getContext('2d');
+  if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
+  const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
+  const productsTableH = 58 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
+  const notesH = Math.max(188, 64 + data.notes.length * 42 + (data.discount > 0 ? 14 : 0));
+  const receiptH = 282 + 178 + 34 + 52 + productsTableH + 34 + 150 + 34 + notesH + 106;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -335,29 +353,36 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   y += 212;
   fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W);
   y += 52;
-  const columns = [92, INNER_W - 92 - 170 - 176, 170, 176];
+  const columns = PRODUCT_COLUMNS;
   const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
   ctx.fillStyle = BLACK;
-  ctx.fillRect(INNER_X, y, INNER_W, 52);
+  ctx.fillRect(INNER_X, y, INNER_W, 58);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 36, columns[index], 19, 900, '#ffffff');
+    drawCentered(ctx, header, x, y + 40, columns[index], 21, 900, '#ffffff');
     x += columns[index];
   });
-  const tableH = 52 + productRows.length * productRowH;
+  const tableH = productsTableH;
   drawRect(ctx, INNER_X, y, INNER_W, tableH, 4);
   x = INNER_X;
   columns.slice(0, -1).forEach((w) => {
     x += w;
     drawLine(ctx, x, y, x, y + tableH, 3);
   });
+  let productRowY = y + 58;
   productRows.forEach((row, index) => {
-    const rowY = y + 52 + index * productRowH;
-    drawLine(ctx, INNER_X, rowY + productRowH, INNER_X + INNER_W, rowY + productRowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + 47, columns[0], 23, 800);
-    drawWrapped(ctx, row.produto, INNER_X + columns[0] + 18, rowY + 32, columns[1] - 32, 20, 800, 2, 7);
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY + 47, columns[2], 21, 800);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY + 47, columns[3], 22, 900);
+    const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
+    drawLine(ctx, INNER_X, productRowY + rowH, INNER_X + INNER_W, productRowY + rowH, 3);
+    drawCentered(ctx, row.qtd, INNER_X, productRowY + Math.floor(rowH / 2) + 9, columns[0], 25, 850);
+    let productTextY = productRowY + 35;
+    productDescriptionLines(ctx, row.produto).forEach((line) => {
+      drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
+      productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
+    });
+    const valueY = productRowY + Math.floor(rowH / 2) + 9;
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 23, 850);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 24, 900);
+    productRowY += rowH;
   });
   y += tableH + 34;
 
