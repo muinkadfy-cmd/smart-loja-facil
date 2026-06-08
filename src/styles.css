@@ -218,3 +218,23 @@ th { color: var(--app-muted); font-size: .78rem; text-transform: uppercase; lett
   .neo-product-intel-grid { grid-template-columns: 1fr; }
   .neo-product-intel-card { min-height: auto; }
 }
+
+/* Lote 181 — ações rápidas de comprovante nas vendas recentes */
+.sales-recent-receipt-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.sales-recent-receipt-actions .ghost-btn.small {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+.classic-payment-row-option input[inputmode="decimal"],
+.classic-sale-summary-grid input[inputmode="decimal"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}

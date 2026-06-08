@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v180-produtos-inteligentes-alertas';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v181-vendas-comprovante-pdf-png';
 const APP_SHELL = [
   '/',
   '/index.html',

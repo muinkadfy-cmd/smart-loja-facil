@@ -95,7 +95,7 @@ export interface Product {
 }
 
 export interface SaleSummary {
-  id: string; number: number; customer_name: string; payment_method: PaymentMethod; total: number; status: string; created_at: string; thumbnail_url?: string; first_product_name?: string; item_count?: number;
+  id: string; number: number; customer_name: string; payment_method: PaymentMethod; subtotal?: number; discount?: number; total: number; status: string; created_at: string; thumbnail_url?: string; first_product_name?: string; item_count?: number;
 }
 
 export interface SaleItemSummary {

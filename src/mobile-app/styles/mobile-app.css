@@ -9167,3 +9167,25 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   font-size: 0.77rem;
   line-height: 1.25;
 }
+
+/* Lote 181 — Vendas/comprovantes: compartilhamento PDF/PNG e campos monetários polidos */
+.mapp-sale-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.mapp-sale-detail-actions button {
+  min-height: 38px;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-weight: 900;
+}
+.mapp-pdv-money-grid input[inputmode="decimal"] {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: .01em;
+}
+.mapp-receipt-button-grid {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+}

@@ -131,6 +131,8 @@ struct SaleSummary {
     number: i64,
     customer_name: String,
     payment_method: String,
+    subtotal: Option<f64>,
+    discount: Option<f64>,
     total: f64,
     status: String,
     created_at: String,
@@ -1343,6 +1345,8 @@ fn list_sales_inner(connection: &Connection, limit: i64) -> CmdResult<Vec<SaleSu
             s.number,
             s.customer_name,
             s.payment_method,
+            s.subtotal,
+            s.discount,
             s.total,
             s.status,
             s.created_at,
@@ -1358,12 +1362,14 @@ fn list_sales_inner(connection: &Connection, limit: i64) -> CmdResult<Vec<SaleSu
         number: row.get(1)?,
         customer_name: row.get(2)?,
         payment_method: row.get(3)?,
-        total: row.get(4)?,
-        status: row.get(5)?,
-        created_at: row.get(6)?,
-        thumbnail_url: row.get(7)?,
-        first_product_name: row.get(8)?,
-        item_count: row.get(9)?,
+        subtotal: row.get(4)?,
+        discount: row.get(5)?,
+        total: row.get(6)?,
+        status: row.get(7)?,
+        created_at: row.get(8)?,
+        thumbnail_url: row.get(9)?,
+        first_product_name: row.get(10)?,
+        item_count: row.get(11)?,
     }))
         .map_err(|e| e.to_string())?;
     let result = rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
@@ -1382,7 +1388,7 @@ fn create_sale(app: AppHandle, payload: SaleInput) -> CmdResult<SaleSummary> {
     if payload.items.is_empty() { return Err("Venda sem itens".to_string()); }
     let mut connection = conn(&app)?;
     init_schema(&connection)?;
-    if let Some(existing) = connection.query_row("SELECT id,number,customer_name,payment_method,total,status,created_at FROM sales WHERE request_id=?1", params![payload.request_id], |row| Ok(SaleSummary { id: row.get(0)?, number: row.get(1)?, customer_name: row.get(2)?, payment_method: row.get(3)?, total: row.get(4)?, status: row.get(5)?, created_at: row.get(6)?, thumbnail_url: None, first_product_name: None, item_count: None })).optional().map_err(|e| e.to_string())? { return Ok(existing); }
+    if let Some(existing) = connection.query_row("SELECT id,number,customer_name,payment_method,subtotal,discount,total,status,created_at FROM sales WHERE request_id=?1", params![payload.request_id], |row| Ok(SaleSummary { id: row.get(0)?, number: row.get(1)?, customer_name: row.get(2)?, payment_method: row.get(3)?, subtotal: row.get(4)?, discount: row.get(5)?, total: row.get(6)?, status: row.get(7)?, created_at: row.get(8)?, thumbnail_url: None, first_product_name: None, item_count: None })).optional().map_err(|e| e.to_string())? { return Ok(existing); }
     let tx = connection.transaction().map_err(|e| e.to_string())?;
     let sale_id = new_id("sale");
     let sale_number = next_number(&tx, "sales").map_err(|e| e.to_string())?;
@@ -1613,7 +1619,7 @@ fn payment_method_label(value: &str) -> &'static str {
 fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<String> {
     let settings = read_settings(connection).map_err(|_| rusqlite::Error::InvalidQuery)?;
     let sale = connection.query_row(
-        "SELECT s.number,s.customer_name,s.total,s.payment_method,s.created_at,COALESCE(c.phone,''),COALESCE(c.whatsapp,'') FROM sales s LEFT JOIN customers c ON c.id=s.customer_id WHERE s.id=?1",
+        "SELECT s.number,s.customer_name,s.total,s.payment_method,s.created_at,COALESCE(c.phone,''),COALESCE(c.whatsapp,''),COALESCE(s.subtotal,s.total),COALESCE(s.discount,0) FROM sales s LEFT JOIN customers c ON c.id=s.customer_id WHERE s.id=?1",
         params![sale_id],
         |row| Ok((
             row.get::<_, i64>(0)?,
@@ -1623,6 +1629,8 @@ fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<Str
             row.get::<_, String>(4)?,
             row.get::<_, String>(5)?,
             row.get::<_, String>(6)?,
+            row.get::<_, f64>(7)?,
+            row.get::<_, f64>(8)?,
         )),
     )?;
 
@@ -1706,6 +1714,12 @@ fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<Str
         settings.receipt_message.clone()
     };
 
+    let discount_summary = if sale.8 > 0.009 {
+        format!("<div class='discount-line'><span>Subtotal: R$ {:.2}</span><span>Desconto: R$ {:.2}</span></div>", sale.7, sale.8)
+    } else {
+        String::new()
+    };
+
     Ok(format!(
         r#"<!doctype html><html><head><meta charset='utf-8'><title>Comprovante</title><style>
         @page{{size:{}mm {}mm;margin:0;}}
@@ -1727,6 +1741,7 @@ fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<Str
         .qty{{width:10mm;text-align:center;font-weight:700}}
         .product{{width:auto}}
         .money{{width:14mm;text-align:right;white-space:nowrap;font-weight:700}}
+        .discount-line{{display:flex;justify-content:space-between;gap:2mm;border-left:0.28mm solid #454045;border-right:0.28mm solid #454045;padding:1.2mm 1.6mm;font-size:7pt;font-weight:800;color:#4b2a38;background:#fff8fb}}
         .payment-head{{display:grid;grid-template-columns:1fr 16mm;margin-top:0;border:0.28mm solid #454045;border-top:0}}
         .payment-head div{{background:#e8b5c9;color:#4b2a38;font-weight:800;text-align:center;padding:1.9mm 1mm;border-right:0.28mm solid #454045}}
         .payment-head div:last-child{{border-right:0}}
@@ -1765,6 +1780,7 @@ fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<Str
           <tbody>{}</tbody>
         </table>
         {}
+        {}
         <div class='payment-head'><div>Pagamento</div><div>Total</div></div>
         <div class='payment-body'><div class='payment-options'>{}</div><div class='payment-total'>R$ {:.2}</div></div>
         <div class='notes'><strong>Anotações</strong><p>{}</p><p>{}</p></div>
@@ -1782,6 +1798,7 @@ fn build_receipt(connection: &Connection, sale_id: &str) -> rusqlite::Result<Str
         contact_line,
         rows,
         paid_stamp,
+        discount_summary,
         payment_options,
         sale.2,
         notes,

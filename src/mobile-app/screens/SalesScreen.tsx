@@ -14,7 +14,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
-import { findReceiptForSale, shareSaleReceipt } from '../components/receiptShare';
+import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 import { notifyMobileAction } from '../components/actionToast';
 
 interface SalesScreenProps {
@@ -52,6 +52,22 @@ function requestId(prefix: string): string {
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2, 12);
   return `${prefix}-${Date.now()}-${random}`;
+}
+
+
+function parseCurrencyInput(value: string): number {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return 0;
+  return Number(digits) / 100;
+}
+
+function formatCurrencyInput(value: number): string {
+  const safe = Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0;
+  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function maskCurrencyInput(value: string): string {
+  return formatCurrencyInput(parseCurrencyInput(value));
 }
 
 function paymentLabel(method: PaymentMethod): string {
@@ -114,7 +130,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [savingQuickCustomer, setSavingQuickCustomer] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
   const [discount, setDiscount] = useState(0);
+  const [discountInput, setDiscountInput] = useState('0,00');
   const [amountPaid, setAmountPaid] = useState(0);
+  const [amountPaidInput, setAmountPaidInput] = useState('0,00');
   const [installmentCount, setInstallmentCount] = useState(1);
   const [firstDueDate, setFirstDueDate] = useState(todayInputValue());
   const [dueDay, setDueDay] = useState(dayFromDateValue(todayInputValue()));
@@ -202,8 +220,15 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     : `Recebimento em ${paymentLabel(paymentMethod)}${paymentMethod === 'dinheiro' && change > 0 ? ` · troco ${formatCurrency(change)}` : ''}`;
 
   useEffect(() => {
-    if (paymentMethod === 'crediario') return;
-    if (total > 0) setAmountPaid(total);
+    if (paymentMethod === 'crediario') {
+      setAmountPaid(0);
+      setAmountPaidInput('0,00');
+      return;
+    }
+    if (total > 0) {
+      setAmountPaid(total);
+      setAmountPaidInput(formatCurrencyInput(total));
+    }
   }, [paymentMethod, total]);
 
   function addProduct(product: Product): void {
@@ -340,7 +365,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       });
       setCart([]);
       setDiscount(0);
+      setDiscountInput('0,00');
       setAmountPaid(0);
+      setAmountPaidInput('0,00');
       setCustomerId('');
       setPaymentMethod('dinheiro');
       setFirstDueDate(todayInputValue());
@@ -362,11 +389,11 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     }
   }
 
-  async function shareRecentSale(sale: SaleSummary): Promise<void> {
+  async function shareRecentSale(sale: SaleSummary, format: ReceiptShareFormat = 'pdf'): Promise<void> {
     const receipt = findReceiptForSale(receipts, sale);
-    const message = await shareSaleReceipt(sale, receipt);
+    const message = await shareSaleReceipt(sale, receipt, format);
     setFeedback(message);
-    notifyMobileAction({ title: 'Comprovante', message, tone: message.startsWith('Ainda') ? 'warning' : 'success', page: 'receipts', actionLabel: 'Abrir' });
+    notifyMobileAction({ title: format === 'png' ? 'Imagem do comprovante' : 'Comprovante PDF', message, tone: message.startsWith('Ainda') ? 'warning' : 'success', page: 'receipts', actionLabel: 'Abrir' });
   }
 
   function setDueDaySelection(day: number): void {
@@ -544,11 +571,11 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         <div className="mapp-form-grid mapp-pdv-money-grid">
           <label>
             <span>Desconto</span>
-            <input inputMode="decimal" type="number" min="0" step="0.01" value={discount} onChange={(event) => setDiscount(Number(event.target.value) || 0)} />
+            <input inputMode="decimal" type="text" value={discountInput} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setDiscountInput(masked); setDiscount(parseCurrencyInput(masked)); }} onBlur={() => setDiscountInput(formatCurrencyInput(discount))} placeholder="0,00" />
           </label>
           <label>
             <span>Valor pago</span>
-            <input inputMode="decimal" type="number" min="0" step="0.01" value={paymentMethod === 'crediario' ? 0 : amountPaid} onChange={(event) => setAmountPaid(Number(event.target.value) || 0)} disabled={paymentMethod === 'crediario'} />
+            <input inputMode="decimal" type="text" value={paymentMethod === 'crediario' ? '0,00' : amountPaidInput} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setAmountPaidInput(masked); setAmountPaid(parseCurrencyInput(masked)); }} onBlur={() => setAmountPaidInput(formatCurrencyInput(amountPaid))} disabled={paymentMethod === 'crediario'} placeholder="0,00" />
           </label>
           {paymentMethod === 'crediario' ? (
             <>
@@ -676,7 +703,8 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                   <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
                 </div>
                 <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareRecentSale(sale)}>Compartilhar comprovante</button>
+                  <button type="button" onClick={() => void shareRecentSale(sale, 'pdf')}>Compartilhar PDF</button>
+                  <button type="button" onClick={() => void shareRecentSale(sale, 'png')}>Enviar PNG</button>
                 </div>
               </ListCard>
             ))}

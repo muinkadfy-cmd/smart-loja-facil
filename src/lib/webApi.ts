@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v180-produtos-inteligentes-alertas';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v180-produtos-inteligentes-alertas';
+export const WEB_APP_VERSION = 'pwa-supabase-v181-vendas-comprovante-pdf-png';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v181-vendas-comprovante-pdf-png';
 
 
 export interface WebTrainingModeState {
@@ -1334,7 +1334,7 @@ export async function webDashboard(): Promise<DashboardData> {
   try {
     const { data: sales } = await client
       .from('sales')
-      .select('id, number, customer_name, payment_method, total, status, created_at')
+      .select('id, number, customer_name, payment_method, subtotal, discount, total, status, created_at')
       .eq('store_id', context.store.id)
       .gte('created_at', todayStartIso())
       .neq('status', 'canceled')
@@ -2653,6 +2653,8 @@ function mapSale(row: Record<string, unknown>): SaleSummary {
     number: numberValue(row.number),
     customer_name: stringValue(row.customer_name, 'Balcão'),
     payment_method: normalizePaymentMethod(row.payment_method),
+    subtotal: row.subtotal === undefined ? undefined : numberValue(row.subtotal),
+    discount: row.discount === undefined ? undefined : numberValue(row.discount),
     total: numberValue(row.total),
     status: saleStatusFromCloud(row.status),
     created_at: toIso(row.created_at),
@@ -2763,7 +2765,7 @@ export async function webSales(): Promise<SaleSummary[]> {
   const client = await getClient();
   const { data, error } = await client
     .from('sales')
-    .select('id, number, customer_name, payment_method, total, status, created_at')
+    .select('id, number, customer_name, payment_method, subtotal, discount, total, status, created_at')
     .eq('store_id', context.store.id)
     .order('created_at', { ascending: false })
     .limit(120);
@@ -4229,7 +4231,7 @@ export async function webCommercialValidation(): Promise<WebCommercialValidation
 
   pushCommercialCheck(checks, {
     id: 'cache-version', area: 'PWA/cache', title: 'Versão do cache',
-    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v180 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
+    detail: cacheKeys.includes(WEB_CACHE_VERSION) ? 'Cache novo v181 encontrado neste aparelho.' : 'Cache novo ainda não apareceu; pode precisar abrir após deploy ou limpar cache antigo.',
     level: cacheKeys.length === 0 || cacheKeys.includes(WEB_CACHE_VERSION) ? 'ok' : 'warn',
     evidence: `esperado=${WEB_CACHE_VERSION}; encontrado=${cacheKeys.join(', ') || 'sem cache'}`,
   });

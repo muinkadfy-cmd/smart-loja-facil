@@ -6,7 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
-import { findReceiptForSale, shareSaleReceipt } from '../components/receiptShare';
+import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 
 interface DashboardScreenProps {
   status: AppStatus | null;
@@ -75,9 +75,9 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
     return () => { active = false; };
   }, []);
 
-  async function shareActivityReceipt(sale: SaleSummary): Promise<void> {
+  async function shareActivityReceipt(sale: SaleSummary, format: ReceiptShareFormat = 'pdf'): Promise<void> {
     const receipt = findReceiptForSale(receipts, sale);
-    const message = await shareSaleReceipt(sale, receipt);
+    const message = await shareSaleReceipt(sale, receipt, format);
     setShareFeedback(message);
   }
 
@@ -188,7 +188,8 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
                   <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
                 </div>
                 <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareActivityReceipt(sale)}>Compartilhar comprovante</button>
+                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'pdf')}>Compartilhar PDF</button>
+                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'png')}>Enviar PNG</button>
                   <button type="button" onClick={() => onNavigate('sales')}>Abrir vendas</button>
                 </div>
               </ListCard>

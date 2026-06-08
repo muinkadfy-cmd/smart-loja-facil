@@ -15,6 +15,7 @@ import {
   useDebouncedValue,
 } from '../lib/listLimits';
 import { useWebPermissions } from '../lib/useWebPermissions';
+import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../mobile-app/components/receiptShare';
 import type { Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -41,6 +42,22 @@ function saleStatusLabel(status: string): string {
   if (status === 'quitada') return 'Quitada';
   if (status === 'aberto') return 'Em aberto';
   return status;
+}
+
+
+function parseCurrencyInput(value: string): number {
+  const digits = value.replace(/\D/g, '');
+  if (!digits) return 0;
+  return Number(digits) / 100;
+}
+
+function formatCurrencyInput(value: number): string {
+  const safe = Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0;
+  return safe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function maskCurrencyInput(value: string): string {
+  return formatCurrencyInput(parseCurrencyInput(value));
 }
 
 function matchesProductQuery(product: Product, query: string): boolean {
@@ -79,7 +96,9 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   const [installmentCount, setInstallmentCount] = useState(1);
   const [firstDueDate, setFirstDueDate] = useState(todayInputValue());
   const [discount, setDiscount] = useState(0);
+  const [discountInput, setDiscountInput] = useState('0,00');
   const [amountPaid, setAmountPaid] = useState(0);
+  const [amountPaidInput, setAmountPaidInput] = useState('0,00');
   const [saving, setSaving] = useState(false);
   const [printingReceipt, setPrintingReceipt] = useState(false);
   const [message, setMessage] = useState('');
@@ -184,10 +203,14 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
   useEffect(() => {
     if (paymentMethod === 'crediario') {
       setAmountPaid(0);
-    } else if (total > 0 && amountPaid === 0) {
-      setAmountPaid(total);
+      setAmountPaidInput('0,00');
+      return;
     }
-  }, [amountPaid, paymentMethod, total]);
+    if (total > 0) {
+      setAmountPaid(total);
+      setAmountPaidInput(formatCurrencyInput(total));
+    }
+  }, [paymentMethod, total]);
 
   function addItem() {
     if (!canOperate) {
@@ -259,7 +282,9 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     setCart([]);
     setSelectedCartProductId(null);
     setDiscount(0);
+    setDiscountInput('0,00');
     setAmountPaid(0);
+    setAmountPaidInput('0,00');
     setMessage('');
     setError('');
   }
@@ -322,6 +347,13 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
     } finally {
       setSavingQuickCustomer(false);
     }
+  }
+
+  async function shareRecentSale(row: SaleSummary, format: ReceiptShareFormat): Promise<void> {
+    const receipt = findReceiptForSale(receipts, row);
+    const feedback = await shareSaleReceipt(row, receipt, format);
+    setError('');
+    setMessage(feedback);
   }
 
   async function finishSale(event: FormEvent<HTMLFormElement>) {
@@ -536,7 +568,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                   <strong><AppIcon name="dinheiro" size={16} className="app-icon-button-inline" />Dinheiro</strong>
                 </div>
                 <span>Valor pago (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'dinheiro' ? amountPaid : 0} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
+                <input inputMode="decimal" type="text" value={paymentMethod === 'dinheiro' ? amountPaidInput : '0,00'} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setAmountPaidInput(masked); setAmountPaid(parseCurrencyInput(masked)); }} onBlur={() => setAmountPaidInput(formatCurrencyInput(amountPaid))} readOnly={!canOperate || paymentMethod !== 'dinheiro'} />
                 <span>Troco (R$)</span>
                 <input value={money(cashChange).replace('R$ ', '')} readOnly />
               </label>
@@ -547,7 +579,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                   <strong><AppIcon name="cartao_debito" size={16} className="app-icon-button-inline" />Cartão Débito / Crédito</strong>
                 </div>
                 <span>Valor (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'cartao' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
+                <input inputMode="decimal" type="text" value={paymentMethod === 'cartao' ? amountPaidInput : formatCurrencyInput(total)} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setAmountPaidInput(masked); setAmountPaid(parseCurrencyInput(masked)); }} onBlur={() => setAmountPaidInput(formatCurrencyInput(amountPaid))} readOnly={!canOperate || paymentMethod !== 'cartao'} />
                 <span>Taxa (%)</span>
                 <input value="0,00" readOnly />
               </label>
@@ -558,7 +590,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
                   <strong><AppIcon name="pix" size={16} className="app-icon-button-inline" />Pix</strong>
                 </div>
                 <span>Valor (R$)</span>
-                <input type="number" min="0" step="0.01" value={paymentMethod === 'pix' ? amountPaid : total} onChange={(event) => setAmountPaid(Number(event.target.value))} readOnly={!canOperate} />
+                <input inputMode="decimal" type="text" value={paymentMethod === 'pix' ? amountPaidInput : formatCurrencyInput(total)} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setAmountPaidInput(masked); setAmountPaid(parseCurrencyInput(masked)); }} onBlur={() => setAmountPaidInput(formatCurrencyInput(amountPaid))} readOnly={!canOperate || paymentMethod !== 'pix'} />
                 <span>Total (R$)</span>
                 <input value={money(total).replace('R$ ', '')} readOnly />
               </label>
@@ -584,7 +616,7 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
               <div><span>Subtotal:</span><strong>{money(subtotal)}</strong></div>
               <div>
                 <span>Descontos:</span>
-                <input type="number" min="0" step="0.01" value={discount} onChange={(event) => setDiscount(Number(event.target.value) || 0)} readOnly={!canOperate} />
+                <input inputMode="decimal" type="text" value={discountInput} onChange={(event) => { const masked = maskCurrencyInput(event.target.value); setDiscountInput(masked); setDiscount(parseCurrencyInput(masked)); }} onBlur={() => setDiscountInput(formatCurrencyInput(discount))} readOnly={!canOperate} />
               </div>
             </div>
             <div className="classic-sale-total-box">
@@ -623,6 +655,12 @@ export function SalesPage({ refreshToken, onChanged }: PageProps): JSX.Element {
             { key: 'method', label: 'Forma', render: (row) => paymentMethodLabel(row.payment_method) },
             { key: 'total', label: 'Total', align: 'right', render: (row) => money(row.total) },
             { key: 'status', label: 'Status', render: (row) => saleStatusLabel(row.status) },
+            { key: 'actions', label: 'Comprovante', render: (row) => (
+              <span className="sales-recent-receipt-actions">
+                <button type="button" className="ghost-btn small" onClick={() => void shareRecentSale(row, 'pdf')}>PDF</button>
+                <button type="button" className="ghost-btn small" onClick={() => void shareRecentSale(row, 'png')}>PNG</button>
+              </span>
+            ) },
           ]}
         />
       </section>

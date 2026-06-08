@@ -621,6 +621,81 @@ function downloadPreviewPdf(preview: ReceiptPreview, store: ReceiptStoreInfo): s
   return file.fileName;
 }
 
+
+function uniquePngFileName(stem: string): string {
+  const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
+  const safeStem = (stem || 'comprovante').replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return `${safeStem}-${stamp}.png`;
+}
+
+function escapeSvgText(value: string): string {
+  return value.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char] || char));
+}
+
+function triggerFileDownload(fileName: string, blob: Blob): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<{ fileName: string; blob: Blob }> {
+  const data = getPdfReceiptData(preview);
+  const storeName = (store.store_name || 'Jaque Confecções e Presentes').trim();
+  const rows = [
+    data.subtitle,
+    `Cliente: ${data.customer}`,
+    `Telefone: ${data.phone}`,
+    `Status: ${data.status}`,
+    `${data.totalLabel}: ${data.totalValue}`,
+    `${data.paidLabel}: ${data.paidValue}`,
+    `${data.balanceLabel}: ${data.balanceValue}`,
+    ...(data.productRows ?? []).slice(0, 6).map((row) => `${row.qtd}x ${row.produto} - ${row.total}`),
+    ...data.rows.slice(0, 8).map((row) => `${row.parcela} | ${row.vencimento} | ${row.valor} | ${row.status}`),
+    ...data.notes.slice(0, 5),
+  ].map((line) => pdfSafeText(line)).filter(Boolean);
+  const width = 900;
+  const height = Math.max(1020, 300 + rows.length * 32);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#111"/><rect x="46" y="46" width="808" height="${height - 92}" fill="#fff" stroke="#000" stroke-width="8"/><text x="90" y="116" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="900" fill="#111">${escapeSvgText(storeName.toUpperCase())}</text><text x="90" y="168" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#111">${escapeSvgText(data.title)}</text><line x1="90" y1="196" x2="810" y2="196" stroke="#111" stroke-width="4"/>${rows.map((line, index) => `<text x="90" y="${250 + index * 32}" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="${/^(total|pago|saldo|status|cliente|telefone)/i.test(line) ? '850' : '500'}" fill="#111">${escapeSvgText(line)}</text>`).join('')}<text x="90" y="${height - 86}" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#333">Arquivo PNG do comprovante pronto para compartilhar.</text></svg>`;
+  const image = new Image();
+  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+  try {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error('Não foi possível gerar a imagem PNG do comprovante.'));
+      image.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas indisponível para gerar PNG.');
+    context.drawImage(image, 0, 0);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.96);
+    });
+    return { fileName: uniquePngFileName(data.title || 'comprovante'), blob };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function shareReceiptFileOnly(file: File, title: string): Promise<boolean> {
+  const payload = { title, files: [file] } as ShareData & { files: File[] };
+  const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
+  if (!navigator.share || !mobileNavigator.canShare?.(payload)) return false;
+  try {
+    await navigator.share(payload);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function readReceiptFocusPayload(): ReceiptFocusPayload | null {
   try {
     const raw = window.localStorage.getItem(RECEIPTS_FOCUS_SALE_KEY);
@@ -1101,6 +1176,11 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     return Array.from(groups.values()).sort((a, b) => b.balance - a.balance || a.customerName.localeCompare(b.customerName));
   }, [filteredCredits]);
 
+
+  const visibleGroupedCredits = groupedCredits.slice(0, visibleCreditGroups);
+  const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);
+  const hasAnyVisible = visibleGroupedCredits.length > 0 || visibleSavedReceipts.length > 0;
+
   const totalReceipts = savedReceipts.length + installmentReceiptViews.length + credits.length;
   const totalValue = useMemo(() => savedReceipts.reduce((sum, receipt) => sum + Number(receipt.total || 0), 0) + credits.reduce((sum, credit) => sum + Number(credit.total || 0), 0), [credits, savedReceipts]);
   const pendingCount = useMemo(() => credits.flatMap((credit) => credit.installments).filter((installment) => remainingOf(installment) > 0.009 && installment.status !== 'pago').length, [credits]);
@@ -1238,61 +1318,40 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     notifyMobileAction({ title: 'Visualização aberta', message: `${preview.title} aberto dentro do app, sem HTML solto.`, tone: 'success', page: 'receipts', actionLabel: 'Conferir' });
   }
 
-  async function sharePreview(preview: ReceiptPreview): Promise<void> {
-    const baseText = preview.kind === 'nota'
-      ? creditGeneralShareText(preview.credit)
-      : preview.kind === 'parcela'
-        ? installmentShareText(preview.credit, preview.installment)
-        : `${preview.title}
-Status: ${preview.status}
-Cliente: ${preview.customer}
-Total: ${formatCurrency(preview.total)}`;
-    const pdfFile = buildPdfReceiptFile(preview, receiptStore);
-    const shareFile = new File([pdfFile.blob], pdfFile.fileName, { type: 'application/pdf' });
-    const sharePayload = {
-      title: preview.title,
-      text: `${baseText}
-
-Segue o comprovante em PDF.`,
-      files: [shareFile],
-    } as ShareData & { files: File[] };
-    const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
-
-    if (navigator.share && mobileNavigator.canShare?.(sharePayload)) {
-      try {
-        await navigator.share(sharePayload);
-        setFeedback({ tone: 'success', text: 'PDF pronto aberto no compartilhamento do celular. Escolha WhatsApp e envie o arquivo.' });
-        notifyMobileAction({ title: 'PDF pronto para enviar', message: 'Compartilhamento abriu com o arquivo PDF anexado.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+  async function sharePreview(preview: ReceiptPreview, format: 'pdf' | 'png' = 'pdf'): Promise<void> {
+    try {
+      if (format === 'png') {
+        const pngFile = await buildPngReceiptFile(preview, receiptStore);
+        const file = new File([pngFile.blob], pngFile.fileName, { type: 'image/png' });
+        const shared = await shareReceiptFileOnly(file, preview.title);
+        if (shared) {
+          setFeedback({ tone: 'success', text: 'PNG do comprovante aberto no compartilhamento do celular, sem link e sem texto extra.' });
+          notifyMobileAction({ title: 'PNG pronto', message: 'Compartilhamento abriu com a imagem anexada.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+          return;
+        }
+        triggerFileDownload(pngFile.fileName, pngFile.blob);
+        setFeedback({ tone: 'info', text: `PNG baixado como ${pngFile.fileName}. Anexe essa imagem no WhatsApp.` });
+        notifyMobileAction({ title: 'PNG baixado', message: 'Anexe a imagem baixada no WhatsApp.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
         return;
-      } catch {
-        // Quando o usuário cancela ou o navegador bloqueia, baixa o PDF como fallback.
       }
-    }
 
-    triggerPdfDownload(pdfFile);
-    const phone = safeWhatsapp(preview.phone || '');
-    const fallbackText = `${baseText}
-
-O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no WhatsApp para enviar o comprovante pronto.`;
-    if (phone) {
-      await api.openExternalUrl(`https://wa.me/${phone}?text=${encodeURIComponent(fallbackText)}`);
-      setFeedback({ tone: 'info', text: 'Este navegador não permitiu anexar PDF automaticamente. Baixei o PDF e abri o WhatsApp com orientação para anexar o arquivo.' });
-      notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o PDF baixado no WhatsApp. Alguns navegadores bloqueiam anexo automático.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
-      return;
+      const pdfFile = buildPdfReceiptFile(preview, receiptStore);
+      const file = new File([pdfFile.blob], pdfFile.fileName, { type: 'application/pdf' });
+      const shared = await shareReceiptFileOnly(file, preview.title);
+      if (shared) {
+        setFeedback({ tone: 'success', text: 'PDF do comprovante aberto no compartilhamento do celular, sem link e sem texto extra.' });
+        notifyMobileAction({ title: 'PDF pronto', message: 'Compartilhamento abriu com o arquivo PDF anexado.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+        return;
+      }
+      triggerPdfDownload(pdfFile);
+      setFeedback({ tone: 'info', text: `PDF baixado como ${pdfFile.fileName}. Anexe esse arquivo no WhatsApp.` });
+      notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o arquivo baixado ao compartilhar.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
     }
-    await navigator.clipboard?.writeText(fallbackText).catch(() => undefined);
-    setFeedback({ tone: 'info', text: 'PDF baixado. Texto de apoio copiado para colar no WhatsApp ou em outro app.' });
-    notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o arquivo baixado ao compartilhar.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
   }
 
-  const visibleSavedReceipts = filteredSavedReceipts.slice(0, visibleCount);
-  const visibleGroupedCredits = groupedCredits.slice(0, visibleCreditGroups);
-  const hasAnyVisible = Boolean(visibleSavedReceipts.length || visibleGroupedCredits.length);
 
-  useEffect(() => {
-    setVisibleCount(COMPACT_CREDIT_LIMIT);
-    setVisibleCreditGroups(COMPACT_CREDIT_LIMIT);
-  }, [filter, query]);
 
   return (
     <div className="mapp-screen mapp-receipts-screen">
@@ -1307,7 +1366,7 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
 
       <section className="mapp-success-card">
         <strong>Comprovantes organizados por cliente, nota e parcela</strong>
-        <span>Agora esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa como arquivo .pdf e Enviar tenta compartilhar o PDF pronto; se o navegador bloquear, baixa o PDF e orienta anexar no WhatsApp.</span>
+        <span>Esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa arquivo real e Enviar compartilha o arquivo pronto sem link e sem texto extra; se o navegador bloquear, baixa o arquivo para anexar manualmente.</span>
       </section>
 
       <section className="mapp-filters-card mapp-receipts-filter-card">
@@ -1366,7 +1425,8 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
           <div className="mapp-button-grid mapp-receipt-button-grid">
             <button type="button" className="mapp-primary-button" onClick={() => openFullPreview(selected)}>Visualizar</button>
             <button type="button" className="mapp-secondary-button" onClick={() => void exportPreview(selected, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'Baixar PDF'}</button>
-            <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected)}>Enviar / compartilhar</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected, 'pdf')}>Enviar PDF</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => void sharePreview(selected, 'png')}>Enviar PNG</button>
             <button type="button" className="mapp-secondary-button" onClick={() => setSelected(null)}>Fechar prévia</button>
           </div>
         </section>
@@ -1425,7 +1485,8 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
                             <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
                               <button type="button" onClick={() => selectAndOpenPreview(creditReceipt)}>Visualizar</button>
                               <button type="button" onClick={() => void exportPreview(creditReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
-                              <button type="button" onClick={() => void sharePreview(creditReceipt)} disabled={saving}>Enviar extrato</button>
+                              <button type="button" onClick={() => void sharePreview(creditReceipt, 'pdf')} disabled={saving}>Enviar PDF</button>
+                              <button type="button" onClick={() => void sharePreview(creditReceipt, 'png')} disabled={saving}>Enviar PNG</button>
                             </div>
                             {expanded ? (
                               <div className="mapp-installment-list">
@@ -1448,7 +1509,8 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
                                       <div className="mapp-installment-actions mapp-installment-actions-slim">
                                         <button type="button" onClick={() => selectAndOpenPreview(parcelReceipt)}>Visualizar</button>
                                         <button type="button" onClick={() => void exportPreview(parcelReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
-                                        <button type="button" onClick={() => void sharePreview(parcelReceipt)} disabled={saving}>Enviar</button>
+                                        <button type="button" onClick={() => void sharePreview(parcelReceipt, 'pdf')} disabled={saving}>Enviar PDF</button>
+                                        <button type="button" onClick={() => void sharePreview(parcelReceipt, 'png')} disabled={saving}>PNG</button>
                                       </div>
                                     </div>
                                   );
@@ -1500,7 +1562,8 @@ O PDF ${pdfFile.fileName} foi baixado neste aparelho. Anexe esse arquivo no What
                   <div className="mapp-receipt-actions">
                     <button type="button" onClick={() => selectAndOpenPreview(preview)}>Ver</button>
                     <button type="button" onClick={() => void exportPreview(preview, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
-                    <button type="button" onClick={() => void sharePreview(preview)}>Enviar</button>
+                    <button type="button" onClick={() => void sharePreview(preview, 'pdf')}>PDF</button>
+                    <button type="button" onClick={() => void sharePreview(preview, 'png')}>PNG</button>
                   </div>
                 </div>
               </article>
