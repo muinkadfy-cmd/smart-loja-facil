@@ -24,12 +24,12 @@ type ReceiptRenderData = {
 
 const STORE_NAME = 'Jaque Confecções e Presentes';
 const STORE_LOGO_URL = '/brand/jaque-receipt-logo-wide.png';
-const CANVAS_WIDTH = 1120;
-const RECEIPT_X = 56;
-const RECEIPT_Y = 46;
+const CANVAS_WIDTH = 1240;
+const RECEIPT_X = 62;
+const RECEIPT_Y = 50;
 const RECEIPT_W = CANVAS_WIDTH - RECEIPT_X * 2;
-const INNER_X = RECEIPT_X + 36;
-const INNER_W = RECEIPT_W - 72;
+const INNER_X = RECEIPT_X + 42;
+const INNER_W = RECEIPT_W - 84;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
@@ -251,10 +251,10 @@ function drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   ctx.strokeRect(x, y, w, h);
 }
 
-function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 44): void {
+function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 52): void {
   ctx.fillStyle = BLACK;
   ctx.fillRect(x, y, w, h);
-  drawText(ctx, label, x + 18, y + 30, 18, 900, '#ffffff');
+  drawText(ctx, label, x + 20, y + 36, 21, 900, '#ffffff');
 }
 
 function drawWrapped(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 700, maxLines = 2, lineGap = 7): number {
@@ -266,7 +266,7 @@ function drawWrapped(ctx: CanvasRenderingContext2D, text: string, x: number, y: 
   return cursor;
 }
 
-function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: number, y: number, w = 132, h = 36): void {
+function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: number, y: number, w = 152, h = 44): void {
   const clean = safeText(status).toUpperCase();
   const isPaid = clean.includes('PAGO') || clean.includes('PAGA') || clean.includes('QUIT');
   const isPartial = clean.includes('PARCIAL');
@@ -277,14 +277,14 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
   ctx.strokeStyle = isPartial ? '#9a5a05' : isCancel ? '#8a1c1c' : BLACK;
   ctx.lineWidth = 4;
   ctx.strokeRect(x, y, w, h);
-  drawCentered(ctx, label, x, y + 25, w, 17, 900, isPaid ? '#ffffff' : isPartial ? '#8a5206' : INK);
+  drawCentered(ctx, label, x, y + 30, w, 20, 900, isPaid ? '#ffffff' : isPartial ? '#8a5206' : INK);
 }
 
 async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasElement> {
   const productRows = data.productRows.slice(0, 8);
-  const productRowH = 60;
-  const notesH = Math.max(142, 48 + data.notes.length * 32 + (data.discount > 0 ? 8 : 0));
-  const receiptH = 250 + 156 + 28 + 44 + 44 + productRows.length * productRowH + 28 + 128 + 28 + notesH + 76;
+  const productRowH = 74;
+  const notesH = Math.max(176, 56 + data.notes.length * 40 + (data.discount > 0 ? 12 : 0));
+  const receiptH = 282 + 178 + 34 + 52 + 52 + productRows.length * productRowH + 34 + 150 + 34 + notesH + 96;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -300,51 +300,51 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
 
   const logo = await loadImage(STORE_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, INNER_X, RECEIPT_Y + 34, 316, 156);
+    ctx.drawImage(logo, INNER_X, RECEIPT_Y + 34, 354, 174);
   } else {
-    drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 116, 316, 24, 900);
+    drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 128, 354, 27, 900);
   }
-  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 210, 316, 13, 900);
+  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 232, 354, 15, 900);
 
-  const titleX = INNER_X + 390;
-  const titleW = INNER_W - 405;
-  let titleY = RECEIPT_Y + 86;
-  wrapCanvasText(ctx, data.title, titleW, 42, 900).slice(0, 2).forEach((line) => {
-    drawCentered(ctx, line, titleX, titleY, titleW, 42, 900);
-    titleY += 45;
+  const titleX = INNER_X + 430;
+  const titleW = INNER_W - 445;
+  let titleY = RECEIPT_Y + 92;
+  wrapCanvasText(ctx, data.title, titleW, 48, 900).slice(0, 2).forEach((line) => {
+    drawCentered(ctx, line, titleX, titleY, titleW, 48, 900);
+    titleY += 52;
   });
   drawLine(ctx, titleX, titleY - 18, titleX + titleW, titleY - 18, 5);
-  drawText(ctx, `${data.subtitle} • ${data.date}`, titleX, titleY + 15, 15, 650, MUTED);
-  drawText(ctx, `Status: ${data.status}`, titleX, titleY + 42, 17, 900);
-  drawStatusBadge(ctx, data.status, titleX + titleW - 150, titleY + 58, 150, 38);
+  drawText(ctx, `${data.subtitle} • ${data.date}`, titleX, titleY + 20, 18, 700, MUTED);
+  drawText(ctx, `Status: ${data.status}`, titleX, titleY + 52, 20, 900);
+  drawStatusBadge(ctx, data.status, titleX + titleW - 172, titleY + 72, 172, 46);
 
-  let y = RECEIPT_Y + 250;
-  drawRect(ctx, INNER_X, y, INNER_W, 156, 4);
+  let y = RECEIPT_Y + 282;
+  drawRect(ctx, INNER_X, y, INNER_W, 178, 4);
   const labelX = INNER_X + 28;
   const valueX = INNER_X + 210;
-  drawText(ctx, 'CLIENTE', labelX, y + 42, 18, 900);
-  drawWrapped(ctx, data.customer, valueX, y + 42, INNER_W - 250, 21, 900, 1);
-  drawLine(ctx, INNER_X + 22, y + 58, INNER_X + INNER_W - 22, y + 58, 3);
-  drawText(ctx, 'VENDA', labelX, y + 82, 18, 900);
-  drawText(ctx, `#${data.saleNumber}`, valueX, y + 82, 20, 900);
-  drawLine(ctx, INNER_X + 22, y + 98, INNER_X + INNER_W - 22, y + 98, 3);
-  drawText(ctx, 'FORMA', labelX, y + 122, 18, 900);
-  drawText(ctx, data.payment, valueX, y + 122, 20, 900);
-  drawLine(ctx, INNER_X + 22, y + 138, INNER_X + INNER_W - 22, y + 138, 3);
+  drawText(ctx, 'CLIENTE', labelX, y + 48, 21, 900);
+  drawWrapped(ctx, data.customer, valueX, y + 48, INNER_W - 260, 25, 900, 1);
+  drawLine(ctx, INNER_X + 22, y + 68, INNER_X + INNER_W - 22, y + 68, 3);
+  drawText(ctx, 'VENDA', labelX, y + 100, 21, 900);
+  drawText(ctx, `#${data.saleNumber}`, valueX, y + 100, 24, 900);
+  drawLine(ctx, INNER_X + 22, y + 118, INNER_X + INNER_W - 22, y + 118, 3);
+  drawText(ctx, 'FORMA', labelX, y + 150, 21, 900);
+  drawText(ctx, data.payment, valueX, y + 150, 24, 900);
+  drawLine(ctx, INNER_X + 22, y + 166, INNER_X + INNER_W - 22, y + 166, 3);
 
-  y += 184;
+  y += 212;
   fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W);
-  y += 44;
+  y += 52;
   const columns = [92, INNER_W - 92 - 170 - 176, 170, 176];
   const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
   ctx.fillStyle = BLACK;
-  ctx.fillRect(INNER_X, y, INNER_W, 44);
+  ctx.fillRect(INNER_X, y, INNER_W, 52);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 29, columns[index], 16, 900, '#ffffff');
+    drawCentered(ctx, header, x, y + 36, columns[index], 19, 900, '#ffffff');
     x += columns[index];
   });
-  const tableH = 44 + productRows.length * productRowH;
+  const tableH = 52 + productRows.length * productRowH;
   drawRect(ctx, INNER_X, y, INNER_W, tableH, 4);
   x = INNER_X;
   columns.slice(0, -1).forEach((w) => {
@@ -352,49 +352,49 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     drawLine(ctx, x, y, x, y + tableH, 3);
   });
   productRows.forEach((row, index) => {
-    const rowY = y + 44 + index * productRowH;
+    const rowY = y + 52 + index * productRowH;
     drawLine(ctx, INNER_X, rowY + productRowH, INNER_X + INNER_W, rowY + productRowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + 39, columns[0], 20, 800);
-    drawWrapped(ctx, row.produto, INNER_X + columns[0] + 16, rowY + 30, columns[1] - 28, 17, 800, 2, 5);
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY + 39, columns[2], 18, 700);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY + 39, columns[3], 19, 900);
+    drawCentered(ctx, row.qtd, INNER_X, rowY + 47, columns[0], 23, 800);
+    drawWrapped(ctx, row.produto, INNER_X + columns[0] + 18, rowY + 32, columns[1] - 32, 20, 800, 2, 7);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY + 47, columns[2], 21, 800);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY + 47, columns[3], 22, 900);
   });
-  y += tableH + 28;
+  y += tableH + 34;
 
   const paymentW = Math.floor(INNER_W * 0.68);
   fillBlackHeader(ctx, 'PAGAMENTO', INNER_X, y, paymentW);
   fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW, y, INNER_W - paymentW);
-  y += 44;
-  drawRect(ctx, INNER_X, y, paymentW, 84, 4);
-  drawRect(ctx, INNER_X + paymentW, y, INNER_W - paymentW, 84, 4);
+  y += 52;
+  drawRect(ctx, INNER_X, y, paymentW, 98, 4);
+  drawRect(ctx, INNER_X + paymentW, y, INNER_W - paymentW, 98, 4);
   const methods = ['Pix', 'Dinheiro', 'Cartão', 'Crediário'];
   const activePayment = data.payment.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   let methodX = INNER_X + 28;
   methods.forEach((method) => {
     const methodKey = method.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const active = activePayment.includes(methodKey);
-    drawText(ctx, active ? '●' : '♡', methodX, y + 38, 23, 900, active ? BLACK : '#888888');
-    drawText(ctx, method, methodX + 28, y + 38, 17, active ? 900 : 650);
-    methodX += 130;
+    drawText(ctx, active ? '●' : '♡', methodX, y + 44, 27, 900, active ? BLACK : '#888888');
+    drawText(ctx, method, methodX + 34, y + 44, 20, active ? 900 : 700);
+    methodX += 148;
   });
   if (data.subtotal > 0 || data.discount > 0) {
-    drawText(ctx, `Subtotal: ${formatCurrency(data.subtotal || data.total + data.discount)}`, INNER_X + 28, y + 70, 16, 800);
-    if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 292, y + 70, 16, 900);
+    drawText(ctx, `Subtotal: ${formatCurrency(data.subtotal || data.total + data.discount)}`, INNER_X + 28, y + 82, 19, 800);
+    if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 330, y + 82, 19, 900);
   }
-  drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW, y + 54, INNER_W - paymentW, 34, 900);
-  y += 112;
+  drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW, y + 64, INNER_W - paymentW, 40, 900);
+  y += 132;
 
   fillBlackHeader(ctx, 'ANOTAÇÕES', INNER_X, y, INNER_W);
-  y += 44;
-  drawRect(ctx, INNER_X, y, INNER_W, notesH - 44, 4);
-  let noteY = y + 30;
+  y += 52;
+  drawRect(ctx, INNER_X, y, INNER_W, notesH - 52, 4);
+  let noteY = y + 36;
   data.notes.forEach((note) => {
-    wrapCanvasText(ctx, `• ${note}`, INNER_W - 60, 17, 600).slice(0, 2).forEach((line) => {
-      drawText(ctx, line, INNER_X + 28, noteY, 17, 600);
-      noteY += 28;
+    wrapCanvasText(ctx, `• ${note}`, INNER_W - 66, 20, 650).slice(0, 2).forEach((line) => {
+      drawText(ctx, line, INNER_X + 30, noteY, 20, 650);
+      noteY += 34;
     });
   });
-  drawCentered(ctx, 'Obrigado pela preferência! · Jaque Confecções e Presentes', INNER_X, RECEIPT_Y + receiptH - 32, INNER_W, 17, 700);
+  drawCentered(ctx, 'Obrigado pela preferência! · Jaque Confecções e Presentes', INNER_X, RECEIPT_Y + receiptH - 38, INNER_W, 20, 750);
   return canvas;
 }
 
