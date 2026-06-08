@@ -250,23 +250,24 @@ async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<
     : saleFallbackProductRows(sale, receipt);
   const noteLines = compactReceiptNoteLines(sale, receipt, productRows.length);
 
-  const width = 1080;
-  const margin = 72;
-  const receiptX = margin;
-  const receiptY = 56;
-  const receiptW = width - margin * 2;
-  const innerX = receiptX + 30;
-  const innerW = receiptW - 60;
-  const headerH = 226;
-  const customerH = 156;
-  const productHeaderH = 46;
-  const productRowH = 54;
-  const productH = productHeaderH + Math.max(1, productRows.length) * productRowH;
-  const paymentH = discount > 0 ? 156 : 124;
-  const notesH = 68 + noteLines.length * 34;
+  const width = 1040;
+  const outerPad = 32;
+  const receiptX = outerPad;
+  const receiptY = 32;
+  const receiptW = width - outerPad * 2;
+  const innerX = receiptX + 28;
+  const innerW = receiptW - 56;
+  const headerH = 232;
+  const customerH = 160;
+  const sectionGap = 28;
+  const productHeaderH = 44;
+  const productRowH = 60;
+  const productH = productHeaderH + productRows.length * productRowH;
+  const paymentH = discount > 0 ? 150 : 122;
+  const notesH = Math.max(150, 54 + noteLines.length * 38);
   const footerH = 76;
-  const receiptH = headerH + customerH + 32 + productH + 32 + paymentH + 30 + notesH + footerH;
-  const height = receiptH + 112;
+  const receiptH = headerH + customerH + sectionGap + productH + sectionGap + paymentH + sectionGap + notesH + footerH;
+  const height = receiptH + receiptY * 2;
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -274,26 +275,34 @@ async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<
   if (!context) throw new Error('Canvas indisponível para gerar PNG.');
   const ctx: CanvasRenderingContext2D = context;
 
-  function drawText(text: string, x: number, y: number, size: number, weight = 600, color = '#111111'): void {
-    ctx.fillStyle = color;
+  function cleanText(value: string): string {
+    return cleanSystemBrand(String(value || '-')).replace(/\s+/g, ' ').trim() || '-';
+  }
+
+  function setFont(size: number, weight = 650): void {
     ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  }
+
+  function drawText(text: string, x: number, y: number, size: number, weight = 650, color = '#111111'): void {
+    ctx.fillStyle = color;
+    setFont(size, weight);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(cleanSystemBrand(String(text || '')), x, y);
+    ctx.fillText(cleanText(text), x, y);
   }
 
   function drawCentered(text: string, x: number, y: number, boxW: number, size: number, weight = 800, color = '#111111'): void {
     ctx.fillStyle = color;
-    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    setFont(size, weight);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(cleanSystemBrand(String(text || '')), x + boxW / 2, y);
+    ctx.fillText(cleanText(text), x + boxW / 2, y);
     ctx.textAlign = 'left';
   }
 
-  function wrapForWidth(text: string, maxWidth: number, size: number, weight = 600): string[] {
-    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
-    const words = cleanSystemBrand(String(text || '-')).split(/\s+/).filter(Boolean);
+  function wrapForWidth(text: string, maxWidth: number, size: number, weight = 650): string[] {
+    setFont(size, weight);
+    const words = cleanText(text).split(/\s+/).filter(Boolean);
     const lines: string[] = [];
     let line = '';
     words.forEach((word) => {
@@ -309,29 +318,40 @@ async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<
     return lines.length ? lines : ['-'];
   }
 
-  function drawWrapped(text: string, x: number, y: number, maxWidth: number, size: number, weight = 600, lineGap = 8, color = '#111111', maxLines = 2): number {
-    const lines = wrapForWidth(text, maxWidth, size, weight).slice(0, maxLines);
+  function drawWrapped(text: string, x: number, y: number, maxWidth: number, size: number, weight = 650, maxLines = 2, lineGap = 7, color = '#111111'): number {
     let nextY = y;
-    lines.forEach((line) => {
-      drawText(line, x, nextY, size, weight, color);
+    wrapForWidth(text, maxWidth, size, weight).slice(0, maxLines).forEach((lineText) => {
+      drawText(lineText, x, nextY, size, weight, color);
       nextY += size + lineGap;
     });
     return nextY;
   }
 
+  function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3): void {
+    ctx.lineWidth = widthLine;
+    ctx.strokeStyle = '#050505';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  function rect(x: number, y: number, w: number, h: number, lineWidth = 4): void {
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = '#050505';
+    ctx.strokeRect(x, y, w, h);
+  }
+
   function drawBlackHeader(label: string, x: number, y: number, w: number, h = 44): void {
     ctx.fillStyle = '#050505';
     ctx.fillRect(x, y, w, h);
-    drawText(label, x + 18, y + 29, 18, 900, '#ffffff');
+    drawText(label, x + 18, y + 30, 19, 900, '#ffffff');
   }
 
   function drawInfoRow(label: string, value: string, y: number): void {
-    drawText(label, innerX + 28, y, 17, 900);
-    drawWrapped(value, innerX + 190, y, innerW - 220, 19, 900, 5, '#111111', 1);
-    ctx.beginPath();
-    ctx.moveTo(innerX + 24, y + 13);
-    ctx.lineTo(innerX + innerW - 24, y + 13);
-    ctx.stroke();
+    drawText(label, innerX + 28, y, 18, 900);
+    drawWrapped(value, innerX + 198, y, innerW - 230, 20, 900, 1, 5);
+    line(innerX + 22, y + 14, innerX + innerW - 22, y + 14, 3);
   }
 
   async function loadLogo(): Promise<HTMLImageElement | null> {
@@ -344,99 +364,95 @@ async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<
     });
   }
 
-  ctx.fillStyle = '#080808';
+  ctx.fillStyle = '#090909';
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(receiptX, receiptY, receiptW, receiptH);
-  ctx.strokeStyle = '#050505';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(receiptX, receiptY, receiptW, receiptH);
+  rect(receiptX, receiptY, receiptW, receiptH, 8);
 
   const logo = await loadLogo();
   if (logo) {
-    ctx.drawImage(logo, innerX + 2, receiptY + 34, 310, 148);
+    ctx.drawImage(logo, innerX + 4, receiptY + 34, 300, 150);
   } else {
-    drawCentered(storeName.toUpperCase(), innerX, receiptY + 104, 310, 24, 900);
+    drawCentered(storeName.toUpperCase(), innerX, receiptY + 106, 300, 24, 900);
   }
-  drawCentered(storeName.toUpperCase(), innerX + 8, receiptY + 196, 300, 13, 900);
+  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 202, 300, 13, 900);
 
   const titleX = innerX + 370;
-  const titleW = innerW - 390;
-  let titleY = receiptY + 82;
-  wrapForWidth(title, titleW, 41, 900).slice(0, 2).forEach((line) => {
-    drawText(line, titleX, titleY, 41, 900, '#050505');
-    titleY += 43;
+  const titleW = innerW - 388;
+  let titleY = receiptY + 92;
+  wrapForWidth(title, titleW, 39, 900).slice(0, 2).forEach((lineText) => {
+    drawCentered(lineText, titleX, titleY, titleW, 39, 900, '#050505');
+    titleY += 42;
   });
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(titleX, titleY - 23);
-  ctx.lineTo(titleX + titleW, titleY - 23);
-  ctx.stroke();
-  drawText(`Comprovante salvo • ${formatDateTime(receipt.created_at || sale.created_at)}`, titleX, titleY + 8, 16, 700);
-  drawText(`Status: ${status}`, titleX, titleY + 34, 18, 900);
+  line(titleX, titleY - 16, titleX + titleW, titleY - 16, 5);
+  drawText(`Comprovante salvo • ${formatDateTime(receipt.created_at || sale.created_at)}`, titleX, titleY + 16, 15, 650);
+  drawText(`Status: ${status}`, titleX, titleY + 42, 17, 900);
 
   let y = receiptY + headerH;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(innerX, y, innerW, customerH);
+  rect(innerX, y, innerW, customerH, 4);
   drawInfoRow('CLIENTE', receipt.customer_name || sale.customer_name || 'Consumidor', y + 38);
-  drawInfoRow('VENDA', `#${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`, y + 72);
-  drawInfoRow('DATA', formatDateTime(receipt.created_at || sale.created_at), y + 106);
-  drawInfoRow('FORMA', paymentLabel(sale.payment_method), y + 140);
+  drawInfoRow('VENDA', `#${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`, y + 76);
+  drawInfoRow('DATA', formatDateTime(receipt.created_at || sale.created_at), y + 114);
+  drawInfoRow('FORMA', paymentLabel(sale.payment_method), y + 148);
 
-  y += customerH + 32;
+  y += customerH + sectionGap;
   drawBlackHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
   y += productHeaderH;
-  const tableCols = [84, 458, 160, innerW - 84 - 458 - 160];
-  const headers = ['QTD.', 'PRODUTO', 'R$ UN', 'TOTAL'];
-  ctx.lineWidth = 3;
-  productRows.forEach((row, rowIndex) => {
-    const rowTop = y + rowIndex * productRowH;
-    ctx.strokeRect(innerX, rowTop, innerW, productRowH);
-    let cx = innerX;
-    tableCols.forEach((colW, colIndex) => {
-      if (colIndex > 0) {
-        ctx.beginPath();
-        ctx.moveTo(cx, rowTop);
-        ctx.lineTo(cx, rowTop + productRowH);
-        ctx.stroke();
-      }
-      if (rowIndex === 0) drawCentered(headers[colIndex], cx, rowTop - 15, colW, 15, 900, '#111111');
-      cx += colW;
-    });
-    drawCentered(row.qtd, innerX, rowTop + 35, tableCols[0], 18, 800);
-    drawWrapped(row.produto, innerX + tableCols[0] + 16, rowTop + 28, tableCols[1] - 28, 18, 800, 2, '#111111', 2);
-    drawCentered(row.unitario || '-', innerX + tableCols[0] + tableCols[1], rowTop + 35, tableCols[2], 17, 700);
-    drawCentered(row.total || '-', innerX + tableCols[0] + tableCols[1] + tableCols[2], rowTop + 35, tableCols[3], 18, 900);
+  const tableCols = [88, innerW - 88 - 170 - 170, 170, 170];
+  const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(innerX, y, innerW, 44);
+  let cx = innerX;
+  headers.forEach((header, index) => {
+    drawCentered(header, cx, y + 29, tableCols[index], 16, 900, '#ffffff');
+    cx += tableCols[index];
   });
-  y += productH + 32;
+  rect(innerX, y, innerW, 44 + productRows.length * productRowH, 4);
+  cx = innerX;
+  tableCols.slice(0, -1).forEach((colW) => {
+    cx += colW;
+    line(cx, y, cx, y + 44 + productRows.length * productRowH, 3);
+  });
+  productRows.forEach((row, rowIndex) => {
+    const rowTop = y + 44 + rowIndex * productRowH;
+    line(innerX, rowTop + productRowH, innerX + innerW, rowTop + productRowH, 3);
+    drawCentered(row.qtd, innerX, rowTop + 38, tableCols[0], 20, 800);
+    drawWrapped(row.produto, innerX + tableCols[0] + 16, rowTop + 30, tableCols[1] - 28, 18, 800, 2, 5);
+    drawCentered(row.unitario || '-', innerX + tableCols[0] + tableCols[1], rowTop + 38, tableCols[2], 18, 700);
+    drawCentered(row.total || '-', innerX + tableCols[0] + tableCols[1] + tableCols[2], rowTop + 38, tableCols[3], 19, 900);
+  });
+  y += productH + sectionGap;
 
-  drawBlackHeader('PAGAMENTO', innerX, y, Math.floor(innerW * 0.72));
-  drawBlackHeader('TOTAL', innerX + Math.floor(innerW * 0.72), y, innerW - Math.floor(innerW * 0.72));
+  const paymentW = Math.floor(innerW * 0.7);
+  drawBlackHeader('PAGAMENTO', innerX, y, paymentW);
+  drawBlackHeader('TOTAL', innerX + paymentW, y, innerW - paymentW);
   y += 44;
-  ctx.strokeRect(innerX, y, Math.floor(innerW * 0.72), paymentH - 44);
-  ctx.strokeRect(innerX + Math.floor(innerW * 0.72), y, innerW - Math.floor(innerW * 0.72), paymentH - 44);
+  rect(innerX, y, paymentW, paymentH - 44, 4);
+  rect(innerX + paymentW, y, innerW - paymentW, paymentH - 44, 4);
   const methods = ['Pix', 'Dinheiro', 'Crédito', 'Débito', 'Crediário'];
   let mx = innerX + 28;
+  const activePayment = paymentLabel(sale.payment_method).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   methods.forEach((method) => {
-    const active = method.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(paymentLabel(sale.payment_method).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+    const active = method.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(activePayment);
     drawText(active ? '●' : '♡', mx, y + 42, 24, 900, active ? '#050505' : '#888888');
     drawText(method, mx + 28, y + 42, 17, active ? 900 : 650);
-    mx += 132;
+    mx += 130;
   });
   if (subtotal > 0 || discount > 0) {
     drawText(`Subtotal: ${subtotal > 0 ? formatCurrency(subtotal) : formatCurrency(total + discount)}`, innerX + 28, y + 78, 16, 800);
-    if (discount > 0) drawText(`Desconto: ${formatCurrency(discount)}`, innerX + 280, y + 78, 16, 800);
+    if (discount > 0) drawText(`Desconto: ${formatCurrency(discount)}`, innerX + 290, y + 78, 16, 800);
   }
-  drawCentered(formatCurrency(total), innerX + Math.floor(innerW * 0.72), y + 58, innerW - Math.floor(innerW * 0.72), 32, 900);
-  y += paymentH + 30;
+  drawCentered(formatCurrency(total), innerX + paymentW, y + 60, innerW - paymentW, 33, 900);
+  y += paymentH + sectionGap;
 
   drawBlackHeader('ANOTAÇÕES', innerX, y, innerW);
   y += 44;
-  ctx.strokeRect(innerX, y, innerW, notesH - 44);
-  let noteY = y + 31;
+  rect(innerX, y, innerW, notesH - 44, 4);
+  let noteY = y + 32;
   noteLines.forEach((note) => {
-    wrapForWidth(`• ${note}`, innerW - 54, 17, 600).slice(0, 2).forEach((line) => {
-      drawText(line, innerX + 28, noteY, 17, 600);
+    wrapForWidth(`• ${note}`, innerW - 60, 17, 600).slice(0, 2).forEach((lineText) => {
+      drawText(lineText, innerX + 28, noteY, 17, 600);
       noteY += 28;
     });
   });
