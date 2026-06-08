@@ -4,6 +4,36 @@ import { formatCurrency, formatDateTime } from './format';
 
 export type ReceiptShareFormat = 'pdf' | 'png';
 
+type ProductRow = { qtd: string; produto: string; unitario: string; total: string };
+type ReceiptRenderData = {
+  storeName: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  saleNumber: string;
+  customer: string;
+  phone: string;
+  date: string;
+  payment: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  productRows: ProductRow[];
+  notes: string[];
+};
+
+const STORE_NAME = 'Jaque Confecções e Presentes';
+const STORE_LOGO_URL = '/brand/jaque-receipt-logo-wide.png';
+const CANVAS_WIDTH = 1120;
+const RECEIPT_X = 56;
+const RECEIPT_Y = 46;
+const RECEIPT_W = CANVAS_WIDTH - RECEIPT_X * 2;
+const INNER_X = RECEIPT_X + 36;
+const INNER_W = RECEIPT_W - 72;
+const BLACK = '#050505';
+const INK = '#101116';
+const MUTED = '#3f4652';
+
 export function saleReceiptTitle(sale: SaleSummary): string {
   return `Comprovante #${String(sale.number || 0).padStart(4, '0')}`;
 }
@@ -28,42 +58,26 @@ function uniqueFileName(stem: string, ext: 'pdf' | 'png'): string {
 }
 
 function cleanSystemBrand(value: string): string {
-  return value
-    .replace(/Smart Loja F(?:a|á)cil/gi, 'Jaque Confecções e Presentes')
-    .replace(/Smart Loja/gi, 'Jaque Confecções e Presentes');
+  return String(value || '')
+    .replace(/Smart Loja F(?:a|á)cil/gi, STORE_NAME)
+    .replace(/Smart Loja/gi, STORE_NAME)
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-function htmlToText(html: string): string {
-  const raw = typeof window === 'undefined' ? html.replace(/<[^>]+>/g, ' ') : (() => {
-    const element = document.createElement('div');
-    element.innerHTML = html;
-    return element.textContent ?? '';
-  })();
-  return cleanSystemBrand(raw).replace(/\s+/g, ' ').trim();
+function textFromHtml(html: string): string {
+  if (typeof document === 'undefined') return cleanSystemBrand(html.replace(/<[^>]+>/g, ' '));
+  const element = document.createElement('div');
+  element.innerHTML = html || '';
+  return cleanSystemBrand(element.textContent ?? '');
 }
 
-function normalizeLines(text: string, maxLines = 26): string[] {
-  return text
-    .replace(/R\$\s*/g, 'R$ ')
-    .split(/(?=Subtotal|Desconto|Total|Status|Obrigado|Cliente|Forma|Venda|Data)|\n|\r/g)
-    .map((line) => line.replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
-    .slice(0, maxLines);
-}
-
-function receiptLines(sale: SaleSummary, receipt: ReceiptSummary): string[] {
-  const title = saleReceiptTitle(sale);
-  const body = normalizeLines(htmlToText(receipt.content), 20);
-  const lines = [
-    title,
-    `Venda: #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`,
-    `Cliente: ${receipt.customer_name || sale.customer_name || 'Consumidor'}`,
-    `Data: ${formatDateTime(receipt.created_at || sale.created_at)}`,
-    `Forma: ${paymentLabel(sale.payment_method)}`,
-    `Total: ${formatCurrency(receipt.total || sale.total)}`,
-    ...body,
-  ].filter(Boolean);
-  return Array.from(new Set(lines)).slice(0, 30);
+function safeText(value: string | number | null | undefined): string {
+  return cleanSystemBrand(String(value ?? '-'))
+    .normalize('NFC')
+    .replace(/[–—]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim() || '-';
 }
 
 function paymentLabel(method: SaleSummary['payment_method']): string {
@@ -73,68 +87,344 @@ function paymentLabel(method: SaleSummary['payment_method']): string {
   return 'Crediário';
 }
 
-function pdfEscape(value: string): string {
-  return value.replace(/[\\()]/g, '\\$&');
+function receiptStatusForShare(sale: SaleSummary, receipt: ReceiptSummary): string {
+  const status = String(receipt.status || sale.status || '').toLowerCase();
+  if (/(cancel|cancelad)/.test(status)) return 'Cancelado';
+  if (/(pago|paid|quitado)/.test(status)) return 'Pago';
+  if (/(parcial|partial)/.test(status)) return 'Parcial';
+  if (/(venc|atras|overdue)/.test(status)) return 'Atrasado';
+  if (sale.payment_method === 'crediario') return 'Emitido';
+  return 'Emitido';
 }
 
-function safePdfText(value: string): string {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[–—]/g, '-')
-    .replace(/[•]/g, '-')
-    .replace(/[^\x20-\x7E\n\r\t]/g, '');
+function numberFromMoney(value: string): number {
+  const clean = String(value || '').replace(/[^0-9,.-]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.');
+  const parsed = Number(clean);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function pdfText(commands: string[], x: number, y: number, text: string, size = 10, bold = false): void {
-  commands.push('BT', `/${bold ? 'F2' : 'F1'} ${size} Tf`, `${x} ${y} Td`, `(${pdfEscape(safePdfText(text))}) Tj`, 'ET');
+function parseMoneyAfter(text: string, label: RegExp): number {
+  const match = text.match(new RegExp(`${label.source}[^0-9R$-]*(?:R\\$)?\\s*([0-9.]+,\\d{2}|[0-9]+(?:\\.\\d{2})?)`, 'i'));
+  return match ? numberFromMoney(match[1]) : 0;
 }
 
-function pdfLine(commands: string[], x1: number, y1: number, x2: number, y2: number): void {
-  commands.push(`${x1} ${y1} m ${x2} ${y2} l S`);
+function cellTexts(row: Element): string[] {
+  return Array.from(row.querySelectorAll('th,td')).map((cell) => safeText(cell.textContent || ''));
 }
 
-function pdfRect(commands: string[], x: number, y: number, w: number, h: number, fill = false): void {
-  commands.push(`${x} ${y} ${w} ${h} re ${fill ? 'f' : 'S'}`);
+function extractProductRowsFromHtml(html: string): ProductRow[] {
+  if (typeof document === 'undefined' || !html) return [];
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  const tables = Array.from(wrapper.querySelectorAll('table'));
+  for (const table of tables) {
+    const firstRow = table.querySelector('thead tr') || table.querySelector('tr');
+    const headers = firstRow ? cellTexts(firstRow).map((header) => header.toLowerCase()) : [];
+    const productIndex = headers.findIndex((header) => /produto|item|descri/.test(header));
+    if (productIndex < 0) continue;
+    const qtyIndex = Math.max(0, headers.findIndex((header) => /qtd|quant/.test(header)));
+    const unitIndex = headers.findIndex((header) => /un|unit/.test(header));
+    const totalIndex = headers.findIndex((header) => /total/.test(header));
+    const bodyRows = Array.from(table.querySelectorAll('tbody tr')).length
+      ? Array.from(table.querySelectorAll('tbody tr'))
+      : Array.from(table.querySelectorAll('tr')).slice(1);
+    const rows = bodyRows.map((row) => {
+      const cells = cellTexts(row);
+      const product = cells[productIndex] || cells.join(' ');
+      return {
+        qtd: cells[qtyIndex] || '1',
+        produto: safeText(product).slice(0, 110),
+        unitario: unitIndex >= 0 ? (cells[unitIndex] || '-') : '-',
+        total: totalIndex >= 0 ? (cells[totalIndex] || '-') : (cells[cells.length - 1] || '-'),
+      };
+    }).filter((row) => row.produto && !/^produto$/i.test(row.produto) && row.produto !== '-');
+    if (rows.length) return rows.slice(0, 10);
+  }
+  return [];
 }
 
-function makePdfBlob(sale: SaleSummary, receipt: ReceiptSummary): Blob {
-  const lines = receiptLines(sale, receipt);
-  const commands: string[] = ['q', '1 w', '0 0 0 RG', '0 0 0 rg'];
-  pdfRect(commands, 46, 48, 503, 748, false);
-  pdfText(commands, 68, 752, 'JAQUE CONFECCOES E PRESENTES', 15, true);
-  pdfText(commands, 68, 731, saleReceiptTitle(sale).toUpperCase(), 21, true);
-  pdfLine(commands, 68, 716, 527, 716);
-  pdfText(commands, 68, 695, `Cliente: ${receipt.customer_name || sale.customer_name || 'Consumidor'}`, 12, true);
-  pdfText(commands, 68, 676, `Venda: #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`, 10, false);
-  pdfText(commands, 315, 676, `Data: ${formatDateTime(receipt.created_at || sale.created_at)}`, 10, false);
-  pdfText(commands, 68, 657, `Forma: ${paymentLabel(sale.payment_method)}`, 10, false);
-  pdfText(commands, 315, 657, `Total: ${formatCurrency(receipt.total || sale.total)}`, 12, true);
-  pdfRect(commands, 68, 611, 459, 28, true);
-  commands.push('1 1 1 rg');
-  pdfText(commands, 82, 620, 'COMPROVANTE / RESUMO', 10, true);
-  commands.push('0 0 0 rg');
-  let y = 591;
-  normalizeLines(lines.slice(6).join('\n'), 22).forEach((line) => {
-    const chunks = wrapText(line, 78);
-    chunks.forEach((chunk) => {
-      if (y > 110) {
-        pdfText(commands, 82, y, chunk, 8.8, /^(total|desconto|subtotal|status)/i.test(chunk));
-        y -= 15;
-      }
+function fallbackProductRows(sale: SaleSummary, receipt: ReceiptSummary): ProductRow[] {
+  const total = Number(receipt.total || sale.total || 0);
+  const count = Math.max(1, Number(sale.item_count || 1));
+  const firstName = safeText(sale.first_product_name || `Venda #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`);
+  const label = count > 1 ? `${firstName} + ${count - 1} item(ns)` : firstName;
+  return [{ qtd: String(count), produto: label, unitario: count > 1 ? '-' : formatCurrency(total), total: formatCurrency(total) }];
+}
+
+function parseData(sale: SaleSummary, receipt: ReceiptSummary): ReceiptRenderData {
+  const rawText = textFromHtml(receipt.content || '');
+  const saleNumber = String(receipt.sale_number || sale.number || 0).padStart(4, '0');
+  const subtotalFromSale = Number(sale.subtotal || 0);
+  const discountFromSale = Number(sale.discount || 0);
+  const discountFromContent = parseMoneyAfter(rawText, /desconto/);
+  const subtotalFromContent = parseMoneyAfter(rawText, /subtotal/);
+  const total = Number(receipt.total || sale.total || 0);
+  const discount = discountFromSale > 0 ? discountFromSale : discountFromContent;
+  const subtotal = subtotalFromSale > 0 ? subtotalFromSale : subtotalFromContent > 0 ? subtotalFromContent : total + discount;
+  const rows = extractProductRowsFromHtml(receipt.content || '');
+  const productRows = rows.length ? rows : fallbackProductRows(sale, receipt);
+  const status = receiptStatusForShare(sale, receipt);
+  const customer = safeText(receipt.customer_name || sale.customer_name || 'Consumidor');
+  const date = formatDateTime(receipt.created_at || sale.created_at);
+  const notes = [
+    `Comprovante da venda #${saleNumber} emitido em ${date}.`,
+    `${productRows.length} item(ns) listado(s) neste comprovante.`,
+    discount > 0 ? `Desconto aplicado: ${formatCurrency(discount)}.` : '',
+    `Forma de pagamento: ${paymentLabel(sale.payment_method)}. Status: ${status}.`,
+    'Comprovante pronto para conferência e compartilhamento.',
+  ].filter(Boolean);
+  return {
+    storeName: STORE_NAME,
+    title: `COMPROVANTE #${saleNumber}`,
+    subtitle: `Venda #${saleNumber}`,
+    status,
+    saleNumber,
+    customer,
+    phone: safeText(receipt.customer_whatsapp || '-'),
+    date,
+    payment: paymentLabel(sale.payment_method),
+    subtotal,
+    discount,
+    total,
+    productRows,
+    notes,
+  };
+}
+
+function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, size: number, weight = 700): string[] {
+  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  const words = safeText(text).split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (ctx.measureText(next).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : ['-'];
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement | null> {
+  return await new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
+}
+
+function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, weight = 700, color = INK): void {
+  ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(safeText(text), x, y);
+}
+
+function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, size: number, weight = 800, color = INK): void {
+  ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(safeText(text), x + width / 2, y);
+  ctx.textAlign = 'left';
+}
+
+function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width = 4): void {
+  ctx.strokeStyle = BLACK;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, width = 4): void {
+  ctx.strokeStyle = BLACK;
+  ctx.lineWidth = width;
+  ctx.strokeRect(x, y, w, h);
+}
+
+function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 44): void {
+  ctx.fillStyle = BLACK;
+  ctx.fillRect(x, y, w, h);
+  drawText(ctx, label, x + 18, y + 30, 18, 900, '#ffffff');
+}
+
+function drawWrapped(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 700, maxLines = 2, lineGap = 7): number {
+  let cursor = y;
+  wrapCanvasText(ctx, text, maxWidth, size, weight).slice(0, maxLines).forEach((line) => {
+    drawText(ctx, line, x, cursor, size, weight);
+    cursor += size + lineGap;
+  });
+  return cursor;
+}
+
+function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: number, y: number, w = 132, h = 36): void {
+  const clean = safeText(status).toUpperCase();
+  const isPaid = clean.includes('PAGO') || clean.includes('PAGA') || clean.includes('QUIT');
+  const isPartial = clean.includes('PARCIAL');
+  const isCancel = clean.includes('CANCEL');
+  const label = isPaid ? 'PAGO' : isPartial ? 'PARCIAL' : isCancel ? 'CANCELADO' : clean;
+  ctx.fillStyle = isPaid ? BLACK : '#ffffff';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = isPartial ? '#9a5a05' : isCancel ? '#8a1c1c' : BLACK;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(x, y, w, h);
+  drawCentered(ctx, label, x, y + 25, w, 17, 900, isPaid ? '#ffffff' : isPartial ? '#8a5206' : INK);
+}
+
+async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasElement> {
+  const productRows = data.productRows.slice(0, 8);
+  const productRowH = 60;
+  const notesH = Math.max(142, 48 + data.notes.length * 32 + (data.discount > 0 ? 8 : 0));
+  const receiptH = 250 + 156 + 28 + 44 + 44 + productRows.length * productRowH + 28 + 128 + 28 + notesH + 76;
+  const height = receiptH + RECEIPT_Y * 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = CANVAS_WIDTH;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas indisponível para gerar comprovante.');
+
+  ctx.fillStyle = '#090909';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(RECEIPT_X, RECEIPT_Y, RECEIPT_W, receiptH);
+  drawRect(ctx, RECEIPT_X, RECEIPT_Y, RECEIPT_W, receiptH, 8);
+
+  const logo = await loadImage(STORE_LOGO_URL);
+  if (logo) {
+    ctx.drawImage(logo, INNER_X, RECEIPT_Y + 34, 316, 156);
+  } else {
+    drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 116, 316, 24, 900);
+  }
+  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 210, 316, 13, 900);
+
+  const titleX = INNER_X + 390;
+  const titleW = INNER_W - 405;
+  let titleY = RECEIPT_Y + 86;
+  wrapCanvasText(ctx, data.title, titleW, 42, 900).slice(0, 2).forEach((line) => {
+    drawCentered(ctx, line, titleX, titleY, titleW, 42, 900);
+    titleY += 45;
+  });
+  drawLine(ctx, titleX, titleY - 18, titleX + titleW, titleY - 18, 5);
+  drawText(ctx, `${data.subtitle} • ${data.date}`, titleX, titleY + 15, 15, 650, MUTED);
+  drawText(ctx, `Status: ${data.status}`, titleX, titleY + 42, 17, 900);
+  drawStatusBadge(ctx, data.status, titleX + titleW - 150, titleY + 58, 150, 38);
+
+  let y = RECEIPT_Y + 250;
+  drawRect(ctx, INNER_X, y, INNER_W, 156, 4);
+  const labelX = INNER_X + 28;
+  const valueX = INNER_X + 210;
+  drawText(ctx, 'CLIENTE', labelX, y + 42, 18, 900);
+  drawWrapped(ctx, data.customer, valueX, y + 42, INNER_W - 250, 21, 900, 1);
+  drawLine(ctx, INNER_X + 22, y + 58, INNER_X + INNER_W - 22, y + 58, 3);
+  drawText(ctx, 'VENDA', labelX, y + 82, 18, 900);
+  drawText(ctx, `#${data.saleNumber}`, valueX, y + 82, 20, 900);
+  drawLine(ctx, INNER_X + 22, y + 98, INNER_X + INNER_W - 22, y + 98, 3);
+  drawText(ctx, 'FORMA', labelX, y + 122, 18, 900);
+  drawText(ctx, data.payment, valueX, y + 122, 20, 900);
+  drawLine(ctx, INNER_X + 22, y + 138, INNER_X + INNER_W - 22, y + 138, 3);
+
+  y += 184;
+  fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W);
+  y += 44;
+  const columns = [92, INNER_W - 92 - 170 - 176, 170, 176];
+  const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
+  ctx.fillStyle = BLACK;
+  ctx.fillRect(INNER_X, y, INNER_W, 44);
+  let x = INNER_X;
+  headers.forEach((header, index) => {
+    drawCentered(ctx, header, x, y + 29, columns[index], 16, 900, '#ffffff');
+    x += columns[index];
+  });
+  const tableH = 44 + productRows.length * productRowH;
+  drawRect(ctx, INNER_X, y, INNER_W, tableH, 4);
+  x = INNER_X;
+  columns.slice(0, -1).forEach((w) => {
+    x += w;
+    drawLine(ctx, x, y, x, y + tableH, 3);
+  });
+  productRows.forEach((row, index) => {
+    const rowY = y + 44 + index * productRowH;
+    drawLine(ctx, INNER_X, rowY + productRowH, INNER_X + INNER_W, rowY + productRowH, 3);
+    drawCentered(ctx, row.qtd, INNER_X, rowY + 39, columns[0], 20, 800);
+    drawWrapped(ctx, row.produto, INNER_X + columns[0] + 16, rowY + 30, columns[1] - 28, 17, 800, 2, 5);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY + 39, columns[2], 18, 700);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY + 39, columns[3], 19, 900);
+  });
+  y += tableH + 28;
+
+  const paymentW = Math.floor(INNER_W * 0.68);
+  fillBlackHeader(ctx, 'PAGAMENTO', INNER_X, y, paymentW);
+  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW, y, INNER_W - paymentW);
+  y += 44;
+  drawRect(ctx, INNER_X, y, paymentW, 84, 4);
+  drawRect(ctx, INNER_X + paymentW, y, INNER_W - paymentW, 84, 4);
+  const methods = ['Pix', 'Dinheiro', 'Cartão', 'Crediário'];
+  const activePayment = data.payment.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  let methodX = INNER_X + 28;
+  methods.forEach((method) => {
+    const methodKey = method.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const active = activePayment.includes(methodKey);
+    drawText(ctx, active ? '●' : '♡', methodX, y + 38, 23, 900, active ? BLACK : '#888888');
+    drawText(ctx, method, methodX + 28, y + 38, 17, active ? 900 : 650);
+    methodX += 130;
+  });
+  if (data.subtotal > 0 || data.discount > 0) {
+    drawText(ctx, `Subtotal: ${formatCurrency(data.subtotal || data.total + data.discount)}`, INNER_X + 28, y + 70, 16, 800);
+    if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 292, y + 70, 16, 900);
+  }
+  drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW, y + 54, INNER_W - paymentW, 34, 900);
+  y += 112;
+
+  fillBlackHeader(ctx, 'ANOTAÇÕES', INNER_X, y, INNER_W);
+  y += 44;
+  drawRect(ctx, INNER_X, y, INNER_W, notesH - 44, 4);
+  let noteY = y + 30;
+  data.notes.forEach((note) => {
+    wrapCanvasText(ctx, `• ${note}`, INNER_W - 60, 17, 600).slice(0, 2).forEach((line) => {
+      drawText(ctx, line, INNER_X + 28, noteY, 17, 600);
+      noteY += 28;
     });
   });
-  pdfLine(commands, 68, 94, 527, 94);
-  pdfText(commands, 68, 76, 'Arquivo gerado pelo sistema da loja. Compartilhe este PDF pronto, sem link e sem texto extra.', 8, false);
-  commands.push('Q');
-  const stream = commands.join('\n');
+  drawCentered(ctx, 'Obrigado pela preferência! · Jaque Confecções e Presentes', INNER_X, RECEIPT_Y + receiptH - 32, INNER_W, 17, 700);
+  return canvas;
+}
+
+async function canvasToBlob(canvas: HTMLCanvasElement, type: 'image/png' | 'image/jpeg', quality = 0.96): Promise<Blob> {
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Não foi possível finalizar o arquivo.')), type, quality);
+  });
+}
+
+function binaryFromDataUrl(dataUrl: string): string {
+  const base64 = dataUrl.split(',')[1] || '';
+  return atob(base64);
+}
+
+function makePdfFromJpeg(jpegData: string, imageWidth: number, imageHeight: number): Blob {
+  const pageW = 595;
+  const pageH = 842;
+  const margin = 30;
+  const ratio = Math.min((pageW - margin * 2) / imageWidth, (pageH - margin * 2) / imageHeight);
+  const drawW = Math.round(imageWidth * ratio);
+  const drawH = Math.round(imageHeight * ratio);
+  const drawX = Math.round((pageW - drawW) / 2);
+  const drawY = Math.round((pageH - drawH) / 2);
+  const content = `q\n${drawW} 0 0 ${drawH} ${drawX} ${drawY} cm\n/Im0 Do\nQ`;
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
-    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>',
+    `<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegData.length} >>\nstream\n${jpegData}\nendstream`,
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
   ];
   let pdf = '%PDF-1.4\n';
   const offsets: number[] = [0];
@@ -146,321 +436,20 @@ function makePdfBlob(sale: SaleSummary, receipt: ReceiptSummary): Blob {
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
   for (let index = 1; index < offsets.length; index += 1) pdf += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
   pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return new Blob([pdf], { type: 'application/pdf' });
-}
-
-function wrapText(value: string, maxChars: number): string[] {
-  const words = value.split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let current = '';
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (next.length > maxChars && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = next;
-    }
-  }
-  if (current) lines.push(current);
-  return lines.length ? lines : ['-'];
-}
-
-
-function receiptStatusForShare(status: string): string {
-  const clean = String(status || '').toLowerCase();
-  if (/(pago|paid|quitado)/.test(clean)) return 'Pago';
-  if (/(parcial|partial)/.test(clean)) return 'Parcial';
-  if (/(venc|atras|overdue)/.test(clean)) return 'Atrasado';
-  if (/(cancel)/.test(clean)) return 'Cancelado';
-  return 'Emitido';
-}
-
-
-interface PngProductRow {
-  qtd: string;
-  produto: string;
-  unitario: string;
-  total: string;
-}
-
-function textFromCells(row: Element): string[] {
-  return Array.from(row.querySelectorAll('th,td')).map((cell) => (cell.textContent ?? '').replace(/\s+/g, ' ').trim());
-}
-
-function extractProductRowsFromReceiptHtml(html: string): PngProductRow[] {
-  if (typeof document === 'undefined' || !html) return [];
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = html;
-  const tables = Array.from(wrapper.querySelectorAll('table'));
-  for (const table of tables) {
-    const headerRow = table.querySelector('thead tr') || table.querySelector('tr');
-    const headers = headerRow ? textFromCells(headerRow).map((text) => text.toLowerCase()) : [];
-    const productIndex = headers.findIndex((header) => /produto|item|descri/.test(header));
-    if (productIndex < 0) continue;
-    const qtyIndex = Math.max(0, headers.findIndex((header) => /qtd|quant/.test(header)));
-    const unitIndex = headers.findIndex((header) => /un|unit/.test(header));
-    const totalIndex = headers.findIndex((header) => /total|valor/.test(header));
-    const bodyRows = Array.from(table.querySelectorAll('tbody tr')).length
-      ? Array.from(table.querySelectorAll('tbody tr'))
-      : Array.from(table.querySelectorAll('tr')).slice(1);
-    const rows = bodyRows.map((row) => {
-      const cells = textFromCells(row);
-      return {
-        qtd: cells[qtyIndex] || '1',
-        produto: cleanSystemBrand(cells[productIndex] || cells.join(' ')).slice(0, 90),
-        unitario: unitIndex >= 0 ? (cells[unitIndex] || '-') : '-',
-        total: totalIndex >= 0 ? (cells[totalIndex] || '-') : (cells[cells.length - 1] || '-'),
-      };
-    }).filter((row) => row.produto && !/^produto$/i.test(row.produto));
-    if (rows.length) return rows.slice(0, 8);
-  }
-  return [];
-}
-
-function saleFallbackProductRows(sale: SaleSummary, receipt: ReceiptSummary): PngProductRow[] {
-  const name = sale.first_product_name?.trim() || `Venda #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`;
-  const qty = sale.item_count && sale.item_count > 1 ? `${sale.item_count}` : '1';
-  return [{ qtd: qty, produto: name, unitario: '-', total: formatCurrency(receipt.total || sale.total) }];
-}
-
-function compactReceiptNoteLines(sale: SaleSummary, receipt: ReceiptSummary, productCount: number): string[] {
-  const discount = Number(sale.discount || 0);
-  const subtotal = Number(sale.subtotal || 0);
-  const notes = [
-    `Comprovante da venda #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')} emitido em ${formatDateTime(receipt.created_at || sale.created_at)}.`,
-    `Cliente: ${receipt.customer_name || sale.customer_name || 'Consumidor'}. Forma: ${paymentLabel(sale.payment_method)}.`,
-    productCount > 1 ? `${productCount} produtos listados neste comprovante.` : 'Produto da venda listado neste comprovante.',
-    subtotal > 0 ? `Subtotal: ${formatCurrency(subtotal)}.` : '',
-    discount > 0 ? `Desconto aplicado: ${formatCurrency(discount)}.` : '',
-    `Total final: ${formatCurrency(receipt.total || sale.total)}.`,
-  ].filter(Boolean);
-  return notes.slice(0, 6);
+  const bytes = new Uint8Array(pdf.length);
+  for (let index = 0; index < pdf.length; index += 1) bytes[index] = pdf.charCodeAt(index) & 0xff;
+  return new Blob([bytes], { type: 'application/pdf' });
 }
 
 async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<Blob> {
-  const title = saleReceiptTitle(sale).toUpperCase();
-  const storeName = 'Jaque Confecções e Presentes';
-  const status = receiptStatusForShare(receipt.status || sale.status);
-  const subtotal = Number(sale.subtotal || 0);
-  const discount = Number(sale.discount || 0);
-  const total = Number(receipt.total || sale.total || 0);
-  const productRows = extractProductRowsFromReceiptHtml(receipt.content).length
-    ? extractProductRowsFromReceiptHtml(receipt.content)
-    : saleFallbackProductRows(sale, receipt);
-  const noteLines = compactReceiptNoteLines(sale, receipt, productRows.length);
+  const canvas = await renderReceiptCanvas(parseData(sale, receipt));
+  return await canvasToBlob(canvas, 'image/png', 0.98);
+}
 
-  const width = 1040;
-  const outerPad = 32;
-  const receiptX = outerPad;
-  const receiptY = 32;
-  const receiptW = width - outerPad * 2;
-  const innerX = receiptX + 28;
-  const innerW = receiptW - 56;
-  const headerH = 232;
-  const customerH = 160;
-  const sectionGap = 28;
-  const productHeaderH = 44;
-  const productRowH = 60;
-  const productH = productHeaderH + productRows.length * productRowH;
-  const paymentH = discount > 0 ? 150 : 122;
-  const notesH = Math.max(150, 54 + noteLines.length * 38);
-  const footerH = 76;
-  const receiptH = headerH + customerH + sectionGap + productH + sectionGap + paymentH + sectionGap + notesH + footerH;
-  const height = receiptH + receiptY * 2;
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d');
-  if (!context) throw new Error('Canvas indisponível para gerar PNG.');
-  const ctx: CanvasRenderingContext2D = context;
-
-  function cleanText(value: string): string {
-    return cleanSystemBrand(String(value || '-')).replace(/\s+/g, ' ').trim() || '-';
-  }
-
-  function setFont(size: number, weight = 650): void {
-    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
-  }
-
-  function drawText(text: string, x: number, y: number, size: number, weight = 650, color = '#111111'): void {
-    ctx.fillStyle = color;
-    setFont(size, weight);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(cleanText(text), x, y);
-  }
-
-  function drawCentered(text: string, x: number, y: number, boxW: number, size: number, weight = 800, color = '#111111'): void {
-    ctx.fillStyle = color;
-    setFont(size, weight);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(cleanText(text), x + boxW / 2, y);
-    ctx.textAlign = 'left';
-  }
-
-  function wrapForWidth(text: string, maxWidth: number, size: number, weight = 650): string[] {
-    setFont(size, weight);
-    const words = cleanText(text).split(/\s+/).filter(Boolean);
-    const lines: string[] = [];
-    let line = '';
-    words.forEach((word) => {
-      const next = line ? `${line} ${word}` : word;
-      if (ctx.measureText(next).width > maxWidth && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = next;
-      }
-    });
-    if (line) lines.push(line);
-    return lines.length ? lines : ['-'];
-  }
-
-  function drawWrapped(text: string, x: number, y: number, maxWidth: number, size: number, weight = 650, maxLines = 2, lineGap = 7, color = '#111111'): number {
-    let nextY = y;
-    wrapForWidth(text, maxWidth, size, weight).slice(0, maxLines).forEach((lineText) => {
-      drawText(lineText, x, nextY, size, weight, color);
-      nextY += size + lineGap;
-    });
-    return nextY;
-  }
-
-  function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3): void {
-    ctx.lineWidth = widthLine;
-    ctx.strokeStyle = '#050505';
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
-
-  function rect(x: number, y: number, w: number, h: number, lineWidth = 4): void {
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = '#050505';
-    ctx.strokeRect(x, y, w, h);
-  }
-
-  function drawBlackHeader(label: string, x: number, y: number, w: number, h = 44): void {
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(x, y, w, h);
-    drawText(label, x + 18, y + 30, 19, 900, '#ffffff');
-  }
-
-  function drawInfoRow(label: string, value: string, y: number): void {
-    drawText(label, innerX + 28, y, 18, 900);
-    drawWrapped(value, innerX + 198, y, innerW - 230, 20, 900, 1, 5);
-    line(innerX + 22, y + 14, innerX + innerW - 22, y + 14, 3);
-  }
-
-  async function loadLogo(): Promise<HTMLImageElement | null> {
-    return await new Promise((resolve) => {
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      image.onload = () => resolve(image);
-      image.onerror = () => resolve(null);
-      image.src = '/brand/jaque-receipt-logo-wide.png';
-    });
-  }
-
-  ctx.fillStyle = '#090909';
-  ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(receiptX, receiptY, receiptW, receiptH);
-  rect(receiptX, receiptY, receiptW, receiptH, 8);
-
-  const logo = await loadLogo();
-  if (logo) {
-    ctx.drawImage(logo, innerX + 4, receiptY + 34, 300, 150);
-  } else {
-    drawCentered(storeName.toUpperCase(), innerX, receiptY + 106, 300, 24, 900);
-  }
-  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 202, 300, 13, 900);
-
-  const titleX = innerX + 370;
-  const titleW = innerW - 388;
-  let titleY = receiptY + 92;
-  wrapForWidth(title, titleW, 39, 900).slice(0, 2).forEach((lineText) => {
-    drawCentered(lineText, titleX, titleY, titleW, 39, 900, '#050505');
-    titleY += 42;
-  });
-  line(titleX, titleY - 16, titleX + titleW, titleY - 16, 5);
-  drawText(`Comprovante salvo • ${formatDateTime(receipt.created_at || sale.created_at)}`, titleX, titleY + 16, 15, 650);
-  drawText(`Status: ${status}`, titleX, titleY + 42, 17, 900);
-
-  let y = receiptY + headerH;
-  rect(innerX, y, innerW, customerH, 4);
-  drawInfoRow('CLIENTE', receipt.customer_name || sale.customer_name || 'Consumidor', y + 38);
-  drawInfoRow('VENDA', `#${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`, y + 76);
-  drawInfoRow('DATA', formatDateTime(receipt.created_at || sale.created_at), y + 114);
-  drawInfoRow('FORMA', paymentLabel(sale.payment_method), y + 148);
-
-  y += customerH + sectionGap;
-  drawBlackHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
-  y += productHeaderH;
-  const tableCols = [88, innerW - 88 - 170 - 170, 170, 170];
-  const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-  ctx.fillStyle = '#050505';
-  ctx.fillRect(innerX, y, innerW, 44);
-  let cx = innerX;
-  headers.forEach((header, index) => {
-    drawCentered(header, cx, y + 29, tableCols[index], 16, 900, '#ffffff');
-    cx += tableCols[index];
-  });
-  rect(innerX, y, innerW, 44 + productRows.length * productRowH, 4);
-  cx = innerX;
-  tableCols.slice(0, -1).forEach((colW) => {
-    cx += colW;
-    line(cx, y, cx, y + 44 + productRows.length * productRowH, 3);
-  });
-  productRows.forEach((row, rowIndex) => {
-    const rowTop = y + 44 + rowIndex * productRowH;
-    line(innerX, rowTop + productRowH, innerX + innerW, rowTop + productRowH, 3);
-    drawCentered(row.qtd, innerX, rowTop + 38, tableCols[0], 20, 800);
-    drawWrapped(row.produto, innerX + tableCols[0] + 16, rowTop + 30, tableCols[1] - 28, 18, 800, 2, 5);
-    drawCentered(row.unitario || '-', innerX + tableCols[0] + tableCols[1], rowTop + 38, tableCols[2], 18, 700);
-    drawCentered(row.total || '-', innerX + tableCols[0] + tableCols[1] + tableCols[2], rowTop + 38, tableCols[3], 19, 900);
-  });
-  y += productH + sectionGap;
-
-  const paymentW = Math.floor(innerW * 0.7);
-  drawBlackHeader('PAGAMENTO', innerX, y, paymentW);
-  drawBlackHeader('TOTAL', innerX + paymentW, y, innerW - paymentW);
-  y += 44;
-  rect(innerX, y, paymentW, paymentH - 44, 4);
-  rect(innerX + paymentW, y, innerW - paymentW, paymentH - 44, 4);
-  const methods = ['Pix', 'Dinheiro', 'Crédito', 'Débito', 'Crediário'];
-  let mx = innerX + 28;
-  const activePayment = paymentLabel(sale.payment_method).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  methods.forEach((method) => {
-    const active = method.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(activePayment);
-    drawText(active ? '●' : '♡', mx, y + 42, 24, 900, active ? '#050505' : '#888888');
-    drawText(method, mx + 28, y + 42, 17, active ? 900 : 650);
-    mx += 130;
-  });
-  if (subtotal > 0 || discount > 0) {
-    drawText(`Subtotal: ${subtotal > 0 ? formatCurrency(subtotal) : formatCurrency(total + discount)}`, innerX + 28, y + 78, 16, 800);
-    if (discount > 0) drawText(`Desconto: ${formatCurrency(discount)}`, innerX + 290, y + 78, 16, 800);
-  }
-  drawCentered(formatCurrency(total), innerX + paymentW, y + 60, innerW - paymentW, 33, 900);
-  y += paymentH + sectionGap;
-
-  drawBlackHeader('ANOTAÇÕES', innerX, y, innerW);
-  y += 44;
-  rect(innerX, y, innerW, notesH - 44, 4);
-  let noteY = y + 32;
-  noteLines.forEach((note) => {
-    wrapForWidth(`• ${note}`, innerW - 60, 17, 600).slice(0, 2).forEach((lineText) => {
-      drawText(lineText, innerX + 28, noteY, 17, 600);
-      noteY += 28;
-    });
-  });
-
-  drawCentered('Obrigado pela preferência! · Jaque Confecções e Presentes', innerX, receiptY + receiptH - 34, innerW, 17, 700);
-  return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.98);
-  });
+async function makePdfBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<Blob> {
+  const canvas = await renderReceiptCanvas(parseData(sale, receipt));
+  const jpegData = binaryFromDataUrl(canvas.toDataURL('image/jpeg', 0.93));
+  return makePdfFromJpeg(jpegData, canvas.width, canvas.height);
 }
 
 function downloadBlob(blob: Blob, fileName: string): void {
@@ -497,7 +486,7 @@ export async function shareSaleReceipt(sale: SaleSummary, receipt: ReceiptSummar
     downloadBlob(blob, fileName);
     return `PNG baixado como ${fileName}. Anexe essa imagem no WhatsApp.`;
   }
-  const blob = makePdfBlob(sale, receipt);
+  const blob = await makePdfBlob(sale, receipt);
   const fileName = uniqueFileName(`comprovante-venda-${receipt.sale_number || sale.number}`, 'pdf');
   const shared = await shareFile(new File([blob], fileName, { type: 'application/pdf' }), title);
   if (shared) return 'PDF do comprovante aberto no compartilhamento do celular.';

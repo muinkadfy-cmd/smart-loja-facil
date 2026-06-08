@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v184",
-  "short_name": "Jaque v184",
-  "description": "PWA da loja Jaque Confecções e Presentes v184 com comprovantes PDF/PNG e PNG polido no padrão do recibo.",
+  "name": "Jaque Confecções e Presentes v185",
+  "short_name": "Jaque v185",
+  "description": "PWA da loja Jaque Confecções e Presentes v185 com comprovantes PDF/PNG e PNG polido no padrão do recibo.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
