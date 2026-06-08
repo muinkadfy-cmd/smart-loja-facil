@@ -703,8 +703,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                   <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
                 </div>
                 <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareRecentSale(sale, 'pdf')}>Compartilhar PDF</button>
-                  <button type="button" onClick={() => void shareRecentSale(sale, 'png')}>Enviar PNG</button>
+                  <button type="button" onClick={() => void shareRecentSale(sale, 'pdf')}>PDF</button>
+                  <button type="button" onClick={() => void shareRecentSale(sale, 'png')}>Extrato PNG</button>
+                  <button type="button" onClick={() => void shareRecentSale(sale, 'share')}>Compartilhar</button>
                 </div>
               </ListCard>
             ))}

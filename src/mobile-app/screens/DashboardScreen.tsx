@@ -188,8 +188,9 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
                   <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
                 </div>
                 <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'pdf')}>Compartilhar PDF</button>
-                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'png')}>Enviar PNG</button>
+                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'pdf')}>PDF</button>
+                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'png')}>Extrato PNG</button>
+                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'share')}>Compartilhar</button>
                   <button type="button" onClick={() => onNavigate('sales')}>Abrir vendas</button>
                 </div>
               </ListCard>
