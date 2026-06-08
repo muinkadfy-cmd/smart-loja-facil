@@ -646,42 +646,236 @@ function triggerFileDownload(fileName: string, blob: Blob): void {
 async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<{ fileName: string; blob: Blob }> {
   const data = getPdfReceiptData(preview);
   const storeName = (store.store_name || 'Jaque Confecções e Presentes').trim();
-  const rows = [
-    data.subtitle,
-    `Cliente: ${data.customer}`,
-    `Telefone: ${data.phone}`,
-    `Status: ${data.status}`,
-    `${data.totalLabel}: ${data.totalValue}`,
-    `${data.paidLabel}: ${data.paidValue}`,
-    `${data.balanceLabel}: ${data.balanceValue}`,
-    ...(data.productRows ?? []).slice(0, 6).map((row) => `${row.qtd}x ${row.produto} - ${row.total}`),
-    ...data.rows.slice(0, 8).map((row) => `${row.parcela} | ${row.vencimento} | ${row.valor} | ${row.status}`),
-    ...data.notes.slice(0, 5),
-  ].map((line) => pdfSafeText(line)).filter(Boolean);
+  const productRows = (data.productRows ?? []).slice(0, 8);
+  const installmentRows = data.rows.slice(0, 12);
+  const notes = data.notes.slice(0, 7);
   const width = 900;
-  const height = Math.max(1020, 300 + rows.length * 32);
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#111"/><rect x="46" y="46" width="808" height="${height - 92}" fill="#fff" stroke="#000" stroke-width="8"/><text x="90" y="116" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="900" fill="#111">${escapeSvgText(storeName.toUpperCase())}</text><text x="90" y="168" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" fill="#111">${escapeSvgText(data.title)}</text><line x1="90" y1="196" x2="810" y2="196" stroke="#111" stroke-width="4"/>${rows.map((line, index) => `<text x="90" y="${250 + index * 32}" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="${/^(total|pago|saldo|status|cliente|telefone)/i.test(line) ? '850' : '500'}" fill="#111">${escapeSvgText(line)}</text>`).join('')}<text x="90" y="${height - 86}" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#333">Arquivo PNG do comprovante pronto para compartilhar.</text></svg>`;
-  const image = new Image();
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-  try {
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve();
-      image.onerror = () => reject(new Error('Não foi possível gerar a imagem PNG do comprovante.'));
-      image.src = url;
+  const receiptX = 54;
+  const receiptY = 44;
+  const receiptW = 792;
+  const headerH = 214;
+  const clientH = 104;
+  const productH = productRows.length ? 48 + productRows.length * 42 + 24 : 0;
+  const installmentH = 50 + installmentRows.length * 46 + 30;
+  const cardsH = 92;
+  const notesH = Math.max(110, 44 + notes.length * 25);
+  const footerH = 56;
+  const receiptH = headerH + clientH + productH + installmentH + cardsH + notesH + footerH + 76;
+  const height = receiptH + 88;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas indisponível para gerar PNG.');
+  const ctx: CanvasRenderingContext2D = context;
+
+  async function loadLogo(src: string): Promise<HTMLImageElement | null> {
+    return await new Promise((resolve) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = src;
     });
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Canvas indisponível para gerar PNG.');
-    context.drawImage(image, 0, 0);
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.96);
-    });
-    return { fileName: uniquePngFileName(data.title || 'comprovante'), blob };
-  } finally {
-    URL.revokeObjectURL(url);
   }
+
+  function drawText(text: string, x: number, y: number, size: number, weight = 600, color = '#111827'): void {
+    ctx.fillStyle = color;
+    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x, y);
+  }
+
+  function drawCentered(text: string, x: number, y: number, boxW: number, size: number, weight = 700, color = '#111827'): void {
+    ctx.fillStyle = color;
+    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x + boxW / 2, y);
+    ctx.textAlign = 'left';
+  }
+
+  function wrapTextForCanvas(text: string, maxWidth: number): string[] {
+    ctx.font = '600 20px Arial, Helvetica, sans-serif';
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    const out: string[] = [];
+    let line = '';
+    words.forEach((word) => {
+      const next = line ? `${line} ${word}` : word;
+      if (ctx.measureText(next).width > maxWidth && line) {
+        out.push(line);
+        line = word;
+      } else {
+        line = next;
+      }
+    });
+    if (line) out.push(line);
+    return out.length ? out : ['-'];
+  }
+
+  function drawSectionHeader(label: string, x: number, y: number, w: number): void {
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(x, y, w, 36);
+    drawText(label, x + 18, y + 25, 18, 900, '#ffffff');
+  }
+
+  function drawStatusToken(label: string, x: number, y: number, w = 118, h = 28): void {
+    const clean = pdfSafeText(label).toUpperCase();
+    const paid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
+    const partial = clean.includes('PARCIAL');
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = partial ? '#a86507' : '#050505';
+    ctx.fillStyle = paid ? '#050505' : '#ffffff';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    drawCentered(paid ? 'PAGA' : partial ? 'PARCIAL' : clean.includes('VENC') ? 'VENCIDA' : 'PENDENTE', x, y + 20, w, 15, 900, paid ? '#ffffff' : partial ? '#9a5a05' : '#111827');
+  }
+
+  function drawSimpleTable(x: number, y: number, w: number, columns: Array<{ label: string; width: number; align?: 'left' | 'center' | 'right' }>, rows: string[][], rowH: number): number {
+    drawSectionHeader('', x, y, w);
+    let cursorX = x;
+    columns.forEach((col) => {
+      drawCentered(col.label, cursorX, y + 25, col.width, 16, 900, '#ffffff');
+      cursorX += col.width;
+    });
+    ctx.strokeStyle = '#050505';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(x, y, w, 36 + rows.length * rowH);
+    cursorX = x;
+    columns.slice(0, -1).forEach((col) => {
+      cursorX += col.width;
+      ctx.beginPath();
+      ctx.moveTo(cursorX, y);
+      ctx.lineTo(cursorX, y + 36 + rows.length * rowH);
+      ctx.stroke();
+    });
+    rows.forEach((row, rowIndex) => {
+      const rowY = y + 36 + rowIndex * rowH;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, rowY + rowH);
+      ctx.lineTo(x + w, rowY + rowH);
+      ctx.stroke();
+      let cellX = x;
+      row.forEach((cell, cellIndex) => {
+        const col = columns[cellIndex];
+        if (cellIndex === row.length - 1 && columns.length === 4) {
+          drawStatusToken(cell, cellX + 18, rowY + 8, Math.max(86, col.width - 36), 28);
+        } else if (col.align === 'left') {
+          drawText(String(cell).slice(0, 34), cellX + 12, rowY + 28, 16, 650, '#111827');
+        } else {
+          drawCentered(String(cell), cellX, rowY + 28, col.width, 16, 650, '#111827');
+        }
+        cellX += col.width;
+      });
+    });
+    return y + 36 + rows.length * rowH;
+  }
+
+  ctx.fillStyle = '#090909';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(receiptX, receiptY, receiptW, receiptH);
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = '#050505';
+  ctx.strokeRect(receiptX, receiptY, receiptW, receiptH);
+
+  const logo = await loadLogo(store.logo_url || DEFAULT_RECEIPT_LOGO_URL);
+  if (logo) {
+    ctx.drawImage(logo, receiptX + 28, receiptY + 34, 260, 136);
+  } else {
+    drawText(storeName.toUpperCase(), receiptX + 34, receiptY + 98, 24, 900, '#111827');
+  }
+  drawCentered(storeName.toUpperCase(), receiptX + 40, receiptY + 190, 260, 13, 900, '#111827');
+
+  const titleLines = pdfTitleLines(data.title);
+  let ty = receiptY + 82;
+  titleLines.forEach((line) => {
+    drawCentered(line, receiptX + 360, ty, 382, 44, 900, '#050505');
+    ty += 48;
+  });
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(receiptX + 360, ty - 16);
+  ctx.lineTo(receiptX + 742, ty - 16);
+  ctx.stroke();
+  drawText(data.subtitle, receiptX + 362, ty + 16, 15, 600, '#111827');
+  drawText(`Status: ${data.status}`, receiptX + 362, ty + 40, 17, 900, '#111827');
+  if (data.paidStamp) {
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(receiptX + 540, ty, 176, 64);
+    drawCentered('PAGO', receiptX + 540, ty + 31, 176, 28, 900, '#ffffff');
+    drawCentered(data.paidStamp, receiptX + 540, ty + 53, 176, 13, 800, '#ffffff');
+  }
+
+  let y = receiptY + headerH;
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#050505';
+  ctx.strokeRect(receiptX + 20, y, receiptW - 40, clientH);
+  drawText('CLIENTE', receiptX + 46, y + 34, 18, 900);
+  drawText(data.customer, receiptX + 200, y + 34, 22, 900);
+  ctx.beginPath(); ctx.moveTo(receiptX + 36, y + 48); ctx.lineTo(receiptX + receiptW - 36, y + 48); ctx.stroke();
+  drawText('TELEFONE', receiptX + 46, y + 75, 18, 900);
+  drawText(data.phone, receiptX + 200, y + 75, 20, 800);
+  ctx.beginPath(); ctx.moveTo(receiptX + 36, y + 86); ctx.lineTo(receiptX + receiptW - 36, y + 86); ctx.stroke();
+  drawText('ENDEREÇO', receiptX + 46, y + 101, 15, 900);
+  drawText(data.address || '-', receiptX + 200, y + 101, 15, 600);
+
+  y += clientH + 32;
+  if (productRows.length) {
+    drawSectionHeader('PRODUTOS COMPRADOS', receiptX + 20, y, receiptW - 40);
+    y += 36;
+    const productCols = [
+      { label: 'QTD', width: 82, align: 'center' as const },
+      { label: 'PRODUTO', width: 374, align: 'left' as const },
+      { label: 'R$ UN', width: 140, align: 'center' as const },
+      { label: 'TOTAL', width: 156, align: 'center' as const },
+    ];
+    y = drawSimpleTable(receiptX + 20, y, receiptW - 40, productCols, productRows.map((row) => [row.qtd, row.produto, row.unitario, row.total]), 40) + 26;
+  }
+
+  drawSectionHeader(productRows.length ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', receiptX + 20, y, receiptW - 40);
+  y += 36;
+  const installmentCols = [
+    { label: 'PARCELA', width: 130, align: 'center' as const },
+    { label: 'VENCIMENTO', width: 220, align: 'center' as const },
+    { label: 'VALOR', width: 160, align: 'center' as const },
+    { label: 'STATUS', width: 242, align: 'center' as const },
+  ];
+  y = drawSimpleTable(receiptX + 20, y, receiptW - 40, installmentCols, installmentRows.map((row) => [row.parcela, row.vencimento, row.valor, row.status]), 44) + 30;
+
+  const cardW = 230;
+  const cardGap = 32;
+  const cardY = y;
+  [[data.totalLabel, data.totalValue], [data.paidLabel, data.paidValue], [data.balanceLabel, data.balanceValue]].forEach(([label, value], index) => {
+    const cardX = receiptX + 20 + index * (cardW + cardGap);
+    ctx.strokeStyle = '#050505';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(cardX, cardY, cardW, 76);
+    drawCentered(label, cardX, cardY + 28, cardW, 15, 900);
+    ctx.beginPath(); ctx.moveTo(cardX + 24, cardY + 38); ctx.lineTo(cardX + cardW - 24, cardY + 38); ctx.stroke();
+    drawCentered(value, cardX, cardY + 64, cardW, 24, 900);
+  });
+  y += 104;
+
+  drawSectionHeader('ANOTAÇÕES', receiptX + 20, y, receiptW - 40);
+  y += 36;
+  ctx.strokeStyle = '#050505';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(receiptX + 20, y, receiptW - 40, notesH - 36);
+  let noteY = y + 28;
+  notes.forEach((note) => {
+    wrapTextForCanvas(`• ${note}`, receiptW - 76).slice(0, 2).forEach((line) => {
+      drawText(line, receiptX + 42, noteY, 17, 550);
+      noteY += 24;
+    });
+  });
+  drawCentered(`${store.receipt_message?.trim() || 'Obrigado pela preferência.'} - ${storeName}`, receiptX + 20, receiptY + receiptH - 34, receiptW - 40, 17, 600, '#111827');
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.98);
+  });
+  return { fileName: uniquePngFileName(data.title || 'comprovante'), blob };
 }
 
 async function shareReceiptFileOnly(file: File, title: string): Promise<boolean> {

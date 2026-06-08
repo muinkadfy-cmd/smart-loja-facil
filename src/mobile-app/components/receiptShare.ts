@@ -166,32 +166,147 @@ function wrapText(value: string, maxChars: number): string[] {
   return lines.length ? lines : ['-'];
 }
 
+
+function receiptStatusForShare(status: string): string {
+  const clean = String(status || '').toLowerCase();
+  if (/(pago|paid|quitado)/.test(clean)) return 'Pago';
+  if (/(parcial|partial)/.test(clean)) return 'Parcial';
+  if (/(venc|atras|overdue)/.test(clean)) return 'Atrasado';
+  if (/(cancel)/.test(clean)) return 'Cancelado';
+  return 'Emitido';
+}
+
 async function makePngBlob(sale: SaleSummary, receipt: ReceiptSummary): Promise<Blob> {
-  const lines = receiptLines(sale, receipt).slice(0, 24);
+  const title = saleReceiptTitle(sale).toUpperCase();
+  const storeName = 'Jaque Confecções e Presentes';
+  const lines = receiptLines(sale, receipt);
+  const summaryRows = [
+    ['CLIENTE', receipt.customer_name || sale.customer_name || 'Consumidor'],
+    ['VENDA', `#${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`],
+    ['DATA', formatDateTime(receipt.created_at || sale.created_at)],
+    ['FORMA', paymentLabel(sale.payment_method)],
+    ['TOTAL', formatCurrency(receipt.total || sale.total)],
+  ];
+  const detailLines = normalizeLines(lines.slice(6).join('\n'), 18);
   const width = 900;
-  const height = Math.max(980, 250 + lines.length * 30);
-  const escaped = lines.map((line) => line.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char] || char)));
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#111"/><rect x="46" y="46" width="808" height="${height - 92}" rx="0" fill="#fff" stroke="#000" stroke-width="8"/><text x="90" y="116" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="900" fill="#111">JAQUE CONFECÇÕES E PRESENTES</text><text x="90" y="166" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="900" fill="#111">${saleReceiptTitle(sale).toUpperCase()}</text><line x1="90" y1="190" x2="810" y2="190" stroke="#111" stroke-width="4"/>${escaped.map((line, index) => `<text x="90" y="${240 + index * 30}" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="${/^(total|desconto|subtotal|status|cliente|venda)/i.test(line) ? '800' : '500'}" fill="#111">${line}</text>`).join('')}<text x="90" y="${height - 86}" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#333">Comprovante pronto para WhatsApp - sem link e sem texto extra.</text></svg>`;
-  const image = new Image();
-  const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
-  try {
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve();
-      image.onerror = () => reject(new Error('Não foi possível gerar PNG do comprovante.'));
-      image.src = url;
-    });
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Canvas indisponível para gerar PNG.');
-    context.drawImage(image, 0, 0);
-    return await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.96);
-    });
-  } finally {
-    URL.revokeObjectURL(url);
+  const receiptX = 54;
+  const receiptY = 44;
+  const receiptW = 792;
+  const detailsH = Math.max(250, 70 + detailLines.length * 30);
+  const receiptH = 250 + 220 + detailsH + 86;
+  const height = receiptH + 88;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas indisponível para gerar PNG.');
+  const ctx: CanvasRenderingContext2D = context;
+
+  function drawText(text: string, x: number, y: number, size: number, weight = 600, color = '#111827'): void {
+    ctx.fillStyle = color;
+    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x, y);
   }
+
+  function drawCentered(text: string, x: number, y: number, boxW: number, size: number, weight = 700, color = '#111827'): void {
+    ctx.fillStyle = color;
+    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, x + boxW / 2, y);
+    ctx.textAlign = 'left';
+  }
+
+  function wrapCanvas(text: string, maxWidth: number): string[] {
+    ctx.font = '600 20px Arial, Helvetica, sans-serif';
+    const words = String(text || '').split(/\s+/).filter(Boolean);
+    const out: string[] = [];
+    let line = '';
+    words.forEach((word) => {
+      const next = line ? `${line} ${word}` : word;
+      if (ctx.measureText(next).width > maxWidth && line) {
+        out.push(line);
+        line = word;
+      } else {
+        line = next;
+      }
+    });
+    if (line) out.push(line);
+    return out.length ? out : ['-'];
+  }
+
+  async function loadLogo(): Promise<HTMLImageElement | null> {
+    return await new Promise((resolve) => {
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => resolve(image);
+      image.onerror = () => resolve(null);
+      image.src = '/brand/jaque-receipt-logo-wide.png';
+    });
+  }
+
+  ctx.fillStyle = '#090909';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(receiptX, receiptY, receiptW, receiptH);
+  ctx.strokeStyle = '#050505';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(receiptX, receiptY, receiptW, receiptH);
+
+  const logo = await loadLogo();
+  if (logo) {
+    ctx.drawImage(logo, receiptX + 34, receiptY + 38, 260, 136);
+  } else {
+    drawText(storeName.toUpperCase(), receiptX + 42, receiptY + 112, 24, 900);
+  }
+  drawCentered(storeName.toUpperCase(), receiptX + 40, receiptY + 192, 260, 13, 900);
+  drawCentered(title, receiptX + 350, receiptY + 94, 398, 42, 900, '#050505');
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(receiptX + 350, receiptY + 122);
+  ctx.lineTo(receiptX + 748, receiptY + 122);
+  ctx.stroke();
+  drawText(`Comprovante salvo • ${formatDateTime(receipt.created_at || sale.created_at)}`, receiptX + 354, receiptY + 156, 17, 700);
+  drawText(`Status: ${receiptStatusForShare(receipt.status)}`, receiptX + 354, receiptY + 184, 18, 900);
+
+  let y = receiptY + 250;
+  ctx.strokeStyle = '#050505';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(receiptX + 20, y, receiptW - 40, 178);
+  let rowY = y + 34;
+  summaryRows.forEach(([label, value], index) => {
+    drawText(label, receiptX + 46, rowY, 16, 900);
+    drawText(String(value), receiptX + 190, rowY, index === summaryRows.length - 1 ? 24 : 20, 900);
+    if (index < summaryRows.length - 1) {
+      ctx.beginPath();
+      ctx.moveTo(receiptX + 36, rowY + 14);
+      ctx.lineTo(receiptX + receiptW - 36, rowY + 14);
+      ctx.stroke();
+    }
+    rowY += 34;
+  });
+
+  y += 214;
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(receiptX + 20, y, receiptW - 40, 42);
+  drawText('DETALHES DO COMPROVANTE', receiptX + 42, y + 29, 19, 900, '#ffffff');
+  y += 42;
+  ctx.strokeStyle = '#050505';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(receiptX + 20, y, receiptW - 40, detailsH - 42);
+  let detailY = y + 32;
+  detailLines.forEach((line) => {
+    wrapCanvas(`• ${line}`, receiptW - 80).slice(0, 2).forEach((chunk) => {
+      drawText(chunk, receiptX + 42, detailY, 19, /^(•\s*)?(total|desconto|subtotal|status|cliente|venda)/i.test(chunk) ? 850 : 550);
+      detailY += 30;
+    });
+  });
+
+  drawCentered('Comprovante pronto para WhatsApp — sem link e sem texto extra.', receiptX + 20, receiptY + receiptH - 34, receiptW - 40, 17, 600);
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.98);
+  });
 }
 
 function downloadBlob(blob: Blob, fileName: string): void {
