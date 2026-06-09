@@ -35,8 +35,8 @@ const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
 const PRODUCT_COLUMNS = [88, INNER_W - 88 - 142 - 154, 142, 154];
-const PRODUCT_NAME_SIZE = 29;
-const PRODUCT_NAME_WEIGHT = 950;
+const PRODUCT_NAME_SIZE = 19;
+const PRODUCT_NAME_WEIGHT = 650;
 const PRODUCT_ROW_MIN_H = 92;
 const PRODUCT_ROW_LINE_GAP = 10;
 const PRODUCT_MAX_LINES = 3;
@@ -423,13 +423,15 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
   const isPaid = clean.includes('PAGO') || clean.includes('PAGA') || clean.includes('QUIT');
   const isPartial = clean.includes('PARCIAL');
   const isCancel = clean.includes('CANCEL');
-  const label = isPaid ? 'PAGO' : isPartial ? 'PARCIAL' : isCancel ? 'CANCELADO' : clean;
-  ctx.fillStyle = isPaid ? BLACK : '#ffffff';
+  const isOpen = clean.includes('ABERTA') || clean.includes('ABERTO');
+  const label = isPaid ? 'PAGO' : isPartial ? 'PARCIAL' : isCancel ? 'CANCELADO' : isOpen ? 'ABERTA' : clean;
+  ctx.fillStyle = isPaid ? BLACK : isOpen ? '#e91862' : '#ffffff';
   ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = isPartial ? '#9a5a05' : isCancel ? '#8a1c1c' : BLACK;
+  ctx.strokeStyle = isPaid ? BLACK : isPartial ? '#9a5a05' : isCancel ? '#8a1c1c' : isOpen ? '#e91862' : BLACK;
   ctx.lineWidth = 4;
   ctx.strokeRect(x, y, w, h);
-  drawCentered(ctx, label, x, y + 25, w, 17, 900, isPaid ? '#ffffff' : isPartial ? '#8a5206' : INK);
+  const fontSize = label.length >= 7 ? 16 : 17;
+  drawCentered(ctx, label, x, y + 23, w, fontSize, 850, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
 }
 
 async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasElement> {
@@ -477,7 +479,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 74, 'tag');
   drawText(ctx, 'Status:', titleX + 64, titleY + 107, 24, 750);
   drawText(ctx, data.status, titleX + 148, titleY + 107, 24, 950, '#e91862');
-  drawStatusBadge(ctx, data.status, titleX + titleW - 176, titleY + 79, 154, 46);
+  drawStatusBadge(ctx, data.status, titleX + titleW - 174, titleY + 78, 156, 46);
 
   let y = RECEIPT_Y + 292;
   drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
@@ -523,15 +525,15 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 28, 900);
+    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 21, 700);
     let productTextY = rowY + 38;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
       drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
     const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 25, 900);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 27, 950);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 19, 650);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 19, 650);
     rowY += rowH;
   });
   y += tableH + 28;

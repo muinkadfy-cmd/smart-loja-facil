@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.198",
+  "version": "0.1.199",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com micro ajuste no topo do comprovante, status ABERTA refinado e layout unificado nas abas v198",
+  "description": "PWA da loja com tipografia refinada no comprovante, vencimento/descricao sem negrito e ajuste da badge ABERTA v199",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

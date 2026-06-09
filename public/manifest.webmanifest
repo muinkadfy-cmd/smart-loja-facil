@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v198",
-  "short_name": "Jaque v198",
-  "description": "PWA da loja v198 com comprovante refinado no topo e layout unificado para comprovante, vendas recentes e atividades recentes.",
+  "name": "Jaque Confecções e Presentes v199",
+  "short_name": "Jaque v199",
+  "description": "PWA da loja v199 com vencimento e descrição no mesmo tamanho, sem negrito, e badge ABERTA ajustada.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

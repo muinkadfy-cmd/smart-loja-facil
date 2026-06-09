@@ -875,7 +875,8 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     const paid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
     const partial = clean.includes('PARCIAL');
     const overdue = clean.includes('VENC') || clean.includes('ATRAS');
-    const display = paid ? 'PAGO' : partial ? 'PARCIAL' : overdue ? 'VENCIDA' : clean.includes('ABERTA') || clean.includes('ABERTO') ? 'ABERTA' : 'PENDENTE';
+    const open = clean.includes('ABERTA') || clean.includes('ABERTO');
+    const display = paid ? 'PAGO' : partial ? 'PARCIAL' : overdue ? 'VENCIDA' : open ? 'ABERTA' : 'PENDENTE';
     ctx.lineWidth = 3;
     ctx.strokeStyle = paid ? '#111111' : overdue ? '#d21f52' : '#e91862';
     ctx.fillStyle = paid ? '#111111' : display === 'ABERTA' ? '#e91862' : '#ffffff';
@@ -883,7 +884,8 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.roundRect(x, y, w, h, 8);
     ctx.fill();
     ctx.stroke();
-    drawCentered(display, x, y + Math.round(h * 0.66), w, Math.max(14, Math.floor(h * 0.42)), 900, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
+    const fontSize = display.length >= 7 ? Math.max(13, Math.floor(h * 0.36)) : Math.max(14, Math.floor(h * 0.4));
+    drawCentered(display, x, y + Math.round(h * 0.62), w, fontSize, 850, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
   }
 
   function drawMiniGlyph(cx: number, cy: number, kind: 'user' | 'phone' | 'pin' | 'bag' | 'card'): void {
@@ -1037,10 +1039,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     productRows.forEach((row, index) => {
       const rowY = y + 44 + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
-      drawCentered(row.qtd, innerX, rowY + 46, columns[0], 24, 800);
-      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 45, columns[1] - 34, 30, 900, 2, 6);
-      drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 46, columns[2], 20, 700);
-      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 46, columns[3], 21, 900);
+      drawCentered(row.qtd, innerX, rowY + 46, columns[0], 21, 700);
+      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 43, columns[1] - 34, 19, 650, 2, 4);
+      drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 46, columns[2], 19, 650);
+      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 46, columns[3], 19, 650);
     });
     return y + 44 + productRows.length * productRowH + sectionGap;
   }
@@ -1069,9 +1071,9 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     installmentRows.forEach((row, index) => {
       const rowY = y + 44 + index * installmentRowH;
       line(innerX, rowY + installmentRowH, innerX + innerW, rowY + installmentRowH, 3);
-      drawCentered(row.parcela, innerX, rowY + 36, columns[0], 19, 750);
-      drawCentered(row.vencimento, innerX + columns[0], rowY + 36, columns[1], 19, 750);
-      drawCentered(row.valor, innerX + columns[0] + columns[1], rowY + 36, columns[2], 19, 750);
+      drawCentered(row.parcela, innerX, rowY + 36, columns[0], 19, 650);
+      drawCentered(row.vencimento, innerX + columns[0], rowY + 36, columns[1], 19, 650);
+      drawCentered(row.valor, innerX + columns[0] + columns[1], rowY + 36, columns[2], 19, 650);
       drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 36, rowY + 12, Math.max(126, columns[3] - 72), 34);
     });
     return y + 44 + installmentRows.length * installmentRowH + sectionGap;
@@ -1136,7 +1138,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawCentered('PAGO', titleX + titleW - 190, titleY + 37, 184, 27, 900, '#ffffff');
     drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 57, 184, 13, 800, '#ffffff');
   } else {
-    drawStatusToken(data.status, titleX + titleW - 178, titleY + 79, 154, 52);
+    drawStatusToken(data.status, titleX + titleW - 176, titleY + 78, 156, 50);
   }
 
   let cursorY = receiptY + headerH;
