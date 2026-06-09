@@ -1127,16 +1127,16 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   line(titleX, titleY - 14, titleX + titleW, titleY - 14, 3, '#e91862');
   drawMetaIcon(titleX + 6, titleY + 4, 'calendar');
   drawText(data.subtitle, titleX + 64, titleY + 36, 20, 650);
-  drawMetaIcon(titleX + 6, titleY + 70, 'tag');
-  drawText('Status:', titleX + 64, titleY + 103, 24, 750);
-  drawText(data.status, titleX + 148, titleY + 103, 24, 950, '#e91862');
+  drawMetaIcon(titleX + 6, titleY + 74, 'tag');
+  drawText('Status:', titleX + 64, titleY + 107, 24, 750);
+  drawText(data.status, titleX + 148, titleY + 107, 24, 950, '#e91862');
   if (data.paidStamp) {
     ctx.fillStyle = '#050505';
-    ctx.fillRect(titleX + titleW - 190, titleY + 6, 184, 64);
-    drawCentered('PAGO', titleX + titleW - 190, titleY + 35, 184, 28, 900, '#ffffff');
+    ctx.fillRect(titleX + titleW - 190, titleY + 10, 184, 60);
+    drawCentered('PAGO', titleX + titleW - 190, titleY + 37, 184, 27, 900, '#ffffff');
     drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 57, 184, 13, 800, '#ffffff');
   } else {
-    drawStatusToken(data.status, titleX + titleW - 170, titleY + 73, 160, 58);
+    drawStatusToken(data.status, titleX + titleW - 178, titleY + 79, 154, 52);
   }
 
   let cursorY = receiptY + headerH;

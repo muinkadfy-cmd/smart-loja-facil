@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v197",
-  "short_name": "Jaque v197",
-  "description": "PWA da loja v197 com comprovante fiel à referência e margens micro ajustadas.",
+  "name": "Jaque Confecções e Presentes v198",
+  "short_name": "Jaque v198",
+  "description": "PWA da loja v198 com comprovante refinado no topo e layout unificado para comprovante, vendas recentes e atividades recentes.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
