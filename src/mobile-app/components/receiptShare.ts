@@ -505,9 +505,8 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 4, 'calendar');
   drawText(ctx, `${data.subtitle} - ${data.date}`, titleX + 64, titleY + 36, 20, 700, MUTED);
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 74, 'tag');
-  drawText(ctx, 'Status:', titleX + 64, titleY + 107, 24, 750);
-  drawText(ctx, data.status, titleX + 148, titleY + 107, 24, 950, '#e91862');
-  drawStatusBadge(ctx, data.status, titleX + titleW - 172, titleY + 72, 150, 46);
+  drawText(ctx, 'Status:', titleX + 64, titleY + 106, 24, 750);
+  drawText(ctx, data.status, titleX + 148, titleY + 106, 24, 850, '#e91862');
 
   let y = RECEIPT_Y + 292;
   drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
