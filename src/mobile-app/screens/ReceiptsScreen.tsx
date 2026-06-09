@@ -447,6 +447,83 @@ function triggerPdfDownload(file: { fileName: string; blob: Blob }): void {
 }
 
 
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Não foi possível preparar a imagem do comprovante.'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function imageFromBlob(blob: Blob): Promise<HTMLImageElement> {
+  return await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Não foi possível carregar a imagem do comprovante.'));
+    };
+    image.src = url;
+  });
+}
+
+function binaryFromDataUrl(dataUrl: string): string {
+  return atob(dataUrl.split(',')[1] || '');
+}
+
+function makeImagePdfBlob(jpegBinary: string, imageWidth: number, imageHeight: number): Blob {
+  const pageW = 595;
+  const pageH = 842;
+  const margin = 22;
+  const ratio = Math.min((pageW - margin * 2) / imageWidth, (pageH - margin * 2) / imageHeight);
+  const drawW = Math.round(imageWidth * ratio);
+  const drawH = Math.round(imageHeight * ratio);
+  const drawX = Math.round((pageW - drawW) / 2);
+  const drawY = Math.round((pageH - drawH) / 2);
+  const content = `q\n${drawW} 0 0 ${drawH} ${drawX} ${drawY} cm\n/Im0 Do\nQ`;
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>',
+    `<< /Type /XObject /Subtype /Image /Width ${imageWidth} /Height ${imageHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBinary.length} >>\nstream\n${jpegBinary}\nendstream`,
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
+  ];
+  let pdf = '%PDF-1.4\n% Extrato Jaque gerado a partir do PNG fiel\n';
+  const offsets: number[] = [0];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index < offsets.length; index += 1) pdf += `${String(offsets[index]).padStart(10, '0')} 00000 n \n`;
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  const bytes = new Uint8Array(pdf.length);
+  for (let index = 0; index < pdf.length; index += 1) bytes[index] = pdf.charCodeAt(index) & 0xff;
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+
+async function buildPdfFromPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<{ fileName: string; blob: Blob }> {
+  const png = await buildPngReceiptFile(preview, store);
+  const image = await imageFromBlob(png.blob);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth || image.width;
+  canvas.height = image.naturalHeight || image.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Não foi possível preparar o PDF fiel.');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const jpegBinary = binaryFromDataUrl(canvas.toDataURL('image/jpeg', 0.94));
+  return { fileName: uniquePdfFileName(preview.fileStem || 'comprovante'), blob: makeImagePdfBlob(jpegBinary, canvas.width, canvas.height) };
+}
+
+
 type PdfReceiptRow = { parcela: string; vencimento: string; valor: string; status: string };
 type PdfProductRow = { qtd: string; produto: string; unitario: string; total: string };
 type PdfReceiptData = {
@@ -615,8 +692,8 @@ function uniquePdfFileName(stem: string): string {
   return `${safeStem}-${stamp}.pdf`;
 }
 
-function downloadPreviewPdf(preview: ReceiptPreview, store: ReceiptStoreInfo): string {
-  const file = buildPdfReceiptFile(preview, store);
+async function downloadPreviewPdf(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<string> {
+  const file = await buildPdfFromPngReceiptFile(preview, store);
   triggerPdfDownload(file);
   return file.fileName;
 }
@@ -657,15 +734,15 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const receiptW = width - outerPad * 2;
   const innerX = receiptX + 28;
   const innerW = receiptW - 56;
-  const headerH = 236;
-  const clientH = 122;
+  const headerH = 286;
+  const clientH = 250;
   const sectionGap = 28;
-  const productRowH = 58;
+  const productRowH = 72;
   const installmentRowH = 58;
   const productBlockH = productRows.length ? 44 + 44 + productRows.length * productRowH + sectionGap : 0;
   const installmentBlockH = 44 + 44 + installmentRows.length * installmentRowH + sectionGap;
   const cardsH = 98;
-  const notesH = Math.max(154, 52 + notes.length * 40);
+  const notesH = Math.max(0, 0);
   const footerH = 78;
   const receiptH = headerH + clientH + sectionGap + productBlockH + installmentBlockH + cardsH + sectionGap + notesH + footerH;
   const height = receiptH + receiptY * 2;
@@ -738,25 +815,37 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     return nextY;
   }
 
-  function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3): void {
+  function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3, color = '#f5bfd1'): void {
     ctx.lineWidth = widthLine;
-    ctx.strokeStyle = '#050505';
+    ctx.strokeStyle = color;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
   }
 
-  function rect(x: number, y: number, w: number, h: number, lineWidth = 4): void {
+  function rect(x: number, y: number, w: number, h: number, lineWidth = 4, color = '#050505', radius = 0): void {
     ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = '#050505';
+    ctx.strokeStyle = color;
+    if (radius > 0) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, radius);
+      ctx.stroke();
+      return;
+    }
     ctx.strokeRect(x, y, w, h);
   }
 
-  function fillHeader(label: string, x: number, y: number, w: number, h = 44): void {
+  function fillHeader(label: string, x: number, y: number, w: number, h = 54): void {
     ctx.fillStyle = '#050505';
-    ctx.fillRect(x, y, w, h);
-    drawText(label, x + 18, y + 30, 19, 900, '#ffffff');
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 14);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x + 30, y + h / 2, 24, 0, Math.PI * 2);
+    ctx.fill();
+    drawText(label, x + 72, y + 34, 22, 900, '#ffffff');
   }
 
   function drawStatusToken(label: string, x: number, y: number, w = 132, h = 34): void {
@@ -764,44 +853,62 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     const paid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
     const partial = clean.includes('PARCIAL');
     const overdue = clean.includes('VENC') || clean.includes('ATRAS');
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = partial ? '#9a5a05' : overdue ? '#8a1c1c' : '#050505';
-    ctx.fillStyle = paid ? '#050505' : '#ffffff';
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeRect(x, y, w, h);
-    drawCentered(paid ? 'PAGA' : partial ? 'PARCIAL' : overdue ? 'VENCIDA' : clean.includes('ABERTA') ? 'ABERTA' : 'PENDENTE', x, y + 24, w, 17, 900, paid ? '#ffffff' : partial ? '#8a5206' : overdue ? '#8a1c1c' : '#111111');
+    const display = paid ? 'PAGO' : partial ? 'PARCIAL' : overdue ? 'VENCIDA' : clean.includes('ABERTA') || clean.includes('ABERTO') ? 'ABERTA' : 'PENDENTE';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = paid ? '#111111' : overdue ? '#d21f52' : '#e91862';
+    ctx.fillStyle = paid ? '#111111' : display === 'ABERTA' ? '#e91862' : '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.fill();
+    ctx.stroke();
+    drawCentered(display, x, y + Math.round(h * 0.66), w, Math.max(14, Math.floor(h * 0.42)), 900, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
+  }
+
+  function drawPinkIcon(x: number, y: number, label: string): void {
+    ctx.fillStyle = '#e91862';
+    ctx.beginPath();
+    ctx.roundRect(x, y, 52, 52, 12);
+    ctx.fill();
+    drawCentered(label, x, y + 36, 52, 27, 900, '#ffffff');
   }
 
   function drawInfoBox(y: number): number {
-    rect(innerX, y, innerW, clientH, 4);
-    const labelX = innerX + 28;
-    const valueX = innerX + 210;
-    const rowY = [y + 38, y + 78, y + 110];
-    drawText('CLIENTE', labelX, rowY[0], 18, 900);
-    drawWrapped(data.customer, valueX, rowY[0], innerW - 250, 21, 900, 1);
-    line(innerX + 22, y + 52, innerX + innerW - 22, y + 52, 3);
-    drawText('TELEFONE', labelX, rowY[1], 18, 900);
-    drawText(data.phone || '-', valueX, rowY[1], 20, 800);
-    line(innerX + 22, y + 92, innerX + innerW - 22, y + 92, 3);
-    drawText('ENDEREÇO', labelX, rowY[2], 16, 900);
-    drawWrapped(data.address || '-', valueX, rowY[2], innerW - 250, 16, 650, 1);
+    rect(innerX, y, innerW, clientH, 3, '#050505', 12);
+    const labelX = innerX + 86;
+    const valueX = innerX + 318;
+    const splitX = innerX + 292;
+    line(splitX, y, splitX, y + clientH, 2, '#f1aac4');
+    line(innerX, y + 84, innerX + innerW, y + 84, 2, '#f1c1d1');
+    line(innerX, y + 166, innerX + innerW, y + 166, 2, '#f1c1d1');
+    drawPinkIcon(innerX + 18, y + 18, '●');
+    drawPinkIcon(innerX + 18, y + 99, '☎');
+    drawPinkIcon(innerX + 18, y + 181, '⌖');
+    drawText('CLIENTE', labelX, y + 54, 23, 950);
+    drawWrapped(data.customer, valueX, y + 62, innerW - 350, 40, 950, 1);
+    drawText('TELEFONE', labelX, y + 136, 23, 950);
+    drawText(data.phone || '-', valueX, y + 136, 29, 850);
+    drawText('ENDEREÇO', labelX, y + 218, 23, 950);
+    drawWrapped(data.address || '-', valueX, y + 218, innerW - 350, 24, 750, 1);
     return y + clientH + sectionGap;
   }
 
   function drawProductTable(y: number): number {
     if (!productRows.length) return y;
     fillHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
-    y += 44;
+    y += 54;
     const columns = [88, innerW - 88 - 168 - 168, 168, 168];
     const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-    ctx.fillStyle = '#050505';
+    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + 44);
+    headerGradient.addColorStop(0, '#f04f7d');
+    headerGradient.addColorStop(1, '#e12b67');
+    ctx.fillStyle = headerGradient;
     ctx.fillRect(innerX, y, innerW, 44);
     let x = innerX;
     headers.forEach((header, index) => {
       drawCentered(header, x, y + 29, columns[index], 16, 900, '#ffffff');
       x += columns[index];
     });
-    rect(innerX, y, innerW, 44 + productRows.length * productRowH, 4);
+    rect(innerX, y, innerW, 44 + productRows.length * productRowH, 3, '#050505', 0);
     x = innerX;
     columns.slice(0, -1).forEach((w) => {
       x += w;
@@ -810,27 +917,30 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     productRows.forEach((row, index) => {
       const rowY = y + 44 + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
-      drawCentered(row.qtd, innerX, rowY + 36, columns[0], 19, 800);
-      drawWrapped(row.produto, innerX + columns[0] + 16, rowY + 28, columns[1] - 26, 17, 750, 2, 5);
-      drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 36, columns[2], 18, 700);
-      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 36, columns[3], 19, 900);
+      drawCentered(row.qtd, innerX, rowY + 46, columns[0], 24, 800);
+      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 45, columns[1] - 34, 30, 900, 2, 6);
+      drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 46, columns[2], 20, 700);
+      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 46, columns[3], 21, 900);
     });
     return y + 44 + productRows.length * productRowH + sectionGap;
   }
 
   function drawInstallmentTable(y: number): number {
     fillHeader(productRows.length ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', innerX, y, innerW);
-    y += 44;
+    y += 54;
     const columns = [150, 250, 170, innerW - 150 - 250 - 170];
     const headers = ['PARCELA', 'VENCIMENTO', 'VALOR', 'STATUS'];
-    ctx.fillStyle = '#050505';
+    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + 44);
+    headerGradient.addColorStop(0, '#f04f7d');
+    headerGradient.addColorStop(1, '#e12b67');
+    ctx.fillStyle = headerGradient;
     ctx.fillRect(innerX, y, innerW, 44);
     let x = innerX;
     headers.forEach((header, index) => {
       drawCentered(header, x, y + 29, columns[index], 16, 900, '#ffffff');
       x += columns[index];
     });
-    rect(innerX, y, innerW, 44 + installmentRows.length * installmentRowH, 4);
+    rect(innerX, y, innerW, 44 + installmentRows.length * installmentRowH, 3, '#050505', 0);
     x = innerX;
     columns.slice(0, -1).forEach((w) => {
       x += w;
@@ -848,64 +958,62 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   }
 
   function drawSummaryCards(y: number): number {
-    const cardGap = 34;
+    const cardGap = 26;
     const cardW = (innerW - cardGap * 2) / 3;
-    const cards = [[data.totalLabel, data.totalValue], [data.paidLabel, data.paidValue], [data.balanceLabel, data.balanceValue]];
-    cards.forEach(([label, value], index) => {
+    const cards = [[data.totalLabel, data.totalValue, '#e12b67'], [data.paidLabel, data.paidValue, '#050505'], [data.balanceLabel, data.balanceValue, '#e12b67']];
+    cards.forEach(([label, value, color], index) => {
       const x = innerX + index * (cardW + cardGap);
-      rect(x, y, cardW, 86, 4);
-      drawCentered(label, x, y + 30, cardW, 16, 900);
-      line(x + 24, y + 42, x + cardW - 24, y + 42, 3);
-      drawCentered(value, x, y + 70, cardW, 25, 900);
+      rect(x, y, cardW, 116, 3, '#050505', 12);
+      drawCentered(label, x, y + 35, cardW, 19, 900);
+      line(x + 18, y + 54, x + cardW - 18, y + 54, 2, '#e85f8a');
+      drawCentered(value, x, y + 92, cardW, 38, 950, String(color));
     });
-    return y + 86 + sectionGap;
+    return y + 116 + sectionGap;
   }
 
   function drawNotes(y: number): number {
-    fillHeader('ANOTAÇÕES', innerX, y, innerW);
-    y += 44;
-    rect(innerX, y, innerW, notesH - 44, 4);
-    let noteY = y + 32;
-    notes.forEach((note) => {
-      wrapText(`• ${note}`, innerW - 60, 17, 600).slice(0, 2).forEach((lineText) => {
-        drawText(lineText, innerX + 28, noteY, 17, 600);
-        noteY += 28;
-      });
-    });
-    return y + notesH - 44;
+    return y;
   }
 
-  ctx.fillStyle = '#090909';
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(receiptX, receiptY, receiptW, receiptH);
-  rect(receiptX, receiptY, receiptW, receiptH, 8);
+  ctx.beginPath();
+  ctx.roundRect(receiptX, receiptY, receiptW, receiptH, 10);
+  ctx.fill();
+  rect(receiptX, receiptY, receiptW, receiptH, 5, '#050505', 10);
 
   const logo = await loadLogo(store.logo_url || DEFAULT_RECEIPT_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, innerX + 2, receiptY + 34, 296, 150);
+    ctx.drawImage(logo, innerX + 8, receiptY + 18, 384, 210);
   } else {
-    drawCentered(storeName.toUpperCase(), innerX, receiptY + 106, 296, 24, 900);
+    drawCentered(storeName.toUpperCase(), innerX, receiptY + 130, 384, 26, 900);
   }
-  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 202, 296, 13, 900);
+  drawCentered(storeName.toUpperCase(), innerX + 8, receiptY + 250, 384, 21, 900);
+  line(innerX + 24, receiptY + 280, innerX + 190, receiptY + 280, 2, '#e91862');
+  drawCentered('♥', innerX + 190, receiptY + 286, 44, 25, 900, '#e91862');
+  line(innerX + 236, receiptY + 280, innerX + 410, receiptY + 280, 2, '#e91862');
 
-  const titleX = innerX + 372;
-  const titleW = innerW - 390;
-  let titleY = receiptY + 82;
+  const titleX = innerX + 500;
+  const titleW = innerW - 520;
+  let titleY = receiptY + 110;
   pdfTitleLines(data.title).slice(0, 2).forEach((lineText) => {
-    drawCentered(lineText, titleX, titleY, titleW, 39, 900, '#050505');
-    titleY += 42;
+    drawCentered(lineText, titleX, titleY, titleW, 44, 950, '#050505');
+    titleY += 48;
   });
-  line(titleX, titleY - 16, titleX + titleW, titleY - 16, 5);
-  drawText(data.subtitle, titleX, titleY + 16, 15, 650);
-  drawText(`Status: ${data.status}`, titleX, titleY + 42, 17, 900);
+  line(titleX, titleY - 16, titleX + titleW, titleY - 16, 3, '#e91862');
+  drawText(data.subtitle, titleX + 70, titleY + 36, 20, 650);
+  drawText('◷', titleX + 16, titleY + 36, 24, 900, '#050505');
+  drawText(`Status: `, titleX + 70, titleY + 102, 24, 750);
+  drawText(data.status, titleX + 154, titleY + 102, 24, 950, '#e91862');
+  drawText('◇', titleX + 16, titleY + 102, 24, 900, '#050505');
   if (data.paidStamp) {
     ctx.fillStyle = '#050505';
     ctx.fillRect(titleX + titleW - 190, titleY + 2, 184, 64);
     drawCentered('PAGO', titleX + titleW - 190, titleY + 31, 184, 28, 900, '#ffffff');
     drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 53, 184, 13, 800, '#ffffff');
   } else {
-    drawStatusToken(data.status, titleX + titleW - 162, titleY + 6, 156, 38);
+    drawStatusToken(data.status, titleX + titleW - 170, titleY + 76, 160, 60);
   }
 
   let cursorY = receiptY + headerH;
@@ -914,7 +1022,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   cursorY = drawInstallmentTable(cursorY);
   cursorY = drawSummaryCards(cursorY);
   cursorY = drawNotes(cursorY);
-  drawCentered(`${store.receipt_message?.trim() || 'Obrigado pela preferência.'} - ${storeName}`, innerX, receiptY + receiptH - 34, innerW, 17, 700, '#111111');
+  line(innerX, receiptY + receiptH - 62, innerX + innerW / 2 - 28, receiptY + receiptH - 62, 2, '#e91862');
+  drawCentered('♥', innerX + innerW / 2 - 28, receiptY + receiptH - 55, 56, 22, 900, '#e91862');
+  line(innerX + innerW / 2 + 28, receiptY + receiptH - 62, innerX + innerW, receiptY + receiptH - 62, 2, '#e91862');
+  drawCentered(`${store.receipt_message?.trim() || 'Obrigado pela preferência.'} - ${storeName}`, innerX, receiptY + receiptH - 28, innerW, 18, 700, '#111111');
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.98);
@@ -1118,6 +1229,20 @@ function buildReceiptStyles(): string {
       .slf-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 14px}.slf-summary-card{border:2px solid var(--line);border-radius:10px;min-height:118px;text-align:center;padding:14px 10px;display:grid;align-content:center;gap:9px}.slf-summary-card .icon{width:44px;height:44px;margin:0 auto;border-radius:999px;background:#050505;color:#fff;display:grid;place-items:center;font-family:Arial,sans-serif;font-size:20px}.slf-summary-card span{font-weight:950;text-transform:uppercase;letter-spacing:.06em}.slf-summary-card strong{font-size:clamp(24px,5vw,38px);line-height:1;white-space:nowrap}.slf-payment{border:2px solid var(--line);border-radius:8px;margin:12px 0 0;overflow:hidden}.slf-payment-head{display:grid;grid-template-columns:1fr 170px;background:#050505;color:#fff;text-align:center;font-weight:950;font-size:17px;text-transform:uppercase}.slf-payment-head span{padding:10px;border-right:1px solid #fff}.slf-payment-head span:last-child{border-right:0}.slf-payment-row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:12px;font-family:Arial,sans-serif;color:#111}.slf-payment-row span{font-weight:700;color:#333}.slf-payment-row span.active{color:var(--pink-dark);font-weight:950}.slf-payment-total{font-size:clamp(28px,5vw,44px);font-weight:950;padding:10px;text-align:center;border-left:2px solid var(--line)}
       .slf-note{border:2px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0 0;background:#fff}.slf-note-title{background:#050505;color:#fff;padding:10px 14px;font-weight:950;text-transform:uppercase;letter-spacing:.06em;font-size:17px}.slf-note ul{margin:0;padding:14px 18px 14px 30px;line-height:1.55;font-size:clamp(12px,2.1vw,16px)}.slf-note.ok .slf-note-title{background:#050505}.slf-note.danger .slf-note-title{background:#7f1d1d}.slf-note.warn .slf-note-title{background:#92400e}.slf-paid-stamp{position:absolute;right:8%;top:42%;transform:rotate(-4deg);border:4px solid #050505;color:#050505;border-radius:10px;padding:8px 22px;text-align:center;opacity:.82;font-weight:950;letter-spacing:.08em;font-size:clamp(26px,6vw,54px);line-height:.9;z-index:2;pointer-events:none}.slf-paid-stamp span{display:block;font-size:clamp(10px,2vw,16px);margin-top:8px}.slf-footer{margin-top:14px;text-align:center;color:#111;font-weight:900;font-size:12px}.slf-print-tip{margin-top:10px;border:2px dashed #111;border-radius:10px;padding:10px;text-align:center;font-size:12px;color:#111;background:#fff}
       @media (max-width:720px){body{padding:0;background:#050505}.slf-app-shell{width:100%;padding:0 8px 10px}.slf-appbar{height:54px;grid-template-columns:48px 1fr 96px;margin-bottom:4px}.slf-appbar-btn{width:44px;height:44px;border-radius:12px;font-size:21px}.slf-appbar-title{font-size:15px;letter-spacing:.06em}.slf-receipt{padding:12px 10px}.slf-head{grid-template-columns:36% 1fr;gap:10px;padding-top:14px}.slf-logo-img{max-height:94px}.slf-doc-title h1{font-size:clamp(25px,8vw,34px);letter-spacing:.04em}.slf-doc-title p{font-size:11px}.slf-customer-box{padding:8px 10px}.slf-customer-row{grid-template-columns:32px 76px 1fr;gap:8px;padding:8px 0}.slf-customer-icon{width:28px;height:28px;font-size:14px}.slf-customer-label{font-size:11px}.slf-customer-value{font-size:14px}.slf-table{font-size:13px}.slf-table th,.slf-table td{padding:9px 5px}.slf-table .left{font-size:15px}.slf-status-token{min-width:76px;padding:5px 6px;font-size:10px;gap:4px}.slf-status-token b{width:18px;height:18px;font-size:11px}.slf-summary-grid{grid-template-columns:1fr;gap:8px}.slf-summary-card{min-height:84px;display:grid;grid-template-columns:42px 1fr;align-items:center;text-align:left;padding:10px}.slf-summary-card .icon{margin:0;width:36px;height:36px}.slf-summary-card strong{font-size:24px}.slf-payment-head{grid-template-columns:1fr 120px;font-size:14px}.slf-payment-row{font-size:12px;gap:8px}.slf-payment-total{font-size:26px}.slf-note ul{font-size:14px;padding:13px 12px 13px 25px;line-height:1.35}.slf-paid-stamp{right:6%;top:46%;font-size:30px;padding:7px 15px}}
+
+      /* Lote 194 — padrão extrato Jaque fiel */
+      :root{--ink:#050505;--line:#111;--pink:#e91862;--pink2:#f04f7d;--pink-soft:#ffe6f0;--pink-line:#f3b4ca}
+      body{background:#f7f7f7;font-family:Arial,Helvetica,sans-serif;padding:10px;color:var(--ink)}
+      .slf-appbar{display:none}
+      .slf-app-shell{width:min(1040px,100%)}
+      .slf-receipt{border:3px solid #050505;border-radius:12px;clip-path:none;padding:28px;background:#fff;box-shadow:0 12px 36px rgba(0,0,0,.12)}
+      .slf-head{grid-template-columns:minmax(250px,43%) 1fr;gap:22px;align-items:center;margin-bottom:18px;padding-top:0}
+      .slf-logo-img{width:min(390px,100%);max-height:240px}.slf-doc-title h1{font-size:clamp(32px,5.4vw,58px);letter-spacing:.02em;line-height:1.02}.slf-doc-title p{border-top:3px solid var(--pink);border-top-style:solid;font-size:clamp(14px,2.1vw,22px);margin-top:12px;padding-top:20px;color:#111}.slf-badge{float:right;margin-top:10px;border:0;border-radius:8px;background:var(--pink)!important;color:#fff!important;font-size:clamp(18px,2.6vw,28px);padding:13px 18px;min-width:138px}
+      .slf-customer-box{border:2px solid #111;border-radius:12px;padding:0;margin:14px 0 22px;overflow:hidden}.slf-customer-row{grid-template-columns:58px 200px 1fr;padding:17px 18px;border-bottom:2px solid var(--pink-line)}.slf-customer-label{font-size:clamp(15px,2.4vw,23px);letter-spacing:.01em}.slf-customer-value{font-size:clamp(18px,3.2vw,34px)}.slf-customer-icon{background:var(--pink);width:48px;height:48px;font-size:24px}
+      .slf-note{border:0;margin:0;background:transparent;padding:0}.slf-note-title,.slf-payment-head{background:#050505!important;color:#fff;border-radius:12px 12px 0 0;padding:18px 22px;font-size:clamp(17px,2.6vw,28px);font-weight:950;text-transform:uppercase}.slf-table{border:2px solid #111;border-radius:0 0 12px 12px;margin:0 0 22px;font-family:Arial,Helvetica,sans-serif}.slf-table th{background:linear-gradient(90deg,var(--pink2),#df326b)!important;color:#fff;border-right:2px solid var(--pink-line);font-size:clamp(13px,2vw,20px);padding:15px 10px}.slf-table td{border-color:var(--pink-line);font-size:clamp(15px,2.3vw,23px);padding:16px 10px}.slf-table .left{font-size:clamp(20px,3vw,32px)}.slf-status-token{border-color:var(--pink);color:var(--pink);background:#fff;border-radius:8px}.slf-status-token.pending,.slf-status-token.neutral{color:var(--pink)}
+      .slf-summary-grid{grid-template-columns:repeat(3,1fr);gap:22px;margin:18px 0 18px}.slf-summary-card{border:2px solid #111;border-radius:12px;min-height:128px;padding:16px;text-align:center}.slf-summary-card span,.slf-summary-card .icon{display:none}.slf-summary-card em{display:block;border-bottom:2px dashed var(--pink2);padding-bottom:12px;margin-bottom:14px;font-size:clamp(14px,2vw,20px);font-style:normal;text-transform:uppercase;font-weight:950}.slf-summary-card strong{font-size:clamp(28px,4.2vw,48px);color:var(--pink);font-weight:950}.slf-footer{font-size:clamp(13px,2vw,20px);border-top:2px solid var(--pink);padding-top:18px;text-align:center}.slf-footer::before{content:'♥';display:block;color:var(--pink);font-weight:950;margin:-31px auto 8px;background:#fff;width:58px;text-align:center}.slf-print-tip{display:none}
+      @media(max-width:720px){body{background:#f8fafc;padding:0}.slf-app-shell{padding:0}.slf-receipt{border-radius:12px;padding:14px;border-width:2px}.slf-head{grid-template-columns:40% 1fr;gap:10px}.slf-logo-img{max-height:130px}.slf-doc-title h1{font-size:clamp(23px,7vw,38px)}.slf-doc-title p{font-size:11px;padding-top:10px}.slf-badge{font-size:13px;min-width:86px;padding:8px 10px}.slf-customer-row{grid-template-columns:34px 92px 1fr;gap:9px;padding:10px}.slf-customer-icon{width:30px;height:30px;font-size:15px}.slf-customer-label{font-size:12px}.slf-customer-value{font-size:15px}.slf-note-title,.slf-payment-head{font-size:14px;padding:12px 14px}.slf-table th,.slf-table td{font-size:12px;padding:9px 5px}.slf-table .left{font-size:15px}.slf-summary-grid{grid-template-columns:1fr;gap:8px}.slf-summary-card{min-height:78px;display:grid;grid-template-columns:1fr auto;align-items:center;padding:10px 12px}.slf-summary-card em{border:0;margin:0;padding:0;text-align:left;font-size:13px}.slf-summary-card strong{font-size:24px}.slf-footer{font-size:12px}}
+
       @media print{body{background:#fff;padding:0}.slf-appbar,.slf-mode-tip,.slf-print-tip{display:none!important}.slf-app-shell{width:100%;padding:0}.slf-receipt{box-shadow:none;border:1px solid #111;width:100%;max-width:100%;clip-path:none;page-break-inside:avoid}.slf-paid-stamp{opacity:.75}}
     </style>`;
 }
@@ -1537,7 +1662,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     setSaving(true);
     try {
       selectPreview(preview);
-      const fileName = downloadPreviewPdf(preview, receiptStore);
+      const fileName = await downloadPreviewPdf(preview, receiptStore);
       setFullPreview(preview);
       setFeedback({ tone: 'success', text: `PDF real baixado como ${fileName}. A prévia interna continua aberta no app para conferir ou tirar print.` });
       notifyMobileAction({ title: 'PDF baixado', message: `${fileName} foi gerado como arquivo PDF real.`, tone: 'success', page: 'receipts', actionLabel: 'Abrir tela' });
@@ -1572,7 +1697,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
         return;
       }
 
-      const pdfFile = buildPdfReceiptFile(preview, receiptStore);
+      const pdfFile = await buildPdfFromPngReceiptFile(preview, receiptStore);
       const file = new File([pdfFile.blob], pdfFile.fileName, { type: 'application/pdf' });
       const shared = await shareReceiptFileOnly(file, preview.title);
       if (shared) {

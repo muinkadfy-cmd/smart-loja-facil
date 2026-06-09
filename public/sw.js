@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v193-cupom-micro-ajuste-acima';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v194-extrato-fiel-central-avisos';
 const APP_SHELL = [
   '/',
   '/index.html',

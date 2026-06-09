@@ -221,7 +221,7 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
         <header className="mapp-notification-head">
           <div>
             <h2 id="mapp-notification-title">{title}</h2>
-            <p id="mapp-notification-subtitle">Alertas claros para usuário leigo</p>
+            <p id="mapp-notification-subtitle">Alertas claros para usuário leigo · central v2</p>
           </div>
           <button type="button" className="mapp-notification-close" onClick={onClose} aria-label="Fechar notificações">
             ×

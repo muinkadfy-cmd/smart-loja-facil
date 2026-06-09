@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.193",
+  "version": "0.1.194",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com cupom PNG micro ajustado para cima, campos protegidos e acabamento premium v193",
+  "description": "PWA da loja com extrato de crediário fiel em PNG/PDF/compartilhar e central de avisos v2 premium",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
