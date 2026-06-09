@@ -80,7 +80,7 @@ if (largeFiles.length) warnings.push(`Arquivos grandes para revisar: ${largeFile
 if (!gitignoreRules.includes('.env.production')) warnings.push('Recomendado manter .env.production listado explicitamente no .gitignore.');
 if (!gitignoreRules.includes('.wrangler/')) warnings.push('Recomendado manter .wrangler/ listado explicitamente no .gitignore.');
 
-process.stdout.write('Commercial package check v208 - Jaque Confeccoes e Presentes\n');
+process.stdout.write('Commercial package check v209 - Jaque Confeccoes e Presentes\n');
 process.stdout.write(`Modo: ${strict ? 'strict' : 'relatório'}\n`);
 if (!warnings.length && !errors.length) process.stdout.write('OK: nenhum risco de pacote comercial encontrado.\n');
 for (const warning of warnings) process.stdout.write(`AVISO: ${warning}\n`);

@@ -9699,3 +9699,85 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     -webkit-line-clamp: 1;
   }
 }
+
+
+/* Mega Lote 209 — Crediário fácil para usuário leigo */
+.mapp-credit-mode-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(124, 92, 255, 0.18);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.10), rgba(255, 255, 255, 0.96));
+  box-shadow: var(--mapp-soft-shadow);
+}
+.mapp-credit-mode-card strong { display: block; font-size: 15px; color: var(--mapp-text); }
+.mapp-credit-mode-card span { display: block; margin-top: 3px; color: var(--mapp-muted); font-size: 12px; line-height: 1.35; }
+.mapp-credit-mode-buttons { display: grid; grid-template-columns: repeat(2, minmax(82px, 1fr)); gap: 8px; flex: 0 0 auto; }
+.mapp-credit-mode-buttons button {
+  border: 1px solid var(--mapp-line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--mapp-muted);
+  font-weight: 900;
+}
+.mapp-credit-mode-buttons button.active {
+  border-color: rgba(124, 92, 255, 0.45);
+  background: #0b1933;
+  color: #fff;
+}
+.mapp-credit-assistant-grid { display: grid; gap: 10px; margin: 14px 0; }
+.mapp-credit-assistant-grid button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(124, 92, 255, 0.20);
+  border-radius: 16px;
+  background: #fff;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(28, 50, 86, 0.06);
+}
+.mapp-credit-assistant-grid button strong { display: block; color: var(--mapp-text); font-size: 15px; }
+.mapp-credit-assistant-grid button span { display: block; margin-top: 4px; color: var(--mapp-muted); font-size: 12px; line-height: 1.35; }
+.mapp-credit-before-after {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.mapp-credit-before-after span {
+  border: 1px solid rgba(217, 227, 239, 0.95);
+  border-radius: 12px;
+  background: #fff;
+  padding: 9px 10px;
+  font-size: 12px;
+  color: var(--mapp-muted);
+}
+.mapp-credit-before-after b { display: block; margin-top: 3px; color: var(--mapp-text); font-size: 14px; }
+.mapp-danger-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  margin-top: 10px;
+  border: 1px solid rgba(242, 154, 46, 0.35);
+  border-radius: 14px;
+  background: rgba(255, 247, 237, 0.96);
+  color: #6b3d03;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.mapp-danger-ack input { margin-top: 2px; width: 18px; height: 18px; accent-color: var(--mapp-orange); }
+.mapp-installment-actions-slim .mapp-secondary-button.strong {
+  border-color: rgba(124, 92, 255, 0.35);
+  color: var(--mapp-purple);
+  background: rgba(124, 92, 255, 0.08);
+}
+@media (max-width: 520px) {
+  .mapp-credit-mode-card { align-items: stretch; flex-direction: column; }
+  .mapp-credit-mode-buttons { width: 100%; }
+  .mapp-credit-before-after { grid-template-columns: 1fr; }
+}

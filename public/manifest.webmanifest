@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v208",
-  "short_name": "Jaque v208",
-  "description": "PWA da loja v208 com Crediário Pro, correção segura, edição de parcela e auditoria.",
+  "name": "Jaque Confecções e Presentes v209",
+  "short_name": "Jaque v209",
+  "description": "PWA da loja v209 com Crediário Fácil para usuário leigo, modo simples e correção guiada.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
