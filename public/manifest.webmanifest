@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v202",
-  "short_name": "Jaque v202",
-  "description": "PWA da loja v202 com card ABERTA do comprovante micro ajustado para cima.",
+  "name": "Jaque Confecções e Presentes v203",
+  "short_name": "Jaque v203",
+  "description": "PWA da loja v203 com Sora sem erro de fonte local quebrada e comprovantes aguardando carregamento da fonte.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

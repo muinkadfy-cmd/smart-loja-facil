@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v202-card-aberta-acima';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v203-sora-sem-fonte-quebrada';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -49,6 +49,23 @@ export function findReceiptForSale(receipts: ReceiptSummary[], sale: SaleSummary
   return receipts.find((receipt) => receipt.sale_id === sale.id || Number(receipt.sale_number || 0) === Number(sale.number || 0)) ?? null;
 }
 
+async function ensureShareSoraReady(): Promise<void> {
+  const fontSet = document.fonts;
+  if (!fontSet?.load) return;
+  try {
+    await Promise.race([
+      Promise.all([
+        fontSet.load('400 22px "Sora"'),
+        fontSet.load('600 22px "Sora"'),
+        fontSet.load('800 22px "Sora"'),
+      ]),
+      new Promise((resolve) => window.setTimeout(resolve, 900)),
+    ]);
+  } catch {
+    // Mantém fallback seguro se a rede bloquear a fonte.
+  }
+}
+
 function safeFilePart(value: string): string {
   return value
     .normalize('NFD')

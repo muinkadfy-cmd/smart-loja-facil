@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.202",
+  "version": "0.1.203",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com card ABERTA do comprovante micro ajustado para cima v202",
+  "description": "PWA da loja com Sora carregada sem fonte local quebrada e comprovantes aguardando fonte v203",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

@@ -709,6 +709,23 @@ function escapeSvgText(value: string): string {
   return value.replace(/[&<>]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[char] || char));
 }
 
+async function ensureReceiptSoraReady(): Promise<void> {
+  const fontSet = document.fonts;
+  if (!fontSet?.load) return;
+  try {
+    await Promise.race([
+      Promise.all([
+        fontSet.load('400 22px "Sora"'),
+        fontSet.load('600 22px "Sora"'),
+        fontSet.load('800 22px "Sora"'),
+      ]),
+      new Promise((resolve) => window.setTimeout(resolve, 900)),
+    ]);
+  } catch {
+    // Mantém fallback seguro se a rede bloquear a fonte.
+  }
+}
+
 function triggerFileDownload(fileName: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
