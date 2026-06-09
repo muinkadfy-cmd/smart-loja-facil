@@ -539,6 +539,9 @@ type PdfReceiptData = {
   paidValue: string;
   balanceLabel: string;
   balanceValue: string;
+  subtotalValue?: string;
+  discountValue?: string;
+  hasDiscount?: boolean;
   status: string;
   notes: string[];
   paidStamp?: string;
@@ -554,6 +557,9 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
     const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
     const partialCount = credit.installments.filter((item) => installmentStatusLabel(item).toLowerCase().includes('parcial')).length;
     const overdueCount = credit.installments.filter(isOverdue).length;
+    const creditProducts = creditSaleItems(credit);
+    const creditSubtotal = creditProducts.reduce((sum, item) => sum + Number(item.total || 0), 0);
+    const creditDiscount = Math.max(0, creditSubtotal - Number(credit.total || 0));
     return {
       title: 'EXTRATO DO CREDIARIO',
       subtitle: `Nota #${String(credit.sale_number || 0).padStart(4, '0')} - ${formatDateTime(credit.created_at)}`,
@@ -566,7 +572,7 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
         valor: pdfMoney(installment.amount),
         status: installmentStatusLabel(installment),
       })),
-      productRows: creditSaleItems(credit).map((item) => ({
+      productRows: creditProducts.map((item) => ({
         qtd: formatProductQty(item.qty),
         produto: item.product_name,
         unitario: pdfMoney(item.unit_price),
@@ -578,10 +584,13 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
       paidValue: pdfMoney(paid),
       balanceLabel: 'SALDO',
       balanceValue: pdfMoney(balance),
+      subtotalValue: pdfMoney(creditSubtotal || credit.total),
+      discountValue: pdfMoney(creditDiscount),
+      hasDiscount: creditDiscount > 0.009,
       status,
       notes: [
         `Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} gerado em ${now}.`,
-        creditSaleItems(credit).length ? `Produtos na venda: ${creditSaleItems(credit).map((item) => `${formatProductQty(item.qty)}x ${item.product_name}`).join('; ')}.` : 'Produtos da venda não encontrados no histórico.',
+        creditProducts.length ? `Produtos na venda: ${creditProducts.map((item) => `${formatProductQty(item.qty)}x ${item.product_name}`).join('; ')}.` : 'Produtos da venda não encontrados no histórico.',
         `Parcelas pagas: ${paidCount}/${credit.installments.length}.`,
         `Total da nota: ${pdfMoney(credit.total)}. Total pago: ${pdfMoney(paid)}.`,
         balance > 0.009 ? `Saldo para acompanhar no crediario: ${pdfMoney(balance)}.` : 'Nota quitada sem saldo pendente.',
@@ -616,6 +625,9 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
       paidValue: pdfMoney(paid),
       balanceLabel: 'SALDO',
       balanceValue: pdfMoney(rest),
+      subtotalValue: pdfMoney(installment.amount),
+      discountValue: pdfMoney(0),
+      hasDiscount: false,
       status,
       notes: [
         `Venda/nota #${String(credit.sale_number || 0).padStart(4, '0')} - parcela ${installment.number}/${credit.installments.length}.`,
@@ -642,6 +654,9 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
     paidValue: status,
     balanceLabel: 'DATA',
     balanceValue: dateOnly(preview.createdAt),
+    subtotalValue: pdfMoney(preview.total),
+    discountValue: pdfMoney(0),
+    hasDiscount: false,
     status,
     notes: [
       `Comprovante gerado em ${now}.`,
@@ -750,10 +765,11 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const installmentRowH = 64;
   const productBlockH = productRows.length ? 44 + 44 + productRows.length * productRowH + sectionGap : 0;
   const installmentBlockH = 44 + 44 + installmentRows.length * installmentRowH + sectionGap;
+  const discountBlockH = data.hasDiscount ? 104 : 0;
   const cardsH = 98;
   const notesH = Math.max(0, 0);
   const footerH = 84;
-  const receiptH = headerH + clientH + sectionGap + productBlockH + installmentBlockH + cardsH + sectionGap + notesH + footerH;
+  const receiptH = headerH + clientH + sectionGap + productBlockH + installmentBlockH + discountBlockH + cardsH + sectionGap + notesH + footerH;
   const height = receiptH + receiptY * 2;
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -1088,6 +1104,26 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     return y + 44 + installmentRows.length * installmentRowH + sectionGap;
   }
 
+
+  function drawDiscountStrip(y: number): number {
+    if (!data.hasDiscount) return y;
+    const gap = 16;
+    const boxW = (innerW - gap * 2) / 3;
+    const items = [
+      ['SUBTOTAL', data.subtotalValue || data.totalValue, '#050505'],
+      ['DESCONTO', data.discountValue || pdfMoney(0), '#e12b67'],
+      ['TOTAL FINAL', data.totalValue, '#050505'],
+    ];
+    items.forEach(([label, value, color], index) => {
+      const x = innerX + index * (boxW + gap);
+      rect(x, y, boxW, 78, 3, '#050505', 10);
+      drawCentered(label, x, y + 28, boxW, 16, 900, '#111111');
+      line(x + 14, y + 38, x + boxW - 14, y + 38, 2, '#e85f8a');
+      drawCentered(value, x, y + 65, boxW, 24, 850, String(color));
+    });
+    return y + 78 + sectionGap;
+  }
+
   function drawSummaryCards(y: number): number {
     const cardGap = 26;
     const cardW = (innerW - cardGap * 2) / 3;
@@ -1146,6 +1182,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   cursorY = drawInfoBox(cursorY);
   cursorY = drawProductTable(cursorY);
   cursorY = drawInstallmentTable(cursorY);
+  cursorY = drawDiscountStrip(cursorY);
   cursorY = drawSummaryCards(cursorY);
   cursorY = drawNotes(cursorY);
   line(innerX, receiptY + receiptH - 62, innerX + innerW / 2 - 28, receiptY + receiptH - 62, 2, '#e91862');

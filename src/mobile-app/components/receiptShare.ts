@@ -265,8 +265,8 @@ function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y:
   ctx.textAlign = 'left';
 }
 
-function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width = 4): void {
-  ctx.strokeStyle = BLACK;
+function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width = 4, color = BLACK): void {
+  ctx.strokeStyle = color;
   ctx.lineWidth = width;
   ctx.beginPath();
   ctx.moveTo(x1, y1);
@@ -462,7 +462,8 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
   const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
-  const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + 132 + 32 + 86;
+  const discountBlockH = data.discount > 0.009 ? 104 : 0;
+  const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + discountBlockH + 132 + 32 + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -558,6 +559,24 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   });
   y += tableH + 28;
 
+  if (data.discount > 0.009) {
+    const gap = 16;
+    const boxW = (INNER_W - gap * 2) / 3;
+    const items: Array<[string, string, string]> = [
+      ['SUBTOTAL', formatCurrency(data.subtotal || data.total + data.discount), BLACK],
+      ['DESCONTO', formatCurrency(data.discount), '#e12b67'],
+      ['TOTAL FINAL', formatCurrency(data.total), BLACK],
+    ];
+    items.forEach(([label, value, color], index) => {
+      const x = INNER_X + index * (boxW + gap);
+      drawRect(ctx, x, y, boxW, 78, 3);
+      drawCentered(ctx, label, x, y + 28, boxW, 16, 900, INK);
+      drawLine(ctx, x + 14, y + 38, x + boxW - 14, y + 38, 2, '#e85f8a');
+      drawCentered(ctx, value, x, y + 65, boxW, 24, 850, color);
+    });
+    y += 104;
+  }
+
   const paymentGap = 14;
   const paymentW = data.isCreditSale ? Math.floor(INNER_W * 0.58) : Math.floor(INNER_W * 0.68);
   const totalW = INNER_W - paymentW - paymentGap;
@@ -582,10 +601,6 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
       drawText(ctx, method, methodX + 38, y + 44, 23, active ? 950 : 750);
       methodX += 165;
     });
-    if (data.subtotal > 0 || data.discount > 0) {
-      drawText(ctx, `Subtotal: ${formatCurrency(data.subtotal || data.total + data.discount)}`, INNER_X + 28, y + 86, 21, 850);
-      if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 350, y + 86, 22, 900);
-    }
   }
   drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW + paymentGap, y + 72, totalW, 42, 900);
   y += 146;
