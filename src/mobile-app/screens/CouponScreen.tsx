@@ -95,7 +95,7 @@ async function renderCouponCanvas(form: CouponFormState): Promise<HTMLCanvasElem
   const couponCode = (form.code.trim() || buildDefaultCouponCode(discount)).slice(0, 26).toUpperCase();
 
   // Desconto principal dentro da área limpa da arte enviada.
-  const discountSize = discountText.length >= 2 ? 306 : 360;
+  const discountSize = discountText.length >= 2 ? 304 : 358;
   ctx.save();
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -107,12 +107,12 @@ async function renderCouponCanvas(form: CouponFormState): Promise<HTMLCanvasElem
   ctx.fillStyle = '#cc0000';
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 24;
-  ctx.strokeText(discountText, 410, 792);
-  ctx.fillText(discountText, 410, 792);
+  ctx.strokeText(discountText, 410, 780);
+  ctx.fillText(discountText, 410, 780);
   ctx.shadowColor = 'transparent';
   ctx.strokeStyle = '#8d0000';
   ctx.lineWidth = 4;
-  ctx.strokeText(discountText, 410, 792);
+  ctx.strokeText(discountText, 410, 780);
   ctx.restore();
 
   // Símbolo %.
@@ -123,11 +123,11 @@ async function renderCouponCanvas(form: CouponFormState): Promise<HTMLCanvasElem
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 14;
   ctx.fillStyle = '#d40000';
-  ctx.strokeText('%', 700, 660);
-  ctx.fillText('%', 700, 660);
+  ctx.strokeText('%', 700, 648);
+  ctx.fillText('%', 700, 648);
   ctx.strokeStyle = '#8d0000';
   ctx.lineWidth = 3;
-  ctx.strokeText('%', 700, 660);
+  ctx.strokeText('%', 700, 648);
   ctx.restore();
 
   // OFF.
@@ -138,39 +138,39 @@ async function renderCouponCanvas(form: CouponFormState): Promise<HTMLCanvasElem
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 14;
   ctx.fillStyle = '#d40000';
-  ctx.strokeText('OFF', 688, 782);
-  ctx.fillText('OFF', 688, 782);
+  ctx.strokeText('OFF', 688, 770);
+  ctx.fillText('OFF', 688, 770);
   ctx.strokeStyle = '#8d0000';
   ctx.lineWidth = 3;
-  ctx.strokeText('OFF', 688, 782);
+  ctx.strokeText('OFF', 688, 770);
   ctx.restore();
 
   // Nome do cliente: campo protegido para não escapar da margem.
   if (customerName) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(168, 1099, 820, 36);
+    ctx.rect(168, 1086, 820, 34);
     ctx.clip();
     ctx.fillStyle = '#24171f';
-    const fontSize = fitCanvasFont(ctx, customerName, 790, 28, 17, 850);
+    const fontSize = fitCanvasFont(ctx, customerName, 790, 27, 16, 850);
     ctx.font = `850 ${fontSize}px Arial, sans-serif`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(customerName.slice(0, 46), 176, 1117);
+    ctx.fillText(customerName.slice(0, 46), 176, 1103);
     ctx.restore();
   }
 
   // Código do cupom: centralizado e protegido dentro do campo branco.
   ctx.save();
   ctx.beginPath();
-  ctx.rect(420, 1202, 548, 62);
+  ctx.rect(420, 1189, 548, 62);
   ctx.clip();
   ctx.fillStyle = '#2e0b00';
-  const codeFont = fitCanvasFont(ctx, couponCode, 520, 50, 24, 900);
+  const codeFont = fitCanvasFont(ctx, couponCode, 520, 48, 23, 900);
   ctx.font = `900 ${codeFont}px Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(couponCode, 694, 1234);
+  ctx.fillText(couponCode, 694, 1220);
   ctx.restore();
 
   return canvas;
@@ -311,8 +311,8 @@ export function CouponScreen({ onNavigate }: CouponScreenProps): JSX.Element {
       <section className="mapp-panel mapp-coupon-hero">
         <div>
           <span className="mapp-coupon-kicker">Cupom promocional PNG</span>
-          <strong>Cupom centralizado com base limpa</strong>
-          <p>Desconto, nome e código entram dentro da própria foto, centralizados e protegidos para não escapar das margens.</p>
+          <strong>Cupom refinado com base limpa</strong>
+          <p>Desconto, nome e código entram dentro da própria foto, um pouco mais altos, centralizados e protegidos para não escapar das margens.</p>
         </div>
         <div className="mapp-coupon-hero-actions">
           <button type="button" className="secondary-btn" onClick={() => onNavigate?.('dashboard')}>Voltar</button>

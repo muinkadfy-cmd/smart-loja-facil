@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v192-cupom-centralizado-seguro';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v192-cupom-centralizado-seguro';
+export const WEB_APP_VERSION = 'pwa-supabase-v193-cupom-micro-ajuste-acima';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v193-cupom-micro-ajuste-acima';
 
 
 export interface WebTrainingModeState {
