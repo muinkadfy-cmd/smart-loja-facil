@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v207-desconto-unificado-comprovantes';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v207-desconto-unificado-comprovantes';
+export const WEB_APP_VERSION = 'pwa-supabase-v208-crediario-pro-correcao-segura';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v208-crediario-pro-correcao-segura';
 
 
 export interface WebTrainingModeState {
@@ -3049,6 +3049,7 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
   const method = normalizeCreditPaymentMethod(stringValue(source.method));
   const requestId = stringValue(source.request_id) || clientRequestId('pay');
   const redistribute = Boolean(source.settle_with_redistribution);
+  const moveShortfallToNext = Boolean(source.move_shortfall_to_next);
   if (!creditId || !installmentId) throw new Error('Parcela inválida para recebimento.');
   if (amount <= 0) throw new Error('Informe um valor maior que R$ 0,00.');
   if (!method) throw new Error('Escolha como o cliente pagou: dinheiro, PIX, cartão ou outro.');
@@ -3065,6 +3066,15 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
   if (amount > installmentOpen + 0.009 && !redistribute) {
     throw new Error('Esse valor parece maior que a parcela. Para abater próximas parcelas, marque a opção de redistribuir antes de confirmar.');
   }
+  const nextForShortfall = creditBefore.installments
+    .filter((item) => item.number > installmentBefore.number)
+    .sort((a, b) => a.number - b.number)[0] ?? null;
+  if (moveShortfallToNext && amount >= installmentOpen - 0.009) {
+    throw new Error('A opção de jogar falta para a próxima parcela só faz sentido quando o cliente paga menos que a parcela atual.');
+  }
+  if (moveShortfallToNext && !nextForShortfall) {
+    throw new Error('Não existe próxima parcela para receber a falta. Use pagamento parcial nesta parcela.');
+  }
   const client = await getClient();
   const { error } = await client.rpc('web_receive_credit_payment', {
     target_credit_id: creditId,
@@ -3075,9 +3085,140 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
     redistribute_remaining: redistribute,
   });
   if (error) throw new Error(`Não foi possível receber crediário no Supabase. Aplique a migration do Mega Lote 53 se ainda não aplicou. Detalhe: ${error.message}`);
+  if (moveShortfallToNext && nextForShortfall) {
+    const paidAfter = roundWebMoney(numberValue(installmentBefore.paid_amount) + amount);
+    const missing = roundWebMoney(Math.max(0, numberValue(installmentBefore.amount) - paidAfter));
+    const nextAmount = roundWebMoney(numberValue(nextForShortfall.amount) + missing);
+    const currentStatus = paidAfter > 0 ? 'paid' : 'open';
+    const nextPaid = numberValue(nextForShortfall.paid_amount);
+    const nextStatus = nextPaid >= nextAmount - 0.009 ? 'paid' : nextPaid > 0 ? 'partial' : 'open';
+    const { error: currentError } = await client.from('credit_installments').update({ amount: paidAfter, paid_amount: paidAfter, status: currentStatus, paid_at: new Date().toISOString(), payment_method: method }).eq('id', installmentId).eq('store_id', context.store.id);
+    if (currentError) throw new Error(`Pagamento recebido, mas não consegui mover a falta da parcela atual: ${currentError.message}`);
+    const { error: nextError } = await client.from('credit_installments').update({ amount: nextAmount, status: nextStatus, paid_at: nextStatus === 'paid' ? (nextForShortfall.paid_at || new Date().toISOString()) : null }).eq('id', nextForShortfall.id).eq('store_id', context.store.id);
+    if (nextError) throw new Error(`Pagamento recebido, mas não consegui aumentar a próxima parcela: ${nextError.message}`);
+    await insertAudit(context.store.id, context.userId, 'credit_installments', installmentId, 'shortfall_moved_to_next', { amount, missing, next_installment_id: nextForShortfall.id, reason: stringValue(source.correction_reason) || 'Cliente pagou menos; falta movida para a próxima parcela.' });
+  }
   const credits = await webCredits();
   const credit = credits.find((item) => item.id === creditId);
   if (!credit) throw new Error('Recebimento gravado, mas o crediário não foi encontrado na atualização.');
+  return credit;
+}
+
+
+function roundWebMoney(value: number): number {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function installmentCloudStatusFromAmounts(amount: number, paid: number): 'open' | 'partial' | 'paid' {
+  if (paid >= amount - 0.009) return 'paid';
+  if (paid > 0.009) return 'partial';
+  return 'open';
+}
+
+function assertCreditEditReason(reason: string): string {
+  const clean = reason.trim();
+  if (clean.length < 6) throw new Error('Informe o motivo da alteração com pelo menos 6 letras.');
+  return clean.slice(0, 320);
+}
+
+export async function webAdjustCreditInstallment(payload: unknown): Promise<CreditSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'ajustar parcela do crediário');
+  assertWebTrainingModeAllowsWrite('ajustar parcela real');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const installmentId = stringValue(source.installment_id);
+  const newAmount = roundWebMoney(numberValue(source.amount));
+  const dueDate = stringValue(source.due_date).slice(0, 10);
+  const reason = assertCreditEditReason(stringValue(source.reason));
+  const redistribute = Boolean(source.redistribute_difference_to_next);
+  if (!creditId || !installmentId) throw new Error('Parcela inválida para ajuste.');
+  if (newAmount <= 0) throw new Error('O novo valor da parcela precisa ser maior que R$ 0,00.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) throw new Error('Informe um vencimento válido.');
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
+  const installmentBefore = creditBefore?.installments.find((item) => item.id === installmentId);
+  if (!creditBefore || !installmentBefore) throw new Error('Parcela não encontrada para ajuste.');
+  const paidBefore = roundWebMoney(numberValue(installmentBefore.paid_amount));
+  if (newAmount < paidBefore - 0.009) throw new Error('O novo valor não pode ser menor que o valor já pago. Faça estorno antes de reduzir abaixo do pago.');
+  const oldAmount = roundWebMoney(numberValue(installmentBefore.amount));
+  const delta = roundWebMoney(newAmount - oldAmount);
+  const client = await getClient();
+  const next = creditBefore.installments.filter((item) => item.number > installmentBefore.number).sort((a, b) => a.number - b.number)[0] ?? null;
+  let nextPayload: Record<string, unknown> | null = null;
+  if (redistribute && Math.abs(delta) > 0.009) {
+    if (!next) throw new Error('Não existe próxima parcela para compensar a diferença. Desmarque a compensação.');
+    const nextOldAmount = roundWebMoney(numberValue(next.amount));
+    const nextPaid = roundWebMoney(numberValue(next.paid_amount));
+    const nextNewAmount = roundWebMoney(nextOldAmount - delta);
+    if (nextNewAmount < nextPaid - 0.009 || nextNewAmount <= 0) throw new Error('A compensação deixaria a próxima parcela menor que o valor já pago. Faça estorno ou ajuste manual.');
+    nextPayload = { amount: nextNewAmount, status: installmentCloudStatusFromAmounts(nextNewAmount, nextPaid), paid_at: nextPaid >= nextNewAmount - 0.009 ? (next.paid_at || new Date().toISOString()) : null };
+  }
+  const currentPayload = { amount: newAmount, due_date: dueDate, status: installmentCloudStatusFromAmounts(newAmount, paidBefore), paid_at: paidBefore >= newAmount - 0.009 ? (installmentBefore.paid_at || new Date().toISOString()) : null };
+  const { error: installmentError } = await client.from('credit_installments').update(currentPayload).eq('id', installmentId).eq('store_id', context.store.id);
+  if (installmentError) throw new Error(`Não foi possível ajustar a parcela: ${installmentError.message}`);
+  if (next && nextPayload) {
+    const { error: nextError } = await client.from('credit_installments').update(nextPayload).eq('id', next.id).eq('store_id', context.store.id);
+    if (nextError) throw new Error(`Parcela atual ajustada, mas falhou a compensação na próxima: ${nextError.message}`);
+  } else if (Math.abs(delta) > 0.009) {
+    const newTotal = roundWebMoney(numberValue(creditBefore.total) + delta);
+    const newBalance = roundWebMoney(Math.max(0, numberValue(creditBefore.balance) + delta));
+    const { error: creditError } = await client.from('credits').update({ total: newTotal, balance: newBalance, status: newBalance <= 0.009 ? 'paid' : 'open' }).eq('id', creditId).eq('store_id', context.store.id);
+    if (creditError) throw new Error(`Parcela ajustada, mas falhou o saldo da nota: ${creditError.message}`);
+  }
+  await insertAudit(context.store.id, context.userId, 'credit_installments', installmentId, 'adjusted', { old_amount: oldAmount, new_amount: newAmount, old_due_date: installmentBefore.due_date, new_due_date: dueDate, redistributed_to_next: Boolean(nextPayload), next_installment_id: nextPayload ? next?.id : null, reason });
+  const credits = await webCredits();
+  const credit = credits.find((item) => item.id === creditId);
+  if (!credit) throw new Error('Parcela ajustada, mas o crediário não foi encontrado na atualização.');
+  return credit;
+}
+
+export async function webCorrectCreditPayment(payload: unknown): Promise<CreditSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'corrigir pagamento do crediário');
+  assertWebTrainingModeAllowsWrite('corrigir pagamento real');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const installmentId = stringValue(source.installment_id);
+  const amount = roundWebMoney(numberValue(source.amount));
+  const method = normalizeCreditPaymentMethod(stringValue(source.method)) || 'dinheiro';
+  const reason = assertCreditEditReason(stringValue(source.reason));
+  if (!creditId || !installmentId) throw new Error('Parcela inválida para correção.');
+  if (amount <= 0) throw new Error('Informe o valor a estornar.');
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
+  const installmentBefore = creditBefore?.installments.find((item) => item.id === installmentId);
+  if (!creditBefore || !installmentBefore) throw new Error('Parcela não encontrada para correção.');
+  const paidTotal = creditBefore.installments.reduce((sum, item) => sum + numberValue(item.paid_amount), 0);
+  if (amount > paidTotal + 0.009) throw new Error('O estorno não pode ser maior que o total já pago no crediário.');
+  const client = await getClient();
+  let remainingRefund = amount;
+  const affected: Array<{ id: string; number: number; refunded: number; paid_after: number }> = [];
+  const targets = creditBefore.installments
+    .filter((item) => item.number >= installmentBefore.number && numberValue(item.paid_amount) > 0)
+    .sort((a, b) => a.number - b.number);
+  for (const item of targets) {
+    if (remainingRefund <= 0.009) break;
+    const paid = roundWebMoney(numberValue(item.paid_amount));
+    const refund = roundWebMoney(Math.min(paid, remainingRefund));
+    const paidAfter = roundWebMoney(paid - refund);
+    const amountValue = roundWebMoney(numberValue(item.amount));
+    const status = installmentCloudStatusFromAmounts(amountValue, paidAfter);
+    const { error } = await client.from('credit_installments').update({ paid_amount: paidAfter, status, paid_at: status === 'paid' ? (item.paid_at || new Date().toISOString()) : null, payment_method: paidAfter > 0 ? (item.payment_method || method) : null }).eq('id', item.id).eq('store_id', context.store.id);
+    if (error) throw new Error(`Não foi possível estornar a parcela ${item.number}: ${error.message}`);
+    affected.push({ id: item.id, number: item.number, refunded: refund, paid_after: paidAfter });
+    remainingRefund = roundWebMoney(remainingRefund - refund);
+  }
+  if (remainingRefund > 0.009) throw new Error('Não encontrei pagamento suficiente nesta parcela/próximas para estornar. Escolha a parcela correta ou reduza o valor.');
+  const newBalance = roundWebMoney(numberValue(creditBefore.balance) + amount);
+  const { error: creditError } = await client.from('credits').update({ balance: newBalance, status: newBalance <= 0.009 ? 'paid' : 'open' }).eq('id', creditId).eq('store_id', context.store.id);
+  if (creditError) throw new Error(`Estorno aplicado nas parcelas, mas falhou o saldo da nota: ${creditError.message}`);
+  const { error: cashError } = await client.from('cash_movements').insert({ store_id: context.store.id, type: 'saida', method, amount, reason: `Estorno crediário: ${reason}`, created_by: context.userId });
+  if (cashError) throw new Error(`Estorno aplicado no crediário, mas não consegui lançar a saída no caixa: ${cashError.message}`);
+  await insertAudit(context.store.id, context.userId, 'credits', creditId, 'payment_corrected_refund', { amount, method, reason, affected });
+  const credits = await webCredits();
+  const credit = credits.find((item) => item.id === creditId);
+  if (!credit) throw new Error('Correção aplicada, mas o crediário não foi encontrado na atualização.');
   return credit;
 }
 

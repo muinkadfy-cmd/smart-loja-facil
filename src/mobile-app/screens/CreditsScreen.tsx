@@ -34,6 +34,25 @@ type ReceiveState = {
   amount: string;
   method: CreditPaymentMethod | '';
   redistribute: boolean;
+  moveShortfallToNext: boolean;
+};
+
+type EditInstallmentState = {
+  credit: CreditSummary;
+  installment: CreditInstallment;
+  amount: string;
+  dueDate: string;
+  reason: string;
+  redistributeDifferenceToNext: boolean;
+};
+
+type CorrectionState = {
+  credit: CreditSummary;
+  installment: CreditInstallment;
+  mode: 'estorno' | 'complemento';
+  amount: string;
+  method: CreditPaymentMethod | '';
+  reason: string;
 };
 
 const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
@@ -93,6 +112,19 @@ function creditOpenInstallments(credit: CreditSummary): CreditInstallment[] {
     .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number);
 }
 
+function nextInstallmentAfter(credit: CreditSummary, installment: CreditInstallment): CreditInstallment | null {
+  return [...credit.installments]
+    .filter((item) => item.number > installment.number)
+    .sort((a, b) => a.number - b.number)[0] ?? null;
+}
+
+function installmentInputDate(value: string): string {
+  if (!value) return '';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
 function creditPaidTotal(credit: CreditSummary): number {
   return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
 }
@@ -138,6 +170,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [filter, setFilter] = useState<CreditFilter>('aberto');
   const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [receive, setReceive] = useState<ReceiveState | null>(null);
+  const [editInstallment, setEditInstallment] = useState<EditInstallmentState | null>(null);
+  const [correction, setCorrection] = useState<CorrectionState | null>(null);
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -242,7 +276,114 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       amount: amount.toFixed(2),
       method: 'dinheiro',
       redistribute: credit.installments.some((item) => item.number > installment.number && item.status !== 'pago'),
+      moveShortfallToNext: false,
     });
+  }
+
+  function openEditInstallment(credit: CreditSummary, installment: CreditInstallment): void {
+    setFeedback({ tone: 'info', text: 'Ajuste aberto. Edite valor/vencimento com motivo para manter auditoria.' });
+    setEditInstallment({
+      credit,
+      installment,
+      amount: Number(installment.amount || 0).toFixed(2),
+      dueDate: installmentInputDate(installment.due_date),
+      reason: '',
+      redistributeDifferenceToNext: Boolean(nextInstallmentAfter(credit, installment)),
+    });
+  }
+
+  function openCorrection(credit: CreditSummary, installment: CreditInstallment, mode: 'estorno' | 'complemento'): void {
+    const defaultAmount = mode === 'estorno' ? Math.max(0, paidOf(installment)) : Math.max(0, remainingOf(installment));
+    setFeedback({ tone: 'info', text: mode === 'estorno' ? 'Informe o valor errado para estornar com motivo.' : 'Informe o complemento que faltou receber.' });
+    setCorrection({ credit, installment, mode, amount: defaultAmount.toFixed(2), method: 'dinheiro', reason: '' });
+  }
+
+  async function submitEditInstallment(): Promise<void> {
+    if (!editInstallment || saving) return;
+    const amountPreview = parseBrazilianMoneyInput(editInstallment.amount);
+    const reason = editInstallment.reason.trim();
+    if (!amountPreview.ok) {
+      setFeedback({ tone: 'error', text: amountPreview.message });
+      return;
+    }
+    if (!editInstallment.dueDate) {
+      setFeedback({ tone: 'error', text: 'Informe o vencimento correto da parcela.' });
+      return;
+    }
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras para auditoria.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.adjustCreditInstallment({
+        request_id: requestId('credit-edit'),
+        credit_id: editInstallment.credit.id,
+        installment_id: editInstallment.installment.id,
+        amount: amountPreview.amount,
+        due_date: editInstallment.dueDate,
+        reason,
+        redistribute_difference_to_next: editInstallment.redistributeDifferenceToNext,
+      });
+      setEditInstallment(null);
+      setFeedback({ tone: 'success', text: 'Parcela ajustada com auditoria. Valor, vencimento e saldo foram recalculados.' });
+      await loadCredits();
+      onRefresh();
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitCorrection(): Promise<void> {
+    if (!correction || saving) return;
+    const amountPreview = parseBrazilianMoneyInput(correction.amount);
+    const reason = correction.reason.trim();
+    if (!amountPreview.ok) {
+      setFeedback({ tone: 'error', text: amountPreview.message });
+      return;
+    }
+    if (!correction.method) {
+      setFeedback({ tone: 'error', text: 'Escolha a forma do acerto para o caixa.' });
+      return;
+    }
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe o motivo da correção para auditoria.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      if (correction.mode === 'complemento') {
+        await api.receiveInstallment({
+          request_id: requestId('credit-complement'),
+          credit_id: correction.credit.id,
+          installment_id: correction.installment.id,
+          amount: amountPreview.amount,
+          method: correction.method,
+          settle_with_redistribution: false,
+          user_confirmed: true,
+          correction_reason: reason,
+        });
+      } else {
+        await api.correctCreditPayment({
+          request_id: requestId('credit-refund'),
+          credit_id: correction.credit.id,
+          installment_id: correction.installment.id,
+          amount: amountPreview.amount,
+          method: correction.method,
+          reason,
+        });
+      }
+      setCorrection(null);
+      setFeedback({ tone: 'success', text: correction.mode === 'estorno' ? 'Estorno lançado com auditoria e caixa ajustado.' : 'Complemento recebido com auditoria.' });
+      await loadCredits();
+      onRefresh();
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
   }
 
   function buildCurrentReview(): CreditPaymentReview | null {
@@ -282,6 +423,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         amount: review.amount,
         method: review.method,
         settle_with_redistribution: receive.redistribute,
+        move_shortfall_to_next: receive.moveShortfallToNext,
         user_confirmed: true,
         typed_amount_preview: review.formattedAmount,
         before_after: {
@@ -381,7 +523,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
       <section className="mapp-success-card mapp-credit-help-card">
         <strong>Receba parcelas com conferência</strong>
-        <span>Toque na nota para abrir/recolher. Use Ver recibo para comprovante da parcela e Ver extrato para a nota inteira.</span>
+        <span>Toque na nota para abrir/recolher. Agora você pode editar vencimento/valor, receber, lançar complemento ou estornar valor errado com auditoria.</span>
       </section>
 
       {summary.overdueCount ? (
@@ -414,6 +556,100 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         </div>
       </section>
 
+      {editInstallment ? (
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setEditInstallment(null)}>
+          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Editar parcela" onClick={(event) => event.stopPropagation()}>
+            <span className="mapp-receive-drawer-grip" aria-hidden="true" />
+            <div className="mapp-form-head">
+              <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
+              <div>
+                <strong>Editar parcela {formatNumber(editInstallment.installment.number)}</strong>
+                <p>{editInstallment.credit.customer_name} · venda #{String(editInstallment.credit.sale_number).padStart(4, '0')}</p>
+              </div>
+            </div>
+            <div className="mapp-sale-total-box">
+              <div><span>Valor atual</span><strong>{formatCurrency(editInstallment.installment.amount)}</strong></div>
+              <div><span>Pago</span><strong>{formatCurrency(paidOf(editInstallment.installment))}</strong></div>
+              <div><span>Saldo</span><strong>{formatCurrency(remainingOf(editInstallment.installment))}</strong></div>
+            </div>
+            <div className="mapp-form-grid">
+              <label>
+                <span>Novo valor da parcela</span>
+                <input inputMode="decimal" value={editInstallment.amount} onChange={(event) => setEditInstallment({ ...editInstallment, amount: event.target.value })} placeholder="Ex.: 100,00" />
+              </label>
+              <label>
+                <span>Novo vencimento</span>
+                <input type="date" value={editInstallment.dueDate} onChange={(event) => setEditInstallment({ ...editInstallment, dueDate: event.target.value })} />
+              </label>
+              <label className="span-2 mapp-check-field">
+                <input type="checkbox" checked={editInstallment.redistributeDifferenceToNext} onChange={(event) => setEditInstallment({ ...editInstallment, redistributeDifferenceToNext: event.target.checked })} disabled={!nextInstallmentAfter(editInstallment.credit, editInstallment.installment)} />
+                <span>Compensar diferença na próxima parcela para manter o total da nota</span>
+              </label>
+              <label className="span-2">
+                <span>Motivo obrigatório</span>
+                <textarea value={editInstallment.reason} onChange={(event) => setEditInstallment({ ...editInstallment, reason: event.target.value })} placeholder="Ex.: cliente pediu mudança de vencimento / valor lançado errado" rows={3} />
+              </label>
+            </div>
+            <section className="mapp-credit-payment-review ok">
+              <strong>Prévia segura</strong>
+              <p>Não apaga histórico. O ajuste recalcula saldo, mantém auditoria e bloqueia valor menor que o já pago.</p>
+            </section>
+            <div className="mapp-form-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setEditInstallment(null)}>Cancelar</button>
+              <button type="button" className="mapp-primary-button" onClick={() => void submitEditInstallment()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar ajuste'}</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {correction ? (
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setCorrection(null)}>
+          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Corrigir pagamento" onClick={(event) => event.stopPropagation()}>
+            <span className="mapp-receive-drawer-grip" aria-hidden="true" />
+            <div className="mapp-form-head">
+              <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
+              <div>
+                <strong>{correction.mode === 'estorno' ? 'Estornar valor errado' : 'Receber complemento'}</strong>
+                <p>{correction.credit.customer_name} · parcela {formatNumber(correction.installment.number)}</p>
+              </div>
+            </div>
+            <div className="mapp-sale-total-box">
+              <div><span>Original</span><strong>{formatCurrency(correction.installment.amount)}</strong></div>
+              <div><span>Pago</span><strong>{formatCurrency(paidOf(correction.installment))}</strong></div>
+              <div><span>Saldo</span><strong>{formatCurrency(remainingOf(correction.installment))}</strong></div>
+            </div>
+            <div className="mapp-form-grid">
+              <label>
+                <span>{correction.mode === 'estorno' ? 'Valor a estornar' : 'Valor complementar'}</span>
+                <input inputMode="decimal" value={correction.amount} onChange={(event) => setCorrection({ ...correction, amount: event.target.value })} placeholder="Ex.: 10,00" />
+              </label>
+              <label>
+                <span>Forma no caixa</span>
+                <select value={correction.method} onChange={(event) => setCorrection({ ...correction, method: event.target.value as CreditPaymentMethod | '' })}>
+                  <option value="">Escolha</option>
+                  <option value="dinheiro">Dinheiro</option>
+                  <option value="pix">Pix</option>
+                  <option value="cartao">Cartão</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </label>
+              <label className="span-2">
+                <span>Motivo obrigatório</span>
+                <textarea value={correction.reason} onChange={(event) => setCorrection({ ...correction, reason: event.target.value })} placeholder="Ex.: valor digitado errado / forma errada / cliente pagou complemento" rows={3} />
+              </label>
+            </div>
+            <section className={`mapp-credit-payment-review ${correction.mode === 'estorno' ? 'blocked' : 'ok'}`}>
+              <strong>{correction.mode === 'estorno' ? 'Estorno com caixa' : 'Complemento seguro'}</strong>
+              <p>{correction.mode === 'estorno' ? 'Lança saída no caixa, devolve saldo ao crediário e preserva histórico.' : 'Lança novo recebimento sem apagar o pagamento anterior.'}</p>
+            </section>
+            <div className="mapp-form-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setCorrection(null)}>Cancelar</button>
+              <button type="button" className="mapp-primary-button" onClick={() => void submitCorrection()} disabled={saving}>{saving ? 'Corrigindo...' : 'Confirmar correção'}</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
       {receive ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { setReceive(null); setPaymentReview(null); }}>
         <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Receber parcela" onClick={(event) => event.stopPropagation()}>
@@ -442,7 +678,11 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             </label>
             <label className="span-2 mapp-check-field">
               <input type="checkbox" checked={receive.redistribute} onChange={(event) => { setReceive({ ...receive, redistribute: event.target.checked }); setPaymentReview(null); }} />
-              <span>Redistribuir diferença nas próximas parcelas</span>
+              <span>Abater sobra nas próximas parcelas quando pagar a mais</span>
+            </label>
+            <label className="span-2 mapp-check-field">
+              <input type="checkbox" checked={receive.moveShortfallToNext} onChange={(event) => { setReceive({ ...receive, moveShortfallToNext: event.target.checked }); setPaymentReview(null); }} disabled={!nextInstallmentAfter(receive.credit, receive.installment)} />
+              <span>Se pagar a menos, jogar a falta para a próxima parcela</span>
             </label>
           </div>
           <div className="mapp-sale-total-box">
@@ -477,6 +717,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 <span>Restante depois do pagamento <b>{formatCurrency(paymentReview.remainingAfter)}</b></span>
                 <span>Status depois do pagamento <b>{paymentReview.statusAfter}</b></span>
                 <span>Abatimento em próximas parcelas <b>{paymentReview.applyToFuture > 0 ? formatCurrency(paymentReview.applyToFuture) : 'Não haverá'}</b></span>
+                <span>Falta jogada para próxima <b>{receive.moveShortfallToNext && paymentReview.missing > 0 ? formatCurrency(paymentReview.missing) : 'Não haverá'}</b></span>
                 <span>Forma de pagamento <b>{creditPaymentMethodLabel(paymentReview.method)}</b></span>
               </div>
               <small>Se recebeu errado, registre a correção com cuidado no caixa/crediário ou procure o responsável.</small>
@@ -562,8 +803,15 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                         <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                         <div className="mapp-installment-actions mapp-installment-actions-slim">
                           <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit, installment)}>Ver recibo</button>
+                          <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, installment)}>Editar</button>
+                          {paidOf(installment) > 0.009 ? (
+                            <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'estorno')}>Estornar</button>
+                          ) : null}
                           {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
-                            <button type="button" className="mapp-primary-button" onClick={() => openReceive(credit, installment)}>Receber</button>
+                            <>
+                              <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'complemento')}>Complemento</button>
+                              <button type="button" className="mapp-primary-button" onClick={() => openReceive(credit, installment)}>Receber</button>
+                            </>
                           ) : null}
                         </div>
                       </div>

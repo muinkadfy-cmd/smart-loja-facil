@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.207",
+  "version": "0.1.208",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com desconto unificado em comprovantes, extrato, vendas recentes e atividades recentes v207",
+  "description": "PWA da loja com Crediário Pro: editar parcela, estornar, complementar e mover falta/sobra com auditoria v208",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

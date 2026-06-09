@@ -49,6 +49,8 @@ import {
   webOpenCash,
   webReceipts,
   webReceiveInstallment,
+  webAdjustCreditInstallment,
+  webCorrectCreditPayment,
   webReportData,
   webReportsCsv,
   webRestoreBackupContent,
@@ -124,6 +126,8 @@ const SOUND_COMMANDS = new Set([
   'add_cash_movement',
   'receive_installment',
   'receive_installment_flex',
+  'adjust_credit_installment',
+  'correct_credit_payment',
   'create_order',
   'set_order_status',
   'cancel_order',
@@ -207,6 +211,14 @@ export const api = {
   receiveInstallment: (payload: unknown) => {
     const paymentPayload = withRequestId(payload, 'pay');
     return isTauriRuntime() ? call<CreditSummary>('receive_installment_flex', { payload }) : webCall('Crediário', 'Recebimento sincronizado na nuvem.', () => { guardDemoWrite('receber crediário'); return webReceiveInstallment(paymentPayload); }, { action: 'receiveInstallment', payload: { payload: paymentPayload } });
+  },
+  adjustCreditInstallment: (payload: unknown) => {
+    const editPayload = withRequestId(payload, 'credit-edit');
+    return isTauriRuntime() ? call<CreditSummary>('adjust_credit_installment', { payload: editPayload }) : webCall('Crediário', 'Parcela ajustada na nuvem.', () => { guardDemoWrite('ajustar parcela do crediário'); return webAdjustCreditInstallment(editPayload); }, { action: 'receiveInstallment', payload: { payload: editPayload } });
+  },
+  correctCreditPayment: (payload: unknown) => {
+    const correctionPayload = withRequestId(payload, 'credit-correction');
+    return isTauriRuntime() ? call<CreditSummary>('correct_credit_payment', { payload: correctionPayload }) : webCall('Crediário', 'Correção do pagamento sincronizada.', () => { guardDemoWrite('corrigir pagamento do crediário'); return webCorrectCreditPayment(correctionPayload); }, { action: 'receiveInstallment', payload: { payload: correctionPayload } });
   },
   orders: () => (isTauriRuntime() ? call<OrderSummary[]>('list_orders') : webRead('Pedidos', 'Pedidos carregados da nuvem.', webOrders, webDemoOrders)),
   createOrder: (payload: unknown) => {

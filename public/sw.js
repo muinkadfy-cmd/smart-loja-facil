@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v207-desconto-unificado-comprovantes';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v208-crediario-pro-correcao-segura';
 const APP_SHELL = [
   '/',
   '/index.html',
