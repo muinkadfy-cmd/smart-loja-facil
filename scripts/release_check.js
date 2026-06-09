@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v191-cupom-base-limpa';
-const currentCache = 'smart-loja-pwa-supabase-v191-cupom-base-limpa';
+const currentVersion = 'pwa-supabase-v192-cupom-centralizado-seguro';
+const currentCache = 'smart-loja-pwa-supabase-v192-cupom-centralizado-seguro';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v191 cupom base limpa.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v191 cupom base limpa.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v192 cupom centralizado seguro.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v192 cupom centralizado seguro.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v191 PWA passou. cupom PNG base limpa e campos dentro da arte conferidos.');
+console.log('OK: release_check v192 PWA passou. cupom PNG centralizado e campos protegidos conferidos.');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v191-cupom-base-limpa';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v192-cupom-centralizado-seguro';
 const APP_SHELL = [
   '/',
   '/index.html',

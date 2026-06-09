@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v191",
-  "short_name": "Jaque v191",
-  "description": "PWA da loja Jaque Confecções e Presentes v191 com cupom PNG em base limpa e campos dentro da arte.",
+  "name": "Jaque Confecções e Presentes v192",
+  "short_name": "Jaque v192",
+  "description": "PWA da loja Jaque Confecções e Presentes v192 com cupom PNG centralizado e campos protegidos.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
