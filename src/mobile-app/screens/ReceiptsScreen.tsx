@@ -1149,7 +1149,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawCentered('PAGO', titleX + titleW - 190, titleY + 37, 184, 27, 900, '#ffffff');
     drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 57, 184, 13, 800, '#ffffff');
   } else {
-    drawStatusToken(data.status, titleX + titleW - 172, titleY + 78, 150, 50);
+    drawStatusToken(data.status, titleX + titleW - 172, titleY + 72, 150, 50);
   }
 
   let cursorY = receiptY + headerH;

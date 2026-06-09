@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v201-comprovante-fontes-maiores';
-const currentCache = 'smart-loja-pwa-supabase-v201-comprovante-fontes-maiores';
+const currentVersion = 'pwa-supabase-v202-card-aberta-acima';
+const currentCache = 'smart-loja-pwa-supabase-v202-card-aberta-acima';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v201 comprovante fontes maiores.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v201 comprovante fontes maiores.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v202 card aberta acima.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v202 card aberta acima.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v201 PWA passou. comprovante fontes maiores e icones vetoriais conferidos.');
+console.log('OK: release_check v202 PWA passou. card aberta acima e icones vetoriais conferidos.');
