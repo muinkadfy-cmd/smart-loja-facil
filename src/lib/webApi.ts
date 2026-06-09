@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v199-comprovante-tipografia-aberta';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v199-comprovante-tipografia-aberta';
+export const WEB_APP_VERSION = 'pwa-supabase-v200-sora-comprovantes-unificados';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v200-sora-comprovantes-unificados';
 
 
 export interface WebTrainingModeState {

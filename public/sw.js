@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v199-comprovante-tipografia-aberta';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v200-sora-comprovantes-unificados';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -84,7 +84,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname.startsWith('/coupons/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname.startsWith('/coupons/') || url.pathname.startsWith('/fonts/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(cacheFirst(event.request));
     return;
   }

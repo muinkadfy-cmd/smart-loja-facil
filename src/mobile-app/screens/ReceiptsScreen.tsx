@@ -720,7 +720,18 @@ function triggerFileDownload(fileName: string, blob: Blob): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+
+async function ensureSoraReceiptFont(): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts?.load) return;
+  await Promise.allSettled([
+    document.fonts.load('400 19px "Sora"'),
+    document.fonts.load('600 19px "Sora"'),
+    document.fonts.load('850 24px "Sora"'),
+  ]);
+}
+
 async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<{ fileName: string; blob: Blob }> {
+  await ensureSoraReceiptFont();
   const data = getPdfReceiptData(preview);
   const storeName = receiptStoreName(store);
   const productRows = (data.productRows ?? []).slice(0, 8);
@@ -764,7 +775,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   }
 
   function setFont(size: number, weight = 650): void {
-    ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+    ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   }
 
   function cleanCanvasText(value: string): string {

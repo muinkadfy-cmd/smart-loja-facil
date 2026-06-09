@@ -201,7 +201,7 @@ function parseData(sale: SaleSummary, receipt: ReceiptSummary): ReceiptRenderDat
 }
 
 function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, size: number, weight = 700): string[] {
-  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   const words = safeText(text).split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = '';
@@ -239,7 +239,7 @@ async function loadImage(src: string): Promise<HTMLImageElement | null> {
 
 function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, weight = 700, color = INK): void {
   ctx.fillStyle = color;
-  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(safeText(text), x, y);
@@ -247,7 +247,7 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 
 function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, size: number, weight = 800, color = INK): void {
   ctx.fillStyle = color;
-  ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(safeText(text), x + width / 2, y);
@@ -434,7 +434,18 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
   drawCentered(ctx, label, x, y + 23, w, fontSize, 850, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
 }
 
+
+async function ensureSoraReceiptFont(): Promise<void> {
+  if (typeof document === 'undefined' || !document.fonts?.load) return;
+  await Promise.allSettled([
+    document.fonts.load('400 19px "Sora"'),
+    document.fonts.load('600 19px "Sora"'),
+    document.fonts.load('850 24px "Sora"'),
+  ]);
+}
+
 async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasElement> {
+  await ensureSoraReceiptFont();
   const productRows = data.productRows.slice(0, 8);
   const measurer = document.createElement('canvas').getContext('2d');
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');

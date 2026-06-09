@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v199",
-  "short_name": "Jaque v199",
-  "description": "PWA da loja v199 com vencimento e descrição no mesmo tamanho, sem negrito, e badge ABERTA ajustada.",
+  "name": "Jaque Confecções e Presentes v200",
+  "short_name": "Jaque v200",
+  "description": "PWA da loja v200 com fonte Sora, comprovantes unificados e compartilhamento em PDF/PNG.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

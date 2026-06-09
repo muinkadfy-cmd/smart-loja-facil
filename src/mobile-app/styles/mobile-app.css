@@ -1,5 +1,34 @@
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-SemiBold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Bold.ttf") format("truetype");
+  font-weight: 800 950;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Sora", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #0b1933;
   background: #f2f6fb;
   --mapp-bg: #f2f6fb;
@@ -29,6 +58,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 button, input, select, textarea { font: inherit; }
+body, .mapp-root, .welcome-screen { font-family: "Sora", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button { cursor: pointer; }
 img, svg { max-width: 100%; }
 .mapp-root .app-svg-icon {

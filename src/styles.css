@@ -1,6 +1,35 @@
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-SemiBold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("/fonts/Sora-Bold.ttf") format("truetype");
+  font-weight: 800 950;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
-  font-family: Inter, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Sora", Inter, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --app-bg: #eef3f8;
   --app-surface: #ffffff;
   --app-surface-soft: #f7f9fc;
