@@ -743,7 +743,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const receiptW = width - outerPad * 2;
   const innerX = receiptX + 28;
   const innerW = receiptW - 56;
-  const headerH = 304;
+  const headerH = 324;
   const clientH = 258;
   const sectionGap = 26;
   const productRowH = 82;
@@ -1049,7 +1049,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
       const rowY = y + 44 + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
       drawCentered(row.qtd, innerX, rowY + 47, columns[0], 22, 650);
-      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 45, columns[1] - 34, 22, 650, 2, 5);
+      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 50, columns[1] - 34, 22, 650, 2, 5);
       drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 47, columns[2], 22, 650);
       drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 47, columns[3], 22, 650);
     });
@@ -1138,9 +1138,9 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   line(titleX, titleY - 14, titleX + titleW, titleY - 14, 3, '#e91862');
   drawMetaIcon(titleX + 6, titleY + 4, 'calendar');
   drawText(data.subtitle, titleX + 64, titleY + 36, 20, 650);
-  drawMetaIcon(titleX + 6, titleY + 74, 'tag');
-  drawText('Status:', titleX + 64, titleY + 106, 24, 750);
-  drawText(data.status, titleX + 148, titleY + 106, 24, 850, '#e91862');
+  drawMetaIcon(titleX + 6, titleY + 60, 'tag');
+  drawText('Status:', titleX + 64, titleY + 92, 24, 750);
+  drawText(data.status, titleX + 148, titleY + 92, 24, 850, '#e91862');
 
   let cursorY = receiptY + headerH;
   cursorY = drawInfoBox(cursorY);

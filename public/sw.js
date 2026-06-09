@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v205-extrato-sem-anotacoes';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v206-comprovante-crediario-alinhado';
 const APP_SHELL = [
   '/',
   '/index.html',

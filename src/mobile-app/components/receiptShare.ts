@@ -462,7 +462,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
   const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
-  const receiptH = 292 + 236 + 26 + 54 + productsTableH + 26 + 132 + 32 + 86;
+  const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + 132 + 32 + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -497,11 +497,11 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawLine(ctx, titleX, titleY - 14, titleX + titleW, titleY - 14, 4);
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 4, 'calendar');
   drawText(ctx, `${data.subtitle} - ${data.date}`, titleX + 64, titleY + 36, 20, 700, MUTED);
-  drawMetaReceiptIcon(ctx, titleX + 6, titleY + 74, 'tag');
-  drawText(ctx, 'Status:', titleX + 64, titleY + 106, 24, 750);
-  drawText(ctx, data.status, titleX + 148, titleY + 106, 24, 850, '#e91862');
+  drawMetaReceiptIcon(ctx, titleX + 6, titleY + 60, 'tag');
+  drawText(ctx, 'Status:', titleX + 64, titleY + 92, 24, 750);
+  drawText(ctx, data.status, titleX + 148, titleY + 92, 24, 850, '#e91862');
 
-  let y = RECEIPT_Y + 292;
+  let y = RECEIPT_Y + 316;
   drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
   const labelX = INNER_X + 86;
   const valueX = INNER_X + 318;
@@ -546,7 +546,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
     drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 22, 650);
-    let productTextY = rowY + 38;
+    let productTextY = rowY + 43;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
       drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
@@ -558,15 +558,19 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   });
   y += tableH + 28;
 
-  const paymentW = data.isCreditSale ? Math.floor(INNER_W * 0.56) : Math.floor(INNER_W * 0.68);
+  const paymentGap = 14;
+  const paymentW = data.isCreditSale ? Math.floor(INNER_W * 0.58) : Math.floor(INNER_W * 0.68);
+  const totalW = INNER_W - paymentW - paymentGap;
   fillBlackHeader(ctx, data.isCreditSale ? 'RESUMO DO CREDIÁRIO' : 'PAGAMENTO', INNER_X, y, paymentW, 54);
-  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW, y, INNER_W - paymentW, 54);
+  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW + paymentGap, y, totalW, 54);
   y += 54;
-  drawRect(ctx, INNER_X, y, paymentW, 106, 4);
-  drawRect(ctx, INNER_X + paymentW, y, INNER_W - paymentW, 106, 4);
+  drawRect(ctx, INNER_X, y, paymentW, 112, 4);
+  drawRect(ctx, INNER_X + paymentW + paymentGap, y, totalW, 112, 4);
   if (data.isCreditSale) {
-    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 42, 24, 950);
-    drawText(ctx, 'Acompanhe vencimentos e pagamentos na aba Crediário.', INNER_X + 28, y + 82, 21, 750, MUTED);
+    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 42, 24, 900);
+    wrapCanvasText(ctx, 'Acompanhe vencimentos e pagamentos na aba Crediário.', paymentW - 56, 20, 700).slice(0, 2).forEach((line, index) => {
+      drawText(ctx, line, INNER_X + 28, y + 78 + index * 27, 20, 700, MUTED);
+    });
   } else {
     const methods = ['Pix', 'Dinheiro', 'Cartão'];
     const activePayment = data.payment.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -580,11 +584,11 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     });
     if (data.subtotal > 0 || data.discount > 0) {
       drawText(ctx, `Subtotal: ${formatCurrency(data.subtotal || data.total + data.discount)}`, INNER_X + 28, y + 86, 21, 850);
-      if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 350, y + 86, 22, 950);
+      if (data.discount > 0) drawText(ctx, `Desconto: ${formatCurrency(data.discount)}`, INNER_X + 350, y + 86, 22, 900);
     }
   }
-  drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW, y + 68, INNER_W - paymentW, 44, 950);
-  y += 140;
+  drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW + paymentGap, y + 72, totalW, 42, 900);
+  y += 146;
 
   drawLine(ctx, INNER_X, RECEIPT_Y + receiptH - 64, INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 64, 2);
   drawCentered(ctx, '♥', INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 56, 56, 22, 900, '#e91862');
