@@ -191,13 +191,7 @@ function parseData(sale: SaleSummary, receipt: ReceiptSummary): ReceiptRenderDat
   const customer = safeText(receipt.customer_name || sale.customer_name || 'Consumidor');
   const date = formatDateTime(receipt.created_at || sale.created_at);
   const isCreditSale = sale.payment_method === 'crediario';
-  const notes = [
-    `Comprovante da venda #${saleNumber} emitido em ${date}.`,
-    `${productRows.length} item(ns) listado(s) neste comprovante.`,
-    discount > 0 ? `Desconto aplicado: ${formatCurrency(discount)}.` : '',
-    isCreditSale ? `Venda registrada no crediário. Status: ${status}.` : `Forma de pagamento: ${paymentLabel(sale.payment_method)}. Status: ${status}.`,
-    'Comprovante pronto para conferência e compartilhamento.',
-  ].filter(Boolean);
+  const notes: string[] = [];
   return {
     storeName: STORE_NAME,
     title: `COMPROVANTE #${saleNumber}`,
@@ -468,8 +462,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
   const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
-  const notesH = Math.max(188, 64 + data.notes.length * 42 + (data.discount > 0 ? 14 : 0));
-  const receiptH = 292 + 236 + 26 + 54 + productsTableH + 26 + 132 + 22 + notesH + 86;
+  const receiptH = 292 + 236 + 26 + 54 + productsTableH + 26 + 132 + 32 + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -593,16 +586,6 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawCentered(ctx, formatCurrency(data.total), INNER_X + paymentW, y + 68, INNER_W - paymentW, 44, 950);
   y += 140;
 
-  fillBlackHeader(ctx, 'ANOTAÇÕES', INNER_X, y, INNER_W, 54);
-  y += 54;
-  drawRect(ctx, INNER_X, y, INNER_W, notesH - 54, 4);
-  let noteY = y + 38;
-  data.notes.forEach((note) => {
-    wrapCanvasText(ctx, `• ${note}`, INNER_W - 66, 23, 700).slice(0, 2).forEach((line) => {
-      drawText(ctx, line, INNER_X + 30, noteY, 23, 700);
-      noteY += 38;
-    });
-  });
   drawLine(ctx, INNER_X, RECEIPT_Y + receiptH - 64, INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 64, 2);
   drawCentered(ctx, '♥', INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 56, 56, 22, 900, '#e91862');
   drawLine(ctx, INNER_X + INNER_W / 2 + 28, RECEIPT_Y + receiptH - 64, INNER_X + INNER_W, RECEIPT_Y + receiptH - 64, 2);

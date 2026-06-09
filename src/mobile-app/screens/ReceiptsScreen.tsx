@@ -394,7 +394,6 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   });
 
   y = y - cardH - 18;
-  y = addPdfNotes(commands, tableX, y, tableW, data.notes);
   pdfCenteredText(commands, tableX, Math.max(44, y), tableW, `${receiptMessage} - ${storeName}`, 9, false);
 
   const stream = commands.join('\n');
@@ -666,24 +665,8 @@ function addPdfStatusToken(commands: string[], x: number, y: number, label: stri
   commands.push('0 0 0 rg');
 }
 
-function addPdfNotes(commands: string[], x: number, y: number, width: number, notes: string[]): number {
-  const height = Math.max(68, 24 + notes.length * 14);
-  commands.push('0 0 0 rg');
-  pdfRect(commands, x, y - height, width, height, false);
-  commands.push('0 0 0 rg');
-  pdfRect(commands, x, y - 20, width, 20, true);
-  commands.push('1 1 1 rg');
-  pdfTextAt(commands, x + 12, y - 14, 'ANOTACOES', 10, true);
-  commands.push('0 0 0 rg');
-  let cursor = y - 38;
-  notes.slice(0, 7).forEach((note) => {
-    const wrapped = wrapPdfLines(`- ${note}`, 82).slice(0, 2);
-    wrapped.forEach((line) => {
-      pdfTextAt(commands, x + 12, cursor, line, 8, false);
-      cursor -= 12;
-    });
-  });
-  return y - height - 14;
+function addPdfNotes(_commands: string[], _x: number, y: number, _width: number, _notes: string[]): number {
+  return y;
 }
 
 function uniquePdfFileName(stem: string): string {
@@ -753,8 +736,6 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const storeName = receiptStoreName(store);
   const productRows = (data.productRows ?? []).slice(0, 8);
   const installmentRows = data.rows.slice(0, 12);
-  const notes = data.notes.slice(0, 7);
-
   const width = 1080;
   const outerPad = 28;
   const receiptX = outerPad;

@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v204",
-  "short_name": "Jaque v204",
-  "description": "PWA da loja v204 com card ABERTA removido e comprovantes unificados.",
+  "name": "Jaque Confecções e Presentes v205",
+  "short_name": "Jaque v205",
+  "description": "PWA da loja v205 com extrato PDF/PNG sem anotações e layout unificado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
