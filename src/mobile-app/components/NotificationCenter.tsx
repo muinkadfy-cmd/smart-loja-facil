@@ -119,8 +119,8 @@ export function NotificationActions({
       <button type="button" className="mapp-notification-mark-all" onClick={onMarkAllRead} disabled={disabled} aria-label="Marcar todas as notificações como lidas">
         Marcar todas como lidas
       </button>
-      <button type="button" className="mapp-notification-primary" onClick={onOpenFull} aria-label="Ver central completa de avisos">
-        Ver central completa
+      <button type="button" className="mapp-notification-primary" onClick={onOpenFull} aria-label="Diagnóstico de avisos">
+        Diagnóstico
       </button>
       {onLogout ? (
         <button type="button" className="mapp-notification-logout" onClick={onLogout} aria-label={logoutLabel}>
@@ -221,7 +221,7 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
         <header className="mapp-notification-head">
           <div>
             <h2 id="mapp-notification-title">{title}</h2>
-            <p id="mapp-notification-subtitle">Alertas claros para usuário leigo · central v2</p>
+            <p id="mapp-notification-subtitle">Avisos importantes · toque para abrir</p>
           </div>
           <button type="button" className="mapp-notification-close" onClick={onClose} aria-label="Fechar notificações">
             ×

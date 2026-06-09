@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v194-extrato-fiel-central-avisos';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v195-avisos-responsivo-comprovante-sem-texto';
 const APP_SHELL = [
   '/',
   '/index.html',

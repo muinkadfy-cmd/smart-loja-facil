@@ -727,18 +727,18 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const installmentRows = data.rows.slice(0, 12);
   const notes = data.notes.slice(0, 7);
 
-  const width = 1040;
-  const outerPad = 32;
+  const width = 1080;
+  const outerPad = 28;
   const receiptX = outerPad;
-  const receiptY = 32;
+  const receiptY = 26;
   const receiptW = width - outerPad * 2;
   const innerX = receiptX + 28;
   const innerW = receiptW - 56;
-  const headerH = 286;
-  const clientH = 250;
-  const sectionGap = 28;
-  const productRowH = 72;
-  const installmentRowH = 58;
+  const headerH = 292;
+  const clientH = 258;
+  const sectionGap = 26;
+  const productRowH = 76;
+  const installmentRowH = 60;
   const productBlockH = productRows.length ? 44 + 44 + productRows.length * productRowH + sectionGap : 0;
   const installmentBlockH = 44 + 44 + installmentRows.length * installmentRowH + sectionGap;
   const cardsH = 98;
@@ -869,7 +869,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.beginPath();
     ctx.roundRect(x, y, 52, 52, 12);
     ctx.fill();
-    drawCentered(label, x, y + 36, 52, 27, 900, '#ffffff');
+    drawCentered(label, x, y + 35, 52, 22, 900, '#ffffff');
   }
 
   function drawInfoBox(y: number): number {
@@ -878,17 +878,17 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     const valueX = innerX + 318;
     const splitX = innerX + 292;
     line(splitX, y, splitX, y + clientH, 2, '#f1aac4');
-    line(innerX, y + 84, innerX + innerW, y + 84, 2, '#f1c1d1');
-    line(innerX, y + 166, innerX + innerW, y + 166, 2, '#f1c1d1');
-    drawPinkIcon(innerX + 18, y + 18, '●');
-    drawPinkIcon(innerX + 18, y + 99, '☎');
-    drawPinkIcon(innerX + 18, y + 181, '⌖');
-    drawText('CLIENTE', labelX, y + 54, 23, 950);
-    drawWrapped(data.customer, valueX, y + 62, innerW - 350, 40, 950, 1);
-    drawText('TELEFONE', labelX, y + 136, 23, 950);
-    drawText(data.phone || '-', valueX, y + 136, 29, 850);
-    drawText('ENDEREÇO', labelX, y + 218, 23, 950);
-    drawWrapped(data.address || '-', valueX, y + 218, innerW - 350, 24, 750, 1);
+    line(innerX, y + 86, innerX + innerW, y + 86, 2, '#f1c1d1');
+    line(innerX, y + 172, innerX + innerW, y + 172, 2, '#f1c1d1');
+    drawPinkIcon(innerX + 18, y + 18, '👤');
+    drawPinkIcon(innerX + 18, y + 102, '☎');
+    drawPinkIcon(innerX + 18, y + 186, '⌖');
+    drawText('CLIENTE', labelX, y + 55, 23, 950);
+    drawWrapped(data.customer, valueX, y + 63, innerW - 350, 38, 950, 1);
+    drawText('TELEFONE', labelX, y + 140, 23, 950);
+    drawText(data.phone || '-', valueX, y + 140, 27, 850);
+    drawText('ENDEREÇO', labelX, y + 224, 23, 950);
+    drawWrapped(data.address || '-', valueX, y + 224, innerW - 350, 23, 750, 1);
     return y + clientH + sectionGap;
   }
 
@@ -985,17 +985,17 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
 
   const logo = await loadLogo(store.logo_url || DEFAULT_RECEIPT_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, innerX + 8, receiptY + 18, 384, 210);
+    ctx.drawImage(logo, innerX + 4, receiptY + 18, 400, 208);
   } else {
     drawCentered(storeName.toUpperCase(), innerX, receiptY + 130, 384, 26, 900);
   }
-  drawCentered(storeName.toUpperCase(), innerX + 8, receiptY + 250, 384, 21, 900);
+  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 248, 400, 20, 900);
   line(innerX + 24, receiptY + 280, innerX + 190, receiptY + 280, 2, '#e91862');
   drawCentered('♥', innerX + 190, receiptY + 286, 44, 25, 900, '#e91862');
   line(innerX + 236, receiptY + 280, innerX + 410, receiptY + 280, 2, '#e91862');
 
-  const titleX = innerX + 500;
-  const titleW = innerW - 520;
+  const titleX = innerX + 510;
+  const titleW = innerW - 528;
   let titleY = receiptY + 110;
   pdfTitleLines(data.title).slice(0, 2).forEach((lineText) => {
     drawCentered(lineText, titleX, titleY, titleW, 44, 950, '#050505');
@@ -1003,10 +1003,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   });
   line(titleX, titleY - 16, titleX + titleW, titleY - 16, 3, '#e91862');
   drawText(data.subtitle, titleX + 70, titleY + 36, 20, 650);
-  drawText('◷', titleX + 16, titleY + 36, 24, 900, '#050505');
+  drawText('•', titleX + 16, titleY + 36, 24, 900, '#050505');
   drawText(`Status: `, titleX + 70, titleY + 102, 24, 750);
   drawText(data.status, titleX + 154, titleY + 102, 24, 950, '#e91862');
-  drawText('◇', titleX + 16, titleY + 102, 24, 900, '#050505');
+  drawText('•', titleX + 16, titleY + 102, 24, 900, '#050505');
   if (data.paidStamp) {
     ctx.fillStyle = '#050505';
     ctx.fillRect(titleX + titleW - 190, titleY + 2, 184, 64);
@@ -1033,8 +1033,8 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   return { fileName: uniquePngFileName(data.title || 'comprovante'), blob };
 }
 
-async function shareReceiptFileOnly(file: File, title: string): Promise<boolean> {
-  const payload = { title, files: [file] } as ShareData & { files: File[] };
+async function shareReceiptFileOnly(file: File, _title: string): Promise<boolean> {
+  const payload = { files: [file] } as ShareData & { files: File[] };
   const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
   if (!navigator.share || !mobileNavigator.canShare?.(payload)) return false;
   try {
@@ -1687,7 +1687,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
         const file = new File([pngFile.blob], pngFile.fileName, { type: 'image/png' });
         const shared = await shareReceiptFileOnly(file, preview.title);
         if (shared) {
-          setFeedback({ tone: 'success', text: 'PNG do comprovante aberto no compartilhamento do celular, sem link e sem texto extra.' });
+          setFeedback({ tone: 'success', text: 'PNG aberto no compartilhamento apenas como arquivo de imagem.' });
           notifyMobileAction({ title: 'PNG pronto', message: 'Compartilhamento abriu com a imagem anexada.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
           return;
         }
@@ -1701,7 +1701,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       const file = new File([pdfFile.blob], pdfFile.fileName, { type: 'application/pdf' });
       const shared = await shareReceiptFileOnly(file, preview.title);
       if (shared) {
-        setFeedback({ tone: 'success', text: 'PDF do comprovante aberto no compartilhamento do celular, sem link e sem texto extra.' });
+        setFeedback({ tone: 'success', text: 'PDF aberto no compartilhamento apenas como arquivo.' });
         notifyMobileAction({ title: 'PDF pronto', message: 'Compartilhamento abriu com o arquivo PDF anexado.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
         return;
       }

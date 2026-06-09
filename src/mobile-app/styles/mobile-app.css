@@ -9403,3 +9403,296 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   .mapp-notification-modal { max-height: min(80dvh, 580px); }
   .mapp-notification-tabs button { font-size: .72rem; padding-inline: 5px; }
 }
+
+
+/* Lote 195 — Central de avisos responsiva + comprovante sem texto/link */
+.mapp-notification-layer {
+  align-items: center;
+  justify-items: center;
+}
+
+.mapp-notification-modal {
+  max-height: min(92dvh, 820px);
+  grid-template-rows: auto auto auto minmax(160px, 1fr) auto;
+}
+
+.mapp-notification-head h2 {
+  letter-spacing: -0.035em;
+}
+
+.mapp-notification-list {
+  min-height: 156px;
+  max-height: 260px;
+  padding-right: 4px;
+}
+
+.mapp-notification-card {
+  grid-template-columns: 6px 38px minmax(0, 1fr) auto;
+  min-height: 68px;
+  gap: 9px;
+}
+
+.mapp-notification-card .mapp-notification-time {
+  display: none;
+}
+
+.mapp-notification-copy strong {
+  white-space: normal;
+  -webkit-line-clamp: 2;
+}
+
+.mapp-notification-copy p {
+  -webkit-line-clamp: 2;
+}
+
+.mapp-notification-actions {
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mapp-notification-actions .mapp-notification-logout {
+  grid-column: 1 / -1;
+}
+
+.mapp-notification-external-slot {
+  min-height: 0;
+}
+
+.mapp-external-push-panel {
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+}
+
+.mapp-external-push-main {
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 9px;
+}
+
+.mapp-external-push-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+}
+
+.mapp-external-push-main strong {
+  font-size: 0.9rem;
+  line-height: 1.08;
+}
+
+.mapp-external-push-main p {
+  font-size: 0.75rem;
+  line-height: 1.18;
+}
+
+.mapp-external-push-main small {
+  font-size: 0.68rem;
+  line-height: 1.15;
+}
+
+.mapp-external-push-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.mapp-external-push-grid span {
+  padding: 6px 7px;
+  border-radius: 12px;
+}
+
+.mapp-external-push-grid b {
+  font-size: 0.62rem;
+}
+
+.mapp-external-push-grid strong {
+  font-size: 0.74rem;
+}
+
+.mapp-external-push-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.mapp-external-push-actions button {
+  min-height: 34px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+}
+
+.mapp-receipt-button-grid .mapp-secondary-button,
+.mapp-receipt-button-grid .mapp-primary-button {
+  min-height: 44px;
+  border-radius: 15px;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 768px) {
+  .mapp-notification-modal {
+    width: min(100%, calc(100vw - 18px));
+    max-height: min(92dvh, 760px);
+    grid-template-rows: auto auto auto minmax(170px, 1fr) auto;
+  }
+
+  .mapp-notification-list {
+    min-height: 172px;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 520px) {
+  .mapp-notification-layer {
+    padding: max(8px, env(safe-area-inset-top, 0px)) 8px max(8px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .mapp-notification-modal {
+    width: calc(100vw - 18px);
+    max-height: min(91dvh, 720px);
+    grid-template-rows: auto auto auto minmax(165px, 1fr) auto;
+    gap: 7px;
+    border-radius: 22px;
+    padding: 10px;
+  }
+
+  .mapp-notification-head {
+    align-items: center;
+  }
+
+  .mapp-notification-head h2 {
+    font-size: 1.24rem;
+  }
+
+  .mapp-notification-head p {
+    font-size: 0.76rem;
+    line-height: 1.15;
+  }
+
+  .mapp-notification-close {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mapp-external-push-panel {
+    padding: 9px;
+    gap: 7px;
+    border-radius: 17px;
+  }
+
+  .mapp-external-push-main {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mapp-external-push-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 13px;
+  }
+
+  .mapp-external-push-main strong {
+    font-size: 0.82rem;
+  }
+
+  .mapp-external-push-main p {
+    font-size: 0.7rem;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .mapp-external-push-main small {
+    display: none;
+  }
+
+  .mapp-external-push-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mapp-external-push-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mapp-external-push-actions button {
+    min-height: 32px;
+    padding: 0 6px;
+    font-size: 0.7rem;
+  }
+
+  .mapp-notification-tabs {
+    grid-template-columns: 1fr 1.12fr 0.72fr;
+    gap: 4px;
+  }
+
+  .mapp-notification-tabs button {
+    min-height: 32px;
+    font-size: 0.72rem;
+    padding-inline: 5px;
+  }
+
+  .mapp-notification-list {
+    min-height: 170px;
+    max-height: 260px;
+    gap: 6px;
+  }
+
+  .mapp-notification-card {
+    min-height: 62px;
+    grid-template-columns: 5px 34px minmax(0, 1fr) auto;
+    padding: 7px;
+    gap: 7px;
+    border-radius: 15px;
+  }
+
+  .mapp-notification-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mapp-notification-copy strong {
+    font-size: 0.78rem;
+    line-height: 1.08;
+  }
+
+  .mapp-notification-copy p {
+    font-size: 0.68rem;
+    line-height: 1.15;
+  }
+
+  .mapp-notification-card > button {
+    min-width: 44px;
+    min-height: 30px;
+    padding: 0 7px;
+    font-size: 0.68rem;
+  }
+
+  .mapp-notification-actions {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .mapp-notification-actions .mapp-notification-logout {
+    display: none;
+  }
+
+  .mapp-notification-actions button {
+    min-height: 34px;
+    font-size: 0.74rem;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 390px) {
+  .mapp-notification-modal {
+    max-height: min(90dvh, 690px);
+    padding: 9px;
+  }
+
+  .mapp-notification-list {
+    min-height: 160px;
+    max-height: 230px;
+  }
+
+  .mapp-external-push-main p {
+    -webkit-line-clamp: 1;
+  }
+}

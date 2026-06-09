@@ -25,19 +25,19 @@ type ReceiptRenderData = {
 
 const STORE_NAME = 'Jaque Confecções e Presentes';
 const STORE_LOGO_URL = '/brand/jaque-receipt-logo-wide.png';
-const CANVAS_WIDTH = 1240;
-const RECEIPT_X = 62;
-const RECEIPT_Y = 50;
+const CANVAS_WIDTH = 1080;
+const RECEIPT_X = 28;
+const RECEIPT_Y = 28;
 const RECEIPT_W = CANVAS_WIDTH - RECEIPT_X * 2;
-const INNER_X = RECEIPT_X + 42;
-const INNER_W = RECEIPT_W - 84;
+const INNER_X = RECEIPT_X + 28;
+const INNER_W = RECEIPT_W - 56;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
 const PRODUCT_COLUMNS = [88, INNER_W - 88 - 142 - 154, 142, 154];
 const PRODUCT_NAME_SIZE = 29;
 const PRODUCT_NAME_WEIGHT = 950;
-const PRODUCT_ROW_MIN_H = 106;
+const PRODUCT_ROW_MIN_H = 92;
 const PRODUCT_ROW_LINE_GAP = 10;
 const PRODUCT_MAX_LINES = 3;
 
@@ -305,7 +305,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
   const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
   const notesH = Math.max(188, 64 + data.notes.length * 42 + (data.discount > 0 ? 14 : 0));
-  const receiptH = 286 + 178 + 34 + 54 + productsTableH + 34 + 158 + 34 + notesH + 108;
+  const receiptH = 292 + 214 + 26 + 54 + productsTableH + 26 + 132 + 22 + notesH + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -313,52 +313,55 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas indisponível para gerar comprovante.');
 
-  ctx.fillStyle = '#090909';
+  ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(RECEIPT_X, RECEIPT_Y, RECEIPT_W, receiptH);
-  drawRect(ctx, RECEIPT_X, RECEIPT_Y, RECEIPT_W, receiptH, 8);
+  drawRect(ctx, RECEIPT_X, RECEIPT_Y, RECEIPT_W, receiptH, 5);
 
   const logo = await loadImage(STORE_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, INNER_X, RECEIPT_Y + 34, 354, 174);
+    ctx.drawImage(logo, INNER_X + 4, RECEIPT_Y + 18, 400, 208);
   } else {
     drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 128, 354, 27, 900);
   }
-  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 238, 354, 18, 900);
+  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X + 4, RECEIPT_Y + 248, 400, 20, 900);
 
-  const titleX = INNER_X + 430;
-  const titleW = INNER_W - 445;
-  let titleY = RECEIPT_Y + 96;
+  const titleX = INNER_X + 510;
+  const titleW = INNER_W - 528;
+  let titleY = RECEIPT_Y + 100;
   wrapCanvasText(ctx, data.title, titleW, 54, 950).slice(0, 2).forEach((line) => {
     drawCentered(ctx, line, titleX, titleY, titleW, 54, 950);
     titleY += 58;
   });
-  drawLine(ctx, titleX, titleY - 18, titleX + titleW, titleY - 18, 5);
-  drawText(ctx, `${data.subtitle} • ${data.date}`, titleX, titleY + 24, 21, 800, MUTED);
-  drawText(ctx, `Status: ${data.status}`, titleX, titleY + 60, 24, 950);
-  drawStatusBadge(ctx, data.status, titleX + titleW - 190, titleY + 82, 190, 52);
+  drawLine(ctx, titleX, titleY - 18, titleX + titleW, titleY - 18, 4);
+  drawText(ctx, `•  ${data.subtitle} - ${data.date}`, titleX, titleY + 26, 20, 800, MUTED);
+  drawText(ctx, `•  Status: ${data.status}`, titleX, titleY + 88, 24, 950);
+  drawStatusBadge(ctx, data.status, titleX + titleW - 166, titleY + 64, 160, 50);
 
-  let y = RECEIPT_Y + 286;
-  drawRect(ctx, INNER_X, y, INNER_W, 178, 4);
+  let y = RECEIPT_Y + 292;
+  drawRect(ctx, INNER_X, y, INNER_W, 214, 4);
   const labelX = INNER_X + 28;
-  const valueX = INNER_X + 210;
-  drawText(ctx, 'CLIENTE', labelX, y + 48, 23, 950);
-  drawWrapped(ctx, data.customer, valueX, y + 48, INNER_W - 260, 29, 950, 1);
-  drawLine(ctx, INNER_X + 22, y + 70, INNER_X + INNER_W - 22, y + 70, 3);
-  drawText(ctx, 'VENDA', labelX, y + 104, 23, 950);
-  drawText(ctx, `#${data.saleNumber}`, valueX, y + 104, 28, 950);
-  drawLine(ctx, INNER_X + 22, y + 124, INNER_X + INNER_W - 22, y + 124, 3);
-  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 156, 23, 950);
-  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 156, 28, 950);
-  drawLine(ctx, INNER_X + 22, y + 172, INNER_X + INNER_W - 22, y + 172, 3);
+  const valueX = INNER_X + 318;
+  drawText(ctx, 'CLIENTE', labelX, y + 52, 23, 950);
+  drawWrapped(ctx, data.customer, valueX, y + 58, INNER_W - 350, 36, 950, 1);
+  drawLine(ctx, INNER_X + 22, y + 72, INNER_X + INNER_W - 22, y + 72, 3);
+  drawText(ctx, 'TELEFONE', labelX, y + 124, 23, 950);
+  drawText(ctx, data.phone || '-', valueX, y + 124, 27, 850);
+  drawLine(ctx, INNER_X + 22, y + 144, INNER_X + INNER_W - 22, y + 144, 3);
+  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 190, 23, 950);
+  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 190, 27, 900);
+  drawLine(ctx, INNER_X + 22, y + 208, INNER_X + INNER_W - 22, y + 208, 3);
 
-  y += 218;
+  y += 240;
   fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 54);
   y += 54;
   const columns = PRODUCT_COLUMNS;
   const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-  ctx.fillStyle = BLACK;
+  const headerGradient = ctx.createLinearGradient(INNER_X, y, INNER_X + INNER_W, y + 64);
+  headerGradient.addColorStop(0, '#f04f7d');
+  headerGradient.addColorStop(1, '#e12b67');
+  ctx.fillStyle = headerGradient;
   ctx.fillRect(INNER_X, y, INNER_W, 64);
   let x = INNER_X;
   headers.forEach((header, index) => {
@@ -496,8 +499,8 @@ function downloadBlob(blob: Blob, fileName: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-async function shareFile(file: File, title: string): Promise<boolean> {
-  const payload = { title, files: [file] } as ShareData & { files: File[] };
+async function shareFile(file: File, _title: string): Promise<boolean> {
+  const payload = { files: [file] } as ShareData & { files: File[] };
   const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
   if (!navigator.share || !mobileNavigator.canShare?.(payload)) return false;
   try {
@@ -515,14 +518,14 @@ export async function shareSaleReceipt(sale: SaleSummary, receipt: ReceiptSummar
     const blob = await makePngBlob(sale, receipt);
     const fileName = uniqueFileName(`comprovante-venda-${receipt.sale_number || sale.number}`, 'png');
     const shared = await shareFile(new File([blob], fileName, { type: 'image/png' }), title);
-    if (shared) return 'Imagem PNG do comprovante aberta no compartilhamento do celular.';
+    if (shared) return 'PNG enviado apenas como imagem, sem texto ou link junto.';
     downloadBlob(blob, fileName);
     return `PNG baixado como ${fileName}. Anexe essa imagem no WhatsApp.`;
   }
   const blob = await makePdfBlob(sale, receipt);
   const fileName = uniqueFileName(`comprovante-venda-${receipt.sale_number || sale.number}`, 'pdf');
   const shared = await shareFile(new File([blob], fileName, { type: 'application/pdf' }), title);
-  if (shared) return 'PDF do comprovante aberto no compartilhamento do celular.';
+  if (shared) return 'PDF enviado apenas como arquivo, sem texto ou link junto.';
   downloadBlob(blob, fileName);
   return `PDF baixado como ${fileName}. Anexe esse arquivo no WhatsApp.`;
 }
