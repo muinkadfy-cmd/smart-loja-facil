@@ -845,6 +845,28 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.beginPath();
     ctx.arc(x + 30, y + h / 2, 24, 0, Math.PI * 2);
     ctx.fill();
+    const sectionKind = label.toLowerCase().includes('parcela') ? 'card' : 'bag';
+    ctx.save();
+    ctx.strokeStyle = '#e91862';
+    ctx.fillStyle = '#e91862';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (sectionKind === 'bag') {
+      ctx.strokeRect(x + 18, y + h / 2 - 8, 24, 22);
+      ctx.beginPath();
+      ctx.arc(x + 30, y + h / 2 - 9, 8, Math.PI, 0);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(x + 16, y + h / 2 - 11, 28, 22);
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y + h / 2 - 3);
+      ctx.lineTo(x + 44, y + h / 2 - 3);
+      ctx.moveTo(x + 22, y + h / 2 + 7);
+      ctx.lineTo(x + 34, y + h / 2 + 7);
+      ctx.stroke();
+    }
+    ctx.restore();
     drawText(label, x + 72, y + 34, 22, 900, '#ffffff');
   }
 
@@ -864,12 +886,66 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawCentered(display, x, y + Math.round(h * 0.66), w, Math.max(14, Math.floor(h * 0.42)), 900, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
   }
 
-  function drawPinkIcon(x: number, y: number, label: string): void {
-    ctx.fillStyle = '#e91862';
+  function drawMiniGlyph(cx: number, cy: number, kind: 'user' | 'phone' | 'pin' | 'bag' | 'card'): void {
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = '#ffffff';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (kind === 'user') {
+      ctx.beginPath();
+      ctx.arc(cx, cy - 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx - 16, cy + 18);
+      ctx.quadraticCurveTo(cx, cy + 4, cx + 16, cy + 18);
+      ctx.stroke();
+    } else if (kind === 'phone') {
+      ctx.beginPath();
+      ctx.moveTo(cx - 12, cy - 13);
+      ctx.quadraticCurveTo(cx - 18, cy - 2, cx - 9, cy + 10);
+      ctx.quadraticCurveTo(cx + 2, cy + 20, cx + 13, cy + 11);
+      ctx.stroke();
+    } else if (kind === 'pin') {
+      ctx.beginPath();
+      ctx.arc(cx, cy - 4, 11, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy - 4, 3.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + 18);
+      ctx.lineTo(cx - 9, cy + 6);
+      ctx.lineTo(cx + 9, cy + 6);
+      ctx.closePath();
+      ctx.fill();
+    } else if (kind === 'bag') {
+      ctx.strokeRect(cx - 12, cy - 7, 24, 22);
+      ctx.beginPath();
+      ctx.arc(cx, cy - 8, 8, Math.PI, 0);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(cx - 14, cy - 10, 28, 22);
+      ctx.beginPath();
+      ctx.moveTo(cx - 14, cy - 2);
+      ctx.lineTo(cx + 14, cy - 2);
+      ctx.moveTo(cx - 8, cy + 7);
+      ctx.lineTo(cx + 4, cy + 7);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawPinkIcon(x: number, y: number, kind: 'user' | 'phone' | 'pin'): void {
+    const gradient = ctx.createLinearGradient(x, y, x + 52, y + 52);
+    gradient.addColorStop(0, '#ff3f86');
+    gradient.addColorStop(1, '#e91862');
+    ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.roundRect(x, y, 52, 52, 12);
     ctx.fill();
-    drawCentered(label, x, y + 35, 52, 22, 900, '#ffffff');
+    drawMiniGlyph(x + 26, y + 26, kind);
   }
 
   function drawInfoBox(y: number): number {
@@ -880,9 +956,9 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     line(splitX, y, splitX, y + clientH, 2, '#f1aac4');
     line(innerX, y + 86, innerX + innerW, y + 86, 2, '#f1c1d1');
     line(innerX, y + 172, innerX + innerW, y + 172, 2, '#f1c1d1');
-    drawPinkIcon(innerX + 18, y + 18, '👤');
-    drawPinkIcon(innerX + 18, y + 102, '☎');
-    drawPinkIcon(innerX + 18, y + 186, '⌖');
+    drawPinkIcon(innerX + 18, y + 18, 'user');
+    drawPinkIcon(innerX + 18, y + 102, 'phone');
+    drawPinkIcon(innerX + 18, y + 186, 'pin');
     drawText('CLIENTE', labelX, y + 55, 23, 950);
     drawWrapped(data.customer, valueX, y + 63, innerW - 350, 38, 950, 1);
     drawText('TELEFONE', labelX, y + 140, 23, 950);
@@ -981,7 +1057,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   ctx.beginPath();
   ctx.roundRect(receiptX, receiptY, receiptW, receiptH, 10);
   ctx.fill();
-  rect(receiptX, receiptY, receiptW, receiptH, 5, '#050505', 10);
+  rect(receiptX, receiptY, receiptW, receiptH, 4.5, '#050505', 10);
 
   const logo = await loadLogo(store.logo_url || DEFAULT_RECEIPT_LOGO_URL);
   if (logo) {

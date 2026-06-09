@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v195",
-  "short_name": "Jaque v195",
-  "description": "PWA da loja v195 com central de avisos responsiva e comprovantes compartilhados somente como PNG ou PDF.",
+  "name": "Jaque Confecções e Presentes v196",
+  "short_name": "Jaque v196",
+  "description": "PWA da loja v196 com comprovantes mais fiéis à referência, ícones vetoriais e compartilhamento sem texto/link.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

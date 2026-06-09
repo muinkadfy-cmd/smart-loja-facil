@@ -269,10 +269,100 @@ function drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number
   ctx.strokeRect(x, y, w, h);
 }
 
-function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 44): void {
+function drawMiniReceiptGlyph(ctx: CanvasRenderingContext2D, cx: number, cy: number, kind: 'user' | 'phone' | 'pin' | 'bag' | 'card'): void {
+  ctx.save();
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (kind === 'user') {
+    ctx.beginPath();
+    ctx.arc(cx, cy - 8, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx - 16, cy + 18);
+    ctx.quadraticCurveTo(cx, cy + 4, cx + 16, cy + 18);
+    ctx.stroke();
+  } else if (kind === 'phone') {
+    ctx.beginPath();
+    ctx.moveTo(cx - 12, cy - 13);
+    ctx.quadraticCurveTo(cx - 18, cy - 2, cx - 9, cy + 10);
+    ctx.quadraticCurveTo(cx + 2, cy + 20, cx + 13, cy + 11);
+    ctx.stroke();
+  } else if (kind === 'pin') {
+    ctx.beginPath();
+    ctx.arc(cx, cy - 4, 11, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy - 4, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 18);
+    ctx.lineTo(cx - 9, cy + 6);
+    ctx.lineTo(cx + 9, cy + 6);
+    ctx.closePath();
+    ctx.fill();
+  } else if (kind === 'bag') {
+    ctx.strokeRect(cx - 12, cy - 7, 24, 22);
+    ctx.beginPath();
+    ctx.arc(cx, cy - 8, 8, Math.PI, 0);
+    ctx.stroke();
+  } else {
+    ctx.strokeRect(cx - 14, cy - 10, 28, 22);
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy - 2);
+    ctx.lineTo(cx + 14, cy - 2);
+    ctx.moveTo(cx - 8, cy + 7);
+    ctx.lineTo(cx + 4, cy + 7);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPinkReceiptIcon(ctx: CanvasRenderingContext2D, x: number, y: number, kind: 'user' | 'phone' | 'pin'): void {
+  const gradient = ctx.createLinearGradient(x, y, x + 52, y + 52);
+  gradient.addColorStop(0, '#ff3f86');
+  gradient.addColorStop(1, '#e91862');
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.roundRect(x, y, 52, 52, 12);
+  ctx.fill();
+  drawMiniReceiptGlyph(ctx, x + 26, y + 26, kind);
+}
+
+function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 54): void {
   ctx.fillStyle = BLACK;
-  ctx.fillRect(x, y, w, h);
-  drawText(ctx, label, x + 18, y + 30, 18, 900, '#ffffff');
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 14);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x + 30, y + h / 2, 24, 0, Math.PI * 2);
+  ctx.fill();
+  const kind = label.toLowerCase().includes('parcela') ? 'card' : 'bag';
+  ctx.save();
+  ctx.strokeStyle = '#e91862';
+  ctx.fillStyle = '#e91862';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (kind === 'bag') {
+    ctx.strokeRect(x + 18, y + h / 2 - 8, 24, 22);
+    ctx.beginPath();
+    ctx.arc(x + 30, y + h / 2 - 9, 8, Math.PI, 0);
+    ctx.stroke();
+  } else {
+    ctx.strokeRect(x + 16, y + h / 2 - 11, 28, 22);
+    ctx.beginPath();
+    ctx.moveTo(x + 16, y + h / 2 - 3);
+    ctx.lineTo(x + 44, y + h / 2 - 3);
+    ctx.moveTo(x + 22, y + h / 2 + 7);
+    ctx.lineTo(x + 34, y + h / 2 + 7);
+    ctx.stroke();
+  }
+  ctx.restore();
+  drawText(ctx, label, x + 72, y + 34, 22, 900, '#ffffff');
 }
 
 function drawWrapped(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 700, maxLines = 2, lineGap = 7): number {
@@ -305,7 +395,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
   const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
   const notesH = Math.max(188, 64 + data.notes.length * 42 + (data.discount > 0 ? 14 : 0));
-  const receiptH = 292 + 214 + 26 + 54 + productsTableH + 26 + 132 + 22 + notesH + 86;
+  const receiptH = 292 + 236 + 26 + 54 + productsTableH + 26 + 132 + 22 + notesH + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -340,20 +430,24 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawStatusBadge(ctx, data.status, titleX + titleW - 166, titleY + 64, 160, 50);
 
   let y = RECEIPT_Y + 292;
-  drawRect(ctx, INNER_X, y, INNER_W, 214, 4);
-  const labelX = INNER_X + 28;
+  drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
+  const labelX = INNER_X + 86;
   const valueX = INNER_X + 318;
-  drawText(ctx, 'CLIENTE', labelX, y + 52, 23, 950);
-  drawWrapped(ctx, data.customer, valueX, y + 58, INNER_W - 350, 36, 950, 1);
-  drawLine(ctx, INNER_X + 22, y + 72, INNER_X + INNER_W - 22, y + 72, 3);
-  drawText(ctx, 'TELEFONE', labelX, y + 124, 23, 950);
-  drawText(ctx, data.phone || '-', valueX, y + 124, 27, 850);
-  drawLine(ctx, INNER_X + 22, y + 144, INNER_X + INNER_W - 22, y + 144, 3);
-  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 190, 23, 950);
-  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 190, 27, 900);
-  drawLine(ctx, INNER_X + 22, y + 208, INNER_X + INNER_W - 22, y + 208, 3);
+  const splitX = INNER_X + 292;
+  drawLine(ctx, splitX, y, splitX, y + 236, 2);
+  drawLine(ctx, INNER_X, y + 78, INNER_X + INNER_W, y + 78, 2);
+  drawLine(ctx, INNER_X, y + 156, INNER_X + INNER_W, y + 156, 2);
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 14, 'user');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 92, 'phone');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 170, 'pin');
+  drawText(ctx, 'CLIENTE', labelX, y + 50, 23, 950);
+  drawWrapped(ctx, data.customer, valueX, y + 56, INNER_W - 350, 36, 950, 1);
+  drawText(ctx, 'TELEFONE', labelX, y + 128, 23, 950);
+  drawText(ctx, data.phone || '-', valueX, y + 128, 27, 850);
+  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 206, 23, 950);
+  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 206, 27, 900);
 
-  y += 240;
+  y += 262;
   fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 54);
   y += 54;
   const columns = PRODUCT_COLUMNS;
