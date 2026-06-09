@@ -734,7 +734,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const receiptW = width - outerPad * 2;
   const innerX = receiptX + 28;
   const innerW = receiptW - 56;
-  const headerH = 292;
+  const headerH = 304;
   const clientH = 258;
   const sectionGap = 26;
   const productRowH = 76;
@@ -743,7 +743,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const installmentBlockH = 44 + 44 + installmentRows.length * installmentRowH + sectionGap;
   const cardsH = 98;
   const notesH = Math.max(0, 0);
-  const footerH = 78;
+  const footerH = 84;
   const receiptH = headerH + clientH + sectionGap + productBlockH + installmentBlockH + cardsH + sectionGap + notesH + footerH;
   const height = receiptH + receiptY * 2;
   const canvas = document.createElement('canvas');
@@ -948,6 +948,50 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawMiniGlyph(x + 26, y + 26, kind);
   }
 
+  function drawMetaIcon(x: number, y: number, kind: 'calendar' | 'tag'): void {
+    ctx.fillStyle = '#faedf2';
+    ctx.beginPath();
+    ctx.arc(x + 22, y + 22, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#f2d3dd';
+    ctx.stroke();
+    ctx.save();
+    ctx.strokeStyle = '#111111';
+    ctx.fillStyle = '#111111';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (kind === 'calendar') {
+      ctx.strokeRect(x + 11, y + 14, 22, 19);
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y + 11);
+      ctx.lineTo(x + 16, y + 17);
+      ctx.moveTo(x + 28, y + 11);
+      ctx.lineTo(x + 28, y + 17);
+      ctx.moveTo(x + 11, y + 20);
+      ctx.lineTo(x + 33, y + 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + 17, y + 25, 1.6, 0, Math.PI * 2);
+      ctx.arc(x + 23, y + 25, 1.6, 0, Math.PI * 2);
+      ctx.arc(x + 29, y + 25, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x + 12, y + 22);
+      ctx.lineTo(x + 22, y + 12);
+      ctx.lineTo(x + 32, y + 22);
+      ctx.lineTo(x + 22, y + 32);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + 20, y + 20, 2.2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawInfoBox(y: number): number {
     rect(innerX, y, innerW, clientH, 3, '#050505', 12);
     const labelX = innerX + 86;
@@ -1041,8 +1085,11 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
       const x = innerX + index * (cardW + cardGap);
       rect(x, y, cardW, 116, 3, '#050505', 12);
       drawCentered(label, x, y + 35, cardW, 19, 900);
+      ctx.save();
+      ctx.setLineDash([8, 6]);
       line(x + 18, y + 54, x + cardW - 18, y + 54, 2, '#e85f8a');
-      drawCentered(value, x, y + 92, cardW, 38, 950, String(color));
+      ctx.restore();
+      drawCentered(value, x, y + 94, cardW, 40, 950, String(color));
     });
     return y + 116 + sectionGap;
   }
@@ -1061,35 +1108,35 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
 
   const logo = await loadLogo(store.logo_url || DEFAULT_RECEIPT_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, innerX + 4, receiptY + 18, 400, 208);
+    ctx.drawImage(logo, innerX + 4, receiptY + 16, 410, 214);
   } else {
     drawCentered(storeName.toUpperCase(), innerX, receiptY + 130, 384, 26, 900);
   }
-  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 248, 400, 20, 900);
-  line(innerX + 24, receiptY + 280, innerX + 190, receiptY + 280, 2, '#e91862');
-  drawCentered('♥', innerX + 190, receiptY + 286, 44, 25, 900, '#e91862');
-  line(innerX + 236, receiptY + 280, innerX + 410, receiptY + 280, 2, '#e91862');
+  drawCentered(storeName.toUpperCase(), innerX + 4, receiptY + 250, 410, 20, 900);
+  line(innerX + 22, receiptY + 282, innerX + 192, receiptY + 282, 2, '#e91862');
+  drawCentered('♥', innerX + 190, receiptY + 288, 44, 24, 900, '#e91862');
+  line(innerX + 236, receiptY + 282, innerX + 416, receiptY + 282, 2, '#e91862');
 
-  const titleX = innerX + 510;
-  const titleW = innerW - 528;
-  let titleY = receiptY + 110;
+  const titleX = innerX + 492;
+  const titleW = innerW - 512;
+  let titleY = receiptY + 98;
   pdfTitleLines(data.title).slice(0, 2).forEach((lineText) => {
-    drawCentered(lineText, titleX, titleY, titleW, 44, 950, '#050505');
-    titleY += 48;
+    drawCentered(lineText, titleX, titleY, titleW, 43, 950, '#050505');
+    titleY += 46;
   });
-  line(titleX, titleY - 16, titleX + titleW, titleY - 16, 3, '#e91862');
-  drawText(data.subtitle, titleX + 70, titleY + 36, 20, 650);
-  drawText('•', titleX + 16, titleY + 36, 24, 900, '#050505');
-  drawText(`Status: `, titleX + 70, titleY + 102, 24, 750);
-  drawText(data.status, titleX + 154, titleY + 102, 24, 950, '#e91862');
-  drawText('•', titleX + 16, titleY + 102, 24, 900, '#050505');
+  line(titleX, titleY - 14, titleX + titleW, titleY - 14, 3, '#e91862');
+  drawMetaIcon(titleX + 6, titleY + 4, 'calendar');
+  drawText(data.subtitle, titleX + 64, titleY + 36, 20, 650);
+  drawMetaIcon(titleX + 6, titleY + 70, 'tag');
+  drawText('Status:', titleX + 64, titleY + 103, 24, 750);
+  drawText(data.status, titleX + 148, titleY + 103, 24, 950, '#e91862');
   if (data.paidStamp) {
     ctx.fillStyle = '#050505';
-    ctx.fillRect(titleX + titleW - 190, titleY + 2, 184, 64);
-    drawCentered('PAGO', titleX + titleW - 190, titleY + 31, 184, 28, 900, '#ffffff');
-    drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 53, 184, 13, 800, '#ffffff');
+    ctx.fillRect(titleX + titleW - 190, titleY + 6, 184, 64);
+    drawCentered('PAGO', titleX + titleW - 190, titleY + 35, 184, 28, 900, '#ffffff');
+    drawCentered(data.paidStamp, titleX + titleW - 190, titleY + 57, 184, 13, 800, '#ffffff');
   } else {
-    drawStatusToken(data.status, titleX + titleW - 170, titleY + 76, 160, 60);
+    drawStatusToken(data.status, titleX + titleW - 170, titleY + 73, 160, 58);
   }
 
   let cursorY = receiptY + headerH;
@@ -1101,7 +1148,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   line(innerX, receiptY + receiptH - 62, innerX + innerW / 2 - 28, receiptY + receiptH - 62, 2, '#e91862');
   drawCentered('♥', innerX + innerW / 2 - 28, receiptY + receiptH - 55, 56, 22, 900, '#e91862');
   line(innerX + innerW / 2 + 28, receiptY + receiptH - 62, innerX + innerW, receiptY + receiptH - 62, 2, '#e91862');
-  drawCentered(`${store.receipt_message?.trim() || 'Obrigado pela preferência.'} - ${storeName}`, innerX, receiptY + receiptH - 28, innerW, 18, 700, '#111111');
+  drawCentered(`${store.receipt_message?.trim() || 'Obrigado pela preferência!'} - ${storeName}`, innerX, receiptY + receiptH - 28, innerW, 18, 700, '#111111');
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((result) => result ? resolve(result) : reject(new Error('Não foi possível finalizar o PNG.')), 'image/png', 0.98);

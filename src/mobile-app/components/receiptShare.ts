@@ -331,6 +331,50 @@ function drawPinkReceiptIcon(ctx: CanvasRenderingContext2D, x: number, y: number
   drawMiniReceiptGlyph(ctx, x + 26, y + 26, kind);
 }
 
+function drawMetaReceiptIcon(ctx: CanvasRenderingContext2D, x: number, y: number, kind: 'calendar' | 'tag'): void {
+  ctx.fillStyle = '#faedf2';
+  ctx.beginPath();
+  ctx.arc(x + 22, y + 22, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#f2d3dd';
+  ctx.stroke();
+  ctx.save();
+  ctx.strokeStyle = '#111111';
+  ctx.fillStyle = '#111111';
+  ctx.lineWidth = 2.6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (kind === 'calendar') {
+    ctx.strokeRect(x + 11, y + 14, 22, 19);
+    ctx.beginPath();
+    ctx.moveTo(x + 16, y + 11);
+    ctx.lineTo(x + 16, y + 17);
+    ctx.moveTo(x + 28, y + 11);
+    ctx.lineTo(x + 28, y + 17);
+    ctx.moveTo(x + 11, y + 20);
+    ctx.lineTo(x + 33, y + 20);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 17, y + 25, 1.6, 0, Math.PI * 2);
+    ctx.arc(x + 23, y + 25, 1.6, 0, Math.PI * 2);
+    ctx.arc(x + 29, y + 25, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x + 12, y + 22);
+    ctx.lineTo(x + 22, y + 12);
+    ctx.lineTo(x + 32, y + 22);
+    ctx.lineTo(x + 22, y + 32);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 20, y + 20, 2.2, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function fillBlackHeader(ctx: CanvasRenderingContext2D, label: string, x: number, y: number, w: number, h = 54): void {
   ctx.fillStyle = BLACK;
   ctx.beginPath();
@@ -411,23 +455,29 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
 
   const logo = await loadImage(STORE_LOGO_URL);
   if (logo) {
-    ctx.drawImage(logo, INNER_X + 4, RECEIPT_Y + 18, 400, 208);
+    ctx.drawImage(logo, INNER_X + 4, RECEIPT_Y + 16, 410, 214);
   } else {
-    drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 128, 354, 27, 900);
+    drawCentered(ctx, data.storeName.toUpperCase(), INNER_X, RECEIPT_Y + 130, 410, 27, 900);
   }
-  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X + 4, RECEIPT_Y + 248, 400, 20, 900);
+  drawCentered(ctx, data.storeName.toUpperCase(), INNER_X + 4, RECEIPT_Y + 250, 410, 20, 900);
+  drawLine(ctx, INNER_X + 22, RECEIPT_Y + 282, INNER_X + 192, RECEIPT_Y + 282, 2);
+  drawCentered(ctx, '♥', INNER_X + 190, RECEIPT_Y + 288, 44, 24, 900, '#e91862');
+  drawLine(ctx, INNER_X + 236, RECEIPT_Y + 282, INNER_X + 416, RECEIPT_Y + 282, 2);
 
-  const titleX = INNER_X + 510;
-  const titleW = INNER_W - 528;
-  let titleY = RECEIPT_Y + 100;
+  const titleX = INNER_X + 492;
+  const titleW = INNER_W - 512;
+  let titleY = RECEIPT_Y + 98;
   wrapCanvasText(ctx, data.title, titleW, 54, 950).slice(0, 2).forEach((line) => {
-    drawCentered(ctx, line, titleX, titleY, titleW, 54, 950);
-    titleY += 58;
+    drawCentered(ctx, line, titleX, titleY, titleW, 43, 950);
+    titleY += 46;
   });
-  drawLine(ctx, titleX, titleY - 18, titleX + titleW, titleY - 18, 4);
-  drawText(ctx, `•  ${data.subtitle} - ${data.date}`, titleX, titleY + 26, 20, 800, MUTED);
-  drawText(ctx, `•  Status: ${data.status}`, titleX, titleY + 88, 24, 950);
-  drawStatusBadge(ctx, data.status, titleX + titleW - 166, titleY + 64, 160, 50);
+  drawLine(ctx, titleX, titleY - 14, titleX + titleW, titleY - 14, 4);
+  drawMetaReceiptIcon(ctx, titleX + 6, titleY + 4, 'calendar');
+  drawText(ctx, `${data.subtitle} - ${data.date}`, titleX + 64, titleY + 36, 20, 700, MUTED);
+  drawMetaReceiptIcon(ctx, titleX + 6, titleY + 70, 'tag');
+  drawText(ctx, 'Status:', titleX + 64, titleY + 103, 24, 750);
+  drawText(ctx, data.status, titleX + 148, titleY + 103, 24, 950, '#e91862');
+  drawStatusBadge(ctx, data.status, titleX + titleW - 166, titleY + 73, 160, 50);
 
   let y = RECEIPT_Y + 292;
   drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
@@ -524,7 +574,10 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
       noteY += 38;
     });
   });
-  drawCentered(ctx, 'Obrigado pela preferência! · Jaque Confecções e Presentes', INNER_X, RECEIPT_Y + receiptH - 40, INNER_W, 23, 800);
+  drawLine(ctx, INNER_X, RECEIPT_Y + receiptH - 64, INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 64, 2);
+  drawCentered(ctx, '♥', INNER_X + INNER_W / 2 - 28, RECEIPT_Y + receiptH - 56, 56, 22, 900, '#e91862');
+  drawLine(ctx, INNER_X + INNER_W / 2 + 28, RECEIPT_Y + receiptH - 64, INNER_X + INNER_W, RECEIPT_Y + receiptH - 64, 2);
+  drawCentered(ctx, 'Obrigado pela preferência! - Jaque Confecções e Presentes', INNER_X, RECEIPT_Y + receiptH - 34, INNER_W, 20, 800);
   return canvas;
 }
 
