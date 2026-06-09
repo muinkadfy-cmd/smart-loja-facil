@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v189-cupom-fidelidade-png';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v191-cupom-base-limpa';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -14,6 +14,7 @@ const APP_SHELL = [
   '/icons/notification-flower-pink.png',
   '/brand/smart-loja-icon.png',
   '/brand/jaque-logo-premium.png',
+  '/coupons/cupom-jaque-otica-base.png',
 ];
 
 async function precacheAppShell(cache) {
@@ -83,7 +84,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/brand/') || url.pathname.startsWith('/coupons/') || url.pathname === '/logo.svg' || url.pathname === '/manifest.webmanifest') {
     event.respondWith(cacheFirst(event.request));
     return;
   }
@@ -147,11 +148,6 @@ function routeForPayload(payload, action) {
 
   if (type === 'backup_reminder') {
     params.set('view', 'backup');
-    return `/?${params.toString()}`;
-  }
-
-  if (type === 'coupon' || type === 'coupon_ready') {
-    params.set('view', 'coupons');
     return `/?${params.toString()}`;
   }
 

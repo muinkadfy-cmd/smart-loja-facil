@@ -11,12 +11,12 @@ const pageNames: Record<PageKey, string> = {
   credits: 'Crediário',
   orders: 'Pedidos',
   receipts: 'Comprovantes',
-  coupons: 'Cupom',
   reports: 'Relatórios',
   backup: 'Backup',
   settings: 'Configurações',
   audit: 'Auditoria / Logs',
   diagnostics: 'Diagnóstico Web',
+  coupons: 'Cupom',
 };
 
 const migrationOrder: Array<{ title: string; detail: string; status: 'done' | 'active' | 'next' }> = [

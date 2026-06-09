@@ -7,12 +7,12 @@ export type PageKey =
   | 'credits'
   | 'orders'
   | 'receipts'
-  | 'coupons'
   | 'reports'
   | 'backup'
   | 'settings'
   | 'audit'
-  | 'diagnostics';
+  | 'diagnostics'
+  | 'coupons';
 
 export type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'crediario';
 

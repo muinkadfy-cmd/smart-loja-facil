@@ -19,11 +19,11 @@ const pages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
   { key: 'cash', label: 'Caixa', icon: 'caixa' },
   { key: 'credits', label: 'Crediário', icon: 'crediario' },
   { key: 'receipts', label: 'Comprovantes', icon: 'comprovantes' },
-  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
   { key: 'backup', label: 'Backup', icon: 'backup' },
   { key: 'settings', label: 'Configurações', icon: 'configuracoes' },
   { key: 'audit', label: 'Logs / Diagnóstico', icon: 'auditoria_logs' },
   { key: 'diagnostics', label: 'Diagnóstico Web', icon: 'bloqueio_seguro' },
+  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
 ];
 
 const mobileDockPages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
@@ -36,8 +36,8 @@ const mobileDockPages: Array<{ key: PageKey; label: string; icon: DelphiIconName
   { key: 'cash', label: 'Caixa', icon: 'caixa' },
   { key: 'credits', label: 'Crédito', icon: 'crediario' },
   { key: 'receipts', label: 'Recibos', icon: 'comprovantes' },
-  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
   { key: 'settings', label: 'Config.', icon: 'configuracoes' },
+  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
 ];
 
 const mobileQuickPages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
@@ -47,9 +47,9 @@ const mobileQuickPages: Array<{ key: PageKey; label: string; icon: DelphiIconNam
   { key: 'orders', label: 'Pedidos', icon: 'pedidos' },
   { key: 'cash', label: 'Caixa', icon: 'caixa' },
   { key: 'credits', label: 'Crediário', icon: 'crediario' },
-  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
   { key: 'reports', label: 'Relatórios', icon: 'relatorios' },
   { key: 'backup', label: 'Backup', icon: 'backup' },
+  { key: 'coupons', label: 'Cupom', icon: 'etiquetas' },
 ];
 
 interface ShellProps {
@@ -118,12 +118,12 @@ function pageSubtitle(page: PageKey): string {
     cash: 'Controle entradas, saídas e fechamento do caixa.',
     credits: 'Consulte o crediário, parcelas e recebimentos pendentes.',
     receipts: 'Abra, imprima e reenvie comprovantes salvos.',
-    coupons: 'Crie cupom de parceria em PNG, com nome do cliente e desconto ajustável.',
     reports: 'Veja métricas, exporte relatórios e acompanhe resultados.',
     backup: 'Proteja seus dados com backup e restauração local.',
     settings: 'Ajuste a loja, preferências e configurações do sistema.',
     audit: 'Consulte alertas, trilhas de auditoria e diagnósticos.',
     diagnostics: 'Confira conexão, login, permissão, cache e sincronização.',
+    coupons: 'Gere e compartilhe cupom promocional PNG fiel à arte enviada.',
   };
   return subtitles[page];
 }
@@ -146,12 +146,12 @@ function alertActionLabel(page: PageKey): string {
     cash: 'Abrir caixa',
     credits: 'Abrir crediário',
     receipts: 'Abrir comprovantes',
-    coupons: 'Abrir cupom',
     reports: 'Abrir relatórios',
     backup: 'Abrir backup',
     settings: 'Abrir configurações',
     audit: 'Abrir logs',
     diagnostics: 'Ver diagnóstico',
+    coupons: 'Abrir cupom',
   };
   return labels[page];
 }

@@ -61,9 +61,6 @@ const pageMap: Record<string, PageKey> = {
   creditos: 'credits',
   receipts: 'receipts',
   comprovantes: 'receipts',
-  coupons: 'coupons',
-  cupom: 'coupons',
-  cupons: 'coupons',
   reports: 'reports',
   relatorios: 'reports',
   backup: 'backup',
@@ -73,6 +70,10 @@ const pageMap: Record<string, PageKey> = {
   logs: 'audit',
   diagnostics: 'diagnostics',
   diagnostico: 'diagnostics',
+  coupons: 'coupons',
+  coupon: 'coupons',
+  cupom: 'coupons',
+  cupons: 'coupons',
 };
 
 function clean(value: unknown): string {

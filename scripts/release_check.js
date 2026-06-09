@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v189-cupom-fidelidade-png';
-const currentCache = 'smart-loja-pwa-supabase-v189-cupom-fidelidade-png';
+const currentVersion = 'pwa-supabase-v191-cupom-base-limpa';
+const currentCache = 'smart-loja-pwa-supabase-v191-cupom-base-limpa';
 
 const requiredCore = [
   'package.json',
@@ -16,12 +16,12 @@ const requiredCore = [
   'src/mobile-app/layout/MobileHeader.tsx',
   'src/mobile-app/layout/MobileBottomNav.tsx',
   'src/mobile-app/screens/DashboardScreen.tsx',
+  'src/mobile-app/screens/CouponScreen.tsx',
   'src/mobile-app/screens/GenericDataScreen.tsx',
   'src/mobile-app/screens/ProductsCustomersScreens.tsx',
   'src/mobile-app/screens/CashScreen.tsx',
   'src/mobile-app/screens/OrdersScreen.tsx',
   'src/mobile-app/screens/ReceiptsScreen.tsx',
-  'src/mobile-app/screens/CouponScreen.tsx',
   'src/mobile-app/screens/BackupScreen.tsx',
   'src/mobile-app/screens/DiagnosticsScreen.tsx',
   'src/mobile-app/styles/mobile-app.css',
@@ -107,7 +107,7 @@ if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
-if (!mainSource.includes('smart-mobile-rebuild-v189')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v189.');
+if (!mainSource.includes('smart-mobile-rebuild-v175')) fail('main.tsx precisa aplicar a classe smart-mobile-rebuild-v175.');
 
 const appSource = read('src/App.tsx');
 if (!appSource.includes('MobileApp')) fail('App.tsx precisa renderizar a nova interface MobileApp.');
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v189 cupom fidelidade PNG.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v189 cupom fidelidade PNG.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v191 cupom base limpa.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v191 cupom base limpa.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -140,12 +140,12 @@ try {
 }
 
 const css = read('src/mobile-app/styles/mobile-app.css');
-for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout', 'mapp-coupon-screen', 'mapp-coupon-preview-frame']) {
+for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
 
 const routeSource = read('src/mobile-app/mobileAppRoutes.ts');
-for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Cupom', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web']) {
+for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web', 'Cupom']) {
   if (!routeSource.includes(label)) fail(`Rota nova ausente: ${label}`);
 }
 for (const groupLabel of ['Operação', 'Gestão', 'Controle']) {
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v189 PWA passou. cupom fidelidade PNG editável conferido.');
+console.log('OK: release_check v191 PWA passou. cupom PNG base limpa e campos dentro da arte conferidos.');
