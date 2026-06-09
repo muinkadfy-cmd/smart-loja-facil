@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v200-sora-comprovantes-unificados';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v201-comprovante-fontes-maiores';
 const APP_SHELL = [
   '/',
   '/index.html',

@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v200",
-  "short_name": "Jaque v200",
-  "description": "PWA da loja v200 com fonte Sora, comprovantes unificados e compartilhamento em PDF/PNG.",
+  "name": "Jaque Confecções e Presentes v201",
+  "short_name": "Jaque v201",
+  "description": "PWA da loja v201 com comprovantes em Sora, letras maiores e padrão unificado.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
