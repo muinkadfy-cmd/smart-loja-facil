@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v209-crediario-facil-usuario-leigo';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v209-crediario-facil-usuario-leigo';
+export const WEB_APP_VERSION = 'pwa-supabase-v210-crediario-automatico-mais-menos';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v210-crediario-automatico-mais-menos';
 
 
 export interface WebTrainingModeState {
@@ -3064,7 +3064,7 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
     throw new Error('Esse valor parece maior que o saldo em aberto. Confira antes de receber.');
   }
   if (amount > installmentOpen + 0.009 && !redistribute) {
-    throw new Error('Esse valor parece maior que a parcela. Para abater próximas parcelas, marque a opção de redistribuir antes de confirmar.');
+    throw new Error('Esse valor parece maior que a parcela. Use o recebimento automático para abater a sobra nas próximas parcelas.');
   }
   const nextForShortfall = creditBefore.installments
     .filter((item) => item.number > installmentBefore.number)
@@ -3096,7 +3096,7 @@ export async function webReceiveInstallment(payload: unknown): Promise<CreditSum
     if (currentError) throw new Error(`Pagamento recebido, mas não consegui mover a falta da parcela atual: ${currentError.message}`);
     const { error: nextError } = await client.from('credit_installments').update({ amount: nextAmount, status: nextStatus, paid_at: nextStatus === 'paid' ? (nextForShortfall.paid_at || new Date().toISOString()) : null }).eq('id', nextForShortfall.id).eq('store_id', context.store.id);
     if (nextError) throw new Error(`Pagamento recebido, mas não consegui aumentar a próxima parcela: ${nextError.message}`);
-    await insertAudit(context.store.id, context.userId, 'credit_installments', installmentId, 'shortfall_moved_to_next', { amount, missing, next_installment_id: nextForShortfall.id, reason: stringValue(source.correction_reason) || 'Cliente pagou menos; falta movida para a próxima parcela.' });
+    await insertAudit(context.store.id, context.userId, 'credit_installments', installmentId, 'shortfall_moved_to_next', { amount, missing, next_installment_id: nextForShortfall.id, reason: stringValue(source.correction_reason) || stringValue(source.automatic_balance_rule) || 'Cliente pagou menos; falta movida automaticamente para a próxima parcela.' });
   }
   const credits = await webCredits();
   const credit = credits.find((item) => item.id === creditId);

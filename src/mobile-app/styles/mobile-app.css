@@ -9781,3 +9781,28 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   .mapp-credit-mode-buttons { width: 100%; }
   .mapp-credit-before-after { grid-template-columns: 1fr; }
 }
+
+
+/* Mega Lote 210 - regra automática do crediário */
+.mapp-credit-auto-box {
+  border: 1px solid rgba(226, 43, 103, 0.22);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,240,247,.92));
+  box-shadow: 0 10px 24px rgba(20, 30, 55, 0.06);
+}
+.mapp-credit-auto-box strong { display: block; color: var(--mapp-text); font-size: 14px; line-height: 1.25; }
+.mapp-credit-auto-box span { display: block; margin-top: 5px; color: var(--mapp-muted); font-size: 12.5px; line-height: 1.35; }
+.mapp-credit-auto-box small { display: block; margin-top: 7px; color: #9d174d; font-weight: 800; font-size: 11.5px; }
+.mapp-credit-auto-box-ok { border-color: rgba(22,160,93,.22); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(232,255,244,.92)); }
+.mapp-credit-auto-box-warn { border-color: rgba(242,154,46,.30); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,246,225,.94)); }
+.mapp-credit-auto-box-danger { border-color: rgba(217,52,43,.30); background: linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,237,237,.94)); }
+.mapp-credit-advanced-rules {
+  border: 1px dashed rgba(36, 107, 242, .28);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(246, 249, 255, .92);
+  display: grid;
+  gap: 9px;
+}
+.mapp-credit-advanced-rules > strong { color: var(--mapp-text); font-size: 13px; }

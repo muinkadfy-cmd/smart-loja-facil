@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.209",
+  "version": "0.1.210",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com Crediário Fácil: modo simples, assistente de correção e confirmação segura v209",
+  "description": "PWA da loja com crediário automático para valor maior/menor, sem checkbox no modo simples v210",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

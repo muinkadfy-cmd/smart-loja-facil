@@ -187,7 +187,7 @@ export function buildCreditPaymentReview({
       ...base,
       ok: false,
       severity: 'blocked',
-      message: 'Esse valor parece maior que o saldo em aberto. Confira antes de receber.',
+      message: 'Cliente pagou a mais que esta parcela. A sobra será abatida nas próximas parcelas.',
     };
   }
 
@@ -196,7 +196,7 @@ export function buildCreditPaymentReview({
       ...base,
       ok: false,
       severity: 'blocked',
-      message: 'Esse valor parece maior que a parcela. Para abater próximas parcelas, marque a opção de redistribuir antes de confirmar.',
+      message: 'Esse valor parece maior que a parcela. No modo simples o sistema abate a sobra automaticamente; no modo avançado, ative a redistribuição.',
     };
   }
 
@@ -214,7 +214,7 @@ export function buildCreditPaymentReview({
       ...base,
       ok: true,
       severity: 'partial',
-      message: 'Você está recebendo menos que a parcela. O restante ficará em aberto.',
+      message: 'Cliente pagou menos que esta parcela. No modo simples, a falta vai para a próxima parcela quando existir.',
     };
   }
 

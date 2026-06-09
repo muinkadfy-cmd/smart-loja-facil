@@ -38,6 +38,21 @@ type ReceiveState = {
   moveShortfallToNext: boolean;
 };
 
+type AutomaticReceivePlan = {
+  parsedOk: boolean;
+  amount: number;
+  installmentOpen: number;
+  creditOpen: number;
+  next: CreditInstallment | null;
+  redistribute: boolean;
+  moveShortfallToNext: boolean;
+  overpay: number;
+  shortfall: number;
+  title: string;
+  detail: string;
+  tone: 'ok' | 'warn' | 'danger' | 'neutral';
+};
+
 type EditInstallmentState = {
   credit: CreditSummary;
   installment: CreditInstallment;
@@ -124,6 +139,116 @@ function nextInstallmentAfter(credit: CreditSummary, installment: CreditInstallm
   return [...credit.installments]
     .filter((item) => item.number > installment.number)
     .sort((a, b) => a.number - b.number)[0] ?? null;
+}
+
+function nextOpenInstallmentAfter(credit: CreditSummary, installment: CreditInstallment): CreditInstallment | null {
+  return [...credit.installments]
+    .filter((item) => item.number > installment.number && item.status !== 'pago' && remainingOf(item) > 0.009)
+    .sort((a, b) => a.number - b.number)[0] ?? null;
+}
+
+function automaticReceivePlan(receive: ReceiveState): AutomaticReceivePlan {
+  const parsed = parseBrazilianMoneyInput(receive.amount);
+  const installmentOpen = remainingOf(receive.installment);
+  const creditOpen = Math.max(0, Number(receive.credit.balance || 0));
+  const next = nextOpenInstallmentAfter(receive.credit, receive.installment);
+  if (!parsed.ok) {
+    return {
+      parsedOk: false,
+      amount: 0,
+      installmentOpen,
+      creditOpen,
+      next,
+      redistribute: false,
+      moveShortfallToNext: false,
+      overpay: 0,
+      shortfall: 0,
+      title: 'Digite o valor recebido',
+      detail: 'Depois de digitar, o sistema calcula sozinho se precisa abater sobra ou jogar falta para a próxima parcela.',
+      tone: 'neutral',
+    };
+  }
+  const amount = parsed.amount;
+  const overpay = Math.max(0, Math.round((amount - installmentOpen) * 100) / 100);
+  const shortfall = Math.max(0, Math.round((installmentOpen - amount) * 100) / 100);
+  if (amount > creditOpen + 0.009) {
+    return {
+      parsedOk: true,
+      amount,
+      installmentOpen,
+      creditOpen,
+      next,
+      redistribute: false,
+      moveShortfallToNext: false,
+      overpay,
+      shortfall: 0,
+      title: 'Valor maior que o saldo total',
+      detail: 'Confira o valor digitado. Ele ficou maior que tudo que o cliente ainda deve.',
+      tone: 'danger',
+    };
+  }
+  if (overpay > 0.009) {
+    return {
+      parsedOk: true,
+      amount,
+      installmentOpen,
+      creditOpen,
+      next,
+      redistribute: true,
+      moveShortfallToNext: false,
+      overpay,
+      shortfall: 0,
+      title: 'Automático: cliente pagou a mais',
+      detail: `Vou quitar esta parcela e descontar ${formatCurrency(overpay)} nas próximas parcelas.`,
+      tone: 'ok',
+    };
+  }
+  if (shortfall > 0.009 && next) {
+    return {
+      parsedOk: true,
+      amount,
+      installmentOpen,
+      creditOpen,
+      next,
+      redistribute: false,
+      moveShortfallToNext: true,
+      overpay: 0,
+      shortfall,
+      title: 'Automático: cliente pagou a menos',
+      detail: `Vou fechar esta parcela com o valor recebido e colocar ${formatCurrency(shortfall)} na próxima parcela.`,
+      tone: 'warn',
+    };
+  }
+  if (shortfall > 0.009) {
+    return {
+      parsedOk: true,
+      amount,
+      installmentOpen,
+      creditOpen,
+      next,
+      redistribute: false,
+      moveShortfallToNext: false,
+      overpay: 0,
+      shortfall,
+      title: 'Pagamento parcial na última parcela',
+      detail: `Não existe próxima parcela. O restante de ${formatCurrency(shortfall)} ficará em aberto nesta parcela.`,
+      tone: 'warn',
+    };
+  }
+  return {
+    parsedOk: true,
+    amount,
+    installmentOpen,
+    creditOpen,
+    next,
+    redistribute: false,
+    moveShortfallToNext: false,
+    overpay: 0,
+    shortfall: 0,
+    title: 'Automático: valor exato',
+    detail: 'Vou quitar esta parcela sem mexer nas próximas.',
+    tone: 'ok',
+  };
 }
 
 function installmentInputDate(value: string): string {
@@ -286,7 +411,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       installment,
       amount: amount.toFixed(2),
       method: 'dinheiro',
-      redistribute: credit.installments.some((item) => item.number > installment.number && item.status !== 'pago'),
+      redistribute: false,
       moveShortfallToNext: false,
     });
   }
@@ -413,14 +538,19 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     }
   }
 
+  function receivePlan(receiveState = receive): AutomaticReceivePlan | null {
+    return receiveState ? automaticReceivePlan(receiveState) : null;
+  }
+
   function buildCurrentReview(): CreditPaymentReview | null {
     if (!receive || saving) return null;
+    const plan = automaticReceivePlan(receive);
     return buildCreditPaymentReview({
       credit: receive.credit,
       installment: receive.installment,
       rawAmount: receive.amount,
       method: receive.method,
-      redistribute: receive.redistribute,
+      redistribute: creditMode === 'avancado' ? receive.redistribute : plan.redistribute,
     });
   }
 
@@ -429,7 +559,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     if (!review) return;
     setPaymentReview(review);
     if (!review.ok) setFeedback({ tone: 'error', text: review.message });
-    else setFeedback({ tone: review.severity === 'exact' ? 'info' : 'error', text: review.message });
+    else setFeedback({ tone: review.severity === 'exact' ? 'info' : 'success', text: review.message });
   }
 
   async function submitReceiveConfirmed(): Promise<void> {
@@ -441,6 +571,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       setFeedback({ tone: 'error', text: review.message });
       return;
     }
+    const plan = automaticReceivePlan(receive);
+    const autoRedistribute = creditMode === 'avancado' ? receive.redistribute : plan.redistribute;
+    const autoMoveShortfall = creditMode === 'avancado' ? receive.moveShortfallToNext : plan.moveShortfallToNext;
     setSaving(true);
     try {
       await api.receiveInstallment({
@@ -449,8 +582,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         installment_id: receive.installment.id,
         amount: review.amount,
         method: review.method,
-        settle_with_redistribution: receive.redistribute,
-        move_shortfall_to_next: receive.moveShortfallToNext,
+        settle_with_redistribution: autoRedistribute,
+        move_shortfall_to_next: autoMoveShortfall,
+        automatic_balance_rule: creditMode === 'avancado' ? 'manual_override' : plan.title,
         user_confirmed: true,
         typed_amount_preview: review.formattedAmount,
         before_after: {
@@ -482,18 +616,30 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   function setExactReceiveAmount(): void {
     if (!receive) return;
-    const exact = receive.redistribute ? Math.max(0, Number(receive.credit.balance || 0)) : remainingOf(receive.installment);
-    setReceive({ ...receive, amount: exact.toFixed(2) });
+    const exact = remainingOf(receive.installment);
+    const updated = { ...receive, amount: exact.toFixed(2), redistribute: false, moveShortfallToNext: false };
+    setReceive(updated);
     setPaymentReview(null);
-    setFeedback({ tone: 'info', text: `Valor ajustado para ${formatBrazilianMoney(exact)}. Confira a prévia antes de confirmar.` });
+    setFeedback({ tone: 'info', text: `Valor ajustado para ${formatBrazilianMoney(exact)}. O sistema vai quitar só esta parcela.` });
+  }
+
+  function setTotalOpenReceiveAmount(): void {
+    if (!receive) return;
+    const totalOpen = Math.max(0, Number(receive.credit.balance || 0));
+    const updated = { ...receive, amount: totalOpen.toFixed(2), redistribute: totalOpen > remainingOf(receive.installment) + 0.009, moveShortfallToNext: false };
+    setReceive(updated);
+    setPaymentReview(null);
+    setFeedback({ tone: 'info', text: `Valor ajustado para ${formatBrazilianMoney(totalOpen)}. Se passar da parcela, o sistema abate automaticamente nas próximas.` });
   }
 
   function onReceiveAmountChange(value: string): void {
     if (!receive) return;
-    setReceive({ ...receive, amount: value });
+    const nextState = { ...receive, amount: value };
+    const plan = automaticReceivePlan(nextState);
+    setReceive({ ...nextState, redistribute: plan.redistribute, moveShortfallToNext: plan.moveShortfallToNext });
     setPaymentReview(null);
     const preview = parseBrazilianMoneyInput(value);
-    if (preview.ok) setFeedback({ tone: 'info', text: `Valor que será registrado: ${preview.formatted}` });
+    if (preview.ok) setFeedback({ tone: plan.tone === 'danger' ? 'error' : 'info', text: `${preview.formatted} · ${plan.detail}` });
     else setFeedback(null);
   }
 
@@ -780,7 +926,11 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         </div>
       ) : null}
 
-      {receive ? (
+      {receive ? (() => {
+        const plan = automaticReceivePlan(receive);
+        const activeRedistribute = creditMode === 'avancado' ? receive.redistribute : plan.redistribute;
+        const activeMoveShortfall = creditMode === 'avancado' ? receive.moveShortfallToNext : plan.moveShortfallToNext;
+        return (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { setReceive(null); setPaymentReview(null); }}>
         <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Receber parcela" onClick={(event) => event.stopPropagation()}>
           <span className="mapp-receive-drawer-grip" aria-hidden="true" />
@@ -806,14 +956,24 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 <option value="outro">Outro</option>
               </select>
             </label>
-            <label className="span-2 mapp-check-field">
-              <input type="checkbox" checked={receive.redistribute} onChange={(event) => { setReceive({ ...receive, redistribute: event.target.checked }); setPaymentReview(null); }} />
-              <span>Cliente pagou a mais: descontar nas próximas parcelas</span>
-            </label>
-            <label className="span-2 mapp-check-field">
-              <input type="checkbox" checked={receive.moveShortfallToNext} onChange={(event) => { setReceive({ ...receive, moveShortfallToNext: event.target.checked }); setPaymentReview(null); }} disabled={!nextInstallmentAfter(receive.credit, receive.installment)} />
-              <span>Cliente pagou a menos: colocar o restante na próxima parcela</span>
-            </label>
+            <div className={`span-2 mapp-credit-auto-box mapp-credit-auto-box-${plan.tone}`}>
+              <strong>{plan.title}</strong>
+              <span>{plan.detail}</span>
+              {plan.next ? <small>Próxima parcela: {formatNumber(plan.next.number)}/{formatNumber(receive.credit.installments.length)} · vence {dateOnly(plan.next.due_date)}</small> : null}
+            </div>
+            {creditMode === 'avancado' ? (
+              <div className="span-2 mapp-credit-advanced-rules">
+                <strong>Avançado: alterar regra automática</strong>
+                <label className="mapp-check-field">
+                  <input type="checkbox" checked={receive.redistribute} onChange={(event) => { setReceive({ ...receive, redistribute: event.target.checked }); setPaymentReview(null); }} />
+                  <span>Forçar desconto da sobra nas próximas parcelas</span>
+                </label>
+                <label className="mapp-check-field">
+                  <input type="checkbox" checked={receive.moveShortfallToNext} onChange={(event) => { setReceive({ ...receive, moveShortfallToNext: event.target.checked }); setPaymentReview(null); }} disabled={!nextOpenInstallmentAfter(receive.credit, receive.installment)} />
+                  <span>Forçar falta para a próxima parcela</span>
+                </label>
+              </div>
+            ) : null}
           </div>
           <div className="mapp-sale-total-box">
             <div><span>Parcela</span><strong>{formatCurrency(receive.installment.amount)}</strong></div>
@@ -846,8 +1006,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 <span>Valor recebido agora <b>{formatCurrency(paymentReview.amount)}</b></span>
                 <span>Restante depois do pagamento <b>{formatCurrency(paymentReview.remainingAfter)}</b></span>
                 <span>Status depois do pagamento <b>{paymentReview.statusAfter}</b></span>
-                <span>Abatimento em próximas parcelas <b>{paymentReview.applyToFuture > 0 ? formatCurrency(paymentReview.applyToFuture) : 'Não haverá'}</b></span>
-                <span>Falta jogada para próxima <b>{receive.moveShortfallToNext && paymentReview.missing > 0 ? formatCurrency(paymentReview.missing) : 'Não haverá'}</b></span>
+                <span>Abatimento em próximas parcelas <b>{activeRedistribute && paymentReview.applyToFuture > 0 ? formatCurrency(paymentReview.applyToFuture) : 'Não haverá'}</b></span>
+                <span>Falta jogada para próxima <b>{activeMoveShortfall && paymentReview.missing > 0 ? formatCurrency(paymentReview.missing) : 'Não haverá'}</b></span>
                 <span>Forma de pagamento <b>{creditPaymentMethodLabel(paymentReview.method)}</b></span>
               </div>
               <small>Se recebeu errado, registre a correção com cuidado no caixa/crediário ou procure o responsável.</small>
@@ -856,18 +1016,20 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
           <div className="mapp-form-actions">
             <button type="button" className="mapp-secondary-button" onClick={() => { setReceive(null); setPaymentReview(null); }}>Cancelar</button>
             {paymentReview ? <button type="button" className="mapp-secondary-button" onClick={() => setPaymentReview(null)}>Corrigir valor</button> : null}
-            {paymentReview && !paymentReview.ok ? <button type="button" className="mapp-secondary-button" onClick={setExactReceiveAmount}>Usar saldo exato</button> : null}
+            {paymentReview && !paymentReview.ok ? <button type="button" className="mapp-secondary-button" onClick={setExactReceiveAmount}>Usar valor da parcela</button> : null}
+            {paymentReview && !paymentReview.ok ? <button type="button" className="mapp-secondary-button" onClick={setTotalOpenReceiveAmount}>Usar saldo total</button> : null}
             {!paymentReview ? (
               <button type="button" className="mapp-primary-button" onClick={prepareReceiveConfirmation} disabled={saving}>{saving ? 'Conferindo...' : 'Conferir antes de receber'}</button>
             ) : paymentReview.ok ? (
               <button type="button" className="mapp-primary-button" onClick={() => void submitReceiveConfirmed()} disabled={saving}>
-                {saving ? 'Recebendo...' : paymentReview.severity === 'over-installment' ? 'Confirmar mesmo assim' : 'Confirmar recebimento'}
+                {saving ? 'Recebendo...' : 'Confirmar recebimento'}
               </button>
             ) : null}
           </div>
         </section>
       </div>
-      ) : null}
+        );
+      })() : null}
 
       {loading ? <div className="mapp-inline-status">Carregando crediário...</div> : null}
 
