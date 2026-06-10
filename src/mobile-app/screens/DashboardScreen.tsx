@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import type { AppStatus, DashboardData, PageKey, PaymentMethod, ProductInsight, ReceiptSummary, SaleSummary } from '../../types';
 import { ActionTile } from '../components/ActionTile';
-import { EmptyState } from '../components/EmptyState';
+import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
@@ -186,7 +186,14 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
             ))}
           </div>
         ) : (
-          <EmptyState icon="vendas_pdv" title="Nenhuma venda hoje" detail="Abra o PDV para registrar a primeira venda." actionLabel="Abrir PDV" actionPage="sales" onNavigate={onNavigate} />
+          <button type="button" className="mapp-dashboard-empty-activity" onClick={() => onNavigate('sales')}>
+            <span><InlineIcon name="vendas_pdv" size={24} /></span>
+            <div>
+              <strong>Nenhuma venda hoje</strong>
+              <small>Abra o PDV para registrar a primeira venda.</small>
+            </div>
+            <b aria-hidden="true">›</b>
+          </button>
         )}
       </section>
     </div>
