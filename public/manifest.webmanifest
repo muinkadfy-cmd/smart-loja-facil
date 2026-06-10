@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v213",
-  "short_name": "Jaque v213",
-  "description": "PWA da loja v213 com Crediário compacto premium mobile.",
+  "name": "Jaque Confecções e Presentes v214",
+  "short_name": "Jaque v214",
+  "description": "PWA da loja v214 com padrão compacto premium em Produtos, Clientes e Comprovantes.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

@@ -10297,3 +10297,455 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     display: none;
   }
 }
+
+
+/* Mega Lote 214 — Padrão Compacto Premium: Produtos, Clientes e Comprovantes */
+.mapp-products-screen,
+.mapp-customers-screen,
+.mapp-receipts-screen {
+  gap: 12px !important;
+}
+
+.mapp-products-screen .mapp-crud-hero,
+.mapp-customers-screen .mapp-crud-hero {
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-products-screen .mapp-crud-hero p,
+.mapp-customers-screen .mapp-crud-hero p {
+  margin-top: 3px !important;
+  font-size: clamp(.78rem, 2.7vw, .88rem) !important;
+  line-height: 1.28 !important;
+}
+
+.mapp-products-screen .mapp-crud-hero button,
+.mapp-customers-screen .mapp-crud-hero button {
+  min-height: 44px !important;
+  border-radius: 16px !important;
+  padding-inline: 14px !important;
+}
+
+.mapp-products-screen .mapp-mini-stat-grid,
+.mapp-customers-screen .mapp-mini-stat-grid,
+.mapp-receipts-screen .mapp-receipts-stats {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  border: 1px solid rgba(203,213,225,.82) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 14px 34px rgba(15,23,42,.055) !important;
+}
+
+.mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card,
+.mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card,
+.mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card {
+  min-height: 98px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(203,213,225,.74) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 12px 10px !important;
+}
+
+.mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card:last-child,
+.mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card:last-child,
+.mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card:last-child {
+  border-right: 0 !important;
+}
+
+.mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card strong,
+.mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card strong,
+.mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card strong {
+  font-size: clamp(.92rem, 3.4vw, 1.18rem) !important;
+  letter-spacing: -.03em !important;
+}
+
+.mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card small,
+.mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card small,
+.mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card small {
+  font-size: clamp(.72rem, 2.4vw, .82rem) !important;
+  line-height: 1.18 !important;
+}
+
+.mapp-products-help-card,
+.mapp-receipts-help-card {
+  min-height: 0 !important;
+  padding: 12px 14px !important;
+  border-radius: 22px !important;
+  background: linear-gradient(135deg, #eefdf5 0%, #f8fffb 100%) !important;
+  border: 1px solid rgba(22,163,74,.18) !important;
+}
+
+.mapp-products-help-card::before,
+.mapp-products-help-card::after,
+.mapp-receipts-help-card::before,
+.mapp-receipts-help-card::after {
+  display: none !important;
+  content: none !important;
+}
+
+.mapp-products-screen .mapp-crud-toolbar,
+.mapp-customers-screen .mapp-crud-toolbar {
+  gap: 10px !important;
+  padding: 10px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-products-screen .mapp-crud-toolbar label,
+.mapp-customers-screen .mapp-crud-toolbar label {
+  min-height: 56px !important;
+  border-radius: 19px !important;
+}
+
+.mapp-products-screen .mapp-crud-toolbar input,
+.mapp-customers-screen .mapp-crud-toolbar input {
+  min-height: 52px !important;
+}
+
+.mapp-products-screen .mapp-product-filter-row,
+.mapp-customers-screen .mapp-product-filter-row {
+  gap: 8px !important;
+}
+
+.mapp-products-screen .mapp-product-filter-row button,
+.mapp-customers-screen .mapp-product-filter-row button {
+  min-height: 39px !important;
+  border-radius: 999px !important;
+  padding: 0 16px !important;
+  font-size: .84rem !important;
+  box-shadow: none !important;
+}
+
+.mapp-products-screen .mapp-crud-list,
+.mapp-customers-screen .mapp-crud-list,
+.mapp-receipts-screen .mapp-crud-list,
+.mapp-receipts-screen .mapp-credit-customer-list {
+  gap: 10px !important;
+}
+
+.mapp-products-screen .mapp-crud-card,
+.mapp-customers-screen .mapp-crud-card {
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border-radius: 24px !important;
+  box-shadow: 0 15px 34px rgba(15,23,42,.06) !important;
+}
+
+.mapp-products-screen .mapp-crud-card.is-compact,
+.mapp-customers-screen .mapp-crud-card.is-compact {
+  min-height: 104px !important;
+}
+
+.mapp-products-screen .mapp-crud-title-row strong,
+.mapp-customers-screen .mapp-crud-title-row strong {
+  font-size: clamp(1rem, 3.8vw, 1.16rem) !important;
+  line-height: 1.08 !important;
+}
+
+.mapp-products-screen .mapp-crud-main p,
+.mapp-customers-screen .mapp-crud-main p {
+  margin-top: 3px !important;
+  font-size: clamp(.82rem, 3vw, .92rem) !important;
+  line-height: 1.24 !important;
+}
+
+.mapp-products-screen .mapp-compact-hint,
+.mapp-customers-screen .mapp-compact-hint {
+  display: inline-flex !important;
+  margin-top: 5px !important;
+  color: #64748b !important;
+  font-size: .76rem !important;
+  line-height: 1.2 !important;
+}
+
+.mapp-products-screen .mapp-crud-meta,
+.mapp-customers-screen .mapp-crud-meta {
+  margin-top: 8px !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+.mapp-products-screen .mapp-crud-meta span,
+.mapp-customers-screen .mapp-crud-meta span {
+  min-height: 38px !important;
+  display: grid !important;
+  align-content: center !important;
+  border: 1px solid rgba(226,232,240,.92) !important;
+  border-radius: 13px !important;
+  background: rgba(248,250,252,.8) !important;
+  padding: 7px 9px !important;
+  font-size: .78rem !important;
+  color: #475569 !important;
+}
+
+.mapp-products-screen .mapp-crud-side,
+.mapp-customers-screen .mapp-crud-side {
+  align-items: end !important;
+  gap: 8px !important;
+}
+
+.mapp-products-screen .mapp-crud-side > strong,
+.mapp-customers-screen .mapp-crud-side > strong {
+  font-size: clamp(.96rem, 3.4vw, 1.1rem) !important;
+  color: #0b1933 !important;
+}
+
+.mapp-products-screen .mapp-product-actions,
+.mapp-customers-screen .mapp-customer-actions {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+  min-width: 112px !important;
+}
+
+.mapp-products-screen .mapp-product-actions button,
+.mapp-customers-screen .mapp-customer-actions button {
+  min-height: 38px !important;
+  border-radius: 14px !important;
+  padding: 0 12px !important;
+  font-size: .82rem !important;
+  font-weight: 880 !important;
+}
+
+.mapp-products-screen .mapp-crud-card.is-expanded .mapp-product-actions,
+.mapp-customers-screen .mapp-crud-card.is-expanded .mapp-customer-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  min-width: min(44vw, 240px) !important;
+}
+
+.mapp-receipts-screen .mapp-filters-card {
+  padding: 10px !important;
+  border-radius: 24px !important;
+}
+
+.mapp-receipts-screen .mapp-search-field {
+  min-height: 56px !important;
+  border-radius: 19px !important;
+}
+
+.mapp-receipts-screen .mapp-search-field input {
+  min-height: 52px !important;
+  font-size: .95rem !important;
+}
+
+.mapp-receipts-screen .mapp-filter-pills button {
+  min-height: 39px !important;
+  padding: 0 15px !important;
+  font-size: .84rem !important;
+  box-shadow: none !important;
+}
+
+.mapp-receipt-customer-card {
+  border-radius: 24px !important;
+  box-shadow: 0 15px 34px rgba(15,23,42,.06) !important;
+  padding: 12px !important;
+}
+
+.mapp-receipt-customer-head {
+  grid-template-columns: 48px minmax(0, 1fr) auto auto !important;
+  gap: 10px !important;
+  padding: 4px !important;
+  border-radius: 18px !important;
+}
+
+.mapp-receipt-customer-head::after {
+  content: "›";
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #0f172a;
+  font-size: 2.1rem;
+  line-height: 1;
+  transition: transform .18s ease;
+}
+
+.mapp-receipt-customer-head[aria-expanded="true"]::after {
+  transform: rotate(90deg);
+}
+
+.mapp-receipt-customer-head strong {
+  font-size: clamp(1.04rem, 3.8vw, 1.18rem) !important;
+  line-height: 1.06 !important;
+}
+
+.mapp-receipt-customer-head small {
+  font-size: clamp(.8rem, 2.9vw, .9rem) !important;
+  line-height: 1.24 !important;
+}
+
+.mapp-credit-customer-totals {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  border: 1px solid rgba(226,232,240,.92) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+.mapp-credit-customer-totals span {
+  min-height: 58px !important;
+  display: grid !important;
+  align-content: center !important;
+  border-right: 1px solid rgba(226,232,240,.92) !important;
+  padding: 8px 12px !important;
+  color: #64748b !important;
+  font-size: .76rem !important;
+}
+
+.mapp-credit-customer-totals span:last-child {
+  border-right: 0 !important;
+}
+
+.mapp-credit-customer-totals b {
+  display: block !important;
+  margin-top: 3px !important;
+  color: #0b1933 !important;
+  font-size: .96rem !important;
+}
+
+.mapp-receipt-note-card {
+  border-radius: 22px !important;
+  padding: 11px !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-head {
+  grid-template-columns: 44px minmax(0,1fr) auto auto !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-head::after {
+  content: "›";
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #0f172a;
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.mapp-receipt-note-card.expanded .mapp-credit-note-head::after {
+  transform: rotate(90deg);
+}
+
+.mapp-receipt-note-card .mapp-credit-totals {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  border: 1px solid rgba(226,232,240,.92) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-totals div {
+  border: 0 !important;
+  border-right: 1px solid rgba(226,232,240,.92) !important;
+  border-radius: 0 !important;
+  background: rgba(248,250,252,.62) !important;
+  min-height: 56px !important;
+  padding: 8px 10px !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-totals div:last-child {
+  border-right: 0 !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-actions,
+.mapp-receipt-card .mapp-receipt-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.mapp-receipt-note-card .mapp-credit-note-actions button,
+.mapp-receipt-card .mapp-receipt-actions button {
+  min-height: 42px !important;
+  width: 100% !important;
+  border-radius: 15px !important;
+  font-size: .8rem !important;
+  font-weight: 880 !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+}
+
+.mapp-receipt-card {
+  border-radius: 24px !important;
+  padding: 12px !important;
+}
+
+@media (max-width: 560px) {
+  .mapp-products-screen .mapp-mini-stat-grid,
+  .mapp-customers-screen .mapp-mini-stat-grid,
+  .mapp-receipts-screen .mapp-receipts-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card:nth-child(2),
+  .mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card:nth-child(2),
+  .mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card:nth-child(2) {
+    border-right: 0 !important;
+  }
+
+  .mapp-products-screen .mapp-mini-stat-grid .mapp-stat-card:nth-child(-n+2),
+  .mapp-customers-screen .mapp-mini-stat-grid .mapp-stat-card:nth-child(-n+2),
+  .mapp-receipts-screen .mapp-receipts-stats .mapp-stat-card:nth-child(-n+2) {
+    border-bottom: 1px solid rgba(203,213,225,.74) !important;
+  }
+
+  .mapp-products-screen .mapp-crud-card,
+  .mapp-customers-screen .mapp-crud-card {
+    grid-template-columns: auto minmax(0,1fr) !important;
+  }
+
+  .mapp-products-screen .mapp-crud-side,
+  .mapp-customers-screen .mapp-crud-side {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+
+  .mapp-products-screen .mapp-crud-card.is-expanded .mapp-product-actions,
+  .mapp-customers-screen .mapp-crud-card.is-expanded .mapp-customer-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    min-width: 0 !important;
+  }
+
+  .mapp-receipt-note-card .mapp-credit-note-actions,
+  .mapp-receipt-card .mapp-receipt-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .mapp-receipt-note-card .mapp-credit-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .mapp-receipt-note-card .mapp-credit-totals div:nth-child(2) {
+    border-right: 0 !important;
+  }
+
+  .mapp-receipt-note-card .mapp-credit-totals div:nth-child(-n+2) {
+    border-bottom: 1px solid rgba(226,232,240,.92) !important;
+  }
+}

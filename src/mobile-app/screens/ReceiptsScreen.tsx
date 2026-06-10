@@ -1897,7 +1897,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
   return (
     <div className="mapp-screen mapp-receipts-screen">
-      <section className="mapp-mini-stat-grid">
+      <section className="mapp-mini-stat-grid mapp-receipts-stats">
         <StatCard label="Comprovantes" value={formatNumber(totalReceipts)} detail="salvos, notas e parcelas" icon="comprovantes" tone="sky" />
         <StatCard label="Valor somado" value={formatCurrency(totalValue)} detail="vendas + notas" icon="dinheiro" tone="green" />
         <StatCard label="Atenção" value={formatNumber(pendingCount)} detail="parcelas pendentes" icon="crediario" tone="orange" />
@@ -1906,9 +1906,9 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       {loading ? <div className="mapp-inline-status">Carregando comprovantes...</div> : null}
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
-      <section className="mapp-success-card">
-        <strong>Comprovantes organizados por cliente, nota e parcela</strong>
-        <span>Esta aba usa o recibo preto/branco padrão Jaque. Visualizar abre dentro do app, PDF baixa arquivo real e Enviar compartilha o arquivo pronto sem link e sem texto extra; se o navegador bloquear, baixa o arquivo para anexar manualmente.</span>
+      <section className="mapp-success-card mapp-receipts-help-card">
+        <strong>Comprovantes compactos por cliente</strong>
+        <span>Clientes começam fechados. Toque no cliente para abrir notas, parcelas, PDF, PNG e compartilhamento.</span>
       </section>
 
       <section className="mapp-filters-card mapp-receipts-filter-card">
@@ -1984,7 +1984,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                   <div className="mapp-credit-customer-avatar" aria-hidden="true">{customerInitials(group.customerName)}</div>
                   <div>
                     <strong>{group.customerName}</strong>
-                    <small>{group.notesCount} notas · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
+                    <small>{group.notesCount} notas · {group.openNotes} em aberto · {group.contact || 'sem telefone'}</small>
                   </div>
                   <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Atrasado · ${formatCurrency(group.balance)}` : `Aberto · ${formatCurrency(group.balance)}`}</em>
                 </button>
@@ -2080,7 +2080,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
         <section className="mapp-crud-list mapp-receipt-saved-list" aria-label="Comprovantes salvos">
           <div className="mapp-section-title-row">
             <strong>Comprovantes salvos de vendas e caixa</strong>
-            <small>{formatNumber(filteredSavedReceipts.length)} registro(s)</small>
+            <small>{formatNumber(filteredSavedReceipts.length)} registros</small>
           </div>
           {visibleSavedReceipts.map((receipt) => {
             const preview = savedReceiptPreview(receipt);

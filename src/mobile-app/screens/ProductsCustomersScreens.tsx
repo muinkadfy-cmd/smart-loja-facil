@@ -809,7 +809,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         <span className="mapp-panel-icon tone-sky"><InlineIcon name="produtos" size={24} /></span>
         <div>
           <strong>Produtos prontos para vender</strong>
-          <p>Cadastre, edite, busque e acompanhe estoque baixo. Dica: estoque mínimo é o limite para o app avisar quando precisa repor.</p>
+          <p>Produtos em cartões compactos. Toque em Detalhes para ver código, custo, foto e ações.</p>
         </div>
         <button type="button" onClick={startNewProduct}>Novo produto</button>
       </section>
@@ -832,7 +832,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         </section>
       ) : null}
 
-      <section className="mapp-success-card">
+      <section className="mapp-success-card mapp-products-help-card">
         <strong>Dica de estoque mínimo</strong>
         <span>Quando o estoque ficar em {formatNumber(lowLimit)} ou menos, o produto aparece em Atenção para reposição.</span>
       </section>
@@ -1152,7 +1152,7 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
         <span className="mapp-panel-icon tone-purple"><InlineIcon name="clientes" size={24} /></span>
         <div>
           <strong>Clientes organizados</strong>
-          <p>Dica: telefone ajuda a enviar comprovante pelo WhatsApp e localizar o cliente no crediário.</p>
+          <p>Clientes em cartões compactos. Toque em Detalhes para abrir endereço, limite, WhatsApp e ações.</p>
         </div>
         <button type="button" onClick={startNewCustomer}>Novo cliente</button>
       </section>
