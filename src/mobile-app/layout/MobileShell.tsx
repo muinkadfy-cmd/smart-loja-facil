@@ -119,7 +119,7 @@ export function MobileShell({
           <MobileHeader status={status} settings={settings} alertsCount={alertsCount} onOpenAlerts={onOpenAlerts} onRefresh={onRefresh} onLogout={onLogout} />
         </div>
 
-        <main ref={pageRef} className="mapp-page" id="mapp-page-scroll">
+        <main ref={pageRef} className={`mapp-page mapp-page-${activePage}`} id="mapp-page-scroll">
           <section className="mapp-store-card">
             <span className="mapp-avatar">{storeName.slice(0, 2).toUpperCase()}</span>
             <div>

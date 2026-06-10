@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v212",
-  "short_name": "Jaque v212",
-  "description": "PWA da loja v212 com compartilhamento iPhone sem link automático e acentos preservados no PDF/PNG.",
+  "name": "Jaque Confecções e Presentes v213",
+  "short_name": "Jaque v213",
+  "description": "PWA da loja v213 com Crediário compacto premium mobile.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

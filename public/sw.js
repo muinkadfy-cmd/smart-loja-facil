@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v212-iphone-acentos-pdf';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v213-crediario-compacto-premium';
 const APP_SHELL = [
   '/',
   '/index.html',

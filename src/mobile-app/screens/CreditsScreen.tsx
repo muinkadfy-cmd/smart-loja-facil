@@ -13,7 +13,6 @@ import { COMPACT_CREDIT_LIMIT, LOAD_MORE_STEP, SEARCH_RESULT_LIMIT, useDebounced
 import type { AppStatus, CreditInstallment, CreditSummary, PageKey } from '../../types';
 import { EmptyState } from '../components/EmptyState';
 import { InlineIcon } from '../components/InlineIcon';
-import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { notifyMobileAction } from '../components/actionToast';
 import { clearCreditFocusPayload, readCreditFocusPayload } from '../deepLinks';
@@ -311,6 +310,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [correction, setCorrection] = useState<CorrectionState | null>(null);
   const [correctionMenu, setCorrectionMenu] = useState<CorrectionMenuState | null>(null);
   const [creditMode, setCreditMode] = useState<CreditMode>('simples');
+  const [showCreditHelp, setShowCreditHelp] = useState(true);
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -714,17 +714,43 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   return (
     <div className="mapp-screen mapp-credits-screen">
-      <section className="mapp-mini-stat-grid mapp-credits-stats">
-        <StatCard label="Em aberto" value={formatCurrency(summary.openBalance)} detail={`${pluralLabel(summary.openCount, 'crediário', 'crediários')}`} icon="crediario" tone="purple" />
-        <StatCard label="Vencidos" value={formatCurrency(summary.overdueTotal)} detail={`${pluralLabel(summary.overdueCount, 'parcela', 'parcelas')}`} icon="auditoria_logs" tone="orange" />
-        <StatCard label="Clientes" value={formatNumber(status?.dashboard.credits_active_customers)} detail="com crediário ativo" icon="clientes" tone="sky" />
-        <StatCard label="Próximo vencimento" value={summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'} detail={summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'} icon="comprovantes" tone="green" />
+      <section className="mapp-credit-premium-summary" aria-label="Resumo rápido do crediário">
+        <div className="tone-purple">
+          <span><InlineIcon name="crediario" size={24} /></span>
+          <small>Em aberto</small>
+          <strong>{formatCurrency(summary.openBalance)}</strong>
+          <em>{pluralLabel(summary.openCount, 'crediário', 'crediários')}</em>
+        </div>
+        <div className="tone-orange">
+          <span><InlineIcon name="auditoria_logs" size={24} /></span>
+          <small>Vencidos</small>
+          <strong>{formatCurrency(summary.overdueTotal)}</strong>
+          <em>{pluralLabel(summary.overdueCount, 'parcela', 'parcelas')}</em>
+        </div>
+        <div className="tone-sky">
+          <span><InlineIcon name="clientes" size={24} /></span>
+          <small>Clientes</small>
+          <strong>{formatNumber(status?.dashboard.credits_active_customers)}</strong>
+          <em>com crediário ativo</em>
+        </div>
+        <div className="tone-green">
+          <span><InlineIcon name="comprovantes" size={24} /></span>
+          <small>Próximo vencimento</small>
+          <strong>{summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'}</strong>
+          <em>{summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'}</em>
+        </div>
       </section>
 
-      <section className="mapp-success-card mapp-credit-help-card">
-        <strong>Crediário fácil para operador leigo</strong>
-        <span>Use o modo simples no dia a dia: receber, ver recibo e corrigir com assistente. Deixe o modo avançado só para responsável.</span>
-      </section>
+      {showCreditHelp ? (
+        <section className="mapp-success-card mapp-credit-help-card">
+          <span className="mapp-credit-help-icon"><InlineIcon name="bloqueio_seguro" size={24} /></span>
+          <div>
+            <strong>Crediário fácil para operador leigo</strong>
+            <span>Use o modo simples no dia a dia: receber, ver recibo e corrigir com assistente. Deixe o modo avançado só para responsável.</span>
+          </div>
+          <button type="button" aria-label="Fechar aviso do crediário" onClick={() => setShowCreditHelp(false)}>×</button>
+        </section>
+      ) : null}
 
       <section className="mapp-credit-mode-card" aria-label="Modo da aba crediário">
         <div>
@@ -1046,7 +1072,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
             const statusInfo = creditStatusInfo(credit);
             const isExpanded = Boolean(expandedCredits[credit.id]);
-            const visibleInstallments = isExpanded ? credit.installments : (nextInstallment ? [nextInstallment] : []);
+            const visibleInstallments = isExpanded ? credit.installments : [];
             const hiddenInstallments = Math.max(0, credit.installments.length - visibleInstallments.length);
             return (
               <article key={credit.id} data-credit-id={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'}`}>
@@ -1061,7 +1087,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <div>
                     <strong>{credit.customer_name || 'Cliente sem nome'}</strong>
                     <small>Venda #{String(credit.sale_number).padStart(4, '0')} · {formatDateTime(credit.created_at)}</small>
-                    <small>{statusInfo.detail} · {nextCreditActionLabel(credit)}</small>
+                    <small>{statusInfo.detail.replace(/\.$/, '')} · {nextCreditActionLabel(credit)}</small>
                   </div>
                   <em className={statusInfo.tone}>{statusInfo.label}</em>
                 </button>
@@ -1069,7 +1095,6 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <div><span>Total</span><strong>{formatCurrency(credit.total)}</strong></div>
                   <div><span>Pago</span><strong>{formatCurrency(creditPaidTotal(credit))}</strong></div>
                   <div><span>Saldo</span><strong>{formatCurrency(credit.balance)}</strong></div>
-                  <div><span>Contato</span><strong>{credit.customer_whatsapp || credit.customer_phone || '-'}</strong></div>
                 </div>
                 <div className="mapp-credit-progress" aria-label={`${paidCount} de ${credit.installments.length} parcelas pagas`}>
                   <span style={{ width: `${credit.installments.length ? Math.round((paidCount / credit.installments.length) * 100) : 0}%` }} />
@@ -1077,8 +1102,11 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 {nextInstallment ? (
                   <div className="mapp-credit-next-strip">
                     <span>Próxima cobrança</span>
-                    <strong>Parcela {formatNumber(nextInstallment.number)}/{formatNumber(credit.installments.length)}</strong>
-                    <small>{dateOnly(nextInstallment.due_date)} · {formatCurrency(remainingOf(nextInstallment))}</small>
+                    <div>
+                      <strong>Parcela {formatNumber(nextInstallment.number)}/{formatNumber(credit.installments.length)}</strong>
+                      <small>{dateOnly(nextInstallment.due_date)}</small>
+                    </div>
+                    <b>{formatCurrency(remainingOf(nextInstallment))}</b>
                   </div>
                 ) : null}
                 <div className="mapp-installment-list">
@@ -1119,11 +1147,6 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     );
                   })}
                 </div>
-                {hiddenInstallments ? (
-                  <button type="button" className="mapp-credit-expand-button" onClick={() => toggleCreditExpanded(credit.id)}>
-                    Ver todas as parcelas ({formatNumber(credit.installments.length)})
-                  </button>
-                ) : null}
                 {isExpanded && credit.installments.length > 1 ? (
                   <button type="button" className="mapp-credit-collapse-button" onClick={() => toggleCreditExpanded(credit.id)}>
                     Recolher parcelas e deixar compacto
@@ -1136,6 +1159,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     </button>
                   ) : null}
                   <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Ver extrato da nota</button>
+                  {nextInstallment ? (
+                    <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, nextInstallment)}>Corrigir</button>
+                  ) : null}
                 </div>
               </article>
             );
