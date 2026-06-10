@@ -514,15 +514,15 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 ) : (
                   <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
                 )}
-                <span className="mapp-sales-product-info">
+                <div className="mapp-sales-product-info">
                   <span className="mapp-sales-product-name">{product.name}</span>
                   <span className="mapp-sales-product-code">{product.internal_code || product.category || 'Produto'}</span>
                   <span className={product.stock <= 0 ? 'mapp-sales-product-stock danger' : 'mapp-sales-product-stock'}>
                     {product.stock <= 0 ? 'Sem estoque' : 'Em estoque'}{inCartQty ? ` · carrinho ${formatNumber(inCartQty)}` : ''}
                   </span>
-                </span>
-                <span className="mapp-sales-product-price">{formatCurrency(price)}</span>
-                <span className={product.stock <= 0 ? 'mapp-sales-product-action danger' : 'mapp-sales-product-action'}>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</span>
+                </div>
+                <div className="mapp-sales-product-price">{formatCurrency(price)}</div>
+                <div className={product.stock <= 0 ? 'mapp-sales-product-action danger' : 'mapp-sales-product-action'}>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</div>
               </button>
             );
           })}

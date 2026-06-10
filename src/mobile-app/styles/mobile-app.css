@@ -12071,3 +12071,323 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     padding: 0 8px !important;
   }
 }
+
+
+/* Mega Lote 218 — PDV Premium Definitivo: sem herança, menos poluição e mobile-first */
+
+/* Reset definitivo: só a foto/ícone usa span direto. As informações agora são divs/classes próprias. */
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 66px !important;
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "thumb info price"
+    "thumb info action" !important;
+  gap: 4px 8px !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(226,232,240,.88) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0b1933 !important;
+  padding: 7px 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button:hover,
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button:focus-visible {
+  background: rgba(239,246,255,.68) !important;
+  outline: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button:last-child {
+  border-bottom: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+  grid-area: thumb !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  border-radius: 14px !important;
+  align-self: center !important;
+  justify-self: start !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+  display: grid !important;
+  place-items: center !important;
+  background: #edf7ff !important;
+  color: #3b82f6 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button.is-out-of-stock > span.is-empty {
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info {
+  grid-area: info !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 1px !important;
+  align-content: center !important;
+  justify-self: stretch !important;
+  overflow: hidden !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-name,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-code,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  clear: none !important;
+  transform: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-name {
+  color: #0b1933 !important;
+  font-size: clamp(.86rem, 3.15vw, .98rem) !important;
+  line-height: 1.08 !important;
+  font-weight: 900 !important;
+  letter-spacing: -.014em !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-code {
+  color: #64748b !important;
+  font-size: clamp(.66rem, 2.45vw, .74rem) !important;
+  line-height: 1.06 !important;
+  font-weight: 760 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock {
+  color: #059669 !important;
+  font-size: clamp(.65rem, 2.4vw, .72rem) !important;
+  line-height: 1.06 !important;
+  font-weight: 900 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock.danger {
+  color: #e11d48 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-price {
+  grid-area: price !important;
+  justify-self: end !important;
+  align-self: end !important;
+  display: block !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #2563eb !important;
+  font-size: clamp(.9rem, 3.7vw, 1.06rem) !important;
+  line-height: 1.05 !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action {
+  grid-area: action !important;
+  justify-self: end !important;
+  align-self: start !important;
+  min-width: 76px !important;
+  width: auto !important;
+  height: 28px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+  color: #2563eb !important;
+  font-size: clamp(.62rem, 2.35vw, .7rem) !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action.danger {
+  min-width: 84px !important;
+  border-color: rgba(225,29,72,.22) !important;
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+/* Redução de poluição e altura na aba inteira */
+.mapp-page-sales .mapp-sales-product-browser {
+  padding: 10px 12px 12px !important;
+  border-radius: 22px !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-pdv-search-box {
+  min-height: 48px !important;
+  border-radius: 17px !important;
+  padding: 0 12px !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-pdv-search-box input {
+  min-height: 46px !important;
+  font-size: clamp(.84rem, 3.1vw, .94rem) !important;
+}
+
+.mapp-page-sales .mapp-sales-category-row {
+  padding: 7px 0 8px !important;
+  gap: 7px !important;
+}
+
+.mapp-page-sales .mapp-sales-category-row button {
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  font-size: clamp(.72rem, 2.65vw, .82rem) !important;
+}
+
+.mapp-page-sales .mapp-sales-show-more-products {
+  min-height: 40px !important;
+  margin-top: 8px !important;
+  border-radius: 15px !important;
+  font-size: clamp(.78rem, 2.9vw, .88rem) !important;
+}
+
+/* Mini carrinho e pagamento mais compactos para não empurrar a tela */
+.mapp-page-sales .mapp-sales-mini-cart,
+.mapp-page-sales .mapp-pdv-quick-payment,
+.mapp-page-sales .mapp-pdv-checkout,
+.mapp-page-sales .mapp-sales-recent-side {
+  border-radius: 22px !important;
+  padding: 13px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-section-title,
+.mapp-page-sales .mapp-pdv-quick-payment .mapp-section-title,
+.mapp-page-sales .mapp-pdv-checkout .mapp-section-title {
+  margin-bottom: 8px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-list {
+  max-height: 170px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-item {
+  min-height: 68px !important;
+  padding: 7px 0 !important;
+  gap: 5px 8px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-item > span {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 13px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-summary {
+  margin-top: 7px !important;
+  padding-top: 8px !important;
+  gap: 4px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-summary span,
+.mapp-page-sales .mapp-sales-mini-cart-summary strong {
+  font-size: clamp(.82rem, 2.9vw, .96rem) !important;
+}
+
+.mapp-page-sales .mapp-sales-payment-jump {
+  min-height: 44px !important;
+  margin-top: 8px !important;
+  border-radius: 15px !important;
+  font-size: clamp(.86rem, 3vw, .98rem) !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-actions {
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-actions button {
+  min-height: 38px !important;
+  border-radius: 14px !important;
+  font-size: clamp(.78rem, 2.8vw, .88rem) !important;
+}
+
+.mapp-page-sales .mapp-sales-quick-pay-grid {
+  gap: 8px !important;
+}
+
+.mapp-page-sales .mapp-sales-quick-pay-grid button {
+  min-height: 58px !important;
+  border-radius: 16px !important;
+  gap: 4px !important;
+}
+
+.mapp-page-sales .mapp-pdv-checkout input,
+.mapp-page-sales .mapp-pdv-checkout select {
+  min-height: 44px !important;
+  border-radius: 15px !important;
+  font-size: .9rem !important;
+}
+
+@media (max-width: 430px) {
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+    grid-template-columns: 46px minmax(0, 1fr) auto !important;
+    min-height: 64px !important;
+    gap: 4px 7px !important;
+    padding: 7px 0 !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action {
+    min-width: 72px !important;
+    height: 27px !important;
+    padding: 0 7px !important;
+  }
+}
