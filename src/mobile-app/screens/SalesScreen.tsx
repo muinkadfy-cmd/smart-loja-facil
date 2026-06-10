@@ -12,7 +12,6 @@ import {
 import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../../types';
 import { InlineIcon } from '../components/InlineIcon';
 import { ListCard } from '../components/ListCard';
-import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 import { notifyMobileAction } from '../components/actionToast';
@@ -120,6 +119,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [cash, setCash] = useState<CashSummary | null>(null);
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query);
+  const [categoryFilter, setCategoryFilter] = useState('todos');
   const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
   const [customerQuery, setCustomerQuery] = useState('');
   const debouncedCustomerQuery = useDebouncedValue(customerQuery);
@@ -172,13 +172,25 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
 
   useEffect(() => {
     setProductVisibleLimit(resetLimitForQuery(debouncedQuery));
-  }, [debouncedQuery]);
+  }, [debouncedQuery, categoryFilter]);
 
   useEffect(() => {
     setCustomerVisibleLimit(resetLimitForQuery(debouncedCustomerQuery));
   }, [debouncedCustomerQuery]);
 
-  const filteredProducts = useMemo(() => {
+  const categoryOptions = useMemo(() => {
+    const counts = new Map<string, number>();
+    products.forEach((product) => {
+      const category = String(product.category || 'Sem categoria').trim() || 'Sem categoria';
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    });
+    return Array.from(counts.entries())
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], 'pt-BR'))
+      .slice(0, 4)
+      .map(([category, count]) => ({ category, count }));
+  }, [products]);
+
+  const filteredProductPool = useMemo(() => {
     const term = debouncedQuery.trim().toLowerCase();
     const source = term && canRunListSearch(debouncedQuery)
       ? products.filter((product) => [
@@ -188,8 +200,14 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         product.barcode,
       ].some((value) => value.toLowerCase().includes(term)))
       : sortStockedFirst(products);
-    return source.slice(0, limitForQuery(debouncedQuery, productVisibleLimit));
-  }, [debouncedQuery, productVisibleLimit, products]);
+    return categoryFilter === 'todos'
+      ? source
+      : source.filter((product) => (String(product.category || 'Sem categoria').trim() || 'Sem categoria') === categoryFilter);
+  }, [categoryFilter, debouncedQuery, products]);
+
+  const filteredProducts = useMemo(() => (
+    filteredProductPool.slice(0, limitForQuery(debouncedQuery, productVisibleLimit))
+  ), [debouncedQuery, filteredProductPool, productVisibleLimit]);
 
   const filteredCustomers = useMemo(() => {
     const term = debouncedCustomerQuery.trim().toLowerCase();
@@ -200,7 +218,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
     return source.slice(0, limitForQuery(debouncedCustomerQuery, customerVisibleLimit));
   }, [customerVisibleLimit, customers, debouncedCustomerQuery]);
 
-  const canLoadMoreProducts = !debouncedQuery.trim() && filteredProducts.length < products.length;
+  const canLoadMoreProducts = !debouncedQuery.trim() && filteredProducts.length < filteredProductPool.length;
   const canLoadMoreCustomers = !debouncedCustomerQuery.trim() && filteredCustomers.length < customers.length;
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.qty * item.unit_price, 0), [cart]);
@@ -408,12 +426,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
 
   return (
     <div className="mapp-screen mapp-sales-screen">
-      <section className="mapp-mini-stat-grid mapp-sales-stats">
-        <StatCard label="Vendas hoje" value={formatCurrency(status?.dashboard.today_sales_total)} detail={`${formatNumber(status?.dashboard.today_sales_count)} venda(s)`} icon="vendas_pdv" tone="blue" />
-        <StatCard label="Carrinho agora" value={formatNumber(totalQty)} detail={totalQty ? `${formatCurrency(total)} para finalizar` : 'Nenhum item selecionado'} icon="caixa" tone={totalQty ? 'green' : 'slate'} />
-      </section>
-
-      <section className="mapp-sales-flow-summary" aria-label="Resumo do fluxo de venda">
+      <section className="mapp-sales-flow-summary mapp-sales-flow-premium" aria-label="Resumo do fluxo de venda">
         <div className="mapp-sales-flow-copy">
           <span>PDV guiado</span>
           <strong>{currentStep === 4 ? 'Venda pronta para conferir' : currentStep === 3 ? 'Confira pagamento e cliente' : 'Comece escolhendo o produto'}</strong>
@@ -438,18 +451,53 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       {feedback ? <div className="mapp-form-feedback mapp-form-feedback-success">{feedback}</div> : null}
       {error ? <div className="mapp-form-feedback mapp-form-feedback-error">{error}</div> : null}
 
-      <section className="mapp-panel mapp-pdv-search">
-        <div className="mapp-form-head mapp-pdv-head">
-          <span className="mapp-form-icon tone-blue"><InlineIcon name="buscar" size={32} /></span>
+      <section className="mapp-sales-topbar" aria-label="Resumo rápido da venda">
+        <button type="button" className="mapp-sales-topbar-item" onClick={() => document.getElementById('mapp-mini-cart-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <span><InlineIcon name="vendas_pdv" size={24} /></span>
           <div>
-            <strong>1. Escolha o produto</strong>
-            <p>{availableProductsCount} produto(s) disponíveis{outOfStockCount ? ` · ${outOfStockCount} sem estoque` : ''}</p>
+            <small>Carrinho</small>
+            <strong>{totalQty ? `${formatNumber(totalQty)} ${totalQty === 1 ? 'item' : 'itens'}` : 'Vazio'}</strong>
+          </div>
+          <b>›</b>
+        </button>
+        <div className="mapp-sales-topbar-item">
+          <span><InlineIcon name="caixa" size={24} /></span>
+          <div>
+            <small>Subtotal</small>
+            <strong>{formatCurrency(subtotal)}</strong>
           </div>
         </div>
+        <label className="mapp-sales-topbar-item mapp-sales-customer-compact">
+          <span><InlineIcon name="clientes" size={24} /></span>
+          <div>
+            <small>Cliente</small>
+            <strong>{selectedCustomer?.name || 'Consumidor final'}</strong>
+          </div>
+          <select aria-label="Selecionar cliente da venda" value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
+            <option value="">Consumidor final</option>
+            {filteredCustomers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
+          </select>
+        </label>
+      </section>
+
+      <section className="mapp-sales-premium-layout">
+        <div className="mapp-sales-products-column">
+
+      <section className="mapp-panel mapp-pdv-search mapp-sales-product-browser">
         <label className="mapp-pdv-search-box" aria-label="Buscar produto">
           <InlineIcon name="buscar" size={24} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nome, código ou barras" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar produto, código ou barra" />
+          <InlineIcon name="relatorios" size={24} />
         </label>
+        <div className="mapp-sales-category-row" aria-label="Categorias rápidas">
+          <button type="button" className={categoryFilter === 'todos' ? 'active' : ''} onClick={() => setCategoryFilter('todos')}>Todos</button>
+          {categoryOptions.map((item) => (
+            <button key={item.category} type="button" className={categoryFilter === item.category ? 'active' : ''} onClick={() => setCategoryFilter(item.category)}>
+              {item.category}
+            </button>
+          ))}
+          <button type="button" className="mapp-sales-filter-button" onClick={() => setQuery('')}>Filtrar</button>
+        </div>
         {query.trim() && !canRunListSearch(query) ? <div className="mapp-inline-status">Digite ao menos 2 letras, SKU ou código de barras para buscar.</div> : null}
         <div className="mapp-product-pick-list">
           {filteredProducts.map((product) => {
@@ -464,8 +512,11 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 ) : (
                   <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
                 )}
-                <strong>{product.name}</strong>
-                <small>{product.internal_code || product.category || 'Produto'} · estoque {formatNumber(product.stock)}{inCartQty ? ` · no carrinho ${formatNumber(inCartQty)}` : ''}</small>
+                <div className="mapp-sales-product-info">
+                  <strong>{product.name}</strong>
+                  <small>{product.internal_code || product.category || 'Produto'}</small>
+                  <i>{product.stock <= 0 ? 'Sem estoque' : 'Em estoque'}{inCartQty ? ` · no carrinho ${formatNumber(inCartQty)}` : ''}</i>
+                </div>
                 <b>{formatCurrency(price)}</b>
                 <em>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</em>
               </button>
@@ -484,14 +535,16 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           </button>
         ) : null}
       </section>
+        </div>
 
-      <section className="mapp-panel mapp-pdv-cart">
+        <aside className="mapp-sales-side-column">
+      <section className="mapp-panel mapp-pdv-cart mapp-sales-mini-cart" id="mapp-mini-cart-panel">
         <div className="mapp-section-title mapp-section-title-compact">
           <div>
-            <h2>2. Carrinho</h2>
+            <h2>Mini carrinho</h2>
             <small>{cart.length ? `${formatNumber(totalQty)} ${totalQty === 1 ? 'item selecionado' : 'itens selecionados'}` : 'Carrinho vazio'}</small>
           </div>
-          {cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar</button> : null}
+          {cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar carrinho</button> : null}
         </div>
         {cart.length ? (
           <div className="mapp-cart-list">
@@ -526,12 +579,41 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             </div>
           </div>
         )}
+        <div className="mapp-sales-mini-cart-summary">
+          <span>Subtotal <b>{formatCurrency(subtotal)}</b></span>
+          <span>Desconto <b>{formatCurrency(discount)}</b></span>
+          <strong>Total <b>{formatCurrency(total)}</b></strong>
+        </div>
+        <button type="button" className="mapp-primary-button mapp-sales-payment-jump" disabled={!cart.length} onClick={() => document.getElementById('mapp-payment-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          Ir para pagamento
+        </button>
+        <div className="mapp-sales-mini-cart-actions">
+          {cart.length ? <button type="button" className="danger" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar carrinho</button> : null}
+          <button type="button" onClick={openQuickCustomerForm}>Mais ações</button>
+        </div>
       </section>
 
-      <section className="mapp-panel mapp-pdv-checkout">
+      <section className="mapp-panel mapp-pdv-quick-payment">
         <div className="mapp-section-title mapp-section-title-compact">
           <div>
-            <h2>3. Pagamento</h2>
+            <h2>Pagamento rápido</h2>
+            <small>Escolha a forma antes de finalizar.</small>
+          </div>
+        </div>
+        <div className="mapp-sales-quick-pay-grid">
+          {(['dinheiro', 'pix', 'cartao', 'crediario'] as PaymentMethod[]).map((method) => (
+            <button key={method} type="button" className={paymentMethod === method ? 'active' : ''} onClick={() => setPaymentMethod(method)}>
+              <InlineIcon name={method === 'dinheiro' ? 'caixa' : method === 'pix' ? 'comprovantes' : method === 'cartao' ? 'vendas_pdv' : 'crediario'} size={24} />
+              <span>{paymentLabel(method)}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="mapp-panel mapp-pdv-checkout" id="mapp-payment-panel">
+        <div className="mapp-section-title mapp-section-title-compact">
+          <div>
+            <h2>Pagamento e finalização</h2>
             <small>{paymentHelper}</small>
           </div>
           <button type="button" onClick={() => setPaymentMethod('dinheiro')}>Padrão</button>
@@ -673,7 +755,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         </div>
       ) : null}
 
-      <section className="mapp-section-block mapp-recent-sales-block">
+      <section className="mapp-section-block mapp-recent-sales-block mapp-sales-recent-side">
         <div className="mapp-section-title mapp-section-title-compact">
           <div>
             <h2>Vendas recentes</h2>
@@ -683,7 +765,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         </div>
         {sales.length ? (
           <div className="mapp-list-stack">
-            {sales.slice(0, 6).map((sale) => (
+            {sales.slice(0, 3).map((sale) => (
               <ListCard
                 key={sale.id}
                 icon="vendas_pdv"
@@ -716,6 +798,8 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
             <small>Finalize uma venda para acompanhar aqui.</small>
           </div>
         )}
+      </section>
+        </aside>
       </section>
     </div>
   );

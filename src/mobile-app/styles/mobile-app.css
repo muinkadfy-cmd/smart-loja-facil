@@ -10749,3 +10749,564 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     border-bottom: 1px solid rgba(226,232,240,.92) !important;
   }
 }
+
+
+/* Mega Lote 215 — Vendas / PDV Premium fiel à referência */
+.mapp-sales-screen {
+  gap: 12px !important;
+}
+
+.mapp-sales-flow-premium {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-copy {
+  display: none !important;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps {
+  min-width: min(56vw, 430px);
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  justify-self: end;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps span {
+  position: relative;
+  display: grid !important;
+  place-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  color: #64748b !important;
+  font-size: .78rem !important;
+  font-weight: 830 !important;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps span::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: calc(-50% + 20px);
+  width: calc(100% - 20px);
+  height: 2px;
+  background: rgba(148,163,184,.45);
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps span:first-child::before {
+  display: none;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps b {
+  width: 34px !important;
+  height: 34px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(203,213,225,.9) !important;
+  background: #fff !important;
+  color: #64748b !important;
+  font-size: .92rem !important;
+  box-shadow: 0 8px 18px rgba(15,23,42,.06);
+  z-index: 1;
+}
+
+.mapp-sales-flow-premium .mapp-sales-flow-steps span.active b {
+  border-color: #ec4899 !important;
+  background: linear-gradient(135deg, #ec4899, #db2777) !important;
+  color: #fff !important;
+}
+
+.mapp-sales-topbar {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.35fr);
+  border: 1px solid rgba(203,213,225,.86);
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 14px 34px rgba(15,23,42,.055);
+}
+
+.mapp-sales-topbar-item {
+  position: relative;
+  min-width: 0;
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-right: 1px solid rgba(203,213,225,.72);
+  background: transparent;
+  padding: 13px 18px;
+  color: #0b1933;
+  text-align: left;
+}
+
+.mapp-sales-topbar-item:last-child {
+  border-right: 0;
+}
+
+.mapp-sales-topbar-item > span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  border: 1px solid rgba(203,213,225,.8);
+  background: rgba(248,250,252,.9);
+  color: #2563eb;
+}
+
+.mapp-sales-topbar-item small {
+  display: block;
+  color: #64748b;
+  font-size: .82rem;
+  font-weight: 760;
+  line-height: 1.1;
+}
+
+.mapp-sales-topbar-item strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0b1933;
+  font-size: clamp(1rem, 3vw, 1.16rem);
+  font-weight: 940;
+  line-height: 1.12;
+}
+
+.mapp-sales-topbar-item b {
+  color: #334155;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.mapp-sales-customer-compact select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mapp-sales-premium-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, .9fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.mapp-sales-products-column,
+.mapp-sales-side-column {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.mapp-sales-side-column {
+  position: sticky;
+  top: 8px;
+}
+
+.mapp-sales-product-browser {
+  padding: 14px !important;
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.95) !important;
+  box-shadow: 0 16px 38px rgba(15,23,42,.055) !important;
+}
+
+.mapp-sales-product-browser .mapp-pdv-search-box {
+  min-height: 56px !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(203,213,225,.9) !important;
+  background: #fff !important;
+  padding: 0 14px !important;
+}
+
+.mapp-sales-product-browser .mapp-pdv-search-box input {
+  min-height: 52px !important;
+  font-size: .98rem !important;
+  font-weight: 720 !important;
+}
+
+.mapp-sales-category-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 11px 0 10px;
+  scrollbar-width: none;
+}
+
+.mapp-sales-category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mapp-sales-category-row button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  border: 1px solid rgba(203,213,225,.86);
+  border-radius: 999px;
+  background: #fff;
+  color: #0f172a;
+  padding: 0 16px;
+  font-weight: 850;
+  box-shadow: 0 8px 18px rgba(15,23,42,.035);
+}
+
+.mapp-sales-category-row button.active {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+}
+
+.mapp-sales-filter-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mapp-sales-filter-button::before {
+  content: "≡";
+  transform: rotate(90deg);
+  font-size: 1rem;
+}
+
+.mapp-sales-product-browser .mapp-product-pick-list {
+  gap: 0 !important;
+  border-top: 1px solid rgba(226,232,240,.9);
+}
+
+.mapp-sales-product-browser .mapp-product-pick-list > button {
+  min-height: 82px !important;
+  grid-template-columns: 64px minmax(0, 1fr) auto auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(226,232,240,.9) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 10px 0 !important;
+  box-shadow: none !important;
+}
+
+.mapp-sales-product-browser .mapp-product-pick-list > button:last-child {
+  border-bottom: 0 !important;
+}
+
+.mapp-sales-product-browser .mapp-product-mini-thumb,
+.mapp-sales-product-browser .mapp-product-pick-list > button > span {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 17px !important;
+}
+
+.mapp-sales-product-info {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.mapp-sales-product-info strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0b1933;
+  font-size: clamp(.98rem, 2.6vw, 1.1rem);
+  font-weight: 880;
+}
+
+.mapp-sales-product-info small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #64748b;
+  font-size: .86rem;
+  font-weight: 720;
+}
+
+.mapp-sales-product-info i {
+  color: #059669;
+  font-style: normal;
+  font-size: .82rem;
+  font-weight: 820;
+}
+
+.mapp-sales-product-browser .is-out-of-stock .mapp-sales-product-info i {
+  color: #e11d48;
+}
+
+.mapp-sales-product-browser .mapp-product-pick-list b {
+  color: #2563eb !important;
+  font-size: clamp(1rem, 3vw, 1.12rem) !important;
+  font-weight: 950 !important;
+}
+
+.mapp-sales-product-browser .mapp-product-pick-list em {
+  min-height: 40px !important;
+  min-width: 112px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #2563eb !important;
+  padding: 0 14px !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+}
+
+.mapp-sales-product-browser .is-out-of-stock em {
+  border-color: rgba(225,29,72,.18) !important;
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+.mapp-sales-mini-cart,
+.mapp-pdv-quick-payment,
+.mapp-sales-recent-side,
+.mapp-pdv-checkout {
+  border-radius: 24px !important;
+  background: rgba(255,255,255,.95) !important;
+  box-shadow: 0 16px 38px rgba(15,23,42,.055) !important;
+  padding: 16px !important;
+}
+
+.mapp-sales-mini-cart .mapp-section-title h2,
+.mapp-pdv-quick-payment .mapp-section-title h2,
+.mapp-sales-recent-side .mapp-section-title h2 {
+  font-size: clamp(1rem, 3vw, 1.13rem) !important;
+}
+
+.mapp-sales-mini-cart .mapp-cart-list {
+  max-height: 265px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.mapp-sales-mini-cart .mapp-cart-item {
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "thumb main total"
+    "thumb stepper total" !important;
+  gap: 7px 10px !important;
+  align-items: center !important;
+  padding: 9px 0 !important;
+  border-bottom: 1px solid rgba(226,232,240,.86);
+}
+
+.mapp-sales-mini-cart .mapp-cart-item > span {
+  grid-area: thumb;
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 15px !important;
+}
+
+.mapp-sales-mini-cart .mapp-cart-item > div:first-of-type {
+  grid-area: main;
+}
+
+.mapp-sales-mini-cart .mapp-stepper {
+  grid-area: stepper;
+  justify-self: start;
+  min-height: 28px !important;
+}
+
+.mapp-sales-mini-cart .mapp-cart-item > em {
+  grid-area: total;
+  align-self: center;
+  color: #2563eb;
+  font-size: .94rem;
+  font-style: normal;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.mapp-sales-mini-cart-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(226,232,240,.9);
+}
+
+.mapp-sales-mini-cart-summary span,
+.mapp-sales-mini-cart-summary strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mapp-sales-mini-cart-summary span {
+  color: #0f172a;
+  font-size: .92rem;
+  font-weight: 720;
+}
+
+.mapp-sales-mini-cart-summary strong {
+  color: #0b1933;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.mapp-sales-mini-cart-summary b {
+  color: #2563eb;
+  font-weight: 950;
+}
+
+.mapp-sales-payment-jump {
+  width: 100%;
+  min-height: 52px !important;
+  margin-top: 12px;
+  border-radius: 17px !important;
+  font-size: 1rem !important;
+}
+
+.mapp-sales-mini-cart-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.mapp-sales-mini-cart-actions button {
+  min-height: 44px;
+  border: 1px solid rgba(203,213,225,.9);
+  border-radius: 15px;
+  background: #fff;
+  color: #334155;
+  font-weight: 850;
+}
+
+.mapp-sales-mini-cart-actions .danger {
+  border-color: rgba(225,29,72,.2);
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.mapp-sales-quick-pay-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mapp-sales-quick-pay-grid button {
+  min-height: 78px;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  border: 1px solid rgba(203,213,225,.9);
+  border-radius: 18px;
+  background: #fff;
+  color: #334155;
+  font-weight: 850;
+}
+
+.mapp-sales-quick-pay-grid button.active {
+  border-color: rgba(37,99,235,.36);
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.mapp-sales-quick-pay-grid button span {
+  font-size: .82rem;
+}
+
+.mapp-pdv-checkout .mapp-section-title,
+.mapp-pdv-checkout .mapp-cash-readiness {
+  margin-bottom: 10px;
+}
+
+.mapp-pdv-checkout .mapp-payment-segments {
+  display: none !important;
+}
+
+.mapp-pdv-checkout .mapp-sale-total-box {
+  margin-top: 12px;
+}
+
+.mapp-sales-recent-side .mapp-list-stack {
+  gap: 6px !important;
+}
+
+.mapp-sales-recent-side .mapp-list-card {
+  min-height: 62px !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 980px) {
+  .mapp-sales-premium-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-sales-side-column {
+    position: static;
+  }
+
+  .mapp-sales-flow-premium {
+    grid-template-columns: 1fr !important;
+  }
+
+  .mapp-sales-flow-premium .mapp-sales-flow-steps {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .mapp-sales-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-sales-topbar-item {
+    border-right: 0;
+    border-bottom: 1px solid rgba(203,213,225,.72);
+  }
+
+  .mapp-sales-topbar-item:last-child {
+    border-bottom: 0;
+  }
+
+  .mapp-sales-product-browser .mapp-product-pick-list > button {
+    grid-template-columns: 56px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "thumb info price"
+      "thumb info action" !important;
+  }
+
+  .mapp-sales-product-browser .mapp-product-mini-thumb,
+  .mapp-sales-product-browser .mapp-product-pick-list > button > span {
+    grid-area: thumb;
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .mapp-sales-product-info { grid-area: info; }
+  .mapp-sales-product-browser .mapp-product-pick-list b { grid-area: price; }
+  .mapp-sales-product-browser .mapp-product-pick-list em {
+    grid-area: action;
+    min-width: 96px !important;
+    min-height: 36px !important;
+  }
+
+  .mapp-sales-quick-pay-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

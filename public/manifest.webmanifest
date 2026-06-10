@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v214",
-  "short_name": "Jaque v214",
-  "description": "PWA da loja v214 com padrão compacto premium em Produtos, Clientes e Comprovantes.",
+  "name": "Jaque Confecções e Presentes v215",
+  "short_name": "Jaque v215",
+  "description": "PWA da loja v215 com Vendas/PDV premium fiel à referência.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

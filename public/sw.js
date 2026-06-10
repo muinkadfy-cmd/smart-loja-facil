@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v214-padrao-compacto-premium-abas';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v215-vendas-pdv-premium';
 const APP_SHELL = [
   '/',
   '/index.html',
