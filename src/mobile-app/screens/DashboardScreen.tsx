@@ -58,9 +58,6 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
   const lowStock = dashboard.low_stock_count ?? 0;
   const activities = dashboard.recent_sales.slice(0, 4);
   const averageTicket = dashboard.today_sales_count > 0 ? dashboard.today_sales_total / dashboard.today_sales_count : 0;
-  const hasSalesToday = dashboard.today_sales_count > 0;
-  const hasProducts = (dashboard.products_total ?? 0) > 0;
-  const hasCustomers = dashboard.customers_total > 0;
 
   function navigateToLowStock() {
     window.location.hash = 'baixo-estoque';
@@ -83,7 +80,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
 
   return (
     <div className="mapp-screen mapp-dashboard-screen">
-      <section className="mapp-stat-grid">
+      <section className="mapp-stat-grid mapp-dashboard-stats">
         <StatCard label="Vendas hoje" value={formatCurrency(dashboard.today_sales_total)} detail={`${formatNumber(dashboard.today_sales_count)} venda(s)`} icon="vendas_pdv" tone="blue" />
         <StatCard label="Ticket médio" value={formatCurrency(averageTicket)} detail="por venda" icon="caixa" tone="green" />
         <StatCard label="Pedidos" value={formatNumber(dashboard.orders_open)} detail="em aberto" icon="pedidos" tone="orange" />
@@ -91,28 +88,46 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
       </section>
 
       {lowStock > 0 ? (
-        <section className="mapp-warning-card">
+        <section className="mapp-warning-card mapp-dashboard-stock-alert">
+          <span className="mapp-dashboard-alert-icon" aria-hidden="true">⚠️</span>
           <div>
             <strong>Atenção: estoque baixo</strong>
-            <p>{lowStock} produto(s) precisam de reposição.</p>
+            <p>{lowStock} produtos precisam de reposição.</p>
           </div>
           <button type="button" onClick={navigateToLowStock}>Ver produtos</button>
         </section>
       ) : (
-        <section className="mapp-success-card">
-          <strong>Tudo certo: estoque sem alertas críticos</strong>
-          <span>Continue acompanhando produtos e vendas.</span>
+        <section className="mapp-success-card mapp-dashboard-stock-alert">
+          <span className="mapp-dashboard-alert-icon ok" aria-hidden="true">✓</span>
+          <div>
+            <strong>Tudo certo: estoque sem alertas críticos</strong>
+            <p>Continue acompanhando produtos e vendas.</p>
+          </div>
+          <button type="button" onClick={() => onNavigate('products')}>Ver produtos</button>
         </section>
       )}
 
+      <section className="mapp-section-block mapp-dashboard-actions-block">
+        <div className="mapp-section-title">
+          <h2>O que fazer agora?</h2>
+          <button type="button" onClick={() => onNavigate('diagnostics')}>Ajuda rápida</button>
+        </div>
+        <div className="mapp-actions-grid mapp-dashboard-actions-grid">
+          <ActionTile label="Abrir PDV" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
+          <ActionTile label="Nova venda" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
+          <ActionTile label="Novo pedido" icon="pedidos" page="orders" tone="orange" intent="novo-pedido" onNavigate={onNavigate} />
+          <ActionTile label="Novo cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} />
+        </div>
+      </section>
+
       {(dashboard.product_insights ?? []).length ? (
-        <section className="mapp-section-block mapp-product-intel-block">
+        <section className="mapp-section-block mapp-product-intel-block mapp-dashboard-product-intel">
           <div className="mapp-section-title">
             <h2>Produtos em destaque</h2>
             <button type="button" onClick={() => onNavigate('products')}>Ver produtos</button>
           </div>
           <div className="mapp-product-intel-list">
-            {(dashboard.product_insights ?? []).slice(0, 3).map((insight) => (
+            {(dashboard.product_insights ?? []).slice(0, 1).map((insight) => (
               <button
                 type="button"
                 key={insight.id}
@@ -134,34 +149,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
         </section>
       ) : null}
 
-      <section className="mapp-section-block">
-        <div className="mapp-section-title">
-          <h2>O que fazer agora?</h2>
-          <button type="button" onClick={() => onNavigate('diagnostics')}>Ajuda rápida</button>
-        </div>
-        <div className="mapp-actions-grid">
-          {!hasSalesToday ? <ActionTile label="Abrir PDV" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} /> : null}
-          {!hasProducts ? <ActionTile label="Cadastrar produto" icon="produtos" page="products" tone="sky" intent="novo-produto" onNavigate={onNavigate} /> : null}
-          {!hasCustomers ? <ActionTile label="Cadastrar cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} /> : null}
-          {hasSalesToday && hasProducts && hasCustomers ? <ActionTile label="Conferir caixa" icon="caixa" page="cash" tone="green" onNavigate={onNavigate} /> : null}
-        </div>
-      </section>
-
-      <section className="mapp-section-block">
-        <div className="mapp-section-title">
-          <h2>Ações rápidas</h2>
-          <button type="button" onClick={() => onNavigate('diagnostics')}>Diagnóstico</button>
-        </div>
-        <div className="mapp-actions-grid">
-          <ActionTile label="Nova venda" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
-          <ActionTile label="Novo pedido" icon="pedidos" page="orders" tone="orange" intent="novo-pedido" onNavigate={onNavigate} />
-          <ActionTile label="Novo produto" icon="produtos" page="products" tone="sky" intent="novo-produto" onNavigate={onNavigate} />
-          <ActionTile label="Novo cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} />
-          <ActionTile label="Cupom PNG" icon="etiquetas" page="coupons" tone="purple" onNavigate={onNavigate} />
-        </div>
-      </section>
-
-      <section className="mapp-section-block">
+      <section className="mapp-section-block mapp-dashboard-activities-block">
         <div className="mapp-section-title">
           <h2>Atividades recentes</h2>
           <button type="button" onClick={() => onNavigate('sales')}>Ver todas</button>

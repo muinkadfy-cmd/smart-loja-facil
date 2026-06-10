@@ -11310,3 +11310,516 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+/* Mega Lote 216 — Correção Mobile PDV + Dashboard Premium */
+.mapp-page-sales .mapp-context-subnav,
+.mapp-page-dashboard .mapp-context-subnav {
+  padding: 10px 12px !important;
+  border-radius: 22px !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-head,
+.mapp-page-dashboard .mapp-context-subnav-head {
+  display: none !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-track,
+.mapp-page-dashboard .mapp-context-subnav-track {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  overflow: visible !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-track button,
+.mapp-page-dashboard .mapp-context-subnav-track button {
+  min-width: 0 !important;
+  min-height: 54px !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(203,213,225,.72) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+  padding: 8px 6px !important;
+  gap: 5px !important;
+  justify-content: center !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-track button:nth-child(n+5),
+.mapp-page-dashboard .mapp-context-subnav-track button:nth-child(n+5) {
+  display: none !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-track button:nth-child(4),
+.mapp-page-dashboard .mapp-context-subnav-track button:nth-child(4) {
+  border-right: 0 !important;
+}
+
+.mapp-page-sales .mapp-context-subnav-track button.active,
+.mapp-page-dashboard .mapp-context-subnav-track button.active {
+  border-radius: 18px !important;
+  border-right: 0 !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 28px rgba(37,99,235,.20) !important;
+}
+
+/* PDV: limpeza de herança antiga que cruzava nome/código/estoque/preço */
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+  display: grid !important;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(92px, auto) minmax(112px, auto) !important;
+  grid-template-areas: "thumb info price action" !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 84px !important;
+  overflow: hidden !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span:not(.mapp-sales-product-info) {
+  grid-area: thumb !important;
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px !important;
+  min-height: 64px !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info {
+  grid-area: info !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-areas:
+    "name"
+    "code"
+    "stock" !important;
+  gap: 3px !important;
+  align-content: center !important;
+  justify-self: stretch !important;
+  text-align: left !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info strong,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info small,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info i {
+  position: static !important;
+  transform: none !important;
+  grid-column: auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info strong {
+  grid-area: name !important;
+  color: #0b1933 !important;
+  font-size: clamp(.92rem, 3.4vw, 1.04rem) !important;
+  line-height: 1.12 !important;
+  font-weight: 900 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info small {
+  grid-area: code !important;
+  color: #64748b !important;
+  font-size: .78rem !important;
+  line-height: 1.1 !important;
+  font-weight: 760 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info i {
+  grid-area: stock !important;
+  color: #059669 !important;
+  font-size: .78rem !important;
+  line-height: 1.1 !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .is-out-of-stock .mapp-sales-product-info i {
+  color: #e11d48 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > b {
+  grid-area: price !important;
+  justify-self: end !important;
+  align-self: center !important;
+  color: #2563eb !important;
+  font-size: clamp(1rem, 4vw, 1.18rem) !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > em {
+  grid-area: action !important;
+  justify-self: end !important;
+  align-self: center !important;
+  min-width: 104px !important;
+  min-height: 38px !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .mapp-page-sales .mapp-sales-flow-premium .mapp-sales-flow-steps {
+    min-width: 0 !important;
+    gap: 4px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-flow-premium .mapp-sales-flow-steps span {
+    font-size: .68rem !important;
+    gap: 3px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-flow-premium .mapp-sales-flow-steps b {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: .78rem !important;
+  }
+
+  .mapp-page-sales .mapp-sales-flow-premium .mapp-sales-flow-steps span::before {
+    top: 13px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item {
+    min-height: 72px !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px 8px !important;
+    border-bottom: 0 !important;
+    border-right: 1px solid rgba(203,213,225,.72) !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item:last-child {
+    border-right: 0 !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item > span {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 13px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item small {
+    font-size: .68rem !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item strong {
+    font-size: clamp(.74rem, 3.2vw, .92rem) !important;
+    line-height: 1.12 !important;
+  }
+
+  .mapp-page-sales .mapp-sales-topbar-item b {
+    display: none !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser {
+    padding: 12px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+    grid-template-columns: 56px minmax(0, 1fr) minmax(82px, auto) !important;
+    grid-template-areas:
+      "thumb info price"
+      "thumb info action" !important;
+    min-height: 76px !important;
+    gap: 8px !important;
+    padding: 9px 0 !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span:not(.mapp-sales-product-info) {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+    min-height: 56px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > b {
+    font-size: clamp(.95rem, 4.3vw, 1.1rem) !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > em {
+    min-width: 88px !important;
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    font-size: .74rem !important;
+  }
+
+  .mapp-page-sales .mapp-sales-mini-cart,
+  .mapp-page-sales .mapp-pdv-quick-payment,
+  .mapp-page-sales .mapp-sales-recent-side,
+  .mapp-page-sales .mapp-pdv-checkout {
+    padding: 14px !important;
+    border-radius: 22px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-quick-pay-grid button {
+    min-height: 62px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-payment-jump {
+    min-height: 48px !important;
+  }
+}
+
+/* Dashboard premium fiel à referência */
+.mapp-page-dashboard .mapp-context-subnav {
+  display: none !important;
+}
+
+.mapp-dashboard-screen {
+  gap: 12px !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-card {
+  min-height: 126px !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 15px !important;
+  border-radius: 24px !important;
+  box-shadow: 0 14px 34px rgba(15,23,42,.055) !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-icon {
+  order: 2;
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 22px !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-card div {
+  order: 1;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-label {
+  font-size: clamp(.9rem, 3.1vw, 1rem) !important;
+  color: #64748b !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-value {
+  font-size: clamp(1.5rem, 6.5vw, 2rem) !important;
+  letter-spacing: -.055em !important;
+}
+
+.mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-detail {
+  font-size: clamp(.8rem, 2.8vw, .92rem) !important;
+}
+
+.mapp-dashboard-stock-alert {
+  min-height: 78px !important;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  border-radius: 22px !important;
+  margin: 2px 0 !important;
+}
+
+.mapp-dashboard-alert-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #fff2cc;
+  box-shadow: inset 0 0 0 1px rgba(245,158,11,.18);
+  font-size: 1.35rem;
+}
+
+.mapp-dashboard-alert-icon.ok {
+  background: #eafbF2;
+  color: #059669;
+}
+
+.mapp-dashboard-stock-alert p {
+  margin: 3px 0 0 !important;
+  font-size: .94rem !important;
+}
+
+.mapp-dashboard-stock-alert button {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+  white-space: nowrap !important;
+}
+
+.mapp-dashboard-actions-block,
+.mapp-dashboard-product-intel,
+.mapp-dashboard-activities-block {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.mapp-dashboard-screen .mapp-section-title {
+  margin: 0 0 10px !important;
+}
+
+.mapp-dashboard-screen .mapp-section-title h2 {
+  font-size: clamp(1.35rem, 5vw, 1.75rem) !important;
+  letter-spacing: -.045em !important;
+}
+
+.mapp-dashboard-screen .mapp-section-title button {
+  min-height: 34px !important;
+  padding-inline: 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #2563eb !important;
+  font-weight: 950 !important;
+}
+
+.mapp-dashboard-actions-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.mapp-dashboard-actions-grid .mapp-action-tile {
+  min-height: 104px !important;
+  border-radius: 20px !important;
+  padding: 12px 8px !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-dashboard-actions-grid .mapp-action-tile > span {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+}
+
+.mapp-dashboard-actions-grid .mapp-action-tile strong {
+  font-size: .9rem !important;
+  line-height: 1.08 !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-list {
+  gap: 8px !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-card {
+  grid-template-columns: 84px auto minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  min-height: 88px !important;
+  border-radius: 20px !important;
+  padding: 10px 12px !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-icon {
+  width: 84px !important;
+  height: 64px !important;
+  border-radius: 17px !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-copy {
+  grid-column: auto !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-copy strong {
+  color: #be185d !important;
+  font-size: clamp(1rem, 3.8vw, 1.16rem) !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-copy em {
+  display: none !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-copy small {
+  font-size: .88rem !important;
+}
+
+.mapp-dashboard-product-intel .mapp-product-intel-card b {
+  grid-column: auto !important;
+  justify-self: end !important;
+  align-self: center !important;
+  background: rgba(15,23,42,.06) !important;
+  color: #111827 !important;
+  font-size: .82rem !important;
+  white-space: nowrap !important;
+}
+
+.mapp-dashboard-activities-block .mapp-list-stack {
+  gap: 8px !important;
+}
+
+.mapp-dashboard-activities-block .mapp-list-card,
+.mapp-dashboard-activities-block .mapp-empty-state {
+  min-height: 82px !important;
+  border-radius: 20px !important;
+  padding: 12px !important;
+  box-shadow: 0 12px 28px rgba(15,23,42,.045) !important;
+}
+
+@media (max-width: 480px) {
+  .mapp-dashboard-screen .mapp-dashboard-stats {
+    gap: 10px !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-card {
+    min-height: 116px !important;
+    padding: 13px !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-icon {
+    width: 56px !important;
+    height: 56px !important;
+  }
+
+  .mapp-dashboard-actions-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile {
+    min-height: 94px !important;
+    padding: 10px 6px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile > span {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile strong {
+    font-size: .78rem !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-card {
+    grid-template-columns: 70px minmax(0, 1fr) auto !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-icon {
+    width: 70px !important;
+    height: 58px !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-card b {
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
