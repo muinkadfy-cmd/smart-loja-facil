@@ -724,6 +724,14 @@ async function ensureReceiptSoraReady(): Promise<void> {
   }
 }
 
+function isIosOrIpadOsShareQuirk(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchPoints = Number(navigator.maxTouchPoints || 0);
+  return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && touchPoints > 1);
+}
+
 function triggerFileDownload(fileName: string, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');
@@ -743,6 +751,14 @@ async function ensureSoraReceiptFont(): Promise<void> {
     document.fonts.load('600 19px "Sora"'),
     document.fonts.load('850 24px "Sora"'),
   ]);
+}
+
+function canvasSafeText(value: unknown): string {
+  return String(value ?? '-')
+    .normalize('NFC')
+    .replace(/[\u0000-\u001f\u007f]/g, ' ')
+    .replace(/[\s]+/g, ' ')
+    .trim() || '-';
 }
 
 async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): Promise<{ fileName: string; blob: Blob }> {
@@ -793,7 +809,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   }
 
   function cleanCanvasText(value: string): string {
-    return pdfSafeText(String(value || '-')).replace(/\s+/g, ' ').trim() || '-';
+    return canvasSafeText(value);
   }
 
   function drawText(text: string, x: number, y: number, size: number, weight = 650, color = '#0b0b0b'): void {
@@ -1197,6 +1213,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
 }
 
 async function shareReceiptFileOnly(file: File, _title: string): Promise<boolean> {
+  if (isIosOrIpadOsShareQuirk()) return false;
   const payload = { files: [file] } as ShareData & { files: File[] };
   const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
   if (!navigator.share || !mobileNavigator.canShare?.(payload)) return false;
@@ -1855,8 +1872,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
           return;
         }
         triggerFileDownload(pngFile.fileName, pngFile.blob);
-        setFeedback({ tone: 'info', text: `PNG baixado como ${pngFile.fileName}. Anexe essa imagem no WhatsApp.` });
-        notifyMobileAction({ title: 'PNG baixado', message: 'Anexe a imagem baixada no WhatsApp.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
+        setFeedback({ tone: 'info', text: `PNG baixado como ${pngFile.fileName}. No iPhone, anexe a imagem manualmente para não sair link junto.` });
+        notifyMobileAction({ title: 'PNG baixado', message: 'No iPhone, anexe manualmente para evitar link junto.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
         return;
       }
 
@@ -1869,7 +1886,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
         return;
       }
       triggerPdfDownload(pdfFile);
-      setFeedback({ tone: 'info', text: `PDF baixado como ${pdfFile.fileName}. Anexe esse arquivo no WhatsApp.` });
+      setFeedback({ tone: 'info', text: `PDF baixado como ${pdfFile.fileName}. No iPhone, anexe o arquivo manualmente para não sair link junto.` });
       notifyMobileAction({ title: 'PDF baixado', message: 'Anexe o arquivo baixado ao compartilhar.', tone: 'info', page: 'receipts', actionLabel: 'Ver' });
     } catch (error) {
       setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });

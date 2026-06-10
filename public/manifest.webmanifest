@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v211",
-  "short_name": "Jaque v211",
-  "description": "PWA da loja v211 com ortografia, acentos, comprovantes compactos e cards expansíveis.",
+  "name": "Jaque Confecções e Presentes v212",
+  "short_name": "Jaque v212",
+  "description": "PWA da loja v212 com compartilhamento iPhone sem link automático e acentos preservados no PDF/PNG.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

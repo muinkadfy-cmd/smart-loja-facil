@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.211",
+  "version": "0.1.212",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com revisão de ortografia, acentos, layout e cards expansíveis v211",
+  "description": "PWA da loja com compartilhamento iPhone sem link e acentos preservados no PDF/PNG v212",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

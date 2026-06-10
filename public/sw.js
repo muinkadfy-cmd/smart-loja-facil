@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v211-ortografia-expansiveis-layout-premium';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v212-iphone-acentos-pdf';
 const APP_SHELL = [
   '/',
   '/index.html',

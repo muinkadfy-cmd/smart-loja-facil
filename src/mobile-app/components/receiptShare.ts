@@ -677,7 +677,16 @@ function downloadBlob(blob: Blob, fileName: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+function isIosOrIpadOsShareQuirk(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchPoints = Number(navigator.maxTouchPoints || 0);
+  return /iPad|iPhone|iPod/i.test(ua) || (platform === 'MacIntel' && touchPoints > 1);
+}
+
 async function shareFile(file: File, _title: string): Promise<boolean> {
+  if (isIosOrIpadOsShareQuirk()) return false;
   const payload = { files: [file] } as ShareData & { files: File[] };
   const mobileNavigator = navigator as Navigator & { canShare?: (data: ShareData & { files?: File[] }) => boolean };
   if (!navigator.share || !mobileNavigator.canShare?.(payload)) return false;
@@ -698,14 +707,14 @@ export async function shareSaleReceipt(sale: SaleSummary, receipt: ReceiptSummar
     const shared = await shareFile(new File([blob], fileName, { type: 'image/png' }), title);
     if (shared) return 'PNG enviado apenas como imagem, sem texto ou link junto.';
     downloadBlob(blob, fileName);
-    return `PNG baixado como ${fileName}. Anexe essa imagem no WhatsApp.`;
+    return `PNG baixado como ${fileName}. No iPhone, anexe a imagem manualmente para não sair link junto.`;
   }
   const blob = await makePdfBlob(sale, receipt);
   const fileName = uniqueFileName(`comprovante-venda-${receipt.sale_number || sale.number}`, 'pdf');
   const shared = await shareFile(new File([blob], fileName, { type: 'application/pdf' }), title);
   if (shared) return 'PDF enviado apenas como arquivo, sem texto ou link junto.';
   downloadBlob(blob, fileName);
-  return `PDF baixado como ${fileName}. Anexe esse arquivo no WhatsApp.`;
+  return `PDF baixado como ${fileName}. No iPhone, anexe o arquivo manualmente para não sair link junto.`;
 }
 
 export async function openReceiptInComprovantes(sale: SaleSummary): Promise<void> {
