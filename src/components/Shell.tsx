@@ -10,7 +10,7 @@ import type { DelphiIconName } from '../lib/icons';
 import type { AppStatus, CreditSummary, PageKey, Product, Settings } from '../types';
 
 const pages: Array<{ key: PageKey; label: string; icon: DelphiIconName }> = [
-  { key: 'dashboard', label: 'Dashboard', icon: 'painel_da_loja' },
+  { key: 'dashboard', label: 'Painel', icon: 'painel_da_loja' },
   { key: 'sales', label: 'Vendas / PDV', icon: 'vendas_pdv' },
   { key: 'orders', label: 'Pedidos', icon: 'pedidos' },
   { key: 'products', label: 'Produtos', icon: 'produtos' },
@@ -359,7 +359,7 @@ export function Shell({ activePage, setActivePage, status, settings, children, o
   const alertSummaryLabel = notificationCount > 0 ? `${notificationCount} atenção(ões)` : 'Nenhum alerta importante agora';
   const primaryAlert = alertsToDisplay[0];
   const activePageMeta = useMemo(() => pages.find((page) => page.key === activePage) ?? pages[0], [activePage]);
-  const activePageTitle = activePage === 'dashboard' ? 'Dashboard' : activePageMeta.label;
+  const activePageTitle = activePage === 'dashboard' ? 'Painel' : activePageMeta.label;
   const environmentLabel = runtimeInfo.isWeb ? (networkOnline ? 'Online' : 'Sem internet') : status?.offline_ready ? 'Local / Offline' : 'Verificando';
   const avatarInitials = initialsFromSettings(settings);
   const sidebarVersionLabel = compactVersionLabel(status?.version);

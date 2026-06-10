@@ -481,7 +481,7 @@ function AuditLogsScreen({ refreshToken, onRefresh }: { refreshToken: number; on
       </section>
       <div className="mapp-filter-pills" role="tablist" aria-label="Filtrar logs">
         {[
-          ['todos', 'Todos'], ['erros', 'Erros'], ['avisos', 'Avisos'], ['vendas', 'Vendas'], ['crediario', 'Crediário'], ['caixa', 'Caixa'], ['backup', 'Backup'], ['sync', 'Sync'],
+          ['todos', 'Todos'], ['erros', 'Erros'], ['avisos', 'Avisos'], ['vendas', 'Vendas'], ['crediario', 'Crediário'], ['caixa', 'Caixa'], ['backup', 'Backup'], ['sync', 'Sincronização'],
         ].map(([key, label]) => <button key={key} type="button" className={filter === key ? 'active' : ''} onClick={() => setFilter(key as AuditFilter)}>{label}</button>)}
       </div>
       <div className="mapp-button-grid">
@@ -653,7 +653,7 @@ function PlaceholderScreen({ page, status, onNavigate, onRefresh }: PlaceholderP
           {checklist.map((item) => <span key={item}>✓ {item}</span>)}
         </div>
       </section>
-      <EmptyState icon={route.icon} title={`${route.label} pronto para conectar`} detail="Esta tela já tem layout novo. A função completa pode ser migrada no próximo lote sem herdar CSS antigo." actionLabel="Voltar ao Dashboard" actionPage="dashboard" onNavigate={onNavigate} />
+      <EmptyState icon={route.icon} title={`${route.label} pronto para conectar`} detail="Esta tela já tem layout novo. A função completa pode ser migrada no próximo lote sem herdar CSS antigo." actionLabel="Voltar ao Painel" actionPage="dashboard" onNavigate={onNavigate} />
       <section className="mapp-version-card">
         <strong>Versão atual</strong>
         <span>{status?.version ?? 'pwa-supabase-v135-proposta-comercial'}</span>

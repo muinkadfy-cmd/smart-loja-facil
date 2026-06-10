@@ -679,9 +679,9 @@ const REGRESSION_AUDIT_STEPS: RegressionAuditStep[] = [
   {
     id: 'regression-dashboard-mobile',
     group: '2. Mobile principal',
-    title: 'Dashboard e navegação mobile sem corte',
+    title: 'Painel e navegação mobile sem corte',
     action: 'Abrir no celular, navegar pelo menu inferior e conferir se nenhum botão fica escondido ou espremido.',
-    expected: 'Dashboard, cards, alertas e bottom nav ficam legíveis em Android/iPhone.',
+    expected: 'Painel, cards, alertas e bottom nav ficam legíveis em Android/iPhone.',
     evidence: 'Print do dashboard no celular instalado.',
     priority: 'P1',
   },
@@ -1104,7 +1104,7 @@ const FIRST_CLIENT_CLOSEOUT_STEPS: FirstClientCloseoutStep[] = [
 
 
 const DEMO_MODE_STEPS: DemoModeStep[] = [
-  { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Dashboard' },
+  { id: 'demo-dashboard', title: 'Apresentar dashboard bonito', detail: 'Mostrar métricas, vendas recentes, estoque baixo, crediário e pedidos usando dados fictícios.', area: 'Painel' },
   { id: 'demo-products', title: 'Mostrar produtos sem expor estoque real', detail: 'Produtos, categorias, preços e estoque são de exemplo. Nada é puxado da loja real enquanto a demo estiver ativa.', area: 'Produtos' },
   { id: 'demo-sales', title: 'Simular venda sem finalizar', detail: 'Cliente entende o fluxo de PDV usando clientes/produtos demo. Finalizar venda real continua bloqueado.', area: 'Vendas' },
   { id: 'demo-receipts', title: 'Mostrar comprovantes de amostra', detail: 'Comprovantes demo podem ser abertos/impresso como modelo visual sem mexer no caixa.', area: 'Comprovantes' },
@@ -1134,7 +1134,7 @@ const COMMERCIAL_TOUR_STEPS: CommercialTourStep[] = [
     order: 2,
     title: 'Mostrar visão geral da loja',
     page: 'dashboard',
-    pageLabel: 'Dashboard',
+    pageLabel: 'Painel',
     goal: 'Mostrar valor rápido: vendas, estoque baixo, pedidos, crediário e alertas em uma tela.',
     script: 'Aqui o dono enxerga a loja do dia sem ficar procurando em várias abas. O importante aparece primeiro.',
     show: 'Cards principais, vendas recentes, alertas e atalhos. Destacar leitura no celular.',
@@ -1344,7 +1344,7 @@ const CLIENT_SATISFACTION_LABEL: Record<ClientSatisfaction, string> = {
 
 const TRAINING_DEMO_STEPS: TrainingDemoStep[] = [
   { id: 'explain-scope', title: 'Explicar modo treinamento', detail: 'Mostrar que o modo bloqueia gravações reais e serve para o cliente aprender sem mexer no caixa/estoque.', protectedArea: 'Dados reais' },
-  { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Dashboard, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
+  { id: 'open-navigation', title: 'Navegar pelas abas', detail: 'Abrir Painel, Vendas, Produtos, Clientes, Caixa, Pedidos e Diagnóstico sem salvar nada.', protectedArea: 'Interface' },
   { id: 'simulate-sale', title: 'Simular venda sem finalizar', detail: 'Montar carrinho de exemplo e parar antes de Finalizar venda. A venda real fica bloqueada pelo modo treinamento.', protectedArea: 'Vendas/estoque' },
   { id: 'print-sample', title: 'Imprimir amostra segura', detail: 'Usar Teste 58mm, Teste 80mm ou A4/PDF. A amostra não baixa estoque e não abre caixa.', protectedArea: 'Impressão' },
   { id: 'disable-before-real', title: 'Desativar antes do uso real', detail: 'Antes da primeira venda verdadeira, desativar o modo e copiar a evidência do treinamento.', protectedArea: 'Operação real' },
@@ -1718,8 +1718,8 @@ function buildFinalSellGate(params: {
     if (params.report.readyLabel !== 'piloto') blockers.push(`Teste comercial ainda não liberou piloto: ${params.report.score}/10 — ${readyText(params.report)}.`);
     if (params.report.score < 8.8) blockers.push('Nota automática abaixo de 8,8/10.');
   }
-  if (params.triage.p0 > 0) blockers.push(`Existem ${params.triage.p0} item(ns) P0 crítico(s) na correção pós-teste.`);
-  if (params.triage.p1 > 0) blockers.push(`Existem ${params.triage.p1} item(ns) P1 alto(s) antes de vender em escala.`);
+  if (params.triage.p0 > 0) blockers.push(`Existem ${params.triage.p0} itens P0 críticos na correção pós-teste.`);
+  if (params.triage.p1 > 0) blockers.push(`Existem ${params.triage.p1} itens P1 alto(s) antes de vender em escala.`);
   if (params.assisted.criticalProblems > 0 || params.assisted.failed > 0 || params.assisted.blocked > 0) blockers.push('Execução assistida tem Falhou/Bloqueado.');
   if (params.assisted.passed < params.assisted.total) blockers.push(`Execução assistida incompleta: ${params.assisted.passed}/${params.assisted.total}.`);
   if (params.guidedDone < params.guidedTotal) blockers.push(`Roteiro guiado incompleto: ${params.guidedDone}/${params.guidedTotal}.`);
@@ -2665,7 +2665,7 @@ function buildExecutiveHealthSummary(params: {
   const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
   const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
 
-  addBlocker(params.triage.p0 > 0, `${params.triage.p0} item(ns) P0 aberto(s) na correção pós-teste.`);
+  addBlocker(params.triage.p0 > 0, `${params.triage.p0} itens P0 abertos na correção pós-teste.`);
   addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda bloqueado.');
   addBlocker(params.assisted.failed > 0 || params.assisted.blocked > 0, 'Execução real assistida tem Falhou/Bloqueado.');
   addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) ainda não enviada(s).`);
@@ -2885,14 +2885,14 @@ function buildRegressionAuditSummary(params: {
   const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
   const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
   addBlocker(criticalOpen > 0, `${criticalOpen} regressão(ões) P0/P1 com Falhou/Bloqueado.`);
-  addBlocker(params.triage.p0 > 0, `${params.triage.p0} item(ns) P0 ainda aberto(s) na correção pós-teste.`);
+  addBlocker(params.triage.p0 > 0, `${params.triage.p0} itens P0 ainda abertos na correção pós-teste.`);
   addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda bloqueado.');
   addBlocker(params.assisted.failed > 0 || params.assisted.blocked > 0, 'Execução real assistida tem Falhou/Bloqueado.');
   addBlocker(params.executive.decision === 'blocked', 'Painel executivo ainda não permite escalar.');
   addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes da pré-venda.`);
   addBlocker(!params.online, 'Aparelho está offline agora.');
   addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
-  addWarning(pending > 0, `${pending} item(ns) de regressão ainda pendente(s).`);
+  addWarning(pending > 0, `${pending} itens de regressão ainda pendentes.`);
   addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
   addWarning(params.roleState.role === 'viewer', 'Leitor não deve aprovar auditoria final.');
   addWarning(!params.state.auditor.trim(), 'Responsável pela auditoria ainda não informado.');
@@ -3050,14 +3050,14 @@ function buildDayOneImplantSummary(params: {
   const warnings: string[] = [];
   const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
   const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
-  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do Dia 1 com Falhou/Bloqueado.`);
+  addBlocker(criticalOpen > 0, `${criticalOpen} itens P0/P1 do Dia 1 com Falhou/Bloqueado.`);
   addBlocker(params.regression.decision === 'blocked', 'Auditoria final de regressão ainda está bloqueada.');
   addBlocker(params.finalGate.decision === 'blocked', 'Fechamento comercial ainda não liberou venda assistida.');
   addBlocker(params.executive.decision === 'blocked', 'Painel executivo ainda bloqueia escala/controlada.');
   addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes do Dia 1.`);
   addBlocker(!params.online, 'Aparelho está offline agora.');
   addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
-  addWarning(pending > 0, `${pending} item(ns) do Dia 1 ainda pendente(s).`);
+  addWarning(pending > 0, `${pending} itens do Dia 1 ainda pendentes.`);
   addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
   addWarning(params.roleState.role === 'viewer', 'Leitor não deve aceitar implantação real.');
   addWarning(!params.state.clientName.trim(), 'Informe cliente/loja da implantação.');
@@ -3229,14 +3229,14 @@ function buildDayTwoFollowUpSummary(params: {
   const warnings: string[] = [];
   const addBlocker = (condition: boolean, message: string) => { if (condition) blockers.push(message); };
   const addWarning = (condition: boolean, message: string) => { if (condition && !blockers.includes(message)) warnings.push(message); };
-  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do Dia 2 com Falhou/Bloqueado.`);
+  addBlocker(criticalOpen > 0, `${criticalOpen} itens P0/P1 do Dia 2 com Falhou/Bloqueado.`);
   addBlocker(params.dayOne.decision === 'blocked', 'Dia 1 ainda está bloqueado; não trate Dia 2 como estabilizado.');
   addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes de fechar Dia 2.`);
   addBlocker(!params.online, 'Aparelho está offline agora.');
   addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
-  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 aberto(s) no pós-venda.`);
+  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 abertos no pós-venda.`);
   addBlocker(params.feedback.openP0P1 > 0, `${params.feedback.openP0P1} melhoria(s) P0/P1 aberta(s) no feedback.`);
-  addWarning(pending > 0, `${pending} item(ns) do Dia 2 ainda pendente(s).`);
+  addWarning(pending > 0, `${pending} itens do Dia 2 ainda pendentes.`);
   addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
   addWarning(params.dayOne.decision !== 'ready', 'Dia 1 não está aceito como pronto neste aparelho.');
   addWarning(params.roleState.role === 'viewer', 'Leitor não deve aprovar acompanhamento do Dia 2.');
@@ -3418,18 +3418,18 @@ function buildFirstClientCloseoutSummary(params: {
   const warnings: string[] = [];
   const addBlocker = (condition: boolean, text: string) => { if (condition) blockers.push(text); };
   const addWarning = (condition: boolean, text: string) => { if (condition) warnings.push(text); };
-  addBlocker(criticalOpen > 0, `${criticalOpen} item(ns) P0/P1 do encerramento com Falhou/Bloqueado.`);
+  addBlocker(criticalOpen > 0, `${criticalOpen} itens P0/P1 do encerramento com Falhou/Bloqueado.`);
   addBlocker(params.dayOne.decision === 'blocked', 'Dia 1 ainda está bloqueado.');
   addBlocker(params.dayTwo.decision === 'blocked', 'Dia 2 ainda está bloqueado.');
   addBlocker(!params.dayTwoState.approvedAt, 'Dia 2 ainda não foi aprovado com evidência neste aparelho.');
   addBlocker(params.regression.blockers.length > 0, 'Auditoria final ainda possui bloqueio.');
   addBlocker(params.executive.blockers.length > 0, 'Painel executivo ainda possui bloqueio.');
-  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 aberto(s) no pós-venda.`);
+  addBlocker(params.postSale.criticalOpen > 0, `${params.postSale.criticalOpen} chamado(s) P0/P1 abertos no pós-venda.`);
   addBlocker(params.feedback.openP0P1 > 0, `${params.feedback.openP0P1} melhoria(s) P0/P1 aberta(s) no feedback/NPS.`);
   addBlocker(params.outbox.total > 0, `${params.outbox.total} pendência(s) local(is) antes de replicar para outro cliente.`);
   addBlocker(!params.online, 'Aparelho está offline agora.');
   addBlocker(params.roleState.role === 'sem login', 'Usuário sem login confirmado.');
-  addWarning(pending > 0, `${pending} item(ns) do encerramento ainda pendente(s).`);
+  addWarning(pending > 0, `${pending} itens do encerramento ainda pendentes.`);
   addWarning(!params.report, 'Teste comercial automático ainda não foi rodado nesta sessão.');
   addWarning(params.dayOne.decision !== 'ready', 'Dia 1 não está marcado como pronto neste aparelho.');
   addWarning(params.dayTwo.decision !== 'stable', 'Dia 2 ainda não está marcado como estabilizado.');
@@ -4900,7 +4900,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         <div className="mapp-postsale-hero">
           <div>
             <span>{postSaleSummary.criticalOpen ? 'Atenção no suporte' : postSaleSummary.open ? 'Acompanhamento ativo' : 'Suporte organizado'}</span>
-            <strong>{postSaleSummary.open} aberto(s) · {postSaleSummary.solved} resolvido(s)</strong>
+            <strong>{postSaleSummary.open} abertos · {postSaleSummary.solved} resolvido(s)</strong>
             <p>Use esta área depois da implantação para registrar chamados, prioridade, prazo, responsável e evidência do primeiro cliente. Não mexe em venda, caixa, estoque ou nuvem.</p>
           </div>
           <b className={postSaleSummary.criticalOpen ? 'danger' : postSaleSummary.open ? 'warn' : 'ok'}>{postSaleSummary.percent}%</b>
@@ -5367,7 +5367,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           <div className="mapp-commercial-groups">
             {groupedChecks.map(([area, checks]) => (
               <article key={area} className="mapp-commercial-group">
-                <header><strong>{area}</strong><small>{checks.length} item(ns)</small></header>
+                <header><strong>{area}</strong><small>{checks.length} itens</small></header>
                 {checks.map((check) => (
                   <div key={check.id} className={`mapp-check-row ${checkToneClass(check.level)}`}>
                     <span>{check.level === 'ok' ? '✓' : check.level === 'warn' ? '!' : '×'}</span>
@@ -5483,7 +5483,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
             <strong>{triageSummary.decision}</strong>
             <p>Transforma Falhou/Bloqueado em prioridade real para corrigir sem chute.</p>
           </div>
-          <span className={triageSummary.p0 ? 'danger' : triageSummary.p1 ? 'warn' : 'ok'}>{triageSummary.total ? `${triageSummary.total} item(ns)` : 'limpo'}</span>
+          <span className={triageSummary.p0 ? 'danger' : triageSummary.p1 ? 'warn' : 'ok'}>{triageSummary.total ? `${triageSummary.total} itens` : 'limpo'}</span>
         </div>
         <div className="mapp-assisted-counters" aria-label="Resumo das correções aceite">
           <span><b>P0</b><strong>{triageSummary.p0}</strong></span>

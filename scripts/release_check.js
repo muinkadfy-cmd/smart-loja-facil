@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v210-crediario-automatico-mais-menos';
-const currentCache = 'smart-loja-pwa-supabase-v210-crediario-automatico-mais-menos';
+const currentVersion = 'pwa-supabase-v211-ortografia-expansiveis-layout-premium';
+const currentCache = 'smart-loja-pwa-supabase-v211-ortografia-expansiveis-layout-premium';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v210 crediario automatico mais menos.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v210 crediario automatico mais menos.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v211 ortografia expansiveis layout premium.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v211 ortografia expansiveis layout premium.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v210 PWA passou. crediario automatico mais menos e icones vetoriais conferidos.');
+console.log('OK: release_check v211 PWA passou. ortografia expansiveis layout premium e icones vetoriais conferidos.');

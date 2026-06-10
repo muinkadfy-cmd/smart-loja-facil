@@ -21,7 +21,7 @@ export interface MobileRouteGroup {
 }
 
 export const MOBILE_ROUTES: MobileRoute[] = [
-  { key: 'dashboard', label: 'Dashboard', shortLabel: 'Início', subtitle: 'Visão geral da sua loja.', icon: 'painel_da_loja', tone: 'blue', primaryAction: 'Ver resumo' },
+  { key: 'dashboard', label: 'Painel', shortLabel: 'Início', subtitle: 'Visão geral da sua loja.', icon: 'painel_da_loja', tone: 'blue', primaryAction: 'Ver resumo' },
   { key: 'sales', label: 'Vendas / PDV', shortLabel: 'Vendas', subtitle: 'Venda rápida e atendimento no balcão.', icon: 'vendas_pdv', tone: 'blue', primaryAction: 'Nova venda' },
   { key: 'products', label: 'Produtos', shortLabel: 'Produtos', subtitle: 'Cadastre produtos e acompanhe estoque.', icon: 'produtos', tone: 'sky', primaryAction: 'Novo produto' },
   { key: 'customers', label: 'Clientes', shortLabel: 'Clientes', subtitle: 'Clientes, contatos e histórico.', icon: 'clientes', tone: 'purple', primaryAction: 'Novo cliente' },
@@ -29,11 +29,11 @@ export const MOBILE_ROUTES: MobileRoute[] = [
   { key: 'cash', label: 'Caixa', shortLabel: 'Caixa', subtitle: 'Abertura, entradas, saídas e fechamento.', icon: 'caixa', tone: 'green', primaryAction: 'Abrir caixa' },
   { key: 'credits', label: 'Crediário', shortLabel: 'Crediário', subtitle: 'Contas a receber e parcelas.', icon: 'crediario', tone: 'purple', primaryAction: 'Ver parcelas' },
   { key: 'reports', label: 'Relatórios', shortLabel: 'Relatórios', subtitle: 'Indicadores simples para decisão.', icon: 'relatorios', tone: 'blue', primaryAction: 'Ver relatório' },
-  { key: 'receipts', label: 'Comprovantes', shortLabel: 'Comprov.', subtitle: 'Comprovantes gerados e reimpressão.', icon: 'comprovantes', tone: 'sky', primaryAction: 'Ver comprovantes' },
+  { key: 'receipts', label: 'Comprovantes', shortLabel: 'Comprovantes', subtitle: 'Comprovantes gerados e reimpressão.', icon: 'comprovantes', tone: 'sky', primaryAction: 'Ver comprovantes' },
   { key: 'backup', label: 'Backup', shortLabel: 'Backup', subtitle: 'Cópias de segurança e restauração.', icon: 'backup', tone: 'mint', primaryAction: 'Criar backup' },
   { key: 'settings', label: 'Configurações', shortLabel: 'Config.', subtitle: 'Dados da loja e preferências.', icon: 'configuracoes', tone: 'slate', primaryAction: 'Editar loja' },
   { key: 'audit', label: 'Logs / Diagnóstico', shortLabel: 'Logs', subtitle: 'Acompanhe ações e segurança.', icon: 'auditoria_logs', tone: 'slate', primaryAction: 'Copiar logs' },
-  { key: 'diagnostics', label: 'Diagnóstico Web', shortLabel: 'Diag. Web', subtitle: 'Conexão, cache e sincronização.', icon: 'bloqueio_seguro', tone: 'green', primaryAction: 'Testar conexão' },
+  { key: 'diagnostics', label: 'Diagnóstico Web', shortLabel: 'Diagnóstico', subtitle: 'Conexão, cache e sincronização.', icon: 'bloqueio_seguro', tone: 'green', primaryAction: 'Testar conexão' },
   { key: 'coupons', label: 'Cupom', shortLabel: 'Cupom', subtitle: 'Cupom PNG fiel para promoção e compartilhamento.', icon: 'etiquetas', tone: 'purple', primaryAction: 'Gerar cupom' },
 ];
 

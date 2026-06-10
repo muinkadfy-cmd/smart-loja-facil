@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v210-crediario-automatico-mais-menos';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v211-ortografia-expansiveis-layout-premium';
 const APP_SHELL = [
   '/',
   '/index.html',

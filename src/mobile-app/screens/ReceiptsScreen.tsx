@@ -238,7 +238,7 @@ function pdfStatusLabel(status: string): string {
 }
 function pdfTitleLines(title: string): string[] {
   const clean = pdfSafeText(title).toUpperCase();
-  if (clean.includes('EXTRATO')) return ['EXTRATO DO', 'CREDIARIO'];
+  if (clean.includes('EXTRATO')) return ['EXTRATO DO', 'CREDIÁRIO'];
   if (clean.includes('PAGAMENTO')) return ['COMPROVANTE', 'DE PAGAMENTO'];
   if (clean.includes('PARCIAL')) return ['COMPROVANTE', 'PARCIAL'];
   if (clean.includes('ATRAS')) return ['PARCELA', 'ATRASADA'];
@@ -561,7 +561,7 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
     const creditSubtotal = creditProducts.reduce((sum, item) => sum + Number(item.total || 0), 0);
     const creditDiscount = Math.max(0, creditSubtotal - Number(credit.total || 0));
     return {
-      title: 'EXTRATO DO CREDIARIO',
+      title: 'EXTRATO DO CREDIÁRIO',
       subtitle: `Nota #${String(credit.sale_number || 0).padStart(4, '0')} - ${formatDateTime(credit.created_at)}`,
       customer: credit.customer_name || preview.customer || 'Cliente',
       phone: credit.customer_whatsapp || credit.customer_phone || preview.phone || '-',
@@ -593,9 +593,9 @@ function getPdfReceiptData(preview: ReceiptPreview): PdfReceiptData {
         creditProducts.length ? `Produtos na venda: ${creditProducts.map((item) => `${formatProductQty(item.qty)}x ${item.product_name}`).join('; ')}.` : 'Produtos da venda não encontrados no histórico.',
         `Parcelas pagas: ${paidCount}/${credit.installments.length}.`,
         `Total da nota: ${pdfMoney(credit.total)}. Total pago: ${pdfMoney(paid)}.`,
-        balance > 0.009 ? `Saldo para acompanhar no crediario: ${pdfMoney(balance)}.` : 'Nota quitada sem saldo pendente.',
-        partialCount ? `${partialCount} parcela(s) com pagamento parcial.` : '',
-        overdueCount ? `${overdueCount} parcela(s) atrasada(s).` : '',
+        balance > 0.009 ? `Saldo para acompanhar no crediário: ${pdfMoney(balance)}.` : 'Nota quitada sem saldo pendente.',
+        partialCount ? `${partialCount} parcelas com pagamento parcial.` : '',
+        overdueCount ? `${overdueCount} parcelas atrasadas.` : '',
       ].filter(Boolean),
       paidStamp: balance <= 0.009 ? now : undefined,
     };
@@ -1300,8 +1300,8 @@ function creditNoteStatusDetails(credit: CreditSummary): { label: string; tone: 
   const overdueCount = installments.filter(isOverdue).length;
   const partialCount = installments.filter((installment) => remainingOf(installment) > 0.009 && paidOf(installment) > 0).length;
   if (balance <= 0.009) return { label: 'Paga', tone: 'paid', detail: 'Nota quitada, sem saldo restante.', overdueCount, partialCount, paidCount };
-  if (overdueCount > 0) return { label: 'Atrasada', tone: 'overdue', detail: `${formatNumber(overdueCount)} parcela(s) atrasada(s).`, overdueCount, partialCount, paidCount };
-  if (partialCount > 0) return { label: 'Parcial', tone: 'partial', detail: `${formatNumber(partialCount)} parcela(s) com pagamento parcial.`, overdueCount, partialCount, paidCount };
+  if (overdueCount > 0) return { label: 'Atrasada', tone: 'overdue', detail: `${formatNumber(overdueCount)} parcelas atrasadas.`, overdueCount, partialCount, paidCount };
+  if (partialCount > 0) return { label: 'Parcial', tone: 'partial', detail: `${formatNumber(partialCount)} parcelas com pagamento parcial.`, overdueCount, partialCount, paidCount };
   return { label: 'Aberta', tone: 'pending', detail: 'Aguardando pagamento.', overdueCount, partialCount, paidCount };
 }
 
@@ -1474,7 +1474,7 @@ function buildInstallmentReceiptHtml(store: ReceiptStoreInfo, credit: CreditSumm
       { icon: '$', label: 'Situação', value: status },
     ])}
     <section class="slf-payment"><div class="slf-payment-head"><span>Resumo do crediário</span><span>Total</span></div><div style="display:grid;grid-template-columns:1fr 170px;align-items:stretch"><div class="slf-payment-row"><span class="active">Parcela do crediário</span><span>${tone === 'paid' && paidDate ? `Paga em ${escapeHtml(paidDate)}` : escapeHtml(status)}</span></div><div class="slf-payment-total">${formatCurrency(tone === 'paid' ? paid : installment.amount)}</div></div></section>
-    <section class="slf-note ${noteTone}"><div class="slf-note-title">Anotações</div><ul>
+    <section class="slf-note ${noteTone}"><div class="slf-note-title">Resumo</div><ul>
       <li>Venda/nota #${String(credit.sale_number || 0).padStart(4, '0')} · Parcela ${installment.number}/${credit.installments.length}.</li>
       <li>Vencimento: ${escapeHtml(dateOnly(installment.due_date))}${dueHint ? ` · ${escapeHtml(dueHint)}` : ''}.</li>
       <li>Status: ${escapeHtml(status)}${tone === 'paid' && paidDate ? ` em ${escapeHtml(paidDate)}` : ''}.</li>
@@ -1499,7 +1499,7 @@ function buildSavedReceiptHtml(store: ReceiptStoreInfo, receipt: ReceiptView): s
       <tr><td>1</td><td class="left">Venda #${String(receipt.sale_number || 0).padStart(4, '0')}</td><td class="num">${formatCurrency(receipt.total)}</td><td class="num">${formatCurrency(receipt.total)}</td></tr>
     </tbody></table>
     <section class="slf-payment"><div class="slf-payment-head"><span>Pagamento</span><span>Total</span></div><div style="display:grid;grid-template-columns:1fr 170px;align-items:stretch">${buildPaymentRow(receipt.receipt_type || '')}<div class="slf-payment-total">${formatCurrency(receipt.total)}</div></div></section>
-    <section class="slf-note ${tone === 'paid' ? 'ok' : tone === 'overdue' || tone === 'danger' ? 'danger' : tone === 'partial' ? 'warn' : ''}"><div class="slf-note-title">Anotações</div><ul>
+    <section class="slf-note ${tone === 'paid' ? 'ok' : tone === 'overdue' || tone === 'danger' ? 'danger' : tone === 'partial' ? 'warn' : ''}"><div class="slf-note-title">Resumo</div><ul>
       <li>Comprovante da venda #${String(receipt.sale_number || 0).padStart(4, '0')} emitido em ${escapeHtml(formatDateTime(receipt.created_at))}.</li>
       <li>Status: ${escapeHtml(status)}. Total do comprovante: ${formatCurrency(receipt.total)}.</li>
       ${bodyText ? `<li>${escapeHtml(bodyText)}</li>` : '<li>Registro salvo em Comprovantes para reimpressão e envio ao cliente.</li>'}
@@ -1534,12 +1534,12 @@ function buildCreditGeneralReceiptHtml(store: ReceiptStoreInfo, credit: CreditSu
       { icon: '◉', label: 'Total pago', value: formatCurrency(paid) },
       { icon: '$', label: 'Saldo em aberto', value: formatCurrency(balance) },
     ])}
-    <section class="slf-note ${noteTone}"><div class="slf-note-title">Anotações</div><ul>
+    <section class="slf-note ${noteTone}"><div class="slf-note-title">Resumo</div><ul>
       <li>Extrato da nota #${String(credit.sale_number || 0).padStart(4, '0')} emitida em ${escapeHtml(formatDateTime(credit.created_at))}.</li>
       <li>Parcelas pagas: ${paidCount}/${credit.installments.length}. Total da nota: ${formatCurrency(credit.total)}. Total pago: ${formatCurrency(paid)}.</li>
       <li>Acompanhar saldo em aberto no crediário: ${formatCurrency(balance)}.</li>
-      ${partialCount ? `<li>${formatNumber(partialCount)} parcela(s) com pagamento parcial.</li>` : ''}
-      ${overdueCount ? `<li>${formatNumber(overdueCount)} parcela(s) atrasada(s), destacada(s) em vermelho.</li>` : ''}
+      ${partialCount ? `<li>${formatNumber(partialCount)} parcelas com pagamento parcial.</li>` : ''}
+      ${overdueCount ? `<li>${formatNumber(overdueCount)} parcelas atrasadas, destacadas em vermelho.</li>` : ''}
     </ul></section>`;
   return buildReceiptDocument(store, 'EXTRATO DO CREDIÁRIO', 'Nota inteira', credit.created_at, status, tone, body, tone === 'paid' ? formatDateTime(credit.created_at) : undefined);
 }
@@ -1569,7 +1569,7 @@ function creditGeneralShareText(credit: CreditSummary): string {
     `Pago: ${formatCurrency(creditPaidTotal(credit))}`,
     `Restante: ${formatCurrency(credit.balance)}`,
     `Parcelas pagas: ${paidCount}/${credit.installments.length}`,
-    overdueCount ? `Atenção: ${overdueCount} parcela(s) vencida(s).` : 'Sem parcela vencida no momento.',
+    overdueCount ? `Atenção: ${overdueCount} parcelas vencidas.` : 'Sem parcela vencida no momento.',
   ].join('\n');
 }
 
@@ -1960,14 +1960,14 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       {visibleGroupedCredits.length ? (
         <section className="mapp-credit-customer-list mapp-receipt-credit-list" aria-label="Comprovantes do crediário por cliente">
           {visibleGroupedCredits.map((group) => {
-            const customerExpanded = expandedCustomers[group.customerKey] ?? true;
+            const customerExpanded = expandedCustomers[group.customerKey] ?? false;
             return (
               <section key={group.customerKey} className="mapp-credit-customer-card mapp-receipt-customer-card">
                 <button type="button" className="mapp-credit-customer-head mapp-receipt-customer-head" onClick={() => toggleCustomer(group.customerKey)} aria-expanded={customerExpanded}>
                   <div className="mapp-credit-customer-avatar" aria-hidden="true">{customerInitials(group.customerName)}</div>
                   <div>
                     <strong>{group.customerName}</strong>
-                    <small>{group.notesCount} nota(s) · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
+                    <small>{group.notesCount} notas · {group.openNotes} em aberto · {group.contact || 'sem telefone cadastrado'}</small>
                   </div>
                   <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Atrasado · ${formatCurrency(group.balance)}` : `Aberto · ${formatCurrency(group.balance)}`}</em>
                 </button>
@@ -1980,7 +1980,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                     </div>
                     {group.overdueInstallments > 0 || group.partialInstallments > 0 ? (
                       <div className={`mapp-receipt-customer-alert ${group.overdueInstallments > 0 ? 'danger' : 'warn'}`}>
-                        {group.overdueInstallments > 0 ? `${formatNumber(group.overdueInstallments)} parcela(s) atrasada(s)` : `${formatNumber(group.partialInstallments)} parcela(s) com pagamento parcial`}
+                        {group.overdueInstallments > 0 ? `${formatNumber(group.overdueInstallments)} parcelas atrasadas` : `${formatNumber(group.partialInstallments)} parcelas com pagamento parcial`}
                       </div>
                     ) : null}
                     <div className="mapp-credit-list" aria-label={`Notas do cliente ${group.customerName}`}>
@@ -1995,7 +1995,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                               <span><InlineIcon name="comprovantes" size={24} /></span>
                               <div>
                                 <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
-                                <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcela(s) pagas</small>
+                                <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
                                 <small className={`mapp-note-status-line ${noteStatus.tone}`}>{noteStatus.detail}</small>
                                 <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
                               </div>

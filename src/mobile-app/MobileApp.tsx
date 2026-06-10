@@ -164,7 +164,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     if (updateAvailable) items.push({ title: 'Nova versão disponível', detail: 'Atualize o PWA neste aparelho para evitar cache antigo.', action: 'Atualizar', page: 'diagnostics', tone: 'info', icon: 'atualizar' });
     if (demoModeActive) items.push({ title: 'Ambiente demo ativo', detail: 'O app está usando dados fictícios separados da loja real.', action: 'Ver demo', page: 'diagnostics', tone: 'info', icon: 'loja_ativa' });
     if (trainingModeActive) items.push({ title: 'Modo treinamento ativo', detail: 'Gravações reais estão bloqueadas para demonstração segura.', action: 'Ver modo', page: 'diagnostics', tone: 'warning', icon: 'bloqueio_seguro' });
-    return items.length ? items.slice(0, 8) : [{ title: 'Tudo certo', detail: 'Nenhum alerta importante agora. Dados prontos para conferência.', action: 'Dashboard', page: 'dashboard' as PageKey, tone: 'success', icon: 'painel_da_loja' }];
+    return items.length ? items.slice(0, 8) : [{ title: 'Tudo certo', detail: 'Nenhum alerta importante agora. Dados prontos para conferência.', action: 'Painel', page: 'dashboard' as PageKey, tone: 'success', icon: 'painel_da_loja' }];
   }, [status, updateAvailable, demoModeActive, trainingModeActive, networkOnline, syncSnapshot, outboxStats, error]);
 
   const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;

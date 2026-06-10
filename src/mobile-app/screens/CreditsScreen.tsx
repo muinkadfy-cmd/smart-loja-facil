@@ -262,6 +262,10 @@ function creditPaidTotal(credit: CreditSummary): number {
   return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
 }
 
+function pluralLabel(count: number, singular: string, plural: string): string {
+  return `${formatNumber(count)} ${count === 1 ? singular : plural}`;
+}
+
 function creditStatusInfo(credit: CreditSummary): { label: string; tone: CreditStatusTone; detail: string } {
   const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
   const openCount = creditOpenInstallments(credit).length;
@@ -272,14 +276,14 @@ function creditStatusInfo(credit: CreditSummary): { label: string; tone: CreditS
   }
 
   if (overdueCount > 0) {
-    return { label: 'Vencido', tone: 'danger', detail: `${formatNumber(overdueCount)} parcela(s) vencida(s).` };
+    return { label: 'Vencido', tone: 'danger', detail: `${pluralLabel(overdueCount, 'parcela vencida', 'parcelas vencidas')}.` };
   }
 
   if (paidCount > 0) {
-    return { label: 'Parcial', tone: 'warn', detail: `${formatNumber(paidCount)}/${formatNumber(credit.installments.length)} parcela(s) pagas.` };
+    return { label: 'Parcial', tone: 'warn', detail: `${formatNumber(paidCount)}/${formatNumber(credit.installments.length)} parcelas pagas.` };
   }
 
-  return { label: 'Aberto', tone: 'neutral', detail: `${formatNumber(openCount)} parcela(s) para receber.` };
+  return { label: 'Aberto', tone: 'neutral', detail: `${pluralLabel(openCount, 'parcela para receber', 'parcelas para receber')}.` };
 }
 
 function nextCreditActionLabel(credit: CreditSummary): string {
@@ -711,10 +715,10 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   return (
     <div className="mapp-screen mapp-credits-screen">
       <section className="mapp-mini-stat-grid mapp-credits-stats">
-        <StatCard label="Em aberto" value={formatCurrency(summary.openBalance)} detail={`${formatNumber(summary.openCount)} crediário(s)`} icon="crediario" tone="purple" />
-        <StatCard label="Vencidos" value={formatCurrency(summary.overdueTotal)} detail={`${formatNumber(summary.overdueCount)} parcela(s)`} icon="auditoria_logs" tone="orange" />
+        <StatCard label="Em aberto" value={formatCurrency(summary.openBalance)} detail={`${pluralLabel(summary.openCount, 'crediário', 'crediários')}`} icon="crediario" tone="purple" />
+        <StatCard label="Vencidos" value={formatCurrency(summary.overdueTotal)} detail={`${pluralLabel(summary.overdueCount, 'parcela', 'parcelas')}`} icon="auditoria_logs" tone="orange" />
         <StatCard label="Clientes" value={formatNumber(status?.dashboard.credits_active_customers)} detail="com crediário ativo" icon="clientes" tone="sky" />
-        <StatCard label="Próx. venc." value={summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'} detail={summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'} icon="comprovantes" tone="green" />
+        <StatCard label="Próximo vencimento" value={summary.nextOpen ? dateOnly(summary.nextOpen.due_date) : '-'} detail={summary.nextOpen ? formatCurrency(remainingOf(summary.nextOpen)) : 'sem parcelas'} icon="comprovantes" tone="green" />
       </section>
 
       <section className="mapp-success-card mapp-credit-help-card">
@@ -737,7 +741,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         <section className="mapp-stock-alert mapp-credit-alert">
           <span><InlineIcon name="crediario" size={24} /></span>
           <div>
-            <strong>{formatNumber(summary.overdueCount)} parcela(s) vencida(s)</strong>
+            <strong>{pluralLabel(summary.overdueCount, 'parcela vencida', 'parcelas vencidas')}</strong>
             <p>Priorize cobrança e recebimento para manter o caixa saudável.</p>
           </div>
           <button type="button" onClick={() => setFilter('vencidos')}>Ver vencidos</button>

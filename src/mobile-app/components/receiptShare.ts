@@ -171,7 +171,7 @@ function fallbackProductRows(sale: SaleSummary, receipt: ReceiptSummary): Produc
   const total = Number(receipt.total || sale.total || 0);
   const count = Math.max(1, Number(sale.item_count || 1));
   const firstName = safeText(sale.first_product_name || `Venda #${String(receipt.sale_number || sale.number || 0).padStart(4, '0')}`);
-  const label = count > 1 ? `${firstName} + ${count - 1} item(ns)` : firstName;
+  const label = count > 1 ? `${firstName} + ${count - 1} itens` : firstName;
   return [{ qtd: String(count), produto: label, unitario: count > 1 ? '-' : formatCurrency(total), total: formatCurrency(total) }];
 }
 

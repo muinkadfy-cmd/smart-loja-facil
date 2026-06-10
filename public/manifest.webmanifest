@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v210",
-  "short_name": "Jaque v210",
-  "description": "PWA da loja v210 com crediário automático para valor maior/menor e modo simples sem checkbox.",
+  "name": "Jaque Confecções e Presentes v211",
+  "short_name": "Jaque v211",
+  "description": "PWA da loja v211 com ortografia, acentos, comprovantes compactos e cards expansíveis.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -59,8 +59,8 @@
   "prefer_related_applications": false,
   "shortcuts": [
     {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
+      "name": "Painel",
+      "short_name": "Painel",
       "description": "Abrir resumo rápido da loja",
       "url": "/?source=pwa&view=dashboard",
       "icons": [

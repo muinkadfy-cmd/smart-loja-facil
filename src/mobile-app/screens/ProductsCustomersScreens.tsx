@@ -591,12 +591,17 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [photoPreview, setPhotoPreview] = useState<{ src: string; title: string } | null>(null);
   const [visibleProductCount, setVisibleProductCount] = useState(CRUD_VISIBLE_BATCH);
+  const [expandedProductIds, setExpandedProductIds] = useState<Record<string, boolean>>({});
   const productFormRef = useRef<HTMLElement>(null);
   const productNameInputRef = useRef<HTMLInputElement>(null);
   const stockAdjustRef = useRef<HTMLElement>(null);
   const stockAdjustInputRef = useRef<HTMLInputElement>(null);
 
   const lowLimit = status?.settings.low_stock_limit ?? 3;
+
+  function toggleProductDetails(productId: string): void {
+    setExpandedProductIds((current) => ({ ...current, [productId]: !current[productId] }));
+  }
 
   function openProductForm(next: ProductFormState, feedbackText: string) {
     setStockAdjust(null);
@@ -906,8 +911,9 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
           {visibleProducts.map((product) => {
             const price = product.promo_price ?? product.price;
             const low = product.stock <= lowLimit;
+            const expanded = expandedProductIds[product.id] ?? false;
             return (
-              <article key={product.id} className={`mapp-crud-card ${product.status === 'inativo' ? 'is-inactive' : ''}`}>
+              <article key={product.id} className={`mapp-crud-card ${expanded ? 'is-expanded' : 'is-compact'} ${product.status === 'inativo' ? 'is-inactive' : ''}`}>
                 {hasProductPhoto(product) ? (
                   <button
                     type="button"
@@ -926,21 +932,28 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
                     <em className={low ? 'warn' : 'ok'}>{low ? 'Estoque baixo' : product.status}</em>
                   </div>
                   <p>{product.category || 'Sem categoria'} · Estoque {formatNumber(product.stock)} {product.unit || 'un'}</p>
-                  <div className="mapp-crud-meta">
-                    <span>{product.internal_code || 'Sem código'}</span>
-                    <span>{product.barcode || 'Sem barras'}</span>
-                    <span>Custo {formatCurrency(product.cost_price || 0)}</span>
-                    <span>{productPhotoLabel(product.image_data)}</span>
-                  </div>
+                  {expanded ? (
+                    <div className="mapp-crud-meta">
+                      <span>{product.internal_code || 'Sem código'}</span>
+                      <span>{product.barcode || 'Sem código de barras'}</span>
+                      <span>Custo {formatCurrency(product.cost_price || 0)}</span>
+                      <span>{productPhotoLabel(product.image_data)}</span>
+                    </div>
+                  ) : <small className="mapp-compact-hint">Toque em detalhes para ver código, custo, foto e ações.</small>}
                 </div>
                 <div className="mapp-crud-side">
                   <strong>{formatCurrency(price)}</strong>
                   <div className="mapp-product-actions">
-                    <button type="button" onClick={() => openProductForm(productToForm(product), `Editando ${product.name}.`)}>Editar</button>
-                    <button type="button" onClick={() => openStockAdjust(product)}>Estoque</button>
-                    <button type="button" onClick={() => void changeProductStatus(product, product.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
-                      {product.status === 'ativo' ? 'Inativar' : 'Ativar'}
-                    </button>
+                    <button type="button" onClick={() => toggleProductDetails(product.id)}>{expanded ? 'Recolher' : 'Detalhes'}</button>
+                    {expanded ? (
+                      <>
+                        <button type="button" onClick={() => openProductForm(productToForm(product), `Editando ${product.name}.`)}>Editar</button>
+                        <button type="button" onClick={() => openStockAdjust(product)}>Estoque</button>
+                        <button type="button" onClick={() => void changeProductStatus(product, product.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
+                          {product.status === 'ativo' ? 'Inativar' : 'Ativar'}
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </article>
@@ -983,8 +996,13 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [visibleCustomerCount, setVisibleCustomerCount] = useState(CRUD_VISIBLE_BATCH);
+  const [expandedCustomerIds, setExpandedCustomerIds] = useState<Record<string, boolean>>({});
   const customerFormRef = useRef<HTMLElement>(null);
   const customerNameInputRef = useRef<HTMLInputElement>(null);
+
+  function toggleCustomerDetails(customerId: string): void {
+    setExpandedCustomerIds((current) => ({ ...current, [customerId]: !current[customerId] }));
+  }
 
   function openCustomerForm(next: CustomerFormState, feedbackText: string) {
     setForm(next);
@@ -1185,8 +1203,10 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
 
       {filtered.length ? (
         <section className="mapp-crud-list" aria-label="Lista de clientes">
-          {visibleCustomers.map((customer) => (
-            <article key={customer.id} className={`mapp-crud-card ${customer.status === 'inativo' ? 'is-inactive' : ''}`}>
+          {visibleCustomers.map((customer) => {
+            const expanded = expandedCustomerIds[customer.id] ?? false;
+            return (
+            <article key={customer.id} className={`mapp-crud-card ${expanded ? 'is-expanded' : 'is-compact'} ${customer.status === 'inativo' ? 'is-inactive' : ''}`}>
               <span className="mapp-crud-icon tone-purple"><InlineIcon name="clientes" size={24} /></span>
               <div className="mapp-crud-main">
                 <div className="mapp-crud-title-row">
@@ -1194,24 +1214,33 @@ export function CustomersScreen({ refreshToken, onRefresh }: ProductsCustomersSc
                   <em className={customer.status === 'ativo' ? 'ok' : 'warn'}>{customer.status}</em>
                 </div>
                 <p>{customer.phone || customer.whatsapp || 'Sem telefone'} · {customer.address || 'Sem endereço'}</p>
-                <div className="mapp-crud-meta">
-                  <span>WhatsApp: {customer.whatsapp || 'não informado'}</span>
-                  <span>Limite: {formatCurrency(customer.credit_limit)}</span>
-                </div>
+                {expanded ? (
+                  <div className="mapp-crud-meta">
+                    <span>WhatsApp: {customer.whatsapp || 'não informado'}</span>
+                    <span>Limite: {formatCurrency(customer.credit_limit)}</span>
+                    <span>{customer.notes || 'Sem observações'}</span>
+                  </div>
+                ) : <small className="mapp-compact-hint">Toque em detalhes para ver endereço, limite, WhatsApp e ações.</small>}
               </div>
               <div className="mapp-crud-side">
                 <strong>{customer.credit_limit ? formatCurrency(customer.credit_limit) : 'Sem limite'}</strong>
                 <div className="mapp-product-actions mapp-customer-actions">
-                  <button type="button" onClick={() => openCustomerForm(customerToForm(customer), `Editando ${customer.name}.`)}>Editar</button>
-                  {customer.whatsapp || customer.phone ? <button type="button" onClick={() => void openCustomerWhatsapp(customer)}>WhatsApp</button> : null}
-                  <button type="button" onClick={() => void copyCustomerContact(customer)}>Copiar</button>
-                  <button type="button" onClick={() => void changeCustomerStatus(customer, customer.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
-                    {customer.status === 'ativo' ? 'Inativar' : 'Ativar'}
-                  </button>
+                  <button type="button" onClick={() => toggleCustomerDetails(customer.id)}>{expanded ? 'Recolher' : 'Detalhes'}</button>
+                  {expanded ? (
+                    <>
+                      <button type="button" onClick={() => openCustomerForm(customerToForm(customer), `Editando ${customer.name}.`)}>Editar</button>
+                      {customer.whatsapp || customer.phone ? <button type="button" onClick={() => void openCustomerWhatsapp(customer)}>WhatsApp</button> : null}
+                      <button type="button" onClick={() => void copyCustomerContact(customer)}>Copiar</button>
+                      <button type="button" onClick={() => void changeCustomerStatus(customer, customer.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
+                        {customer.status === 'ativo' ? 'Inativar' : 'Ativar'}
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
           {visibleCustomers.length < filtered.length ? (
             <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setVisibleCustomerCount((count) => count + LOAD_MORE_STEP)}>
               Mostrar mais clientes ({formatNumber(visibleCustomers.length)} de {formatNumber(filtered.length)})

@@ -9806,3 +9806,21 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   gap: 9px;
 }
 .mapp-credit-advanced-rules > strong { color: var(--mapp-text); font-size: 13px; }
+
+
+/* Lote 211: cards compactos e expansíveis para usuário leigo */
+.mapp-crud-card.is-compact { align-items: center; }
+.mapp-crud-card.is-compact .mapp-crud-main p { margin-bottom: 4px; }
+.mapp-compact-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--mapp-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.mapp-crud-card.is-expanded {
+  align-items: flex-start;
+}
+.mapp-crud-card.is-expanded .mapp-crud-meta {
+  margin-top: 8px;
+}

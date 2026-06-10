@@ -417,7 +417,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         <div className="mapp-sales-flow-copy">
           <span>PDV guiado</span>
           <strong>{currentStep === 4 ? 'Venda pronta para conferir' : currentStep === 3 ? 'Confira pagamento e cliente' : 'Comece escolhendo o produto'}</strong>
-          <small>{cart.length ? `${formatNumber(totalQty)} item(ns) · ${formatCurrency(total)}` : 'Busque, toque no produto e finalize em poucos passos.'}</small>
+          <small>{cart.length ? `${formatNumber(totalQty)} ${totalQty === 1 ? 'item' : 'itens'} · ${formatCurrency(total)}` : 'Busque, toque no produto e finalize em poucos passos.'}</small>
         </div>
         <div className="mapp-sales-flow-steps">
           {[
@@ -489,7 +489,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
         <div className="mapp-section-title mapp-section-title-compact">
           <div>
             <h2>2. Carrinho</h2>
-            <small>{cart.length ? `${formatNumber(totalQty)} item(ns) selecionados` : 'Carrinho vazio'}</small>
+            <small>{cart.length ? `${formatNumber(totalQty)} ${totalQty === 1 ? 'item selecionado' : 'itens selecionados'}` : 'Carrinho vazio'}</small>
           </div>
           {cart.length ? <button type="button" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar</button> : null}
         </div>
