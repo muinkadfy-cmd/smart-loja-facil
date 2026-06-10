@@ -79,6 +79,8 @@ function paymentLabel(method: PaymentMethod): string {
 
 const INSTALLMENT_OPTIONS = [1, 2, 3, 4, 5, 6, 10, 12];
 const DUE_DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => index + 1);
+const SALES_PRODUCT_INITIAL_LIMIT = 5;
+const SALES_PRODUCT_LIMIT_STEP = 5;
 
 function normalizeInstallmentCount(value: unknown): number {
   const numeric = Number(String(value ?? '').replace(/[^0-9]/g, ''));
@@ -120,7 +122,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query);
   const [categoryFilter, setCategoryFilter] = useState('todos');
-  const [productVisibleLimit, setProductVisibleLimit] = useState(INITIAL_LIST_LIMIT);
+  const [productVisibleLimit, setProductVisibleLimit] = useState(SALES_PRODUCT_INITIAL_LIMIT);
   const [customerQuery, setCustomerQuery] = useState('');
   const debouncedCustomerQuery = useDebouncedValue(customerQuery);
   const [customerVisibleLimit, setCustomerVisibleLimit] = useState(INITIAL_LIST_LIMIT);
@@ -171,7 +173,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   }, [refreshToken]);
 
   useEffect(() => {
-    setProductVisibleLimit(resetLimitForQuery(debouncedQuery));
+    setProductVisibleLimit(SALES_PRODUCT_INITIAL_LIMIT);
   }, [debouncedQuery, categoryFilter]);
 
   useEffect(() => {
@@ -206,7 +208,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   }, [categoryFilter, debouncedQuery, products]);
 
   const filteredProducts = useMemo(() => (
-    filteredProductPool.slice(0, limitForQuery(debouncedQuery, productVisibleLimit))
+    filteredProductPool.slice(0, productVisibleLimit)
   ), [debouncedQuery, filteredProductPool, productVisibleLimit]);
 
   const filteredCustomers = useMemo(() => {
@@ -512,13 +514,15 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 ) : (
                   <span className={product.stock <= 0 ? 'is-empty' : ''}><InlineIcon name="produtos" size={24} /></span>
                 )}
-                <div className="mapp-sales-product-info">
-                  <strong>{product.name}</strong>
-                  <small>{product.internal_code || product.category || 'Produto'}</small>
-                  <i>{product.stock <= 0 ? 'Sem estoque' : 'Em estoque'}{inCartQty ? ` · no carrinho ${formatNumber(inCartQty)}` : ''}</i>
-                </div>
-                <b>{formatCurrency(price)}</b>
-                <em>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</em>
+                <span className="mapp-sales-product-info">
+                  <span className="mapp-sales-product-name">{product.name}</span>
+                  <span className="mapp-sales-product-code">{product.internal_code || product.category || 'Produto'}</span>
+                  <span className={product.stock <= 0 ? 'mapp-sales-product-stock danger' : 'mapp-sales-product-stock'}>
+                    {product.stock <= 0 ? 'Sem estoque' : 'Em estoque'}{inCartQty ? ` · carrinho ${formatNumber(inCartQty)}` : ''}
+                  </span>
+                </span>
+                <span className="mapp-sales-product-price">{formatCurrency(price)}</span>
+                <span className={product.stock <= 0 ? 'mapp-sales-product-action danger' : 'mapp-sales-product-action'}>{product.stock <= 0 ? 'Sem estoque' : 'Adicionar'}</span>
               </button>
             );
           })}
@@ -530,8 +534,8 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           </div>
         ) : null}
         {canLoadMoreProducts ? (
-          <button type="button" className="mapp-secondary-button mapp-list-more-button" onClick={() => setProductVisibleLimit((count) => count + LOAD_MORE_STEP)}>
-            Carregar mais produtos
+          <button type="button" className="mapp-secondary-button mapp-list-more-button mapp-sales-show-more-products" onClick={() => setProductVisibleLimit((count) => count + SALES_PRODUCT_LIMIT_STEP)}>
+            Mostrar mais produtos ({Math.max(0, filteredProductPool.length - filteredProducts.length)} restantes)
           </button>
         ) : null}
       </section>

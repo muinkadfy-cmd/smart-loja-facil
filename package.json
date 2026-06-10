@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.216",
+  "version": "0.1.217",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com correção mobile do PDV e Dashboard premium v216",
+  "description": "PWA da loja com PDV mobile compacto, 5 produtos por vez e lista sem sobreposição v217",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

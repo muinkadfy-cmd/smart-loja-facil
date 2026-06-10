@@ -11823,3 +11823,251 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     text-overflow: ellipsis;
   }
 }
+
+
+/* Mega Lote 217 — PDV Mobile Compacto: 5 produtos e limpeza definitiva da lista */
+.mapp-page-sales .mapp-sales-product-browser {
+  padding: 10px 12px !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list {
+  display: grid !important;
+  gap: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border-top: 1px solid rgba(226,232,240,.9) !important;
+}
+
+/* Reset total das regras antigas do produto.
+   A linha passa a usar apenas classes .mapp-sales-product-* para não brigar com strong/small/b/em globais. */
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 74px !important;
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "thumb info price"
+    "thumb info action" !important;
+  gap: 6px 10px !important;
+  align-items: center !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(226,232,240,.9) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #0b1933 !important;
+  padding: 8px 0 !important;
+  overflow: hidden !important;
+  text-align: left !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button:last-child {
+  border-bottom: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+  grid-area: thumb !important;
+  width: 52px !important;
+  height: 52px !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+  border-radius: 15px !important;
+  align-self: center !important;
+  justify-self: start !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+  display: grid !important;
+  place-items: center !important;
+  background: #edf7ff !important;
+  color: #3b82f6 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button.is-out-of-stock > span.is-empty {
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-info {
+  grid-area: info !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 2px !important;
+  align-content: center !important;
+  justify-self: stretch !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-name,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-code,
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock {
+  display: block !important;
+  position: static !important;
+  float: none !important;
+  clear: none !important;
+  transform: none !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-name {
+  color: #0b1933 !important;
+  font-size: clamp(.9rem, 3.4vw, 1rem) !important;
+  line-height: 1.12 !important;
+  font-weight: 900 !important;
+  letter-spacing: -.015em !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-code {
+  color: #64748b !important;
+  font-size: clamp(.7rem, 2.6vw, .78rem) !important;
+  line-height: 1.08 !important;
+  font-weight: 760 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock {
+  color: #059669 !important;
+  font-size: clamp(.68rem, 2.5vw, .76rem) !important;
+  line-height: 1.08 !important;
+  font-weight: 900 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-stock.danger {
+  color: #e11d48 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-price {
+  grid-area: price !important;
+  justify-self: end !important;
+  align-self: end !important;
+  display: block !important;
+  color: #2563eb !important;
+  font-size: clamp(.98rem, 4vw, 1.12rem) !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action {
+  grid-area: action !important;
+  justify-self: end !important;
+  align-self: start !important;
+  min-width: 86px !important;
+  min-height: 32px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 1px solid #2563eb !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #2563eb !important;
+  font-size: clamp(.68rem, 2.5vw, .78rem) !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  padding: 0 10px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action.danger {
+  border-color: rgba(225,29,72,.22) !important;
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+/* Mostrar apenas 5 produtos por lote visual e deixar o botão claro. */
+.mapp-page-sales .mapp-sales-show-more-products {
+  width: 100% !important;
+  min-height: 44px !important;
+  margin-top: 10px !important;
+  border-radius: 16px !important;
+  font-size: .88rem !important;
+  font-weight: 900 !important;
+}
+
+/* Compactação extra do PDV para reduzir poluição visual. */
+.mapp-page-sales .mapp-sales-category-row {
+  padding: 8px 0 !important;
+  gap: 7px !important;
+}
+
+.mapp-page-sales .mapp-sales-category-row button {
+  min-height: 36px !important;
+  padding: 0 13px !important;
+  font-size: .8rem !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-pdv-search-box {
+  min-height: 50px !important;
+  border-radius: 18px !important;
+}
+
+.mapp-page-sales .mapp-sales-product-browser .mapp-pdv-search-box input {
+  min-height: 48px !important;
+  font-size: .92rem !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-list {
+  max-height: 190px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-item {
+  min-height: 76px !important;
+  padding: 8px 0 !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart .mapp-cart-item > span {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-summary {
+  margin-top: 8px !important;
+  padding-top: 9px !important;
+  gap: 5px !important;
+}
+
+.mapp-page-sales .mapp-sales-payment-jump {
+  min-height: 46px !important;
+  margin-top: 9px !important;
+}
+
+.mapp-page-sales .mapp-sales-mini-cart-actions button {
+  min-height: 40px !important;
+}
+
+@media (max-width: 420px) {
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+    grid-template-columns: 48px minmax(0, 1fr) auto !important;
+    min-height: 70px !important;
+    gap: 5px 8px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > .mapp-product-mini-thumb,
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button > span.is-empty {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-sales-product-action {
+    min-width: 78px !important;
+    min-height: 30px !important;
+    padding: 0 8px !important;
+  }
+}
