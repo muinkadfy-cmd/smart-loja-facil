@@ -446,6 +446,34 @@ img, svg { max-width: 100%; }
   color: #fff;
   box-shadow: 0 12px 24px rgba(14, 99, 244, 0.22);
 }
+.mapp-context-subnav-track button.has-pending {
+  border-color: #ffb4b4;
+  color: #b42318;
+  background: #fff3f3;
+  box-shadow: 0 10px 20px rgba(180, 35, 24, 0.1);
+}
+.mapp-context-subnav-track button.has-pending.active {
+  border-color: #b42318;
+  background: #b42318;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(180, 35, 24, 0.24);
+}
+.mapp-context-subnav-track button em,
+.mapp-side-list button em,
+.mapp-bottom-nav button em {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #f23a18;
+  color: #fff;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+}
 
 .mapp-screen { display: grid; gap: 22px; }
 .mapp-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
@@ -1223,11 +1251,15 @@ img, svg { max-width: 100%; }
 .mapp-side-group-title { display: grid; gap: 2px; padding: 3px 10px 2px; }
 .mapp-side-group-title strong { color: #ffffff; font-size: 0.78rem; font-weight: 950; letter-spacing: 0.09em; text-transform: uppercase; }
 .mapp-side-group-title small { color: #9fb1c7; font-size: 0.72rem; font-weight: 700; line-height: 1.25; }
-.mapp-side-list button { min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; border: 0; border-radius: 16px; padding: 8px 10px; background: transparent; color: #dce8f8; text-align: left; }
+.mapp-side-list button { min-height: 50px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 0; border-radius: 16px; padding: 8px 10px; background: transparent; color: #dce8f8; text-align: left; }
 .mapp-side-list button span { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; background: rgba(255,255,255,0.08); color: #71a7ff; }
 .mapp-side-list button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mapp-side-list button.active { background: #fff; color: var(--mapp-text); }
 .mapp-side-list button.active span { background: #eaf3ff; color: var(--mapp-blue); }
+.mapp-side-list button.has-pending { background: rgba(242, 58, 24, 0.12); color: #fff5f4; box-shadow: inset 0 0 0 1px rgba(255, 153, 134, 0.32); }
+.mapp-side-list button.has-pending span { background: rgba(242, 58, 24, 0.2); color: #ffb4a8; }
+.mapp-side-list button.has-pending.active { background: #fff; color: #b42318; box-shadow: inset 0 0 0 2px #f23a18; }
+.mapp-side-list button.has-pending.active span { background: #fff0f0; color: #b42318; }
 .mapp-side-footer { display: grid; gap: 6px; padding: 14px; border: 1px solid rgba(255,255,255,0.12); border-radius: 18px; background: rgba(255,255,255,0.06); }
 .mapp-side-footer span { color: #9fb1c7; font-size: 0.77rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
 .mapp-side-footer strong { overflow-wrap: anywhere; }
@@ -1383,6 +1415,10 @@ img, svg { max-width: 100%; }
   .mapp-bottom-nav button svg, .mapp-bottom-nav button img, .mapp-bottom-nav button .app-svg-icon { width: 24px !important; height: 24px !important; }
   .mapp-bottom-nav button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.71rem; line-height: 1; }
   .mapp-bottom-nav button.active { background: #eef6ff; color: #246bf2; box-shadow: inset 0 0 0 1.5px #b8d8ff; }
+  .mapp-bottom-nav button { position: relative; }
+  .mapp-bottom-nav button.has-pending { color: #b42318; }
+  .mapp-bottom-nav button.has-pending.active { background: #fff1f1; color: #b42318; box-shadow: inset 0 0 0 1.5px #ff9f9f; }
+  .mapp-bottom-nav button em { position: absolute; top: 4px; right: 9px; min-width: 20px; height: 20px; padding: 0 6px; border: 2px solid #fff; font-size: 0.66rem; }
   .mapp-sales-stats .mapp-stat-card {
     min-height: 108px;
   }

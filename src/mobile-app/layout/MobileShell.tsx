@@ -22,6 +22,10 @@ interface MobileShellProps {
   children: React.ReactNode;
 }
 
+function pendingBadge(count: number): string {
+  return count > 99 ? '99+' : String(count);
+}
+
 export function MobileShell({
   activePage,
   status,
@@ -44,6 +48,20 @@ export function MobileShell({
   const route = getMobileRoute(activePage);
   const storeName = (settings?.store_name || status?.settings.store_name || 'Jaque Confecções e Presentes').replace(/\s+Web$/i, '');
   const online = Boolean(status?.sqlite_ok);
+  const pendingCounts = useMemo<Partial<Record<PageKey, number>>>(() => {
+    const dashboard = status?.dashboard;
+    const counts: Partial<Record<PageKey, number>> = {};
+    const lowStock = Math.max(0, Number(dashboard?.low_stock_count || 0));
+    const openOrders = Math.max(0, Number(dashboard?.orders_open || 0));
+    const activeCreditCustomers = Math.max(0, Number(dashboard?.credits_active_customers || 0));
+
+    if (lowStock > 0) counts.products = lowStock;
+    if (openOrders > 0) counts.orders = openOrders;
+    if (activeCreditCustomers > 0) counts.credits = activeCreditCustomers;
+    if (alertsCount > 0 || updateAvailable) counts.diagnostics = alertsCount + (updateAvailable ? 1 : 0);
+
+    return counts;
+  }, [alertsCount, status?.dashboard, updateAvailable]);
 
   useEffect(() => {
     const syncTrainingMode = () => {
@@ -86,12 +104,21 @@ export function MobileShell({
                 <strong>{group.label}</strong>
                 <small>{group.helper}</small>
               </div>
-              {getMobileRoutesByGroup(group).map((item) => (
-                <button key={item.key} type="button" className={item.key === activePage ? 'active' : ''} onClick={() => { setMenuOpen(false); onNavigate(item.key); }}>
-                  <span><InlineIcon name={item.icon} size={24} /></span>
-                  <strong>{item.label}</strong>
-                </button>
-              ))}
+              {getMobileRoutesByGroup(group).map((item) => {
+                const pending = Math.max(0, Number(pendingCounts[item.key] || 0));
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={[item.key === activePage ? 'active' : '', pending > 0 ? 'has-pending' : ''].filter(Boolean).join(' ')}
+                    onClick={() => { setMenuOpen(false); onNavigate(item.key); }}
+                  >
+                    <span><InlineIcon name={item.icon} size={24} /></span>
+                    <strong>{item.label}</strong>
+                    {pending > 0 ? <em>{pendingBadge(pending)}</em> : null}
+                  </button>
+                );
+              })}
             </section>
           ))}
         </div>
@@ -178,18 +205,22 @@ export function MobileShell({
                 <span>{activeGroup.helper}</span>
               </div>
               <div className="mapp-context-subnav-track">
-                {relatedRoutes.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    className={item.key === activePage ? 'active' : ''}
-                    onClick={() => onNavigate(item.key)}
-                    aria-current={item.key === activePage ? 'page' : undefined}
-                  >
-                    <InlineIcon name={item.icon} size={24} />
-                    <span>{item.shortLabel}</span>
-                  </button>
-                ))}
+                {relatedRoutes.map((item) => {
+                  const pending = Math.max(0, Number(pendingCounts[item.key] || 0));
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={[item.key === activePage ? 'active' : '', pending > 0 ? 'has-pending' : ''].filter(Boolean).join(' ')}
+                      onClick={() => onNavigate(item.key)}
+                      aria-current={item.key === activePage ? 'page' : undefined}
+                    >
+                      <InlineIcon name={item.icon} size={24} />
+                      <span>{item.shortLabel}</span>
+                      {pending > 0 ? <em>{pendingBadge(pending)}</em> : null}
+                    </button>
+                  );
+                })}
               </div>
             </nav>
           ) : null}
@@ -197,7 +228,7 @@ export function MobileShell({
           {children}
         </main>
 
-        <MobileBottomNav activePage={activePage} onNavigate={onNavigate} onOpenMore={() => setMenuOpen(true)} />
+        <MobileBottomNav activePage={activePage} pendingCounts={pendingCounts} onNavigate={onNavigate} onOpenMore={() => setMenuOpen(true)} />
       </section>
     </div>
   );

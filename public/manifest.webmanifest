@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v222",
-  "short_name": "Jaque v222",
-  "description": "PWA da loja v222 com botões simples de edição e estorno no crediário.",
+  "name": "Jaque Confecções e Presentes v223",
+  "short_name": "Jaque v223",
+  "description": "PWA da loja v223 com abas pendentes destacadas em vermelho.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
