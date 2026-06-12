@@ -1061,7 +1061,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         );
       })() : null}
 
-      {loading ? <div className="mapp-inline-status">Carregando crediário...</div> : null}
+      {loading && credits.length === 0 ? <div className="mapp-inline-status">Carregando crediário...</div> : null}
 
       {filteredCredits.length ? (
         <>
