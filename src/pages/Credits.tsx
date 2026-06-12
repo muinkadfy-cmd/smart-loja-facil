@@ -17,6 +17,7 @@ import {
 } from '../lib/listLimits';
 import { whatsappChatUrl } from '../lib/links';
 import { getPreferredPdfFolder, setPreferredPdfFolder } from '../lib/preferences';
+import { useWebPermissions } from '../lib/useWebPermissions';
 import type { CreditInstallment, CreditSummary, PaymentMethod, Settings } from '../types';
 
 interface PageProps { refreshToken: number; onChanged: () => void; }
@@ -29,6 +30,25 @@ interface ReceiveState {
 interface PreviewState {
   credit: CreditSummary;
   installment: CreditInstallment;
+}
+
+interface EditState {
+  credit: CreditSummary;
+  installment: CreditInstallment;
+  amount: number;
+  dueDate: string;
+  reason: string;
+  redistributeDifferenceToNext: boolean;
+  confirmed: boolean;
+}
+
+interface RefundState {
+  credit: CreditSummary;
+  installment: CreditInstallment;
+  amount: number;
+  method: Exclude<PaymentMethod, 'crediario'> | 'outro';
+  reason: string;
+  confirmed: boolean;
 }
 
 function dateOnly(value: string): string {
@@ -596,6 +616,8 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   const [statusFilter, setStatusFilter] = useState('todos');
   const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [receiving, setReceiving] = useState<ReceiveState | null>(null);
+  const [editing, setEditing] = useState<EditState | null>(null);
+  const [refunding, setRefunding] = useState<RefundState | null>(null);
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -603,6 +625,9 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   const [pdfFolder, setPdfFolder] = useState<string | null>(getPreferredPdfFolder());
   const [amount, setAmount] = useState(0);
   const [method, setMethod] = useState<Exclude<PaymentMethod, 'crediario'>>('dinheiro');
+  const permissions = useWebPermissions(refreshToken);
+  const canOperate = permissions.canOperate;
+  const canCorrectCredit = !permissions.isWeb || permissions.role === 'owner' || permissions.role === 'admin';
 
   useEffect(() => {
     Promise.all([api.credits(), api.settings()])
@@ -621,16 +646,70 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   }
 
   function openReceiveModal(credit: CreditSummary, installment: CreditInstallment) {
+    if (!canOperate) {
+      setError(permissions.readonlyMessage || 'Você não tem permissão para receber crediário.');
+      return;
+    }
     setError('');
     setMessage('');
+    setEditing(null);
+    setRefunding(null);
     setReceiving({ credit, installment });
     setAmount(Math.max(0, installment.amount - installment.paid_amount));
     setMethod('dinheiro');
   }
 
+  function openEditModal(credit: CreditSummary, installment: CreditInstallment) {
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode editar parcelas do crediário.');
+      return;
+    }
+    setError('');
+    setMessage('');
+    setReceiving(null);
+    setRefunding(null);
+    setEditing({
+      credit,
+      installment,
+      amount: installment.amount,
+      dueDate: installment.due_date.slice(0, 10),
+      reason: '',
+      redistributeDifferenceToNext: false,
+      confirmed: false,
+    });
+  }
+
+  function openRefundModal(credit: CreditSummary, installment: CreditInstallment) {
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode estornar pagamentos do crediário.');
+      return;
+    }
+    const paid = Math.max(0, installment.paid_amount);
+    if (paid <= 0) {
+      setError('Essa parcela ainda não tem valor pago para estornar.');
+      return;
+    }
+    setError('');
+    setMessage('');
+    setReceiving(null);
+    setEditing(null);
+    setRefunding({
+      credit,
+      installment,
+      amount: paid,
+      method: (installment.payment_method === 'pix' || installment.payment_method === 'cartao' || installment.payment_method === 'dinheiro') ? installment.payment_method : 'dinheiro',
+      reason: '',
+      confirmed: false,
+    });
+  }
+
   async function submitReceive(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!receiving || saving) return;
+    if (!canOperate) {
+      setError(permissions.readonlyMessage || 'Você não tem permissão para receber crediário.');
+      return;
+    }
     setSaving(true);
     setError('');
     setMessage('');
@@ -646,6 +725,73 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
       await reload();
       setReceiving(null);
       setMessage('Recebimento lançado no crediário mantendo o valor original da parcela.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editing || saving) return;
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode editar parcelas do crediário.');
+      return;
+    }
+    if (!editing.confirmed) {
+      setError('Confirme que revisou o ajuste antes de salvar.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      await api.adjustCreditInstallment({
+        request_id: makeRequestId('credit-edit'),
+        credit_id: editing.credit.id,
+        installment_id: editing.installment.id,
+        amount: editing.amount,
+        due_date: editing.dueDate,
+        reason: editing.reason,
+        redistribute_difference_to_next: editing.redistributeDifferenceToNext,
+      });
+      await reload();
+      setEditing(null);
+      setMessage('Parcela ajustada com auditoria. O saldo foi recalculado pelas parcelas.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function submitRefund(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!refunding || saving) return;
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode estornar pagamentos do crediário.');
+      return;
+    }
+    if (!refunding.confirmed) {
+      setError('Confirme que revisou o impacto no caixa antes de estornar.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      await api.correctCreditPayment({
+        request_id: makeRequestId('credit-refund'),
+        credit_id: refunding.credit.id,
+        installment_id: refunding.installment.id,
+        amount: refunding.amount,
+        method: refunding.method,
+        reason: refunding.reason,
+      });
+      await reload();
+      setRefunding(null);
+      setMessage('Estorno lançado com saída no caixa e auditoria. O pagamento antigo ficou preservado no histórico.');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -768,6 +914,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
 
       {error && <div className="error-box">{error}</div>}
       {message && <div className="notice">{message}</div>}
+      {!canOperate && permissions.isWeb ? <div className="notice"><strong>{permissions.roleLabel}</strong> · {permissions.readonlyMessage}</div> : null}
 
       <section className="panel classic-panel classic-legacy-table-panel">
         <div className="panel-head panel-head-tight">
@@ -849,9 +996,11 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
                   <div className="table-actions">
                     <button type="button" className="ghost-btn small" onClick={() => openPdfPreview(credit, row)}>PDF</button>
                     <button type="button" className="ghost-btn small" onClick={() => sendWhatsapp(credit, row)}>WhatsApp</button>
+                    {canCorrectCredit ? <button type="button" className="ghost-btn small" onClick={() => openEditModal(credit, row)}>Editar</button> : null}
+                    {canCorrectCredit && row.paid_amount > 0 ? <button type="button" className="ghost-btn small" onClick={() => openRefundModal(credit, row)}>Estornar</button> : null}
                     {row.status === 'pago'
                       ? <span className="muted">Recebida</span>
-                      : <button type="button" className="secondary-btn small" onClick={() => openReceiveModal(credit, row)}>Receber</button>}
+                      : <button type="button" className="secondary-btn small" onClick={() => openReceiveModal(credit, row)} disabled={!canOperate}>Receber</button>}
                   </div>
                 ),
               },
@@ -873,6 +1022,62 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             </div>
             <div className="table-actions span-2">
               <button className="primary-btn" disabled={saving}>{saving ? 'Lançando...' : 'Confirmar recebimento'}</button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal open={Boolean(editing)} title="Editar parcela do crediário" onClose={() => !saving && setEditing(null)}>
+        {editing && (
+          <form className="form-grid compact" onSubmit={submitEdit}>
+            <label>Cliente<input value={editing.credit.customer_name} readOnly /></label>
+            <label>Parcela<input value={`#${editing.installment.number} · paga ${money(editing.installment.paid_amount)}`} readOnly /></label>
+            <label>Novo valor<input type="number" min="0.01" step="0.01" value={editing.amount} onChange={(e) => setEditing({ ...editing, amount: Number(e.target.value), confirmed: false })} /></label>
+            <label>Novo vencimento<input type="date" value={editing.dueDate} onChange={(e) => setEditing({ ...editing, dueDate: e.target.value, confirmed: false })} /></label>
+            <label className="span-2">
+              Motivo obrigatório
+              <textarea value={editing.reason} onChange={(e) => setEditing({ ...editing, reason: e.target.value, confirmed: false })} rows={3} placeholder="Ex.: valor lançado errado ou cliente pediu mudança de vencimento" />
+            </label>
+            <label className="span-2">
+              <input type="checkbox" checked={editing.redistributeDifferenceToNext} onChange={(e) => setEditing({ ...editing, redistributeDifferenceToNext: e.target.checked, confirmed: false })} />
+              Compensar diferença na próxima parcela para manter o total da nota
+            </label>
+            <div className="notice span-2">
+              Antes: {money(editing.installment.amount)} · Depois: {money(editing.amount || 0)} · Pago preservado: {money(editing.installment.paid_amount)} · Saldo da parcela depois: {money(Math.max(0, (editing.amount || 0) - editing.installment.paid_amount))}.
+            </div>
+            <label className="span-2">
+              <input type="checkbox" checked={editing.confirmed} onChange={(e) => setEditing({ ...editing, confirmed: e.target.checked })} />
+              Confirmo que conferi o antes/depois e quero salvar esta correção auditada.
+            </label>
+            <div className="table-actions span-2">
+              <button type="button" className="ghost-btn" onClick={() => setEditing(null)} disabled={saving}>Cancelar</button>
+              <button className="primary-btn" disabled={saving || !editing.confirmed}>{saving ? 'Salvando...' : 'Salvar ajuste'}</button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal open={Boolean(refunding)} title="Estornar pagamento do crediário" onClose={() => !saving && setRefunding(null)}>
+        {refunding && (
+          <form className="form-grid compact" onSubmit={submitRefund}>
+            <label>Cliente<input value={refunding.credit.customer_name} readOnly /></label>
+            <label>Parcela<input value={`#${refunding.installment.number} · pago ${money(refunding.installment.paid_amount)}`} readOnly /></label>
+            <label>Valor a estornar<input type="number" min="0.01" step="0.01" max={refunding.credit.installments.reduce((sum, item) => sum + item.paid_amount, 0)} value={refunding.amount} onChange={(e) => setRefunding({ ...refunding, amount: Number(e.target.value), confirmed: false })} /></label>
+            <label>Forma no caixa<select value={refunding.method} onChange={(e) => setRefunding({ ...refunding, method: e.target.value as RefundState['method'], confirmed: false })}><option value="dinheiro">Dinheiro</option><option value="pix">Pix</option><option value="cartao">Cartão</option><option value="outro">Outro</option></select></label>
+            <label className="span-2">
+              Motivo obrigatório
+              <textarea value={refunding.reason} onChange={(e) => setRefunding({ ...refunding, reason: e.target.value, confirmed: false })} rows={3} placeholder="Ex.: valor digitado errado, pagamento cancelado ou devolução combinada" />
+            </label>
+            <div className="notice span-2">
+              Vai lançar uma SAÍDA no caixa de {money(refunding.amount || 0)} e devolver esse valor ao saldo em aberto do cliente. O recebimento antigo não será apagado.
+            </div>
+            <label className="span-2">
+              <input type="checkbox" checked={refunding.confirmed} onChange={(e) => setRefunding({ ...refunding, confirmed: e.target.checked })} />
+              Confirmo que conferi o impacto no caixa e no saldo do cliente.
+            </label>
+            <div className="table-actions span-2">
+              <button type="button" className="ghost-btn" onClick={() => setRefunding(null)} disabled={saving}>Cancelar</button>
+              <button className="primary-btn" disabled={saving || !refunding.confirmed}>{saving ? 'Estornando...' : 'Confirmar estorno'}</button>
             </div>
           </form>
         )}

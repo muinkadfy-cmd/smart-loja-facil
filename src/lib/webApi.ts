@@ -585,6 +585,8 @@ export type WebOutboxAction =
   | 'closeCash'
   | 'addCashMovement'
   | 'receiveInstallment'
+  | 'adjustCreditInstallment'
+  | 'correctCreditPayment'
   | 'createOrder'
   | 'setOrderStatus'
   | 'cancelOrder'
@@ -635,6 +637,8 @@ function parseWebOutboxItems(raw: string | null): WebOutboxItem[] {
           action !== 'closeCash' &&
           action !== 'addCashMovement' &&
           action !== 'receiveInstallment' &&
+          action !== 'adjustCreditInstallment' &&
+          action !== 'correctCreditPayment' &&
           action !== 'createOrder' &&
           action !== 'setOrderStatus' &&
           action !== 'cancelOrder' &&
@@ -3542,6 +3546,14 @@ async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
   }
   if (item.action === 'receiveInstallment') {
     await webReceiveInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'adjustCreditInstallment') {
+    await webAdjustCreditInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'correctCreditPayment') {
+    await webCorrectCreditPayment(item.payload.payload);
     return;
   }
   if (item.action === 'createOrder') {

@@ -214,11 +214,11 @@ export const api = {
   },
   adjustCreditInstallment: (payload: unknown) => {
     const editPayload = withRequestId(payload, 'credit-edit');
-    return isTauriRuntime() ? call<CreditSummary>('adjust_credit_installment', { payload: editPayload }) : webCall('Crediário', 'Parcela ajustada na nuvem.', () => { guardDemoWrite('ajustar parcela do crediário'); return webAdjustCreditInstallment(editPayload); }, { action: 'receiveInstallment', payload: { payload: editPayload } });
+    return isTauriRuntime() ? call<CreditSummary>('adjust_credit_installment', { payload: editPayload }) : webCall('Crediário', 'Parcela ajustada na nuvem.', () => { guardDemoWrite('ajustar parcela do crediário'); return webAdjustCreditInstallment(editPayload); }, { action: 'adjustCreditInstallment', payload: { payload: editPayload } });
   },
   correctCreditPayment: (payload: unknown) => {
     const correctionPayload = withRequestId(payload, 'credit-correction');
-    return isTauriRuntime() ? call<CreditSummary>('correct_credit_payment', { payload: correctionPayload }) : webCall('Crediário', 'Correção do pagamento sincronizada.', () => { guardDemoWrite('corrigir pagamento do crediário'); return webCorrectCreditPayment(correctionPayload); }, { action: 'receiveInstallment', payload: { payload: correctionPayload } });
+    return isTauriRuntime() ? call<CreditSummary>('correct_credit_payment', { payload: correctionPayload }) : webCall('Crediário', 'Correção do pagamento sincronizada.', () => { guardDemoWrite('corrigir pagamento do crediário'); return webCorrectCreditPayment(correctionPayload); }, { action: 'correctCreditPayment', payload: { payload: correctionPayload } });
   },
   orders: () => (isTauriRuntime() ? call<OrderSummary[]>('list_orders') : webRead('Pedidos', 'Pedidos carregados da nuvem.', webOrders, webDemoOrders)),
   createOrder: (payload: unknown) => {

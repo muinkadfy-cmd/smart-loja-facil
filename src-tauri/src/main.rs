@@ -201,6 +201,27 @@ struct ReceiveInput {
     settle_with_redistribution: Option<bool>,
 }
 
+#[derive(Debug, Deserialize)]
+struct CreditInstallmentAdjustInput {
+    request_id: Option<String>,
+    credit_id: String,
+    installment_id: String,
+    amount: f64,
+    due_date: String,
+    reason: String,
+    redistribute_difference_to_next: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CreditPaymentCorrectionInput {
+    request_id: Option<String>,
+    credit_id: String,
+    installment_id: String,
+    amount: f64,
+    method: String,
+    reason: String,
+}
+
 #[derive(Debug, Serialize, Clone)]
 struct OrderSummary {
     id: String,
@@ -1047,6 +1068,16 @@ fn audit(connection: &Connection, entity: &str, entity_id: &str, action: &str, d
     Ok(())
 }
 
+fn installment_status_from_amounts(amount: f64, paid: f64) -> &'static str {
+    if paid + 0.009 >= amount {
+        "pago"
+    } else if paid > 0.009 {
+        "parcial"
+    } else {
+        "aberto"
+    }
+}
+
 fn next_number(connection: &Connection, table: &str) -> rusqlite::Result<i64> {
     let sql = format!("SELECT COALESCE(MAX(number), 0) + 1 FROM {}", table);
     connection.query_row(&sql, [], |row| row.get(0))
@@ -1837,7 +1868,8 @@ fn list_credits(app: AppHandle) -> CmdResult<Vec<CreditSummary>> {
             Vec::new()
         } else {
             let mut item_stmt = connection.prepare("SELECT product_name,qty,unit_price,total FROM sale_items WHERE sale_id=?1 ORDER BY created_at").map_err(|e| e.to_string())?;
-            item_stmt.query_map(params![credit.4.clone()], |row| Ok(SaleItemSummary { product_name: row.get(0)?, qty: row.get(1)?, unit_price: row.get(2)?, total: row.get(3)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+            let rows = item_stmt.query_map(params![credit.4.clone()], |row| Ok(SaleItemSummary { product_name: row.get(0)?, qty: row.get(1)?, unit_price: row.get(2)?, total: row.get(3)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
+            rows
         };
         out.push(CreditSummary {
             id: credit.0,
@@ -1981,6 +2013,202 @@ fn receive_installment_flex(app: AppHandle, payload: ReceiveInput) -> CmdResult<
         tx.execute("INSERT INTO receipts(id,sale_id,receipt_type,total,content,created_at) VALUES(?1,?2,'80mm',?3,?4,?5)", params![new_id("receipt"), sale_id_value, amount_to_receive, receipt_content, now]).map_err(|e| e.to_string())?;
     }
     audit(&tx, "credit", &payload.credit_id, "receive", &format!("Recebimento protegido: recebido {}; antes {}; depois {}; forma {}; parcelas afetadas: {}; histórico anterior preservado.", format_money_br(amount_to_receive), format_money_br(credit_open_before), format_money_br(balance), method, affected_details.join(", "))).map_err(|e| e.to_string())?;
+    tx.commit().map_err(|e| e.to_string())?;
+    list_credits(app)?.into_iter().find(|row| row.id == payload.credit_id).ok_or_else(|| "Crediário não encontrado".to_string())
+}
+
+#[tauri::command]
+fn adjust_credit_installment(app: AppHandle, payload: CreditInstallmentAdjustInput) -> CmdResult<CreditSummary> {
+    let mut connection = conn(&app)?;
+    init_schema(&connection)?;
+
+    let reason = clean(Some(payload.reason.clone()));
+    if reason.chars().count() < 6 {
+        return Err("Informe o motivo da alteração com pelo menos 6 letras.".to_string());
+    }
+    let due_date = clean(Some(payload.due_date.clone()));
+    let valid_due_date = due_date.len() == 10
+        && due_date.chars().enumerate().all(|(index, value)| {
+            if index == 4 || index == 7 { value == '-' } else { value.is_ascii_digit() }
+        });
+    if !valid_due_date {
+        return Err("Informe um vencimento válido.".to_string());
+    }
+    let new_amount = from_cents(to_cents(payload.amount));
+    if new_amount <= 0.0 {
+        return Err("O novo valor da parcela precisa ser maior que R$ 0,00.".to_string());
+    }
+
+    let tx = connection.transaction().map_err(|e| e.to_string())?;
+    let (credit_total, _credit_balance): (f64, f64) = tx.query_row(
+        "SELECT total,balance FROM credits WHERE id=?1",
+        params![payload.credit_id.clone()],
+        |row| Ok((row.get(0)?, row.get(1)?))
+    ).map_err(|_| "Crediário não encontrado.".to_string())?;
+    let (number, old_amount, paid_before, old_due_date, paid_at): (i64, f64, f64, String, Option<String>) = tx.query_row(
+        "SELECT number,amount,paid_amount,due_date,paid_at FROM credit_installments WHERE id=?1 AND credit_id=?2",
+        params![payload.installment_id.clone(), payload.credit_id.clone()],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?))
+    ).map_err(|_| "Parcela não encontrada para ajuste.".to_string())?;
+    if new_amount + 0.009 < paid_before {
+        return Err("O novo valor não pode ser menor que o valor já pago. Faça estorno antes de reduzir abaixo do pago.".to_string());
+    }
+
+    let now = now_iso();
+    let old_amount_rounded = from_cents(to_cents(old_amount));
+    let delta = from_cents(to_cents(new_amount - old_amount_rounded));
+    let redistribute = payload.redistribute_difference_to_next.unwrap_or(false);
+    let next_installment: Option<(String, i64, f64, f64, Option<String>)> = tx.query_row(
+        "SELECT id,number,amount,paid_amount,paid_at FROM credit_installments WHERE credit_id=?1 AND number>?2 ORDER BY number LIMIT 1",
+        params![payload.credit_id.clone(), number],
+        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?))
+    ).optional().map_err(|e| e.to_string())?;
+
+    let new_status = installment_status_from_amounts(new_amount, paid_before);
+    let new_paid_at = if new_status == "pago" { paid_at.clone().or_else(|| Some(now.clone())) } else { None };
+    tx.execute(
+        "UPDATE credit_installments SET amount=?1,due_date=?2,status=?3,paid_at=?4,updated_at=?5 WHERE id=?6 AND credit_id=?7",
+        params![new_amount, due_date, new_status, new_paid_at, now, payload.installment_id.clone(), payload.credit_id.clone()]
+    ).map_err(|e| e.to_string())?;
+
+    let mut redistributed_to_next = false;
+    let mut next_id_for_audit: Option<String> = None;
+    let new_credit_total = if redistribute && delta.abs() > 0.009 {
+        let (next_id, _next_number, next_amount, next_paid, next_paid_at) = next_installment.ok_or_else(|| "Não existe próxima parcela para compensar a diferença. Desmarque a compensação.".to_string())?;
+        let next_new_amount = from_cents(to_cents(next_amount - delta));
+        if next_new_amount <= 0.0 || next_new_amount + 0.009 < next_paid {
+            return Err("A compensação deixaria a próxima parcela menor que o valor já pago. Faça estorno ou ajuste manual.".to_string());
+        }
+        let next_status = installment_status_from_amounts(next_new_amount, next_paid);
+        let next_new_paid_at = if next_status == "pago" { next_paid_at.or_else(|| Some(now.clone())) } else { None };
+        tx.execute(
+            "UPDATE credit_installments SET amount=?1,status=?2,paid_at=?3,updated_at=?4 WHERE id=?5 AND credit_id=?6",
+            params![next_new_amount, next_status, next_new_paid_at, now, next_id.clone(), payload.credit_id.clone()]
+        ).map_err(|e| e.to_string())?;
+        redistributed_to_next = true;
+        next_id_for_audit = Some(next_id);
+        credit_total
+    } else {
+        from_cents(to_cents(credit_total + delta))
+    };
+
+    let balance: f64 = tx.query_row("SELECT COALESCE(SUM(amount-paid_amount),0) FROM credit_installments WHERE credit_id=?1", params![payload.credit_id.clone()], |row| row.get(0)).map_err(|e| e.to_string())?;
+    let credit_status = if balance <= 0.009 { "quitado" } else { "aberto" };
+    tx.execute(
+        "UPDATE credits SET total=?1,balance=?2,status=?3,updated_at=?4 WHERE id=?5",
+        params![new_credit_total, balance, credit_status, now, payload.credit_id.clone()]
+    ).map_err(|e| e.to_string())?;
+
+    audit(
+        &tx,
+        "credit_installment",
+        &payload.installment_id,
+        "adjust",
+        &format!(
+            "Ajuste de parcela: valor {} -> {}; vencimento {} -> {}; compensou próxima: {}; próxima: {}; motivo: {}; request_id: {}",
+            format_money_br(old_amount_rounded),
+            format_money_br(new_amount),
+            old_due_date,
+            due_date,
+            if redistributed_to_next { "sim" } else { "não" },
+            next_id_for_audit.unwrap_or_else(|| "-".to_string()),
+            reason,
+            payload.request_id.unwrap_or_else(|| "-".to_string())
+        )
+    ).map_err(|e| e.to_string())?;
+    tx.commit().map_err(|e| e.to_string())?;
+    list_credits(app)?.into_iter().find(|row| row.id == payload.credit_id).ok_or_else(|| "Crediário não encontrado".to_string())
+}
+
+#[tauri::command]
+fn correct_credit_payment(app: AppHandle, payload: CreditPaymentCorrectionInput) -> CmdResult<CreditSummary> {
+    let mut connection = conn(&app)?;
+    init_schema(&connection)?;
+
+    let reason = clean(Some(payload.reason.clone()));
+    if reason.chars().count() < 6 {
+        return Err("Informe o motivo da correção com pelo menos 6 letras.".to_string());
+    }
+    let amount = from_cents(to_cents(payload.amount));
+    if amount <= 0.0 {
+        return Err("Informe o valor a estornar.".to_string());
+    }
+    let method = clean(Some(payload.method.clone())).to_lowercase();
+    if method != "dinheiro" && method != "pix" && method != "cartao" && method != "outro" {
+        return Err("Escolha a forma usada no caixa: dinheiro, PIX, cartão ou outro.".to_string());
+    }
+    let request_id = payload.request_id.clone().unwrap_or_else(|| new_id("credit-correction"));
+    let already: Option<String> = connection.query_row("SELECT id FROM cash_movements WHERE request_id=?1", params![request_id.clone()], |row| row.get(0)).optional().map_err(|e| e.to_string())?;
+    if already.is_some() {
+        return list_credits(app)?.into_iter().find(|row| row.id == payload.credit_id).ok_or_else(|| "Crediário não encontrado".to_string());
+    }
+
+    let tx = connection.transaction().map_err(|e| e.to_string())?;
+    tx.query_row("SELECT id FROM credits WHERE id=?1", params![payload.credit_id.clone()], |row| row.get::<_, String>(0)).map_err(|_| "Crediário não encontrado.".to_string())?;
+    let mut stmt = tx.prepare(
+        "SELECT id,number,amount,paid_amount,paid_at,payment_method FROM credit_installments WHERE credit_id=?1 ORDER BY number"
+    ).map_err(|e| e.to_string())?;
+    let installments = stmt.query_map(params![payload.credit_id.clone()], |row| Ok((
+        row.get::<_, String>(0)?,
+        row.get::<_, i64>(1)?,
+        row.get::<_, f64>(2)?,
+        row.get::<_, f64>(3)?,
+        row.get::<_, Option<String>>(4)?,
+        row.get::<_, Option<String>>(5)?,
+    ))).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
+    drop(stmt);
+
+    let selected_number = installments
+        .iter()
+        .find(|item| item.0 == payload.installment_id)
+        .map(|item| item.1)
+        .ok_or_else(|| "Parcela não encontrada para correção.".to_string())?;
+
+    let mut remaining_refund = amount;
+    let mut affected_details: Vec<String> = Vec::new();
+    for (installment_id, installment_number, installment_amount, paid, paid_at, payment_method) in installments
+        .into_iter()
+        .filter(|item| item.1 >= selected_number && item.3 > 0.009)
+    {
+        if remaining_refund <= 0.009 { break; }
+        let refund = from_cents(to_cents(paid.min(remaining_refund)));
+        let paid_after = from_cents(to_cents(paid - refund));
+        let status = installment_status_from_amounts(installment_amount, paid_after);
+        let new_paid_at = if status == "pago" { paid_at } else { None };
+        let new_payment_method = if paid_after > 0.009 { payment_method.or_else(|| Some(method.clone())) } else { None };
+        tx.execute(
+            "UPDATE credit_installments SET paid_amount=?1,status=?2,paid_at=?3,payment_method=?4,updated_at=?5 WHERE id=?6 AND credit_id=?7",
+            params![paid_after, status, new_paid_at, new_payment_method, now_iso(), installment_id, payload.credit_id.clone()]
+        ).map_err(|e| e.to_string())?;
+        affected_details.push(format!("parcela {}: estorno {}; pago depois {}", installment_number, format_money_br(refund), format_money_br(paid_after)));
+        remaining_refund = from_cents(to_cents(remaining_refund - refund));
+    }
+    if remaining_refund > 0.009 {
+        return Err("Não encontrei pagamento suficiente nesta parcela/próximas para estornar. Escolha a parcela correta ou reduza o valor.".to_string());
+    }
+
+    let now = now_iso();
+    let balance: f64 = tx.query_row("SELECT COALESCE(SUM(amount-paid_amount),0) FROM credit_installments WHERE credit_id=?1", params![payload.credit_id.clone()], |row| row.get(0)).map_err(|e| e.to_string())?;
+    let credit_status = if balance <= 0.009 { "quitado" } else { "aberto" };
+    tx.execute("UPDATE credits SET balance=?1,status=?2,updated_at=?3 WHERE id=?4", params![balance, credit_status, now, payload.credit_id.clone()]).map_err(|e| e.to_string())?;
+    tx.execute(
+        "INSERT INTO cash_movements(id,request_id,type,method,amount,reason,created_at) VALUES(?1,?2,'saida',?3,?4,?5,?6)",
+        params![new_id("cash"), request_id.clone(), method, amount, format!("Estorno crediário: {}", reason), now]
+    ).map_err(|e| e.to_string())?;
+    audit(
+        &tx,
+        "credit",
+        &payload.credit_id,
+        "payment_refund",
+        &format!(
+            "Estorno de pagamento: {}; forma {}; motivo: {}; parcelas afetadas: {}; request_id: {}",
+            format_money_br(amount),
+            method,
+            reason,
+            affected_details.join(", "),
+            request_id
+        )
+    ).map_err(|e| e.to_string())?;
     tx.commit().map_err(|e| e.to_string())?;
     list_credits(app)?.into_iter().find(|row| row.id == payload.credit_id).ok_or_else(|| "Crediário não encontrado".to_string())
 }
@@ -2995,6 +3223,8 @@ fn main() {
             list_credits,
             receive_installment,
             receive_installment_flex,
+            adjust_credit_installment,
+            correct_credit_payment,
             list_orders,
             create_order,
             set_order_status,
