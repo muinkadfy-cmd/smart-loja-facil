@@ -700,6 +700,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   }, [filter, query]);
 
   const lowStock = products.filter((product) => product.status === 'ativo' && product.stock <= lowLimit).length;
+  const zeroStock = products.filter((product) => product.status === 'ativo' && product.stock <= 0).length;
   const activeProducts = products.filter((product) => product.status === 'ativo').length;
   const inactiveProducts = products.filter((product) => product.status === 'inativo').length;
   const stockValue = products
@@ -817,16 +818,20 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       <section className="mapp-mini-stat-grid">
         <StatCard label="Produtos" value={formatNumber(products.length)} detail="no catálogo" icon="produtos" tone="sky" />
         <StatCard label="Ativos" value={formatNumber(activeProducts)} detail="prontos para venda" icon="loja_ativa" tone="green" />
-        <StatCard label="Estoque baixo" value={formatNumber(lowStock)} detail="precisam atenção" icon="auditoria_logs" tone="orange" />
+        <StatCard label="Zerados" value={formatNumber(zeroStock)} detail={zeroStock ? 'sem estoque' : `${formatNumber(lowStock)} baixos`} icon="auditoria_logs" tone="orange" />
         <StatCard label="Venda em estoque" value={formatCurrency(stockValue)} detail={`Custo: ${formatCurrency(stockCostValue)}`} icon="caixa" tone="purple" />
       </section>
 
       {lowStock ? (
-        <section className="mapp-stock-alert">
+        <section className={`mapp-stock-alert ${zeroStock ? 'danger' : ''}`}>
           <span><InlineIcon name="auditoria_logs" size={24} /></span>
           <div>
-            <strong>{formatNumber(lowStock)} produto(s) com estoque baixo</strong>
-            <p>Revise reposição antes de vender no PDV para evitar ruptura.</p>
+            <strong>
+              {zeroStock
+                ? `${formatNumber(zeroStock)} produto(s) zerado(s)`
+                : `${formatNumber(lowStock)} produto(s) com estoque baixo`}
+            </strong>
+            <p>{zeroStock ? 'Produto zerado fica em vermelho para repor antes de vender.' : 'Revise reposição antes de vender no PDV para evitar ruptura.'}</p>
           </div>
           <button type="button" onClick={() => setFilter('baixo')}>Ver baixo estoque</button>
         </section>
@@ -910,10 +915,11 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         <section className="mapp-crud-list" aria-label="Lista de produtos">
           {visibleProducts.map((product) => {
             const price = product.promo_price ?? product.price;
-            const low = product.stock <= lowLimit;
+            const zero = product.status === 'ativo' && product.stock <= 0;
+            const low = product.status === 'ativo' && product.stock <= lowLimit;
             const expanded = expandedProductIds[product.id] ?? false;
             return (
-              <article key={product.id} className={`mapp-crud-card ${expanded ? 'is-expanded' : 'is-compact'} ${product.status === 'inativo' ? 'is-inactive' : ''}`}>
+              <article key={product.id} className={`mapp-crud-card ${expanded ? 'is-expanded' : 'is-compact'} ${product.status === 'inativo' ? 'is-inactive' : ''} ${zero ? 'is-zero-stock' : ''}`}>
                 {hasProductPhoto(product) ? (
                   <button
                     type="button"
@@ -924,12 +930,12 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
                     <img src={product.image_data} alt={product.name} loading="lazy" />
                   </button>
                 ) : (
-                  <span className={`mapp-crud-icon ${low ? 'tone-orange' : 'tone-sky'}`}><InlineIcon name="produtos" size={24} /></span>
+                  <span className={`mapp-crud-icon ${zero || low ? 'tone-orange' : 'tone-sky'}`}><InlineIcon name="produtos" size={24} /></span>
                 )}
                 <div className="mapp-crud-main">
                   <div className="mapp-crud-title-row">
                     <strong>{product.name}</strong>
-                    <em className={low ? 'warn' : 'ok'}>{low ? 'Estoque baixo' : product.status}</em>
+                    <em className={zero ? 'danger' : low ? 'warn' : 'ok'}>{zero ? 'Zerado' : low ? 'Estoque baixo' : product.status}</em>
                   </div>
                   <p>{product.category || 'Sem categoria'} · Estoque {formatNumber(product.stock)} {product.unit || 'un'}</p>
                   {expanded ? (

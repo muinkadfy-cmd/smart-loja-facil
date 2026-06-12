@@ -49,7 +49,9 @@ struct DashboardData {
     orders_open: i64,
     credits_open_total: f64,
     credits_active_customers: i64,
+    credit_overdue_installments: i64,
     low_stock_count: i64,
+    zero_stock_count: i64,
     payment_today: Vec<PaymentSummary>,
     recent_sales: Vec<SaleSummary>,
 }
@@ -1182,11 +1184,13 @@ fn dashboard_data(connection: &Connection) -> CmdResult<DashboardData> {
     let orders_open = connection.query_row("SELECT COUNT(*) FROM orders WHERE status IN ('aberto','separado')", [], |row| row.get(0)).map_err(|e| e.to_string())?;
     let credits_open_total = connection.query_row("SELECT COALESCE(SUM(balance),0) FROM credits WHERE status='aberto'", [], |row| row.get(0)).map_err(|e| e.to_string())?;
     let credits_active_customers = connection.query_row("SELECT COUNT(DISTINCT customer_id) FROM credits WHERE status='aberto'", [], |row| row.get(0)).map_err(|e| e.to_string())?;
+    let credit_overdue_installments = connection.query_row("SELECT COUNT(*) FROM credit_installments WHERE status!='pago' AND due_date < date('now','localtime')", [], |row| row.get(0)).map_err(|e| e.to_string())?;
     let low_limit = get_setting(connection, "low_stock_limit", "3").map_err(|e| e.to_string())?.parse::<i64>().unwrap_or(3);
     let low_stock_count = connection.query_row("SELECT COUNT(*) FROM products WHERE status='ativo' AND stock<=?1", params![low_limit], |row| row.get(0)).map_err(|e| e.to_string())?;
+    let zero_stock_count = connection.query_row("SELECT COUNT(*) FROM products WHERE status='ativo' AND stock<=0", [], |row| row.get(0)).map_err(|e| e.to_string())?;
     let mut stmt = connection.prepare("SELECT method, COALESCE(SUM(amount),0), COUNT(*) FROM cash_movements WHERE type='entrada' AND substr(created_at,1,10)=?1 GROUP BY method ORDER BY SUM(amount) DESC").map_err(|e| e.to_string())?;
     let payment_today = stmt.query_map(params![day], |row| Ok(PaymentSummary { method: row.get(0)?, total: row.get(1)?, count: row.get(2)? })).map_err(|e| e.to_string())?.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?;
-    Ok(DashboardData { today_sales_total, today_sales_count, customers_total, orders_open, credits_open_total, credits_active_customers, low_stock_count, payment_today, recent_sales: list_sales_inner(connection, 8)? })
+    Ok(DashboardData { today_sales_total, today_sales_count, customers_total, orders_open, credits_open_total, credits_active_customers, credit_overdue_installments, low_stock_count, zero_stock_count, payment_today, recent_sales: list_sales_inner(connection, 8)? })
 }
 
 #[tauri::command]

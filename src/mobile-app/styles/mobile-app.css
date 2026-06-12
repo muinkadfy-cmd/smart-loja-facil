@@ -1831,6 +1831,27 @@ img, svg { max-width: 100%; }
   font-weight: 950;
 }
 
+.mapp-stock-alert.danger {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #991b1b;
+}
+
+.mapp-stock-alert.danger > span {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.mapp-stock-alert.danger p {
+  color: #9f1239;
+}
+
+.mapp-stock-alert.danger button {
+  border-color: #fecdd3;
+  background: #be123c;
+  color: #fff;
+}
+
 .mapp-stock-adjust-panel {
   border-color: #f3d49c;
   background: linear-gradient(180deg, #fffaf1 0%, #ffffff 100%);
@@ -7422,6 +7443,12 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   border-color: rgba(203, 213, 225, 0.9);
 }
 
+.mapp-credit-card-operations.is-overdue {
+  border-color: #fecdd3 !important;
+  background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%) !important;
+  box-shadow: 0 18px 42px rgba(190,18,60,.12) !important;
+}
+
 .mapp-credit-note-toggle {
   border: 0 !important;
   border-radius: 20px;
@@ -7474,6 +7501,19 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-credit-note-head em.ok,
 .mapp-installment-status.ok {
   border: 1px solid #a7f3d0;
+}
+
+.mapp-credit-next-strip.danger {
+  border-color: #fecdd3 !important;
+  background: #fff1f2 !important;
+  color: #991b1b !important;
+}
+
+.mapp-credit-next-strip.danger > span,
+.mapp-credit-next-strip.danger > div strong,
+.mapp-credit-next-strip.danger > div small,
+.mapp-credit-next-strip.danger > b {
+  color: #be123c !important;
 }
 
 .mapp-credit-totals-compact {
@@ -10485,6 +10525,17 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-products-screen .mapp-crud-card.is-compact,
 .mapp-customers-screen .mapp-crud-card.is-compact {
   min-height: 104px !important;
+}
+
+.mapp-products-screen .mapp-crud-card.is-zero-stock {
+  border-color: #fecdd3 !important;
+  background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%) !important;
+  box-shadow: 0 17px 38px rgba(190,18,60,.12) !important;
+}
+
+.mapp-products-screen .mapp-crud-card.is-zero-stock .mapp-crud-main p,
+.mapp-products-screen .mapp-crud-card.is-zero-stock .mapp-crud-side > strong {
+  color: #991b1b !important;
 }
 
 .mapp-products-screen .mapp-crud-title-row strong,

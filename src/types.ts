@@ -72,7 +72,9 @@ export interface DashboardData {
   orders_open: number;
   credits_open_total: number;
   credits_active_customers: number;
+  credit_overdue_installments: number;
   low_stock_count: number;
+  zero_stock_count: number;
   payment_today: PaymentSummary[];
   recent_sales: SaleSummary[];
   product_insights?: ProductInsight[];

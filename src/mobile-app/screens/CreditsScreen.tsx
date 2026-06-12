@@ -1074,8 +1074,10 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             const isExpanded = Boolean(expandedCredits[credit.id]);
             const visibleInstallments = isExpanded ? credit.installments : [];
             const hiddenInstallments = Math.max(0, credit.installments.length - visibleInstallments.length);
+            const hasOverdue = credit.installments.some(isOverdue);
+            const nextIsOverdue = nextInstallment ? isOverdue(nextInstallment) : false;
             return (
-              <article key={credit.id} data-credit-id={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'}`}>
+              <article key={credit.id} data-credit-id={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'} ${hasOverdue ? 'is-overdue' : ''}`}>
                 <button
                   type="button"
                   className="mapp-credit-note-head mapp-credit-note-toggle"
@@ -1100,8 +1102,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <span style={{ width: `${credit.installments.length ? Math.round((paidCount / credit.installments.length) * 100) : 0}%` }} />
                 </div>
                 {nextInstallment ? (
-                  <div className="mapp-credit-next-strip">
-                    <span>Próxima cobrança</span>
+                  <div className={`mapp-credit-next-strip ${nextIsOverdue ? 'danger' : ''}`}>
+                    <span>{nextIsOverdue ? 'Cobrança vencida' : 'Próxima cobrança'}</span>
                     <div>
                       <strong>Parcela {formatNumber(nextInstallment.number)}/{formatNumber(credit.installments.length)}</strong>
                       <small>{dateOnly(nextInstallment.due_date)}</small>

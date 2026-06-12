@@ -51,13 +51,17 @@ export function MobileShell({
   const pendingCounts = useMemo<Partial<Record<PageKey, number>>>(() => {
     const dashboard = status?.dashboard;
     const counts: Partial<Record<PageKey, number>> = {};
+    const zeroStock = Math.max(0, Number(dashboard?.zero_stock_count || 0));
     const lowStock = Math.max(0, Number(dashboard?.low_stock_count || 0));
     const openOrders = Math.max(0, Number(dashboard?.orders_open || 0));
+    const overdueCreditInstallments = Math.max(0, Number(dashboard?.credit_overdue_installments || 0));
     const activeCreditCustomers = Math.max(0, Number(dashboard?.credits_active_customers || 0));
 
-    if (lowStock > 0) counts.products = lowStock;
+    if (zeroStock > 0) counts.products = zeroStock;
+    else if (lowStock > 0) counts.products = lowStock;
     if (openOrders > 0) counts.orders = openOrders;
-    if (activeCreditCustomers > 0) counts.credits = activeCreditCustomers;
+    if (overdueCreditInstallments > 0) counts.credits = overdueCreditInstallments;
+    else if (activeCreditCustomers > 0) counts.credits = activeCreditCustomers;
     if (alertsCount > 0 || updateAvailable) counts.diagnostics = alertsCount + (updateAvailable ? 1 : 0);
 
     return counts;

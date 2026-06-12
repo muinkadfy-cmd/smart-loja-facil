@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v223-abas-pendentes';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v224-vencidos-zerados';
 const APP_SHELL = [
   '/',
   '/index.html',

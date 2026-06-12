@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v223-abas-pendentes';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v223-abas-pendentes';
+export const WEB_APP_VERSION = 'pwa-supabase-v224-vencidos-zerados';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v224-vencidos-zerados';
 
 
 export interface WebTrainingModeState {
@@ -337,7 +337,14 @@ export function webDemoDashboard(): DashboardData {
     orders_open: DEMO_ORDERS.filter((order) => order.status === 'aberto' || order.status === 'separado').length,
     credits_open_total: 159.8,
     credits_active_customers: 1,
+    credit_overdue_installments: DEMO_CREDITS.flatMap((credit) => credit.installments).filter((installment) => {
+      const dueDate = new Date(`${installment.due_date}T00:00:00`);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return installment.status !== 'pago' && !Number.isNaN(dueDate.getTime()) && dueDate < today;
+    }).length,
     low_stock_count: DEMO_PRODUCTS.filter((product) => product.stock <= 3).length,
+    zero_stock_count: DEMO_PRODUCTS.filter((product) => product.stock <= 0).length,
     payment_today,
     recent_sales: demoClone(DEMO_SALES),
     product_insights: [
@@ -881,7 +888,9 @@ function emptyDashboard(): DashboardData {
     orders_open: 0,
     credits_open_total: 0,
     credits_active_customers: 0,
+    credit_overdue_installments: 0,
     low_stock_count: 0,
+    zero_stock_count: 0,
     payment_today: [],
     recent_sales: [],
     product_insights: [],
@@ -1021,7 +1030,9 @@ export async function getWebStoreContext(options: { createIfMissing?: boolean } 
 
 type SupabaseQueryBuilder = {
   eq: (column: string, value: unknown) => SupabaseQueryBuilder;
+  lt: (column: string, value: unknown) => SupabaseQueryBuilder;
   lte: (column: string, value: unknown) => SupabaseQueryBuilder;
+  neq: (column: string, value: unknown) => SupabaseQueryBuilder;
   then: Promise<{ count: number | null }>["then"];
 };
 
@@ -1032,14 +1043,31 @@ async function safeCount(table: string, storeId: string, build: (query: Supabase
   return count ?? 0;
 }
 
-async function countRows(table: string, storeId: string, options: { status?: string; lowStockLimit?: number } = {}): Promise<number> {
+async function countRows(table: string, storeId: string, options: { status?: string; lowStockLimit?: number; zeroStock?: boolean } = {}): Promise<number> {
   try {
     return await safeCount(table, storeId, (query) => {
       let next = query;
       if (options.status) next = next.eq('status', options.status);
       if (typeof options.lowStockLimit === 'number') next = next.lte('stock', options.lowStockLimit).eq('status', 'active');
+      if (options.zeroStock) next = next.lte('stock', 0).eq('status', 'active');
       return next;
     });
+  } catch {
+    return 0;
+  }
+}
+
+async function countOverdueCreditInstallments(storeId: string): Promise<number> {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isoDate = today.toISOString().slice(0, 10);
+    return await safeCount('credit_installments', storeId, (query) => query
+      .lt('due_date', isoDate)
+      .neq('status', 'paid')
+      .neq('status', 'pago')
+      .neq('status', 'canceled')
+      .neq('status', 'cancelada'));
   } catch {
     return 0;
   }
@@ -1311,6 +1339,7 @@ export async function webDashboard(): Promise<DashboardData> {
   dashboard.customers_total = await countRows('customers', context.store.id, { status: 'active' });
   dashboard.products_total = await countRows('products', context.store.id, { status: 'active' });
   dashboard.low_stock_count = await countRows('products', context.store.id, { lowStockLimit: context.store.low_stock_limit });
+  dashboard.zero_stock_count = await countRows('products', context.store.id, { zeroStock: true });
   dashboard.orders_open = await countRows('orders', context.store.id, { status: 'open' });
   try {
     dashboard.product_insights = await webProductInsights(context.store.id, context.store.low_stock_limit);
@@ -1331,8 +1360,10 @@ export async function webDashboard(): Promise<DashboardData> {
       if (customerId) customerIds.add(customerId);
     }
     dashboard.credits_active_customers = customerIds.size;
+    dashboard.credit_overdue_installments = await countOverdueCreditInstallments(context.store.id);
   } catch {
     dashboard.credits_open_total = 0;
+    dashboard.credit_overdue_installments = 0;
   }
 
   try {
