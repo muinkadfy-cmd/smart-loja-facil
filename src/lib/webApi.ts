@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v221-loading-crediario';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v221-loading-crediario';
+export const WEB_APP_VERSION = 'pwa-supabase-v222-botoes-crediario';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v222-botoes-crediario';
 
 
 export interface WebTrainingModeState {

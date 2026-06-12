@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v221",
-  "short_name": "Jaque v221",
-  "description": "PWA da loja v221 com crediário auditado e carregamento mobile ajustado.",
+  "name": "Jaque Confecções e Presentes v222",
+  "short_name": "Jaque v222",
+  "description": "PWA da loja v222 com botões simples de edição e estorno no crediário.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

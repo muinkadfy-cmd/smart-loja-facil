@@ -1130,13 +1130,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                           {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
                             <button type="button" className="mapp-primary-button" onClick={() => openReceive(credit, installment)}>Receber</button>
                           ) : null}
-                          <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, installment)}>Corrigir</button>
+                          <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, installment)}>Editar</button>
+                          {paidOf(installment) > 0.009 ? (
+                            <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'estorno')}>Estornar</button>
+                          ) : null}
+                          <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, installment)}>Mais correções</button>
                           {creditMode === 'avancado' ? (
                             <>
-                              <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, installment)}>Editar</button>
-                              {paidOf(installment) > 0.009 ? (
-                                <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'estorno')}>Estornar</button>
-                              ) : null}
                               {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
                                 <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'complemento')}>Complemento</button>
                               ) : null}
@@ -1160,7 +1160,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   ) : null}
                   <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Ver extrato da nota</button>
                   {nextInstallment ? (
-                    <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, nextInstallment)}>Corrigir</button>
+                    <>
+                      <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, nextInstallment)}>Editar</button>
+                      {paidOf(nextInstallment) > 0.009 ? (
+                        <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, nextInstallment, 'estorno')}>Estornar</button>
+                      ) : null}
+                      <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, nextInstallment)}>Mais correções</button>
+                    </>
                   ) : null}
                 </div>
               </article>
