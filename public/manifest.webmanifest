@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v219",
-  "short_name": "Jaque v219",
-  "description": "PWA da loja v219 com Dashboard premium compacta e menos poluição visual.",
+  "name": "Jaque Confecções e Presentes v220",
+  "short_name": "Jaque v220",
+  "description": "PWA da loja v220 com crediário auditado, estorno seguro e edição lógica.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
