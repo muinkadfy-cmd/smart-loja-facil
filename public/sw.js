@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v220-comprovantes-tipografia-legivel';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v225-realinhar-versao-auditoria';
 const APP_SHELL = [
   '/',
   '/index.html',
