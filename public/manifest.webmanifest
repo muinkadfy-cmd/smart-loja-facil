@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v224",
-  "short_name": "Jaque v224",
-  "description": "PWA da loja v224 com vencidos e produtos zerados destacados em vermelho.",
+  "name": "Jaque Confecções e Presentes v220",
+  "short_name": "Jaque v220",
+  "description": "PWA da loja v220 com Comprovantes, PDF, PNG e compartilhamento em tipografia legível e unificada.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

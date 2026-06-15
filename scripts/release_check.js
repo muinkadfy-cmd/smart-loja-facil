@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v219-dashboard-premium-compacta';
-const currentCache = 'smart-loja-pwa-supabase-v219-dashboard-premium-compacta';
+const currentVersion = 'pwa-supabase-v220-comprovantes-tipografia-legivel';
+const currentCache = 'smart-loja-pwa-supabase-v220-comprovantes-tipografia-legivel';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v219 dashboard premium compacta.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v219 dashboard premium compacta.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v220 comprovantes tipografia legivel.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v220 comprovantes tipografia legivel.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v219 PWA passou. dashboard premium compacta e icones vetoriais conferidos.');
+console.log('OK: release_check v220 PWA passou. comprovantes tipografia legivel e icones vetoriais conferidos.');

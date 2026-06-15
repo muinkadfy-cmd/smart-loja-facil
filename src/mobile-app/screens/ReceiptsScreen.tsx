@@ -747,9 +747,10 @@ function triggerFileDownload(fileName: string, blob: Blob): void {
 async function ensureSoraReceiptFont(): Promise<void> {
   if (typeof document === 'undefined' || !document.fonts?.load) return;
   await Promise.allSettled([
-    document.fonts.load('400 19px "Sora"'),
-    document.fonts.load('600 19px "Sora"'),
-    document.fonts.load('850 24px "Sora"'),
+    document.fonts.load('400 22px "Sora"'),
+    document.fonts.load('600 24px "Sora"'),
+    document.fonts.load('760 24px "Sora"'),
+    document.fonts.load('850 28px "Sora"'),
   ]);
 }
 
@@ -777,10 +778,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const headerH = 324;
   const clientH = 258;
   const sectionGap = 26;
-  const productRowH = 82;
-  const installmentRowH = 64;
-  const productBlockH = productRows.length ? 44 + 44 + productRows.length * productRowH + sectionGap : 0;
-  const installmentBlockH = 44 + 44 + installmentRows.length * installmentRowH + sectionGap;
+  const productRowH = 104;
+  const installmentRowH = 74;
+  const productBlockH = productRows.length ? 54 + 48 + productRows.length * productRowH + sectionGap : 0;
+  const installmentBlockH = 54 + 48 + installmentRows.length * installmentRowH + sectionGap;
   const discountBlockH = data.hasDiscount ? 104 : 0;
   const cardsH = 98;
   const notesH = Math.max(0, 0);
@@ -1059,65 +1060,69 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     if (!productRows.length) return y;
     fillHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
     y += 54;
-    const columns = [88, innerW - 88 - 168 - 168, 168, 168];
+    const columns = [84, innerW - 84 - 150 - 158, 150, 158];
     const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + 44);
+    const tableHeadH = 48;
+    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
     ctx.fillStyle = headerGradient;
-    ctx.fillRect(innerX, y, innerW, 44);
+    ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 29, columns[index], 16, 900, '#ffffff');
+      drawCentered(header, x, y + 31, columns[index], 17, 900, '#ffffff');
       x += columns[index];
     });
-    rect(innerX, y, innerW, 44 + productRows.length * productRowH, 3, '#050505', 0);
+    rect(innerX, y, innerW, tableHeadH + productRows.length * productRowH, 3, '#050505', 0);
     x = innerX;
     columns.slice(0, -1).forEach((w) => {
       x += w;
-      line(x, y, x, y + 44 + productRows.length * productRowH, 3);
+      line(x, y, x, y + tableHeadH + productRows.length * productRowH, 3);
     });
     productRows.forEach((row, index) => {
-      const rowY = y + 44 + index * productRowH;
+      const rowY = y + tableHeadH + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
-      drawCentered(row.qtd, innerX, rowY + 47, columns[0], 22, 650);
-      drawWrapped(row.produto, innerX + columns[0] + 24, rowY + 50, columns[1] - 34, 22, 650, 2, 5);
-      drawCentered(row.unitario, innerX + columns[0] + columns[1], rowY + 47, columns[2], 22, 650);
-      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], rowY + 47, columns[3], 22, 650);
+      const middleY = rowY + Math.floor(productRowH / 2) + 10;
+      drawCentered(row.qtd, innerX, middleY, columns[0], 23, 750);
+      drawWrapped(row.produto, innerX + columns[0] + 22, rowY + 43, columns[1] - 34, 24, 760, 2, 8);
+      drawCentered(row.unitario, innerX + columns[0] + columns[1], middleY, columns[2], 23, 750);
+      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], middleY, columns[3], 23, 750);
     });
-    return y + 44 + productRows.length * productRowH + sectionGap;
+    return y + tableHeadH + productRows.length * productRowH + sectionGap;
   }
 
   function drawInstallmentTable(y: number): number {
     fillHeader(productRows.length ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', innerX, y, innerW);
     y += 54;
-    const columns = [150, 250, 170, innerW - 150 - 250 - 170];
+    const columns = [140, 278, 166, innerW - 140 - 278 - 166];
     const headers = ['PARCELA', 'VENCIMENTO', 'VALOR', 'STATUS'];
-    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + 44);
+    const tableHeadH = 48;
+    const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
     ctx.fillStyle = headerGradient;
-    ctx.fillRect(innerX, y, innerW, 44);
+    ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 29, columns[index], 16, 900, '#ffffff');
+      drawCentered(header, x, y + 31, columns[index], 17, 900, '#ffffff');
       x += columns[index];
     });
-    rect(innerX, y, innerW, 44 + installmentRows.length * installmentRowH, 3, '#050505', 0);
+    rect(innerX, y, innerW, tableHeadH + installmentRows.length * installmentRowH, 3, '#050505', 0);
     x = innerX;
     columns.slice(0, -1).forEach((w) => {
       x += w;
-      line(x, y, x, y + 44 + installmentRows.length * installmentRowH, 3);
+      line(x, y, x, y + tableHeadH + installmentRows.length * installmentRowH, 3);
     });
     installmentRows.forEach((row, index) => {
-      const rowY = y + 44 + index * installmentRowH;
+      const rowY = y + tableHeadH + index * installmentRowH;
       line(innerX, rowY + installmentRowH, innerX + innerW, rowY + installmentRowH, 3);
-      drawCentered(row.parcela, innerX, rowY + 38, columns[0], 22, 650);
-      drawCentered(row.vencimento, innerX + columns[0], rowY + 38, columns[1], 22, 650);
-      drawCentered(row.valor, innerX + columns[0] + columns[1], rowY + 38, columns[2], 22, 650);
-      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 36, rowY + 12, Math.max(126, columns[3] - 72), 34);
+      const middleY = rowY + Math.floor(installmentRowH / 2) + 9;
+      drawCentered(row.parcela, innerX, middleY, columns[0], 23, 750);
+      drawCentered(row.vencimento, innerX + columns[0], middleY, columns[1], 23, 750);
+      drawCentered(row.valor, innerX + columns[0] + columns[1], middleY, columns[2], 23, 750);
+      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 34, rowY + 17, Math.max(128, columns[3] - 68), 36);
     });
-    return y + 44 + installmentRows.length * installmentRowH + sectionGap;
+    return y + tableHeadH + installmentRows.length * installmentRowH + sectionGap;
   }
 
 

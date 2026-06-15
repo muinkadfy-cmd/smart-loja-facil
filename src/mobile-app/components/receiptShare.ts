@@ -34,11 +34,11 @@ const INNER_W = RECEIPT_W - 56;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
-const PRODUCT_COLUMNS = [88, INNER_W - 88 - 142 - 154, 142, 154];
-const PRODUCT_NAME_SIZE = 22;
-const PRODUCT_NAME_WEIGHT = 650;
-const PRODUCT_ROW_MIN_H = 98;
-const PRODUCT_ROW_LINE_GAP = 8;
+const PRODUCT_COLUMNS = [84, INNER_W - 84 - 142 - 154, 142, 154];
+const PRODUCT_NAME_SIZE = 24;
+const PRODUCT_NAME_WEIGHT = 760;
+const PRODUCT_ROW_MIN_H = 112;
+const PRODUCT_ROW_LINE_GAP = 9;
 const PRODUCT_MAX_LINES = 3;
 
 export function saleReceiptTitle(sale: SaleSummary): string {
@@ -56,8 +56,9 @@ async function ensureShareSoraReady(): Promise<void> {
     await Promise.race([
       Promise.all([
         fontSet.load('400 22px "Sora"'),
-        fontSet.load('600 22px "Sora"'),
-        fontSet.load('800 22px "Sora"'),
+        fontSet.load('600 24px "Sora"'),
+        fontSet.load('760 24px "Sora"'),
+        fontSet.load('800 24px "Sora"'),
       ]),
       new Promise((resolve) => window.setTimeout(resolve, 900)),
     ]);
@@ -235,7 +236,7 @@ function productDescriptionLines(ctx: CanvasRenderingContext2D, text: string): s
 
 function productRowHeight(ctx: CanvasRenderingContext2D, text: string): number {
   const lineCount = Math.max(1, productDescriptionLines(ctx, text).length);
-  return Math.max(PRODUCT_ROW_MIN_H, 40 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 22);
+  return Math.max(PRODUCT_ROW_MIN_H, 46 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 26);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -449,9 +450,10 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
 async function ensureSoraReceiptFont(): Promise<void> {
   if (typeof document === 'undefined' || !document.fonts?.load) return;
   await Promise.allSettled([
-    document.fonts.load('400 19px "Sora"'),
-    document.fonts.load('600 19px "Sora"'),
-    document.fonts.load('850 24px "Sora"'),
+    document.fonts.load('400 22px "Sora"'),
+    document.fonts.load('600 24px "Sora"'),
+    document.fonts.load('760 24px "Sora"'),
+    document.fonts.load('850 28px "Sora"'),
   ]);
 }
 
@@ -532,7 +534,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   ctx.fillRect(INNER_X, y, INNER_W, 64);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 43, columns[index], 23, 950, '#ffffff');
+    drawCentered(ctx, header, x, y + 43, columns[index], 22, 950, '#ffffff');
     x += columns[index];
   });
   const tableH = productsTableH;
@@ -546,15 +548,15 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 22, 650);
+    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 23, 750);
     let productTextY = rowY + 43;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
       drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
     const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 22, 650);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 22, 650);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 23, 750);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 23, 750);
     rowY += rowH;
   });
   y += tableH + 28;
