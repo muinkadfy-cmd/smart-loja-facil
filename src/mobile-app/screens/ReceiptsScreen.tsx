@@ -2006,11 +2006,11 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               <section key={group.customerKey} className="mapp-credit-customer-card mapp-receipt-customer-card">
                 <button type="button" className="mapp-credit-customer-head mapp-receipt-customer-head" onClick={() => toggleCustomer(group.customerKey)} aria-expanded={customerExpanded}>
                   <div className="mapp-credit-customer-avatar" aria-hidden="true">{customerInitials(group.customerName)}</div>
-                  <div>
+                  <div className="mapp-receipt-customer-copy">
                     <strong>{group.customerName}</strong>
                     <small>{group.notesCount} notas · {group.openNotes} em aberto · {group.contact || 'sem telefone'}</small>
                   </div>
-                  <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Atrasado · ${formatCurrency(group.balance)}` : `Aberto · ${formatCurrency(group.balance)}`}</em>
+                  <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Total atrasado do cliente: ${formatCurrency(group.balance)}` : `Total aberto do cliente: ${formatCurrency(group.balance)}`}</em>
                 </button>
                 {customerExpanded ? (
                   <>
@@ -2034,11 +2034,11 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                           <article key={credit.id} className={`mapp-credit-card mapp-receipt-note-card ${expanded ? 'expanded' : ''}`}>
                             <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
                               <span><InlineIcon name="comprovantes" size={24} /></span>
-                              <div>
-                                <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
-                                <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
+                              <div className="mapp-credit-note-copy">
+                                <strong>Nota #{String(credit.sale_number).padStart(4, '0')}</strong>
+                                <small className="mapp-credit-note-meta">{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
                                 <small className={`mapp-note-status-line ${noteStatus.tone}`}>{noteStatus.detail}</small>
-                                <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
+                                <small className="mapp-credit-note-hint">{expanded ? 'Toque para recolher parcelas' : 'Toque para abrir parcelas'}</small>
                               </div>
                               <em className={noteStatus.tone}>{noteStatus.label}</em>
                             </button>

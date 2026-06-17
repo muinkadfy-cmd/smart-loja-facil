@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v226",
-  "short_name": "Jaque v226",
-  "description": "PWA da loja v226 com comprovantes, extratos, PDF, PNG e compartilhamento legíveis 10/10.",
+  "name": "Jaque Confecções e Presentes v227",
+  "short_name": "Jaque v227",
+  "description": "PWA da loja v227 com Crediário e Comprovantes mais claros para usuário leigo.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
