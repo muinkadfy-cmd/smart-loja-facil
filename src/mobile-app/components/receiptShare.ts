@@ -34,11 +34,11 @@ const INNER_W = RECEIPT_W - 56;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
-const PRODUCT_COLUMNS = [84, INNER_W - 84 - 142 - 154, 142, 154];
-const PRODUCT_NAME_SIZE = 24;
-const PRODUCT_NAME_WEIGHT = 760;
-const PRODUCT_ROW_MIN_H = 112;
-const PRODUCT_ROW_LINE_GAP = 9;
+const PRODUCT_COLUMNS = [82, INNER_W - 82 - 142 - 154, 142, 154];
+const PRODUCT_NAME_SIZE = 27;
+const PRODUCT_NAME_WEIGHT = 820;
+const PRODUCT_ROW_MIN_H = 128;
+const PRODUCT_ROW_LINE_GAP = 10;
 const PRODUCT_MAX_LINES = 3;
 
 export function saleReceiptTitle(sale: SaleSummary): string {
@@ -57,8 +57,10 @@ async function ensureShareSoraReady(): Promise<void> {
       Promise.all([
         fontSet.load('400 22px "Sora"'),
         fontSet.load('600 24px "Sora"'),
-        fontSet.load('760 24px "Sora"'),
-        fontSet.load('800 24px "Sora"'),
+        fontSet.load('760 26px "Sora"'),
+        fontSet.load('820 27px "Sora"'),
+        fontSet.load('900 40px "Sora"'),
+        fontSet.load('950 42px "Sora"'),
       ]),
       new Promise((resolve) => window.setTimeout(resolve, 900)),
     ]);
@@ -236,7 +238,7 @@ function productDescriptionLines(ctx: CanvasRenderingContext2D, text: string): s
 
 function productRowHeight(ctx: CanvasRenderingContext2D, text: string): number {
   const lineCount = Math.max(1, productDescriptionLines(ctx, text).length);
-  return Math.max(PRODUCT_ROW_MIN_H, 46 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 26);
+  return Math.max(PRODUCT_ROW_MIN_H, 52 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 30);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -264,6 +266,17 @@ function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y:
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(safeText(text), x + width / 2, y);
   ctx.textAlign = 'left';
+}
+
+function drawFittedText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 850, minSize = 30, color = INK): void {
+  const safe = safeText(text);
+  let fittedSize = size;
+  while (fittedSize > minSize) {
+    ctx.font = `${weight} ${fittedSize}px "Sora", Arial, Helvetica, sans-serif`;
+    if (ctx.measureText(safe).width <= maxWidth) break;
+    fittedSize -= 1;
+  }
+  drawText(ctx, safe, x, y, fittedSize, weight, color);
 }
 
 function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width = 4, color = BLACK): void {
@@ -452,8 +465,10 @@ async function ensureSoraReceiptFont(): Promise<void> {
   await Promise.allSettled([
     document.fonts.load('400 22px "Sora"'),
     document.fonts.load('600 24px "Sora"'),
-    document.fonts.load('760 24px "Sora"'),
-    document.fonts.load('850 28px "Sora"'),
+    document.fonts.load('760 26px "Sora"'),
+    document.fonts.load('820 27px "Sora"'),
+    document.fonts.load('900 40px "Sora"'),
+    document.fonts.load('950 42px "Sora"'),
   ]);
 }
 
@@ -463,7 +478,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const measurer = document.createElement('canvas').getContext('2d');
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
-  const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
+  const productsTableH = 66 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
   const discountBlockH = data.discount > 0.009 ? 104 : 0;
   const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + discountBlockH + 132 + 32 + 86;
   const height = receiptH + RECEIPT_Y * 2;
@@ -516,7 +531,7 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawPinkReceiptIcon(ctx, INNER_X + 18, y + 92, 'phone');
   drawPinkReceiptIcon(ctx, INNER_X + 18, y + 170, 'pin');
   drawText(ctx, 'CLIENTE', labelX, y + 50, 23, 950);
-  drawWrapped(ctx, data.customer, valueX, y + 56, INNER_W - 350, 36, 950, 1);
+  drawFittedText(ctx, data.customer, valueX, y + 57, INNER_W - 350, 42, 950, 32);
   drawText(ctx, 'TELEFONE', labelX, y + 128, 23, 950);
   drawText(ctx, data.phone || '-', valueX, y + 128, 27, 850);
   drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 206, 23, 950);
@@ -531,10 +546,10 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   headerGradient.addColorStop(0, '#f04f7d');
   headerGradient.addColorStop(1, '#e12b67');
   ctx.fillStyle = headerGradient;
-  ctx.fillRect(INNER_X, y, INNER_W, 64);
+  ctx.fillRect(INNER_X, y, INNER_W, 66);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 43, columns[index], 22, 950, '#ffffff');
+    drawCentered(ctx, header, x, y + 44, columns[index], 23, 950, '#ffffff');
     x += columns[index];
   });
   const tableH = productsTableH;
@@ -544,19 +559,19 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     x += w;
     drawLine(ctx, x, y, x, y + tableH, 3);
   });
-  let rowY = y + 64;
+  let rowY = y + 66;
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 10, columns[0], 23, 750);
-    let productTextY = rowY + 43;
+    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 11, columns[0], 25, 820);
+    let productTextY = rowY + 48;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
       drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
     const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 23, 750);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 23, 750);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 25, 800);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 25, 800);
     rowY += rowH;
   });
   y += tableH + 28;

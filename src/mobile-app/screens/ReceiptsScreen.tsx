@@ -306,10 +306,10 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   let y = 624;
   pdfRect(commands, boxX, y - 88, boxW, 88, false);
   pdfTextAt(commands, boxX + 18, y - 26, 'CLIENTE', 9, true);
-  pdfTextAt(commands, boxX + 128, y - 26, data.customer, 12, true);
+  pdfTextAt(commands, boxX + 128, y - 25, data.customer, 14, true);
   pdfLine(commands, boxX + 12, y - 38, boxX + boxW - 12, y - 38);
   pdfTextAt(commands, boxX + 18, y - 56, 'TELEFONE', 9, true);
-  pdfTextAt(commands, boxX + 128, y - 56, data.phone, 11, true);
+  pdfTextAt(commands, boxX + 128, y - 55, data.phone, 12, true);
   pdfLine(commands, boxX + 12, y - 68, boxX + boxW - 12, y - 68);
   pdfTextAt(commands, boxX + 18, y - 80, 'ENDERECO', 9, true);
   pdfTextAt(commands, boxX + 128, y - 80, data.address || '-', 10, false);
@@ -322,7 +322,7 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   const productRows = (data.productRows ?? []).slice(0, 7);
   if (productRows.length > 0) {
     const productCol = [tableX, tableX + 54, tableX + 262, tableX + 382, tableX + tableW];
-    const productRowH = productRows.length > 4 ? 22 : 28;
+    const productRowH = productRows.length > 4 ? 30 : 36;
     commands.push('0 0 0 rg');
     pdfRect(commands, tableX, y - 22, tableW, 22, true);
     commands.push('1 1 1 rg');
@@ -341,17 +341,17 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
     productRows.forEach((row, index) => {
       const rowTop = y - headerH - index * productRowH;
       pdfLine(commands, tableX, rowTop - productRowH, tableX + tableW, rowTop - productRowH);
-      pdfCenteredText(commands, productCol[0], rowTop - 17, productCol[1] - productCol[0], row.qtd, 8, false);
-      pdfTextAt(commands, productCol[1] + 8, rowTop - 17, pdfSafeText(row.produto).slice(0, 28), 8, false);
-      pdfCenteredText(commands, productCol[2], rowTop - 17, productCol[3] - productCol[2], row.unitario, 8, false);
-      pdfCenteredText(commands, productCol[3], rowTop - 17, productCol[4] - productCol[3], row.total, 8, false);
+      pdfCenteredText(commands, productCol[0], rowTop - 21, productCol[1] - productCol[0], row.qtd, 10, true);
+      pdfTextAt(commands, productCol[1] + 8, rowTop - 21, pdfSafeText(row.produto).slice(0, 38), 10, true);
+      pdfCenteredText(commands, productCol[2], rowTop - 21, productCol[3] - productCol[2], row.unitario, 10, true);
+      pdfCenteredText(commands, productCol[3], rowTop - 21, productCol[4] - productCol[3], row.total, 10, true);
     });
     y = y - headerH - productRows.length * productRowH - 18;
   }
 
-  const col = [tableX, tableX + 82, tableX + 222, tableX + 332, tableX + tableW];
+  const col = [tableX, tableX + 74, tableX + 238, tableX + 344, tableX + tableW];
   const rows = data.rows.slice(0, productRows.length > 0 ? 7 : 10);
-  const rowH = rows.length > 7 ? 24 : 30;
+  const rowH = rows.length > 7 ? 30 : 36;
   commands.push('0 0 0 rg');
   pdfRect(commands, tableX, y - 22, tableW, 22, true);
   commands.push('1 1 1 rg');
@@ -361,7 +361,7 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
   commands.push('1 1 1 rg');
   pdfCenteredText(commands, col[0], y - 20, col[1] - col[0], 'PARCELA', 9, true);
-  pdfCenteredText(commands, col[1], y - 20, col[2] - col[1], 'VENCIMENTO', 9, true);
+  pdfCenteredText(commands, col[1], y - 20, col[2] - col[1], 'VENCIMENTO', 10, true);
   pdfCenteredText(commands, col[2], y - 20, col[3] - col[2], 'VALOR', 9, true);
   pdfCenteredText(commands, col[3], y - 20, col[4] - col[3], 'STATUS', 9, true);
   commands.push('0 0 0 rg');
@@ -714,8 +714,11 @@ async function ensureReceiptSoraReady(): Promise<void> {
     await Promise.race([
       Promise.all([
         fontSet.load('400 22px "Sora"'),
-        fontSet.load('600 22px "Sora"'),
-        fontSet.load('800 22px "Sora"'),
+        fontSet.load('600 24px "Sora"'),
+        fontSet.load('760 26px "Sora"'),
+        fontSet.load('820 27px "Sora"'),
+        fontSet.load('900 40px "Sora"'),
+        fontSet.load('950 42px "Sora"'),
       ]),
       new Promise((resolve) => window.setTimeout(resolve, 900)),
     ]);
@@ -749,8 +752,10 @@ async function ensureSoraReceiptFont(): Promise<void> {
   await Promise.allSettled([
     document.fonts.load('400 22px "Sora"'),
     document.fonts.load('600 24px "Sora"'),
-    document.fonts.load('760 24px "Sora"'),
-    document.fonts.load('850 28px "Sora"'),
+    document.fonts.load('760 26px "Sora"'),
+    document.fonts.load('820 27px "Sora"'),
+    document.fonts.load('900 40px "Sora"'),
+    document.fonts.load('950 42px "Sora"'),
   ]);
 }
 
@@ -778,10 +783,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const headerH = 324;
   const clientH = 258;
   const sectionGap = 26;
-  const productRowH = 104;
-  const installmentRowH = 74;
-  const productBlockH = productRows.length ? 54 + 48 + productRows.length * productRowH + sectionGap : 0;
-  const installmentBlockH = 54 + 48 + installmentRows.length * installmentRowH + sectionGap;
+  const productRowH = 122;
+  const installmentRowH = 86;
+  const productBlockH = productRows.length ? 54 + 52 + productRows.length * productRowH + sectionGap : 0;
+  const installmentBlockH = 54 + 52 + installmentRows.length * installmentRowH + sectionGap;
   const discountBlockH = data.hasDiscount ? 104 : 0;
   const cardsH = 98;
   const notesH = Math.max(0, 0);
@@ -855,6 +860,17 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
       nextY += size + lineGap;
     });
     return nextY;
+  }
+
+  function drawFittedText(text: string, x: number, y: number, maxWidth: number, size: number, weight = 850, minSize = 30, color = '#0b0b0b'): void {
+    const safe = cleanCanvasText(text);
+    let fittedSize = size;
+    while (fittedSize > minSize) {
+      setFont(fittedSize, weight);
+      if (ctx.measureText(safe).width <= maxWidth) break;
+      fittedSize -= 1;
+    }
+    drawText(safe, x, y, fittedSize, weight, color);
   }
 
   function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3, color = '#f5bfd1'): void {
@@ -1048,7 +1064,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawPinkIcon(innerX + 18, y + 102, 'phone');
     drawPinkIcon(innerX + 18, y + 186, 'pin');
     drawText('CLIENTE', labelX, y + 55, 23, 950);
-    drawWrapped(data.customer, valueX, y + 63, innerW - 350, 38, 950, 1);
+    drawFittedText(data.customer, valueX, y + 63, innerW - 350, 42, 950, 32);
     drawText('TELEFONE', labelX, y + 140, 23, 950);
     drawText(data.phone || '-', valueX, y + 140, 27, 850);
     drawText('ENDEREÇO', labelX, y + 224, 23, 950);
@@ -1060,9 +1076,9 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     if (!productRows.length) return y;
     fillHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
     y += 54;
-    const columns = [84, innerW - 84 - 150 - 158, 150, 158];
+    const columns = [82, innerW - 82 - 146 - 154, 146, 154];
     const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-    const tableHeadH = 48;
+    const tableHeadH = 52;
     const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
@@ -1070,7 +1086,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 31, columns[index], 17, 900, '#ffffff');
+      drawCentered(header, x, y + 34, columns[index], 18, 950, '#ffffff');
       x += columns[index];
     });
     rect(innerX, y, innerW, tableHeadH + productRows.length * productRowH, 3, '#050505', 0);
@@ -1083,20 +1099,21 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
       const rowY = y + tableHeadH + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
       const middleY = rowY + Math.floor(productRowH / 2) + 10;
-      drawCentered(row.qtd, innerX, middleY, columns[0], 23, 750);
-      drawWrapped(row.produto, innerX + columns[0] + 22, rowY + 43, columns[1] - 34, 24, 760, 2, 8);
-      drawCentered(row.unitario, innerX + columns[0] + columns[1], middleY, columns[2], 23, 750);
-      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], middleY, columns[3], 23, 750);
+      drawCentered(row.qtd, innerX, middleY, columns[0], 25, 820);
+      drawWrapped(row.produto, innerX + columns[0] + 20, rowY + 46, columns[1] - 30, 27, 820, 2, 9);
+      drawCentered(row.unitario, innerX + columns[0] + columns[1], middleY, columns[2], 25, 800);
+      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], middleY, columns[3], 25, 800);
     });
     return y + tableHeadH + productRows.length * productRowH + sectionGap;
   }
 
+
   function drawInstallmentTable(y: number): number {
     fillHeader(productRows.length ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', innerX, y, innerW);
     y += 54;
-    const columns = [140, 278, 166, innerW - 140 - 278 - 166];
+    const columns = [132, 314, 158, innerW - 132 - 314 - 158];
     const headers = ['PARCELA', 'VENCIMENTO', 'VALOR', 'STATUS'];
-    const tableHeadH = 48;
+    const tableHeadH = 52;
     const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
@@ -1104,7 +1121,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 31, columns[index], 17, 900, '#ffffff');
+      drawCentered(header, x, y + 34, columns[index], 18, 950, '#ffffff');
       x += columns[index];
     });
     rect(innerX, y, innerW, tableHeadH + installmentRows.length * installmentRowH, 3, '#050505', 0);
@@ -1116,14 +1133,16 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     installmentRows.forEach((row, index) => {
       const rowY = y + tableHeadH + index * installmentRowH;
       line(innerX, rowY + installmentRowH, innerX + innerW, rowY + installmentRowH, 3);
-      const middleY = rowY + Math.floor(installmentRowH / 2) + 9;
-      drawCentered(row.parcela, innerX, middleY, columns[0], 23, 750);
-      drawCentered(row.vencimento, innerX + columns[0], middleY, columns[1], 23, 750);
-      drawCentered(row.valor, innerX + columns[0] + columns[1], middleY, columns[2], 23, 750);
-      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 34, rowY + 17, Math.max(128, columns[3] - 68), 36);
+      const middleY = rowY + Math.floor(installmentRowH / 2) + 10;
+      drawCentered(row.parcela, innerX, middleY, columns[0], 25, 820);
+      drawCentered(row.vencimento, innerX + columns[0], middleY, columns[1], 26, 820);
+      drawCentered(row.valor, innerX + columns[0] + columns[1], middleY, columns[2], 25, 800);
+      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 32, rowY + 22, Math.max(130, columns[3] - 64), 38);
     });
     return y + tableHeadH + installmentRows.length * installmentRowH + sectionGap;
   }
+
+
 
 
   function drawDiscountStrip(y: number): number {
