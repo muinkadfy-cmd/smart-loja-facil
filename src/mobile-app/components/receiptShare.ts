@@ -34,11 +34,11 @@ const INNER_W = RECEIPT_W - 56;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
-const PRODUCT_COLUMNS = [82, INNER_W - 82 - 142 - 154, 142, 154];
-const PRODUCT_NAME_SIZE = 27;
-const PRODUCT_NAME_WEIGHT = 820;
-const PRODUCT_ROW_MIN_H = 128;
-const PRODUCT_ROW_LINE_GAP = 10;
+const PRODUCT_COLUMNS = [82, INNER_W - 82 - 136 - 150, 136, 150];
+const PRODUCT_NAME_SIZE = 32;
+const PRODUCT_NAME_WEIGHT = 900;
+const PRODUCT_ROW_MIN_H = 148;
+const PRODUCT_ROW_LINE_GAP = 11;
 const PRODUCT_MAX_LINES = 3;
 
 export function saleReceiptTitle(sale: SaleSummary): string {
@@ -238,7 +238,7 @@ function productDescriptionLines(ctx: CanvasRenderingContext2D, text: string): s
 
 function productRowHeight(ctx: CanvasRenderingContext2D, text: string): number {
   const lineCount = Math.max(1, productDescriptionLines(ctx, text).length);
-  return Math.max(PRODUCT_ROW_MIN_H, 52 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 30);
+  return Math.max(PRODUCT_ROW_MIN_H, 58 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 34);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -478,9 +478,9 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const measurer = document.createElement('canvas').getContext('2d');
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
-  const productsTableH = 66 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
+  const productsTableH = 72 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
   const discountBlockH = data.discount > 0.009 ? 104 : 0;
-  const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + discountBlockH + 132 + 32 + 86;
+  const receiptH = 316 + 262 + 28 + 58 + productsTableH + 28 + discountBlockH + 138 + 34 + 88;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -520,36 +520,36 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   drawText(ctx, data.status, titleX + 148, titleY + 92, 24, 850, '#e91862');
 
   let y = RECEIPT_Y + 316;
-  drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
+  drawRect(ctx, INNER_X, y, INNER_W, 262, 4);
   const labelX = INNER_X + 86;
   const valueX = INNER_X + 318;
   const splitX = INNER_X + 292;
-  drawLine(ctx, splitX, y, splitX, y + 236, 2);
-  drawLine(ctx, INNER_X, y + 78, INNER_X + INNER_W, y + 78, 2);
-  drawLine(ctx, INNER_X, y + 156, INNER_X + INNER_W, y + 156, 2);
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 14, 'user');
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 92, 'phone');
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 170, 'pin');
-  drawText(ctx, 'CLIENTE', labelX, y + 50, 23, 950);
-  drawFittedText(ctx, data.customer, valueX, y + 57, INNER_W - 350, 42, 950, 32);
-  drawText(ctx, 'TELEFONE', labelX, y + 128, 23, 950);
-  drawText(ctx, data.phone || '-', valueX, y + 128, 27, 850);
-  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 206, 23, 950);
-  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 206, 27, 900);
+  drawLine(ctx, splitX, y, splitX, y + 262, 2);
+  drawLine(ctx, INNER_X, y + 88, INNER_X + INNER_W, y + 88, 2);
+  drawLine(ctx, INNER_X, y + 176, INNER_X + INNER_W, y + 176, 2);
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 22, 'user');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 110, 'phone');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 198, 'pin');
+  drawText(ctx, 'CLIENTE', labelX, y + 58, 25, 950);
+  drawFittedText(ctx, data.customer, valueX, y + 67, INNER_W - 350, 48, 950, 36);
+  drawText(ctx, 'TELEFONE', labelX, y + 146, 25, 950);
+  drawText(ctx, data.phone || '-', valueX, y + 146, 31, 900);
+  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 234, 25, 950);
+  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 234, 31, 900);
 
-  y += 262;
-  fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 54);
-  y += 54;
+  y += 290;
+  fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 58);
+  y += 58;
   const columns = PRODUCT_COLUMNS;
   const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
   const headerGradient = ctx.createLinearGradient(INNER_X, y, INNER_X + INNER_W, y + 64);
   headerGradient.addColorStop(0, '#f04f7d');
   headerGradient.addColorStop(1, '#e12b67');
   ctx.fillStyle = headerGradient;
-  ctx.fillRect(INNER_X, y, INNER_W, 66);
+  ctx.fillRect(INNER_X, y, INNER_W, 72);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 44, columns[index], 23, 950, '#ffffff');
+    drawCentered(ctx, header, x, y + 47, columns[index], 24, 950, '#ffffff');
     x += columns[index];
   });
   const tableH = productsTableH;
@@ -559,19 +559,19 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     x += w;
     drawLine(ctx, x, y, x, y + tableH, 3);
   });
-  let rowY = y + 66;
+  let rowY = y + 72;
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 11, columns[0], 25, 820);
-    let productTextY = rowY + 48;
+    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 12, columns[0], 29, 880);
+    let productTextY = rowY + 54;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
       drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
     const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 25, 800);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 25, 800);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 28, 850);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 28, 850);
     rowY += rowH;
   });
   y += tableH + 28;
@@ -597,15 +597,15 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const paymentGap = 14;
   const paymentW = data.isCreditSale ? Math.floor(INNER_W * 0.58) : Math.floor(INNER_W * 0.68);
   const totalW = INNER_W - paymentW - paymentGap;
-  fillBlackHeader(ctx, data.isCreditSale ? 'RESUMO DO CREDIÁRIO' : 'PAGAMENTO', INNER_X, y, paymentW, 54);
-  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW + paymentGap, y, totalW, 54);
-  y += 54;
+  fillBlackHeader(ctx, data.isCreditSale ? 'RESUMO DO CREDIÁRIO' : 'PAGAMENTO', INNER_X, y, paymentW, 58);
+  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW + paymentGap, y, totalW, 58);
+  y += 58;
   drawRect(ctx, INNER_X, y, paymentW, 112, 4);
   drawRect(ctx, INNER_X + paymentW + paymentGap, y, totalW, 112, 4);
   if (data.isCreditSale) {
-    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 42, 24, 900);
+    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 44, 27, 900);
     wrapCanvasText(ctx, 'Acompanhe vencimentos e pagamentos na aba Crediário.', paymentW - 56, 20, 700).slice(0, 2).forEach((line, index) => {
-      drawText(ctx, line, INNER_X + 28, y + 78 + index * 27, 20, 700, MUTED);
+      drawText(ctx, line, INNER_X + 28, y + 82 + index * 30, 22, 760, MUTED);
     });
   } else {
     const methods = ['Pix', 'Dinheiro', 'Cartão'];
