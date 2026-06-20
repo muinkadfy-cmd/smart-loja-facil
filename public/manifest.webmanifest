@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v231",
-  "short_name": "Jaque v231",
-  "description": "PWA da loja v231 com micro ajuste premium em extrato e comprovante, preservando o layout atual.",
+  "name": "Jaque Confecções e Presentes v232",
+  "short_name": "Jaque v232",
+  "description": "PWA da loja v232 com status do extrato/comprovante no padrão Status: Aberta.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

@@ -284,7 +284,7 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   pdfLine(commands, titleBoxX, headerRuleY, titleBoxX + titleBoxW, headerRuleY);
   pdfTextAt(commands, titleBoxX, headerRuleY - 15, data.subtitle, 7.2, false);
   pdfTextAt(commands, titleBoxX, headerRuleY - 29, 'Status:', 8.6, false);
-  pdfTextAt(commands, titleBoxX + 38, headerRuleY - 29, data.status, 8.6, false);
+  pdfTextAt(commands, titleBoxX + 54, headerRuleY - 29, data.status, 8.6, false);
 
   if (data.paidStamp) {
     commands.push('q', '0.15 w', '0 0 0 RG', '0 0 0 rg');
@@ -1205,8 +1205,13 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   drawMetaIcon(titleX + 6, titleY + 4, 'calendar');
   drawText(data.subtitle, titleX + 64, titleY + 36, 19, 650);
   drawMetaIcon(titleX + 6, titleY + 60, 'tag');
-  drawText('Status:', titleX + 64, titleY + 92, 22, 650);
-  drawText(data.status, titleX + 182, titleY + 92, 22, 700, '#e91862');
+  const statusLabel = 'Status:';
+  const statusLabelX = titleX + 64;
+  const statusY = titleY + 92;
+  drawText(statusLabel, statusLabelX, statusY, 22, 650);
+  setFont(22, 650);
+  const statusValueX = statusLabelX + ctx.measureText(cleanCanvasText(statusLabel)).width + 16;
+  drawText(data.status, statusValueX, statusY, 22, 700, '#e91862');
 
   let cursorY = receiptY + headerH;
   cursorY = drawInfoBox(cursorY);

@@ -1,0 +1,17 @@
+MEGA LOTE 232 — STATUS COM ESPAÇO EM EXTRATO / COMPROVANTE
+
+Resumo
+- Corrigido o texto do cabeçalho para aparecer visualmente como:
+  Status: Aberta
+- Antes podia aparecer colado como:
+  Status:Aberta
+- Aplicado em:
+  1) ReceiptsScreen.tsx — Extrato/Comprovantes/PDF/PNG principal.
+  2) receiptShare.ts — PNG/Compartilhar/Vendas recentes.
+- Mantido o restante do layout do lote 231.
+- Não altera cálculo, saldo, parcela, venda, crediário, produto ou total.
+- Versão/cache atualizados para v232.
+
+Teste honesto
+- Conferência estrutural feita nos arquivos alterados.
+- Não rodei build/type-check real porque este ambiente não tem node_modules instalados.
