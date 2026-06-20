@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v230-comprovantes-sem-negrito';
-const currentCache = 'smart-loja-pwa-supabase-v230-comprovantes-sem-negrito';
+const currentVersion = 'pwa-supabase-v231-micro-ajuste-extrato-comprovante';
+const currentCache = 'smart-loja-pwa-supabase-v231-micro-ajuste-extrato-comprovante';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v230 comprovantes sem negrito.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v230 comprovantes sem negrito.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v231 micro ajuste extrato comprovante.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v231 micro ajuste extrato comprovante.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
@@ -171,4 +171,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v230 PWA passou. comprovantes sem negrito e icones vetoriais conferidos.');
+console.log('OK: release_check v231 PWA passou. micro ajuste premium de extrato/comprovante conferido.');

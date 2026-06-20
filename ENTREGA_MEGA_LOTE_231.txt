@@ -1,0 +1,49 @@
+MEGA LOTE 231 — MICRO AJUSTE PREMIUM EXTRATO / COMPROVANTE
+
+VERSÃO
+- package.json / package-lock.json: 0.1.231
+- WEB_APP_VERSION: pwa-supabase-v231-micro-ajuste-extrato-comprovante
+- WEB_CACHE_VERSION / service worker: smart-loja-pwa-supabase-v231-micro-ajuste-extrato-comprovante
+
+O QUE FOI FEITO
+1) Extrato / comprovante
+- nome do cliente ficou um pouco menor e menos pesado;
+- tabela de produtos ficou mais compacta;
+- quantidade ficou melhor alinhada com o texto do produto;
+- vencimento e valor foram aproximados visualmente;
+- status ganhou mais respiro.
+
+2) Compartilhamento / PNG
+- os mesmos ajustes principais foram replicados no render compartilhável.
+
+3) Versionamento
+- bump completo para v231.
+
+ARQUIVOS PRINCIPAIS
+- src/mobile-app/screens/ReceiptsScreen.tsx
+- src/mobile-app/components/receiptShare.ts
+- src/lib/webApi.ts
+- public/sw.js
+- public/manifest.webmanifest
+- package.json
+- package-lock.json
+- scripts/release_check.js
+- scripts/commercial_package_check.js
+- scripts/commercial_release_package.js
+
+TESTE HONESTO
+- não rodei build/type-check real porque este ambiente está sem node_modules;
+- conferência feita por inspeção estrutural/manual.
+
+RECOMENDAÇÃO
+- aplicar os arquivos no projeto;
+- rodar:
+  npm install
+  npm run type-check
+  npm run build
+  npm run release:check
+- depois abrir a tela de comprovantes e validar:
+  a) extrato do crediário
+  b) comprovante de pagamento
+  c) PNG compartilhável
+  d) PDF

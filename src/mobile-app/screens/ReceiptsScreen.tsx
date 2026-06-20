@@ -282,8 +282,9 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   });
   const headerRuleY = titleY + 7;
   pdfLine(commands, titleBoxX, headerRuleY, titleBoxX + titleBoxW, headerRuleY);
-  pdfTextAt(commands, titleBoxX, headerRuleY - 15, data.subtitle, 7.5, false);
-  pdfTextAt(commands, titleBoxX, headerRuleY - 29, `Status: ${data.status}`, 9, true);
+  pdfTextAt(commands, titleBoxX, headerRuleY - 15, data.subtitle, 7.2, false);
+  pdfTextAt(commands, titleBoxX, headerRuleY - 29, 'Status:', 8.6, false);
+  pdfTextAt(commands, titleBoxX + 38, headerRuleY - 29, data.status, 8.6, false);
 
   if (data.paidStamp) {
     commands.push('q', '0.15 w', '0 0 0 RG', '0 0 0 rg');
@@ -305,14 +306,14 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   const boxW = 502;
   let y = 624;
   pdfRect(commands, boxX, y - 88, boxW, 88, false);
-  pdfTextAt(commands, boxX + 18, y - 26, 'CLIENTE', 9, true);
-  pdfTextAt(commands, boxX + 128, y - 25, data.customer, 14, true);
+  pdfTextAt(commands, boxX + 18, y - 26, 'CLIENTE', 8.5, true);
+  pdfTextAt(commands, boxX + 128, y - 26, data.customer, 11.2, false);
   pdfLine(commands, boxX + 12, y - 38, boxX + boxW - 12, y - 38);
-  pdfTextAt(commands, boxX + 18, y - 56, 'TELEFONE', 9, true);
-  pdfTextAt(commands, boxX + 128, y - 55, data.phone, 12, true);
+  pdfTextAt(commands, boxX + 18, y - 56, 'TELEFONE', 8.5, true);
+  pdfTextAt(commands, boxX + 128, y - 56, data.phone, 10.2, false);
   pdfLine(commands, boxX + 12, y - 68, boxX + boxW - 12, y - 68);
-  pdfTextAt(commands, boxX + 18, y - 80, 'ENDERECO', 9, true);
-  pdfTextAt(commands, boxX + 128, y - 80, data.address || '-', 10, false);
+  pdfTextAt(commands, boxX + 18, y - 80, 'ENDERECO', 8.5, true);
+  pdfTextAt(commands, boxX + 128, y - 80, data.address || '-', 9.6, false);
 
   // Tabelas.
   y = 520;
@@ -321,8 +322,8 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   const headerH = 30;
   const productRows = (data.productRows ?? []).slice(0, 7);
   if (productRows.length > 0) {
-    const productCol = [tableX, tableX + 54, tableX + 262, tableX + 382, tableX + tableW];
-    const productRowH = productRows.length > 4 ? 30 : 36;
+    const productCol = [tableX, tableX + 52, tableX + 332, tableX + 417, tableX + tableW];
+    const productRowH = productRows.length > 4 ? 21 : 24;
     commands.push('0 0 0 rg');
     pdfRect(commands, tableX, y - 22, tableW, 22, true);
     commands.push('1 1 1 rg');
@@ -331,27 +332,27 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
     commands.push('0 0 0 rg');
     pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
     commands.push('1 1 1 rg');
-    pdfCenteredText(commands, productCol[0], y - 20, productCol[1] - productCol[0], 'QTD', 8, true);
-    pdfCenteredText(commands, productCol[1], y - 20, productCol[2] - productCol[1], 'PRODUTO', 8, true);
-    pdfCenteredText(commands, productCol[2], y - 20, productCol[3] - productCol[2], 'R$ UN', 8, true);
-    pdfCenteredText(commands, productCol[3], y - 20, productCol[4] - productCol[3], 'TOTAL', 8, true);
+    pdfCenteredText(commands, productCol[0], y - 20, productCol[1] - productCol[0], 'QTD', 7.8, true);
+    pdfCenteredText(commands, productCol[1], y - 20, productCol[2] - productCol[1], 'PRODUTO', 7.8, true);
+    pdfCenteredText(commands, productCol[2], y - 20, productCol[3] - productCol[2], 'R$ UN', 7.8, true);
+    pdfCenteredText(commands, productCol[3], y - 20, productCol[4] - productCol[3], 'TOTAL', 7.8, true);
     commands.push('0 0 0 rg');
     pdfRect(commands, tableX, y - headerH - productRows.length * productRowH, tableW, headerH + productRows.length * productRowH, false);
     for (let i = 1; i < productCol.length - 1; i += 1) pdfLine(commands, productCol[i], y, productCol[i], y - headerH - productRows.length * productRowH);
     productRows.forEach((row, index) => {
       const rowTop = y - headerH - index * productRowH;
       pdfLine(commands, tableX, rowTop - productRowH, tableX + tableW, rowTop - productRowH);
-      pdfCenteredText(commands, productCol[0], rowTop - 21, productCol[1] - productCol[0], row.qtd, 10, true);
-      pdfTextAt(commands, productCol[1] + 8, rowTop - 21, pdfSafeText(row.produto).slice(0, 38), 10, true);
-      pdfCenteredText(commands, productCol[2], rowTop - 21, productCol[3] - productCol[2], row.unitario, 10, true);
-      pdfCenteredText(commands, productCol[3], rowTop - 21, productCol[4] - productCol[3], row.total, 10, true);
+      pdfCenteredText(commands, productCol[0], rowTop - 15, productCol[1] - productCol[0], row.qtd, 8.2, false);
+      pdfTextAt(commands, productCol[1] + 8, rowTop - 15, pdfSafeText(row.produto).slice(0, 34), 8.2, false);
+      pdfCenteredText(commands, productCol[2], rowTop - 15, productCol[3] - productCol[2], row.unitario, 8.2, false);
+      pdfCenteredText(commands, productCol[3], rowTop - 15, productCol[4] - productCol[3], row.total, 8.2, false);
     });
     y = y - headerH - productRows.length * productRowH - 18;
   }
 
-  const col = [tableX, tableX + 74, tableX + 238, tableX + 344, tableX + tableW];
+  const col = [tableX, tableX + 82, tableX + 250, tableX + 340, tableX + tableW];
   const rows = data.rows.slice(0, productRows.length > 0 ? 7 : 10);
-  const rowH = rows.length > 7 ? 30 : 36;
+  const rowH = rows.length > 7 ? 23 : 28;
   commands.push('0 0 0 rg');
   pdfRect(commands, tableX, y - 22, tableW, 22, true);
   commands.push('1 1 1 rg');
@@ -360,20 +361,20 @@ function buildPdfReceiptFile(preview: ReceiptPreview, store: ReceiptStoreInfo): 
   commands.push('0 0 0 rg');
   pdfRect(commands, tableX, y - headerH, tableW, headerH, true);
   commands.push('1 1 1 rg');
-  pdfCenteredText(commands, col[0], y - 20, col[1] - col[0], 'PARCELA', 9, true);
-  pdfCenteredText(commands, col[1], y - 20, col[2] - col[1], 'VENCIMENTO', 10, true);
-  pdfCenteredText(commands, col[2], y - 20, col[3] - col[2], 'VALOR', 9, true);
-  pdfCenteredText(commands, col[3], y - 20, col[4] - col[3], 'STATUS', 9, true);
+  pdfCenteredText(commands, col[0], y - 20, col[1] - col[0], 'PARCELA', 8.5, true);
+  pdfCenteredText(commands, col[1], y - 20, col[2] - col[1], 'VENCIMENTO', 8.5, true);
+  pdfCenteredText(commands, col[2], y - 20, col[3] - col[2], 'VALOR', 8.5, true);
+  pdfCenteredText(commands, col[3], y - 20, col[4] - col[3], 'STATUS', 8.5, true);
   commands.push('0 0 0 rg');
   pdfRect(commands, tableX, y - headerH - rows.length * rowH, tableW, headerH + rows.length * rowH, false);
   for (let i = 1; i < col.length - 1; i += 1) pdfLine(commands, col[i], y, col[i], y - headerH - rows.length * rowH);
   rows.forEach((row, index) => {
     const rowTop = y - headerH - index * rowH;
     pdfLine(commands, tableX, rowTop - rowH, tableX + tableW, rowTop - rowH);
-    pdfCenteredText(commands, col[0], rowTop - 19, col[1] - col[0], row.parcela, 9, false);
-    pdfCenteredText(commands, col[1], rowTop - 19, col[2] - col[1], row.vencimento, 9, false);
-    pdfCenteredText(commands, col[2], rowTop - 19, col[3] - col[2], row.valor, 9, false);
-    addPdfStatusToken(commands, col[3] + 20, rowTop - 19, row.status);
+    pdfCenteredText(commands, col[0], rowTop - 17, col[1] - col[0], row.parcela, 8.8, false);
+    pdfCenteredText(commands, col[1], rowTop - 17, col[2] - col[1], row.vencimento, 8.8, false);
+    pdfCenteredText(commands, col[2], rowTop - 17, col[3] - col[2], row.valor, 8.8, false);
+    addPdfStatusToken(commands, col[3] + 22, rowTop - 17, row.status);
   });
 
   // Cards de resumo.
@@ -672,11 +673,13 @@ function addPdfStatusToken(commands: string[], x: number, y: number, label: stri
   const isPaid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
   const isPartial = clean.includes('PARCIAL');
   const isOverdue = clean.includes('VENC') || clean.includes('ATRAS');
-  const width = isPartial ? 72 : isOverdue ? 78 : 64;
-  commands.push('0 0 0 RG', `${isPaid ? '0 0 0 rg' : '1 1 1 rg'}`);
-  pdfRect(commands, x, y - 5, width, 18, isPaid);
-  commands.push(isPaid ? '1 1 1 rg' : '0 0 0 rg');
-  pdfCenteredText(commands, x, y, width, isPaid ? 'PAGA' : isPartial ? 'PARCIAL' : isOverdue ? 'VENCIDA' : 'PENDENTE', 8, true);
+  const isOpen = clean.includes('ABERTA') || clean.includes('ABERTO');
+  const display = isPaid ? 'PAGA' : isPartial ? 'PARCIAL' : isOverdue ? 'VENCIDA' : isOpen ? 'ABERTA' : 'PENDENTE';
+  const width = display.length >= 8 ? 86 : display.length >= 7 ? 82 : 76;
+  commands.push('0 0 0 RG', `${isPaid || isOpen ? '0 0 0 rg' : '1 1 1 rg'}`);
+  pdfRect(commands, x, y - 5, width, 18, isPaid || isOpen);
+  commands.push(isPaid || isOpen ? '1 1 1 rg' : '0 0 0 rg');
+  pdfCenteredText(commands, x, y, width, display, 7.4, false);
   commands.push('0 0 0 rg');
 }
 
@@ -714,11 +717,8 @@ async function ensureReceiptSoraReady(): Promise<void> {
     await Promise.race([
       Promise.all([
         fontSet.load('400 22px "Sora"'),
-        fontSet.load('600 24px "Sora"'),
-        fontSet.load('760 26px "Sora"'),
-        fontSet.load('820 27px "Sora"'),
-        fontSet.load('900 40px "Sora"'),
-        fontSet.load('950 42px "Sora"'),
+        fontSet.load('600 22px "Sora"'),
+        fontSet.load('800 22px "Sora"'),
       ]),
       new Promise((resolve) => window.setTimeout(resolve, 900)),
     ]);
@@ -752,10 +752,8 @@ async function ensureSoraReceiptFont(): Promise<void> {
   await Promise.allSettled([
     document.fonts.load('400 22px "Sora"'),
     document.fonts.load('600 24px "Sora"'),
-    document.fonts.load('760 26px "Sora"'),
-    document.fonts.load('820 27px "Sora"'),
-    document.fonts.load('900 40px "Sora"'),
-    document.fonts.load('950 42px "Sora"'),
+    document.fonts.load('760 24px "Sora"'),
+    document.fonts.load('850 28px "Sora"'),
   ]);
 }
 
@@ -780,15 +778,15 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   const receiptW = width - outerPad * 2;
   const innerX = receiptX + 28;
   const innerW = receiptW - 56;
-  const headerH = 316;
-  const clientH = 276;
-  const sectionGap = 28;
-  const productRowH = 148;
-  const installmentRowH = 104;
-  const productBlockH = productRows.length ? 58 + 58 + productRows.length * productRowH + sectionGap : 0;
-  const installmentBlockH = 58 + 58 + installmentRows.length * installmentRowH + sectionGap;
+  const headerH = 324;
+  const clientH = 258;
+  const sectionGap = 26;
+  const productRowH = 92;
+  const installmentRowH = 72;
+  const productBlockH = productRows.length ? 54 + 48 + productRows.length * productRowH + sectionGap : 0;
+  const installmentBlockH = 54 + 48 + installmentRows.length * installmentRowH + sectionGap;
   const discountBlockH = data.hasDiscount ? 104 : 0;
-  const cardsH = 124;
+  const cardsH = 98;
   const notesH = Math.max(0, 0);
   const footerH = 84;
   const receiptH = headerH + clientH + sectionGap + productBlockH + installmentBlockH + discountBlockH + cardsH + sectionGap + notesH + footerH;
@@ -810,15 +808,8 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     });
   }
 
-  function receiptSoftWeight(weight = 500): number {
-    if (weight >= 850) return 600;
-    if (weight >= 700) return 560;
-    if (weight >= 600) return 520;
-    return Math.max(400, Math.min(weight, 520));
-  }
-
-  function setFont(size: number, weight = 500): void {
-    ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+  function setFont(size: number, weight = 650): void {
+    ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   }
 
   function cleanCanvasText(value: string): string {
@@ -841,16 +832,6 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.fillText(cleanCanvasText(text), x + boxW / 2, y);
     ctx.textAlign = 'left';
   }
-  function drawCenteredMiddle(text: string, x: number, y: number, boxW: number, boxH: number, size: number, weight = 800, color = '#0b0b0b'): void {
-    ctx.fillStyle = color;
-    setFont(size, weight);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(cleanCanvasText(text), x + boxW / 2, y + boxH / 2);
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-  }
-
 
   function wrapText(text: string, maxWidth: number, size: number, weight = 650): string[] {
     setFont(size, weight);
@@ -877,17 +858,6 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
       nextY += size + lineGap;
     });
     return nextY;
-  }
-
-  function drawFittedText(text: string, x: number, y: number, maxWidth: number, size: number, weight = 850, minSize = 30, color = '#0b0b0b'): void {
-    const safe = cleanCanvasText(text);
-    let fittedSize = size;
-    while (fittedSize > minSize) {
-      setFont(fittedSize, weight);
-      if (ctx.measureText(safe).width <= maxWidth) break;
-      fittedSize -= 1;
-    }
-    drawText(safe, x, y, fittedSize, weight, color);
   }
 
   function line(x1: number, y1: number, x2: number, y2: number, widthLine = 3, color = '#f5bfd1'): void {
@@ -945,7 +915,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     drawText(label, x + 72, y + 34, 22, 900, '#ffffff');
   }
 
-  function drawStatusToken(label: string, x: number, y: number, w = 132, h = 34): void {
+  function drawStatusToken(label: string, x: number, y: number, w = 140, h = 34): void {
     const clean = cleanCanvasText(label).toUpperCase();
     const paid = clean.includes('PAGA') || clean.includes('PAGO') || clean.includes('QUIT');
     const partial = clean.includes('PARCIAL');
@@ -959,8 +929,8 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.roundRect(x, y, w, h, 8);
     ctx.fill();
     ctx.stroke();
-    const fontSize = display.length >= 7 ? Math.max(17, Math.floor(h * 0.40)) : Math.max(18, Math.floor(h * 0.43));
-    drawCenteredMiddle(display, x, y, w, h, fontSize, 800, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
+    const fontSize = display.length >= 7 ? 13 : 14;
+    drawCentered(display, x, y + Math.round(h * 0.6), w, fontSize, 700, paid || display === 'ABERTA' ? '#ffffff' : '#e91862');
   }
 
   function drawMiniGlyph(cx: number, cy: number, kind: 'user' | 'phone' | 'pin' | 'bag' | 'card'): void {
@@ -1071,33 +1041,31 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
 
   function drawInfoBox(y: number): number {
     rect(innerX, y, innerW, clientH, 3, '#050505', 12);
-    const labelX = innerX + 88;
-    const valueX = innerX + 316;
+    const labelX = innerX + 86;
+    const valueX = innerX + 318;
     const splitX = innerX + 292;
-    const rowH = Math.floor(clientH / 3);
     line(splitX, y, splitX, y + clientH, 2, '#f1aac4');
-    line(innerX, y + rowH, innerX + innerW, y + rowH, 2, '#f1c1d1');
-    line(innerX, y + rowH * 2, innerX + innerW, y + rowH * 2, 2, '#f1c1d1');
-    drawPinkIcon(innerX + 18, y + 22, 'user');
-    drawPinkIcon(innerX + 18, y + rowH + 22, 'phone');
-    drawPinkIcon(innerX + 18, y + rowH * 2 + 22, 'pin');
-    drawText('CLIENTE', labelX, y + 58, 25, 950);
-    drawFittedText(data.customer, valueX, y + 67, innerW - 350, 48, 950, 36);
-    drawText('TELEFONE', labelX, y + rowH + 58, 25, 950);
-    drawText(data.phone || '-', valueX, y + rowH + 58, 31, 900);
-    drawText('ENDEREÇO', labelX, y + rowH * 2 + 58, 25, 950);
-    drawWrapped(data.address || '-', valueX, y + rowH * 2 + 58, innerW - 350, 26, 820, 1);
+    line(innerX, y + 86, innerX + innerW, y + 86, 2, '#f1c1d1');
+    line(innerX, y + 172, innerX + innerW, y + 172, 2, '#f1c1d1');
+    drawPinkIcon(innerX + 18, y + 18, 'user');
+    drawPinkIcon(innerX + 18, y + 102, 'phone');
+    drawPinkIcon(innerX + 18, y + 186, 'pin');
+    drawText('CLIENTE', labelX, y + 55, 22, 800);
+    drawWrapped(data.customer, valueX, y + 60, innerW - 350, 33, 720, 1, 6);
+    drawText('TELEFONE', labelX, y + 140, 22, 800);
+    drawText(data.phone || '-', valueX, y + 140, 25, 700);
+    drawText('ENDEREÇO', labelX, y + 224, 22, 800);
+    drawWrapped(data.address || '-', valueX, y + 224, innerW - 350, 22, 700, 1, 6);
     return y + clientH + sectionGap;
   }
-
 
   function drawProductTable(y: number): number {
     if (!productRows.length) return y;
     fillHeader('PRODUTOS COMPRADOS', innerX, y, innerW);
-    y += 58;
-    const columns = [82, innerW - 82 - 138 - 150, 138, 150];
+    y += 54;
+    const columns = [86, innerW - 86 - 148 - 148, 148, 148];
     const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
-    const tableHeadH = 58;
+    const tableHeadH = 46;
     const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
@@ -1105,7 +1073,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 38, columns[index], 20, 950, '#ffffff');
+      drawCentered(header, x, y + 30, columns[index], 16, 800, '#ffffff');
       x += columns[index];
     });
     rect(innerX, y, innerW, tableHeadH + productRows.length * productRowH, 3, '#050505', 0);
@@ -1117,21 +1085,27 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     productRows.forEach((row, index) => {
       const rowY = y + tableHeadH + index * productRowH;
       line(innerX, rowY + productRowH, innerX + innerW, rowY + productRowH, 3);
-      const middleY = rowY;
-      drawCenteredMiddle(row.qtd, innerX, middleY, columns[0], productRowH, 29, 880);
-      drawWrapped(row.produto, innerX + columns[0] + 22, rowY + 54, columns[1] - 34, 32, 900, 2, 11);
-      drawCenteredMiddle(row.unitario, innerX + columns[0] + columns[1], middleY, columns[2], productRowH, 28, 850);
-      drawCenteredMiddle(row.total, innerX + columns[0] + columns[1] + columns[2], middleY, columns[3], productRowH, 28, 850);
+      const middleY = rowY + Math.floor(productRowH / 2) + 8;
+      const productLines = wrapText(row.produto, columns[1] - 40, 22, 700).slice(0, 2);
+      const productBlockH = productLines.length * 22 + Math.max(0, productLines.length - 1) * 7;
+      let productY = rowY + Math.floor((productRowH - productBlockH) / 2) + 22;
+      drawCentered(row.qtd, innerX, middleY, columns[0], 22, 700);
+      productLines.forEach((lineText) => {
+        drawText(lineText, innerX + columns[0] + 20, productY, 22, 700);
+        productY += 29;
+      });
+      drawCentered(row.unitario, innerX + columns[0] + columns[1], middleY, columns[2], 22, 700);
+      drawCentered(row.total, innerX + columns[0] + columns[1] + columns[2], middleY, columns[3], 22, 700);
     });
     return y + tableHeadH + productRows.length * productRowH + sectionGap;
   }
 
   function drawInstallmentTable(y: number): number {
     fillHeader(productRows.length ? 'PARCELAS DA NOTA' : 'PARCELAS / COMPROVANTE', innerX, y, innerW);
-    y += 58;
-    const columns = [126, 336, 154, innerW - 126 - 336 - 154];
+    y += 54;
+    const columns = [138, 286, 158, innerW - 138 - 286 - 158];
     const headers = ['PARCELA', 'VENCIMENTO', 'VALOR', 'STATUS'];
-    const tableHeadH = 58;
+    const tableHeadH = 46;
     const headerGradient = ctx.createLinearGradient(innerX, y, innerX + innerW, y + tableHeadH);
     headerGradient.addColorStop(0, '#f04f7d');
     headerGradient.addColorStop(1, '#e12b67');
@@ -1139,7 +1113,7 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ctx.fillRect(innerX, y, innerW, tableHeadH);
     let x = innerX;
     headers.forEach((header, index) => {
-      drawCentered(header, x, y + 38, columns[index], 20, 950, '#ffffff');
+      drawCentered(header, x, y + 30, columns[index], 16, 800, '#ffffff');
       x += columns[index];
     });
     rect(innerX, y, innerW, tableHeadH + installmentRows.length * installmentRowH, 3, '#050505', 0);
@@ -1151,11 +1125,11 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     installmentRows.forEach((row, index) => {
       const rowY = y + tableHeadH + index * installmentRowH;
       line(innerX, rowY + installmentRowH, innerX + innerW, rowY + installmentRowH, 3);
-      const middleY = rowY;
-      drawCenteredMiddle(row.parcela, innerX, middleY, columns[0], installmentRowH, 29, 880);
-      drawCenteredMiddle(row.vencimento, innerX + columns[0], middleY, columns[1], installmentRowH, 31, 900);
-      drawCenteredMiddle(row.valor, innerX + columns[0] + columns[1], middleY, columns[2], installmentRowH, 28, 850);
-      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 30, rowY + Math.round((installmentRowH - 42) / 2), Math.max(142, columns[3] - 60), 42);
+      const middleY = rowY + Math.floor(installmentRowH / 2) + 8;
+      drawCentered(row.parcela, innerX, middleY, columns[0], 22, 700);
+      drawCentered(row.vencimento, innerX + columns[0], middleY, columns[1], 22, 700);
+      drawCentered(row.valor, innerX + columns[0] + columns[1], middleY, columns[2], 22, 700);
+      drawStatusToken(row.status, innerX + columns[0] + columns[1] + columns[2] + 28, rowY + 18, Math.max(138, columns[3] - 56), 34);
     });
     return y + tableHeadH + installmentRows.length * installmentRowH + sectionGap;
   }
@@ -1172,12 +1146,12 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     ];
     items.forEach(([label, value, color], index) => {
       const x = innerX + index * (boxW + gap);
-      rect(x, y, boxW, 86, 3, '#050505', 10);
-      drawCentered(label, x, y + 31, boxW, 18, 900, '#111111');
-      line(x + 14, y + 43, x + boxW - 14, y + 43, 2, '#e85f8a');
-      drawCentered(value, x, y + 72, boxW, 28, 900, String(color));
+      rect(x, y, boxW, 78, 3, '#050505', 10);
+      drawCentered(label, x, y + 28, boxW, 16, 900, '#111111');
+      line(x + 14, y + 38, x + boxW - 14, y + 38, 2, '#e85f8a');
+      drawCentered(value, x, y + 65, boxW, 24, 850, String(color));
     });
-    return y + 86 + sectionGap;
+    return y + 78 + sectionGap;
   }
 
   function drawSummaryCards(y: number): number {
@@ -1186,15 +1160,15 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     const cards = [[data.totalLabel, data.totalValue, '#e12b67'], [data.paidLabel, data.paidValue, '#050505'], [data.balanceLabel, data.balanceValue, '#e12b67']];
     cards.forEach(([label, value, color], index) => {
       const x = innerX + index * (cardW + cardGap);
-      rect(x, y, cardW, 124, 3, '#050505', 12);
-      drawCentered(label, x, y + 39, cardW, 20, 900);
+      rect(x, y, cardW, 116, 3, '#050505', 12);
+      drawCentered(label, x, y + 35, cardW, 19, 900);
       ctx.save();
       ctx.setLineDash([8, 6]);
-      line(x + 18, y + 60, x + cardW - 18, y + 60, 2, '#e85f8a');
+      line(x + 18, y + 54, x + cardW - 18, y + 54, 2, '#e85f8a');
       ctx.restore();
-      drawCentered(value, x, y + 104, cardW, 44, 950, String(color));
+      drawCentered(value, x, y + 94, cardW, 40, 950, String(color));
     });
-    return y + 124 + sectionGap;
+    return y + 116 + sectionGap;
   }
 
   function drawNotes(y: number): number {
@@ -1229,10 +1203,10 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
   });
   line(titleX, titleY - 14, titleX + titleW, titleY - 14, 3, '#e91862');
   drawMetaIcon(titleX + 6, titleY + 4, 'calendar');
-  drawText(data.subtitle, titleX + 64, titleY + 36, 20, 650);
+  drawText(data.subtitle, titleX + 64, titleY + 36, 19, 650);
   drawMetaIcon(titleX + 6, titleY + 60, 'tag');
-  drawText('Status:', titleX + 64, titleY + 92, 24, 750);
-  drawText(data.status, titleX + 148, titleY + 92, 24, 850, '#e91862');
+  drawText('Status:', titleX + 64, titleY + 92, 22, 650);
+  drawText(data.status, titleX + 182, titleY + 92, 22, 700, '#e91862');
 
   let cursorY = receiptY + headerH;
   cursorY = drawInfoBox(cursorY);
@@ -2022,11 +1996,11 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               <section key={group.customerKey} className="mapp-credit-customer-card mapp-receipt-customer-card">
                 <button type="button" className="mapp-credit-customer-head mapp-receipt-customer-head" onClick={() => toggleCustomer(group.customerKey)} aria-expanded={customerExpanded}>
                   <div className="mapp-credit-customer-avatar" aria-hidden="true">{customerInitials(group.customerName)}</div>
-                  <div className="mapp-receipt-customer-copy">
+                  <div>
                     <strong>{group.customerName}</strong>
                     <small>{group.notesCount} notas · {group.openNotes} em aberto · {group.contact || 'sem telefone'}</small>
                   </div>
-                  <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Total atrasado do cliente: ${formatCurrency(group.balance)}` : `Total aberto do cliente: ${formatCurrency(group.balance)}`}</em>
+                  <em className={group.balance <= 0.009 ? 'ok' : group.overdueInstallments > 0 ? 'danger' : 'warn'}>{group.balance <= 0.009 ? 'Sem saldo' : group.overdueInstallments > 0 ? `Atrasado · ${formatCurrency(group.balance)}` : `Aberto · ${formatCurrency(group.balance)}`}</em>
                 </button>
                 {customerExpanded ? (
                   <>
@@ -2050,11 +2024,11 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                           <article key={credit.id} className={`mapp-credit-card mapp-receipt-note-card ${expanded ? 'expanded' : ''}`}>
                             <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
                               <span><InlineIcon name="comprovantes" size={24} /></span>
-                              <div className="mapp-credit-note-copy">
-                                <strong>Nota #{String(credit.sale_number).padStart(4, '0')}</strong>
-                                <small className="mapp-credit-note-meta">{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
+                              <div>
+                                <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
+                                <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
                                 <small className={`mapp-note-status-line ${noteStatus.tone}`}>{noteStatus.detail}</small>
-                                <small className="mapp-credit-note-hint">{expanded ? 'Toque para recolher parcelas' : 'Toque para abrir parcelas'}</small>
+                                <small>Toque para {expanded ? 'recolher' : 'abrir'} as parcelas desta nota</small>
                               </div>
                               <em className={noteStatus.tone}>{noteStatus.label}</em>
                             </button>

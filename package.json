@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.230",
+  "version": "0.1.231",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com comprovantes, extratos, PDF, PNG e compartilhar com fontes sem negrito mantendo layout v230",
+  "description": "PWA da loja com micro ajuste premium no extrato/comprovante, foco em alinhamento, respiro e legibilidade v231",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

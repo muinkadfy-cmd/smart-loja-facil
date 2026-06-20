@@ -34,12 +34,12 @@ const INNER_W = RECEIPT_W - 56;
 const BLACK = '#050505';
 const INK = '#101116';
 const MUTED = '#3f4652';
-const PRODUCT_COLUMNS = [82, INNER_W - 82 - 136 - 150, 136, 150];
-const PRODUCT_NAME_SIZE = 32;
-const PRODUCT_NAME_WEIGHT = 900;
-const PRODUCT_ROW_MIN_H = 148;
-const PRODUCT_ROW_LINE_GAP = 11;
-const PRODUCT_MAX_LINES = 3;
+const PRODUCT_COLUMNS = [86, INNER_W - 86 - 148 - 148, 148, 148];
+const PRODUCT_NAME_SIZE = 22;
+const PRODUCT_NAME_WEIGHT = 700;
+const PRODUCT_ROW_MIN_H = 92;
+const PRODUCT_ROW_LINE_GAP = 7;
+const PRODUCT_MAX_LINES = 2;
 
 export function saleReceiptTitle(sale: SaleSummary): string {
   return `Comprovante #${String(sale.number || 0).padStart(4, '0')}`;
@@ -57,10 +57,8 @@ async function ensureShareSoraReady(): Promise<void> {
       Promise.all([
         fontSet.load('400 22px "Sora"'),
         fontSet.load('600 24px "Sora"'),
-        fontSet.load('760 26px "Sora"'),
-        fontSet.load('820 27px "Sora"'),
-        fontSet.load('900 40px "Sora"'),
-        fontSet.load('950 42px "Sora"'),
+        fontSet.load('760 24px "Sora"'),
+        fontSet.load('800 24px "Sora"'),
       ]),
       new Promise((resolve) => window.setTimeout(resolve, 900)),
     ]);
@@ -214,15 +212,8 @@ function parseData(sale: SaleSummary, receipt: ReceiptSummary): ReceiptRenderDat
   };
 }
 
-function receiptSoftWeight(weight = 500): number {
-  if (weight >= 850) return 600;
-  if (weight >= 700) return 560;
-  if (weight >= 600) return 520;
-  return Math.max(400, Math.min(weight, 520));
-}
-
-function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, size: number, weight = 500): string[] {
-  ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, size: number, weight = 700): string[] {
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   const words = safeText(text).split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let current = '';
@@ -245,7 +236,7 @@ function productDescriptionLines(ctx: CanvasRenderingContext2D, text: string): s
 
 function productRowHeight(ctx: CanvasRenderingContext2D, text: string): number {
   const lineCount = Math.max(1, productDescriptionLines(ctx, text).length);
-  return Math.max(PRODUCT_ROW_MIN_H, 58 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 34);
+  return Math.max(PRODUCT_ROW_MIN_H, 46 + lineCount * (PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP) + 26);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -260,7 +251,7 @@ async function loadImage(src: string): Promise<HTMLImageElement | null> {
 
 function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, weight = 700, color = INK): void {
   ctx.fillStyle = color;
-  ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(safeText(text), x, y);
@@ -268,32 +259,11 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 
 function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, size: number, weight = 800, color = INK): void {
   ctx.fillStyle = color;
-  ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText(safeText(text), x + width / 2, y);
   ctx.textAlign = 'left';
-}
-function drawCenteredMiddle(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, height: number, size: number, weight = 800, color = INK): void {
-  ctx.fillStyle = color;
-  ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(safeText(text), x + width / 2, y + height / 2);
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-}
-
-
-function drawFittedText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 850, minSize = 30, color = INK): void {
-  const safe = safeText(text);
-  let fittedSize = size;
-  while (fittedSize > minSize) {
-    ctx.font = `${receiptSoftWeight(weight)} ${fittedSize}px "Sora", Arial, Helvetica, sans-serif`;
-    if (ctx.measureText(safe).width <= maxWidth) break;
-    fittedSize -= 1;
-  }
-  drawText(ctx, safe, x, y, fittedSize, weight, color);
 }
 
 function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, width = 4, color = BLACK): void {
@@ -460,7 +430,7 @@ function drawWrapped(ctx: CanvasRenderingContext2D, text: string, x: number, y: 
   return cursor;
 }
 
-function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: number, y: number, w = 132, h = 36): void {
+function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: number, y: number, w = 140, h = 36): void {
   const clean = safeText(status).toUpperCase();
   const isPaid = clean.includes('PAGO') || clean.includes('PAGA') || clean.includes('QUIT');
   const isPartial = clean.includes('PARCIAL');
@@ -472,8 +442,8 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
   ctx.strokeStyle = isPaid ? BLACK : isPartial ? '#9a5a05' : isCancel ? '#8a1c1c' : isOpen ? '#e91862' : BLACK;
   ctx.lineWidth = 4;
   ctx.strokeRect(x, y, w, h);
-  const fontSize = label.length >= 7 ? 17 : 18;
-  drawCenteredMiddle(ctx, label, x, y, w, h, fontSize, 800, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
+  const fontSize = label.length >= 7 ? 14 : 15;
+  drawCentered(ctx, label, x, y + Math.round(h * 0.6), w, fontSize, 700, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
 }
 
 
@@ -482,10 +452,8 @@ async function ensureSoraReceiptFont(): Promise<void> {
   await Promise.allSettled([
     document.fonts.load('400 22px "Sora"'),
     document.fonts.load('600 24px "Sora"'),
-    document.fonts.load('760 26px "Sora"'),
-    document.fonts.load('820 27px "Sora"'),
-    document.fonts.load('900 40px "Sora"'),
-    document.fonts.load('950 42px "Sora"'),
+    document.fonts.load('760 24px "Sora"'),
+    document.fonts.load('850 28px "Sora"'),
   ]);
 }
 
@@ -495,9 +463,9 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const measurer = document.createElement('canvas').getContext('2d');
   if (!measurer) throw new Error('Canvas indisponível para medir comprovante.');
   const productRowHeights = productRows.map((row) => productRowHeight(measurer, row.produto));
-  const productsTableH = 72 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
+  const productsTableH = 64 + productRowHeights.reduce((total, itemHeight) => total + itemHeight, 0);
   const discountBlockH = data.discount > 0.009 ? 104 : 0;
-  const receiptH = 316 + 262 + 28 + 58 + productsTableH + 28 + discountBlockH + 138 + 34 + 88;
+  const receiptH = 316 + 236 + 26 + 54 + productsTableH + 26 + discountBlockH + 132 + 32 + 86;
   const height = receiptH + RECEIPT_Y * 2;
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_WIDTH;
@@ -531,42 +499,42 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   });
   drawLine(ctx, titleX, titleY - 14, titleX + titleW, titleY - 14, 4);
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 4, 'calendar');
-  drawText(ctx, `${data.subtitle} - ${data.date}`, titleX + 64, titleY + 36, 20, 700, MUTED);
+  drawText(ctx, `${data.subtitle} - ${data.date}`, titleX + 64, titleY + 36, 19, 650, MUTED);
   drawMetaReceiptIcon(ctx, titleX + 6, titleY + 60, 'tag');
-  drawText(ctx, 'Status:', titleX + 64, titleY + 92, 24, 750);
-  drawText(ctx, data.status, titleX + 148, titleY + 92, 24, 850, '#e91862');
+  drawText(ctx, 'Status:', titleX + 64, titleY + 92, 22, 650);
+  drawText(ctx, data.status, titleX + 182, titleY + 92, 22, 700, '#e91862');
 
   let y = RECEIPT_Y + 316;
-  drawRect(ctx, INNER_X, y, INNER_W, 262, 4);
+  drawRect(ctx, INNER_X, y, INNER_W, 236, 4);
   const labelX = INNER_X + 86;
   const valueX = INNER_X + 318;
   const splitX = INNER_X + 292;
-  drawLine(ctx, splitX, y, splitX, y + 262, 2);
-  drawLine(ctx, INNER_X, y + 88, INNER_X + INNER_W, y + 88, 2);
-  drawLine(ctx, INNER_X, y + 176, INNER_X + INNER_W, y + 176, 2);
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 22, 'user');
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 110, 'phone');
-  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 198, 'pin');
-  drawText(ctx, 'CLIENTE', labelX, y + 58, 25, 950);
-  drawFittedText(ctx, data.customer, valueX, y + 67, INNER_W - 350, 48, 950, 36);
-  drawText(ctx, 'TELEFONE', labelX, y + 146, 25, 950);
-  drawText(ctx, data.phone || '-', valueX, y + 146, 31, 900);
-  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 234, 25, 950);
-  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 234, 31, 900);
+  drawLine(ctx, splitX, y, splitX, y + 236, 2);
+  drawLine(ctx, INNER_X, y + 78, INNER_X + INNER_W, y + 78, 2);
+  drawLine(ctx, INNER_X, y + 156, INNER_X + INNER_W, y + 156, 2);
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 14, 'user');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 92, 'phone');
+  drawPinkReceiptIcon(ctx, INNER_X + 18, y + 170, 'pin');
+  drawText(ctx, 'CLIENTE', labelX, y + 50, 22, 800);
+  drawWrapped(ctx, data.customer, valueX, y + 54, INNER_W - 350, 32, 720, 1, 6);
+  drawText(ctx, 'TELEFONE', labelX, y + 128, 22, 800);
+  drawText(ctx, data.phone || '-', valueX, y + 128, 25, 700);
+  drawText(ctx, data.isCreditSale ? 'TIPO' : 'FORMA', labelX, y + 206, 22, 800);
+  drawText(ctx, data.isCreditSale ? 'Venda no crediário' : data.payment, valueX, y + 206, 25, 700);
 
-  y += 290;
-  fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 58);
-  y += 58;
+  y += 262;
+  fillBlackHeader(ctx, 'PRODUTOS COMPRADOS', INNER_X, y, INNER_W, 54);
+  y += 54;
   const columns = PRODUCT_COLUMNS;
   const headers = ['QTD', 'PRODUTO', 'R$ UN', 'TOTAL'];
   const headerGradient = ctx.createLinearGradient(INNER_X, y, INNER_X + INNER_W, y + 64);
   headerGradient.addColorStop(0, '#f04f7d');
   headerGradient.addColorStop(1, '#e12b67');
   ctx.fillStyle = headerGradient;
-  ctx.fillRect(INNER_X, y, INNER_W, 72);
+  ctx.fillRect(INNER_X, y, INNER_W, 64);
   let x = INNER_X;
   headers.forEach((header, index) => {
-    drawCentered(ctx, header, x, y + 47, columns[index], 24, 950, '#ffffff');
+    drawCentered(ctx, header, x, y + 42, columns[index], 20, 800, '#ffffff');
     x += columns[index];
   });
   const tableH = productsTableH;
@@ -576,19 +544,21 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
     x += w;
     drawLine(ctx, x, y, x, y + tableH, 3);
   });
-  let rowY = y + 72;
+  let rowY = y + 64;
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCenteredMiddle(ctx, row.qtd, INNER_X, rowY, columns[0], rowH, 29, 880);
-    let productTextY = rowY + 56;
-    productDescriptionLines(ctx, row.produto).forEach((line) => {
-      drawText(ctx, line, INNER_X + columns[0] + 22, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
+    const centerY = rowY + Math.floor(rowH / 2) + 8;
+    drawCentered(ctx, row.qtd, INNER_X, centerY, columns[0], 22, 700);
+    const lines = productDescriptionLines(ctx, row.produto);
+    const textBlockH = lines.length * PRODUCT_NAME_SIZE + Math.max(0, lines.length - 1) * PRODUCT_ROW_LINE_GAP;
+    let productTextY = rowY + Math.floor((rowH - textBlockH) / 2) + PRODUCT_NAME_SIZE;
+    lines.forEach((line) => {
+      drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
-    const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCenteredMiddle(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY, columns[2], rowH, 28, 850);
-    drawCenteredMiddle(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY, columns[3], rowH, 28, 850);
+    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], centerY, columns[2], 22, 700);
+    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], centerY, columns[3], 22, 700);
     rowY += rowH;
   });
   y += tableH + 28;
@@ -614,15 +584,15 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   const paymentGap = 14;
   const paymentW = data.isCreditSale ? Math.floor(INNER_W * 0.58) : Math.floor(INNER_W * 0.68);
   const totalW = INNER_W - paymentW - paymentGap;
-  fillBlackHeader(ctx, data.isCreditSale ? 'RESUMO DO CREDIÁRIO' : 'PAGAMENTO', INNER_X, y, paymentW, 58);
-  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW + paymentGap, y, totalW, 58);
-  y += 58;
+  fillBlackHeader(ctx, data.isCreditSale ? 'RESUMO DO CREDIÁRIO' : 'PAGAMENTO', INNER_X, y, paymentW, 54);
+  fillBlackHeader(ctx, 'TOTAL', INNER_X + paymentW + paymentGap, y, totalW, 54);
+  y += 54;
   drawRect(ctx, INNER_X, y, paymentW, 112, 4);
   drawRect(ctx, INNER_X + paymentW + paymentGap, y, totalW, 112, 4);
   if (data.isCreditSale) {
-    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 44, 27, 900);
+    drawText(ctx, 'Venda registrada no crediário', INNER_X + 28, y + 42, 24, 900);
     wrapCanvasText(ctx, 'Acompanhe vencimentos e pagamentos na aba Crediário.', paymentW - 56, 20, 700).slice(0, 2).forEach((line, index) => {
-      drawText(ctx, line, INNER_X + 28, y + 82 + index * 30, 22, 760, MUTED);
+      drawText(ctx, line, INNER_X + 28, y + 78 + index * 27, 20, 700, MUTED);
     });
   } else {
     const methods = ['Pix', 'Dinheiro', 'Cartão'];
