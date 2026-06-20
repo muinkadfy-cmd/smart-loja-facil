@@ -1,0 +1,17 @@
+MEGA LOTE 233 — HOTFIX TYPESCRIPT CREDIÁRIO + DASHBOARD
+
+Resumo
+- Corrige os 4 erros de TypeScript enviados no print/log.
+- Adiciona adjustCreditInstallment e correctCreditPayment no tipo WebOutboxAction.
+- Faz o parser da fila offline aceitar essas duas ações.
+- Adiciona credit_overdue_installments e zero_stock_count nos dashboards demo/vazio.
+- Mantém o layout do lote 232 e a correção Status: Aberta.
+- Atualiza versão/cache para v233.
+
+Arquivos principais
+- src/lib/webApi.ts
+- arquivos de versão/cache/release v233
+
+Teste honesto
+- Conferência estrutural feita.
+- Não rodei type-check real no ambiente porque não há node_modules aqui.

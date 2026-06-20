@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v232-status-com-espaco';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v232-status-com-espaco';
+export const WEB_APP_VERSION = 'pwa-supabase-v233-status-com-espaco';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v233-status-com-espaco';
 
 
 export interface WebTrainingModeState {
@@ -337,7 +337,9 @@ export function webDemoDashboard(): DashboardData {
     orders_open: DEMO_ORDERS.filter((order) => order.status === 'aberto' || order.status === 'separado').length,
     credits_open_total: 159.8,
     credits_active_customers: 1,
+    credit_overdue_installments: DEMO_CREDITS.flatMap((credit) => credit.installments).filter((installment) => String(installment.status || '').toLowerCase().includes('venc')).length,
     low_stock_count: DEMO_PRODUCTS.filter((product) => product.stock <= 3).length,
+    zero_stock_count: DEMO_PRODUCTS.filter((product) => Number(product.stock || 0) <= 0).length,
     payment_today,
     recent_sales: demoClone(DEMO_SALES),
     product_insights: [
@@ -585,6 +587,8 @@ export type WebOutboxAction =
   | 'closeCash'
   | 'addCashMovement'
   | 'receiveInstallment'
+  | 'adjustCreditInstallment'
+  | 'correctCreditPayment'
   | 'createOrder'
   | 'setOrderStatus'
   | 'cancelOrder'
@@ -635,6 +639,8 @@ function parseWebOutboxItems(raw: string | null): WebOutboxItem[] {
           action !== 'closeCash' &&
           action !== 'addCashMovement' &&
           action !== 'receiveInstallment' &&
+          action !== 'adjustCreditInstallment' &&
+          action !== 'correctCreditPayment' &&
           action !== 'createOrder' &&
           action !== 'setOrderStatus' &&
           action !== 'cancelOrder' &&
@@ -877,7 +883,9 @@ function emptyDashboard(): DashboardData {
     orders_open: 0,
     credits_open_total: 0,
     credits_active_customers: 0,
+    credit_overdue_installments: 0,
     low_stock_count: 0,
+    zero_stock_count: 0,
     payment_today: [],
     recent_sales: [],
     product_insights: [],
