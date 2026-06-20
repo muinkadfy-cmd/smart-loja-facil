@@ -267,6 +267,16 @@ function drawCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y:
   ctx.fillText(safeText(text), x + width / 2, y);
   ctx.textAlign = 'left';
 }
+function drawCenteredMiddle(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, width: number, height: number, size: number, weight = 800, color = INK): void {
+  ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(safeText(text), x + width / 2, y + height / 2);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+}
+
 
 function drawFittedText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, size: number, weight = 850, minSize = 30, color = INK): void {
   const safe = safeText(text);
@@ -456,7 +466,7 @@ function drawStatusBadge(ctx: CanvasRenderingContext2D, status: string, x: numbe
   ctx.lineWidth = 4;
   ctx.strokeRect(x, y, w, h);
   const fontSize = label.length >= 7 ? 17 : 18;
-  drawCentered(ctx, label, x, y + Math.round(h * 0.62), w, fontSize, 800, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
+  drawCenteredMiddle(ctx, label, x, y, w, h, fontSize, 800, isPaid || isOpen ? '#ffffff' : isPartial ? '#8a5206' : INK);
 }
 
 
@@ -563,15 +573,15 @@ async function renderReceiptCanvas(data: ReceiptRenderData): Promise<HTMLCanvasE
   productRows.forEach((row, index) => {
     const rowH = productRowHeights[index] ?? PRODUCT_ROW_MIN_H;
     drawLine(ctx, INNER_X, rowY + rowH, INNER_X + INNER_W, rowY + rowH, 3);
-    drawCentered(ctx, row.qtd, INNER_X, rowY + Math.floor(rowH / 2) + 12, columns[0], 29, 880);
-    let productTextY = rowY + 54;
+    drawCenteredMiddle(ctx, row.qtd, INNER_X, rowY, columns[0], rowH, 29, 880);
+    let productTextY = rowY + 56;
     productDescriptionLines(ctx, row.produto).forEach((line) => {
-      drawText(ctx, line, INNER_X + columns[0] + 18, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
+      drawText(ctx, line, INNER_X + columns[0] + 22, productTextY, PRODUCT_NAME_SIZE, PRODUCT_NAME_WEIGHT);
       productTextY += PRODUCT_NAME_SIZE + PRODUCT_ROW_LINE_GAP;
     });
     const valueY = rowY + Math.floor(rowH / 2) + 10;
-    drawCentered(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], valueY, columns[2], 28, 850);
-    drawCentered(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], valueY, columns[3], 28, 850);
+    drawCenteredMiddle(ctx, row.unitario || '-', INNER_X + columns[0] + columns[1], rowY, columns[2], rowH, 28, 850);
+    drawCenteredMiddle(ctx, row.total || '-', INNER_X + columns[0] + columns[1] + columns[2], rowY, columns[3], rowH, 28, 850);
     rowY += rowH;
   });
   y += tableH + 28;

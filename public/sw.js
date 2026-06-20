@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v228-extratos-premium-legiveis';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v229-comprovantes-micro-alinhamento';
 const APP_SHELL = [
   '/',
   '/index.html',
