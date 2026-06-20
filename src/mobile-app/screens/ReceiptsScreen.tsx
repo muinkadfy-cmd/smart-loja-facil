@@ -810,8 +810,15 @@ async function buildPngReceiptFile(preview: ReceiptPreview, store: ReceiptStoreI
     });
   }
 
-  function setFont(size: number, weight = 650): void {
-    ctx.font = `${weight} ${size}px "Sora", Arial, Helvetica, sans-serif`;
+  function receiptSoftWeight(weight = 500): number {
+    if (weight >= 850) return 600;
+    if (weight >= 700) return 560;
+    if (weight >= 600) return 520;
+    return Math.max(400, Math.min(weight, 520));
+  }
+
+  function setFont(size: number, weight = 500): void {
+    ctx.font = `${receiptSoftWeight(weight)} ${size}px "Sora", Arial, Helvetica, sans-serif`;
   }
 
   function cleanCanvasText(value: string): string {
