@@ -1,0 +1,23 @@
+MEGA LOTE 236 — CREDIÁRIO COM PARCELAS EXPANSÍVEIS
+
+Resumo
+- Corrige a percepção de que cliente com 2+ parcelas mostra só uma.
+- Card fechado continua mostrando a próxima cobrança.
+- Agora aparece botão claro: Abrir todas as X parcelas desta nota.
+- Clicar no nome/card também abre todas as parcelas.
+- Ao abrir, mostra todas as parcelas de forma responsiva.
+- Botão Recolher parcelas volta ao modo compacto.
+- Não altera cálculo, saldo, pagamento, vencimento, PDF/PNG ou edição do lote 235.
+- Versão/cache atualizados para v236.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Resultado
+- Todos passaram.
+- Aviso conhecido do Vite sobre chunk acima de 500 kB não quebra build.

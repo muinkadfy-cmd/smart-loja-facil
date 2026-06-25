@@ -1089,7 +1089,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <div>
                     <strong>{credit.customer_name || 'Cliente sem nome'}</strong>
                     <small>Venda #{String(credit.sale_number).padStart(4, '0')} · {formatDateTime(credit.created_at)}</small>
-                    <small>{statusInfo.detail.replace(/\.$/, '')} · {nextCreditActionLabel(credit)}</small>
+                    <small>{statusInfo.detail.replace(/\.$/, '')} · {formatNumber(credit.installments.length)} parcelas no total</small>
+                    <small>{isExpanded ? 'Parcelas abertas abaixo' : 'Toque no nome para abrir todas as parcelas'}</small>
                   </div>
                   <em className={statusInfo.tone}>{statusInfo.label}</em>
                 </button>
@@ -1111,7 +1112,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     <b>{formatCurrency(remainingOf(nextInstallment))}</b>
                   </div>
                 ) : null}
-                <div className="mapp-installment-list">
+                {!isExpanded && credit.installments.length > 1 ? (
+                  <button type="button" className="mapp-credit-expand-all-button" onClick={() => toggleCreditExpanded(credit.id)}>
+                    Abrir todas as {formatNumber(credit.installments.length)} parcelas desta nota
+                    <span>{formatNumber(hiddenInstallments)} parcelas escondidas no modo compacto</span>
+                  </button>
+                ) : null}
+                <div className={`mapp-installment-list ${isExpanded ? 'mapp-installment-list-open' : 'mapp-installment-list-closed'}`}>
                   {visibleInstallments.map((installment) => {
                     const statusLabel = installmentStatusLabel(installment);
                     const tone = installmentStatusTone(installment);
@@ -1151,7 +1158,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 </div>
                 {isExpanded && credit.installments.length > 1 ? (
                   <button type="button" className="mapp-credit-collapse-button" onClick={() => toggleCreditExpanded(credit.id)}>
-                    Recolher parcelas e deixar compacto
+                    Recolher parcelas
                   </button>
                 ) : null}
                 <div className="mapp-credit-note-actions mapp-credit-note-actions-muted" aria-label="Ações do crediário">

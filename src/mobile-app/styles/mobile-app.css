@@ -13064,3 +13064,92 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Mega Lote 236 — Crediário expansível com todas as parcelas */
+.mapp-credit-expand-all-button {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 8px;
+  padding: 12px 14px;
+  border: 1px dashed #ef4d87;
+  border-radius: 18px;
+  background: #fff7fb;
+  color: #101116;
+  font-weight: 900;
+  text-align: center;
+  cursor: pointer;
+}
+
+.mapp-credit-expand-all-button span {
+  color: #64748b;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.mapp-installment-list-closed {
+  display: none;
+}
+
+.mapp-installment-list-open {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.mapp-credit-card.expanded .mapp-credit-note-head {
+  border-color: #ef4d87;
+  background: linear-gradient(180deg, #fff7fb 0%, #ffffff 100%);
+}
+
+.mapp-credit-card.expanded .mapp-credit-note-head strong {
+  color: #101116;
+}
+
+.mapp-credit-card.expanded .mapp-installment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border-radius: 20px;
+}
+
+.mapp-credit-card.expanded .mapp-installment-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mapp-credit-collapse-button {
+  width: 100%;
+  margin: 10px 0 4px;
+  border: 1px solid #dbe3ef;
+  border-radius: 16px;
+  padding: 11px 12px;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 850;
+}
+
+@media (min-width: 720px) {
+  .mapp-credit-card.expanded .mapp-installment-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .mapp-credit-card.expanded .mapp-installment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-credit-card.expanded .mapp-installment-status {
+    width: fit-content;
+  }
+
+  .mapp-credit-card.expanded .mapp-installment-actions {
+    grid-template-columns: 1fr;
+  }
+}
