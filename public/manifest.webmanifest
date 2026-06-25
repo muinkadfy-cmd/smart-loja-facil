@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v233",
-  "short_name": "Jaque v233",
-  "description": "PWA da loja v233 com hotfix TypeScript do crediário e dashboard.",
+  "name": "Jaque Confecções e Presentes v234",
+  "short_name": "Jaque v234",
+  "description": "PWA da loja v234 com edição de vencimento de parcelas do crediário.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

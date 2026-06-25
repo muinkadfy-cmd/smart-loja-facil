@@ -48,6 +48,13 @@ type CreditCustomerGroup = {
   partialInstallments: number;
 };
 
+type DueDateEditState = {
+  credit: CreditSummary;
+  installment: CreditInstallment;
+  dueDate: string;
+  reason: string;
+};
+
 type ReceiptPreview =
   | { kind: 'salvo'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; fileStem: string }
   | { kind: 'nota'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; credit: CreditSummary; fileStem: string }
@@ -1315,6 +1322,22 @@ function installmentStatusTone(installment: CreditInstallment): 'ok' | 'warn' | 
   return 'neutral';
 }
 
+function inputDateValue(value: string): string {
+  const clean = String(value || '').slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date().toISOString().slice(0, 10);
+  return date.toISOString().slice(0, 10);
+}
+
+function canEditInstallmentDueDate(installment: CreditInstallment): boolean {
+  const label = installmentStatusLabel(installment).toLowerCase();
+  const status = String(installment.status || '').toLowerCase();
+  if (label.includes('paga') || status.includes('pago') || remainingOf(installment) <= 0.009) return false;
+  if (status.includes('cancel') || status.includes('estorn')) return false;
+  return true;
+}
+
 function receiptStatusTone(label: string): ReceiptVisualTone {
   const lower = label.toLowerCase();
   if (lower.includes('paga') || lower.includes('quit')) return 'paid';
@@ -1644,6 +1667,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [expandedCredits, setExpandedCredits] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dueDateEdit, setDueDateEdit] = useState<DueDateEditState | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [focusHandled, setFocusHandled] = useState(false);
   const previewPanelRef = useRef<HTMLElement | null>(null);
@@ -1853,6 +1877,60 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     notifyMobileAction({ title: 'Recibo aberto', message: `${preview.title} pronto para conferir dentro do app.`, tone: 'success', page: 'receipts', actionLabel: 'Ver' });
   }
 
+  function openDueDateEdit(credit: CreditSummary, installment: CreditInstallment): void {
+    if (!canEditInstallmentDueDate(installment)) {
+      setFeedback({ tone: 'info', text: 'Esta parcela já foi paga ou encerrada. Para corrigir pagamento, use Correção de pagamento.' });
+      return;
+    }
+    setDueDateEdit({
+      credit,
+      installment,
+      dueDate: inputDateValue(installment.due_date),
+      reason: '',
+    });
+    setFeedback(null);
+  }
+
+  async function saveDueDateEdit(): Promise<void> {
+    if (!dueDateEdit) return;
+    const dueDate = inputDateValue(dueDateEdit.dueDate);
+    const reason = dueDateEdit.reason.trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
+      setFeedback({ tone: 'error', text: 'Informe uma nova data de vencimento válida.' });
+      return;
+    }
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe o motivo da alteração do vencimento com pelo menos 6 letras.' });
+      return;
+    }
+    if (!canEditInstallmentDueDate(dueDateEdit.installment)) {
+      setFeedback({ tone: 'error', text: 'Esta parcela já foi paga ou encerrada e não pode ter o vencimento alterado.' });
+      setDueDateEdit(null);
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await api.adjustCreditInstallment({
+        credit_id: dueDateEdit.credit.id,
+        installment_id: dueDateEdit.installment.id,
+        amount: dueDateEdit.installment.amount,
+        due_date: dueDate,
+        reason,
+        redistribute_difference_to_next: false,
+      }) as CreditSummary;
+      setCredits((current) => current.map((credit) => credit.id === updated.id ? updated : credit));
+      setSelected((current) => current && current.kind !== 'salvo' && current.credit.id === updated.id ? null : current);
+      setFullPreview((current) => current && current.kind !== 'salvo' && current.credit.id === updated.id ? null : current);
+      setDueDateEdit(null);
+      setFeedback({ tone: 'success', text: `Vencimento da parcela ${formatNumber(dueDateEdit.installment.number)} atualizado para ${dateOnly(dueDate)}.` });
+      notifyMobileAction({ title: 'Vencimento atualizado', message: 'A parcela e os comprovantes já usam a nova data.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   useEffect(() => {
     if (selected) scrollToPreviewPanel();
   }, [selected?.id]);
@@ -1924,6 +2002,47 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
       {loading ? <div className="mapp-inline-status">Carregando comprovantes...</div> : null}
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
+
+      {dueDateEdit ? (
+        <section className="mapp-due-date-modal" role="dialog" aria-modal="true" aria-label="Editar vencimento da parcela">
+          <div className="mapp-due-date-card">
+            <div className="mapp-due-date-head">
+              <span><InlineIcon name="calendario_data" size={24} /></span>
+              <div>
+                <strong>Editar vencimento da parcela</strong>
+                <small>Parcela {formatNumber(dueDateEdit.installment.number)}/{formatNumber(dueDateEdit.credit.installments.length)} · Nota #{String(dueDateEdit.credit.sale_number || 0).padStart(4, '0')}</small>
+              </div>
+            </div>
+            <div className="mapp-due-date-summary">
+              <span>Cliente <b>{dueDateEdit.credit.customer_name || 'Cliente'}</b></span>
+              <span>Vencimento atual <b>{dateOnly(dueDateEdit.installment.due_date)}</b></span>
+              <span>Valor da parcela <b>{formatCurrency(dueDateEdit.installment.amount)}</b></span>
+            </div>
+            <label className="mapp-form-field">
+              <span>Novo vencimento</span>
+              <input
+                type="date"
+                value={dueDateEdit.dueDate}
+                onChange={(event) => setDueDateEdit((current) => current ? { ...current, dueDate: event.target.value } : current)}
+              />
+            </label>
+            <label className="mapp-form-field">
+              <span>Motivo da alteração</span>
+              <textarea
+                value={dueDateEdit.reason}
+                onChange={(event) => setDueDateEdit((current) => current ? { ...current, reason: event.target.value } : current)}
+                placeholder="Ex.: cliente pediu para pagar na próxima sexta-feira"
+                rows={3}
+              />
+            </label>
+            <p className="mapp-due-date-note">A alteração muda somente o vencimento. Valor, saldo, produto, cliente e histórico da venda continuam iguais.</p>
+            <div className="mapp-due-date-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
+              <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="mapp-success-card mapp-receipts-help-card">
         <strong>Comprovantes compactos por cliente</strong>
@@ -2068,6 +2187,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                                       </div>
                                       <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                                       <div className="mapp-installment-actions mapp-installment-actions-slim">
+                                        <button type="button" onClick={() => openDueDateEdit(credit, installment)} disabled={saving || !canEditInstallmentDueDate(installment)}>Editar vencimento</button>
                                         <button type="button" onClick={() => selectAndOpenPreview(parcelReceipt)}>Visualizar</button>
                                         <button type="button" onClick={() => void exportPreview(parcelReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
                                         <button type="button" onClick={() => void sharePreview(parcelReceipt, 'png')} disabled={saving}>Extrato PNG</button>

@@ -1,0 +1,23 @@
+MEGA LOTE 234 — EDITAR VENCIMENTO DE PARCELA DO CREDIÁRIO
+
+Resumo
+- Criado botão "Editar vencimento" em cada parcela aberta/pendente/vencida.
+- Criado modal simples para escolher nova data e informar motivo obrigatório.
+- Parcela paga/quitada ou encerrada fica bloqueada.
+- Salva usando api.adjustCreditInstallment.
+- Atualiza a nota na tela sem recarregar.
+- PDF/PNG/Compartilhar passam a usar a nova data porque usam os dados atualizados do crediário.
+- Mantido valor, saldo, total, cliente, produto, pagamento e histórico da venda.
+- Outbox/web agora sabe reenviar adjustCreditInstallment e correctCreditPayment.
+- Versão/cache atualizados para v234.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

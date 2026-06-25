@@ -12787,225 +12787,147 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 }
 
 
-/* Mega Lote 227 — Crediário/Comprovantes: clareza total entre cliente e nota */
-.mapp-receipts-screen {
-  padding-bottom: max(138px, calc(118px + env(safe-area-inset-bottom))) !important;
+/* Mega Lote 234 — Editar vencimento de parcelas do crediário */
+.mapp-due-date-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: end center;
+  padding: 18px;
+  background: rgba(15, 23, 42, .42);
+  backdrop-filter: blur(6px);
 }
 
-/* Cabeçalho do cliente: deixa claro que o valor é total do cliente, não da nota. */
-.mapp-receipt-customer-head {
-  display: grid !important;
-  grid-template-columns: 48px minmax(0, 1fr) !important;
-  align-items: center !important;
-  gap: 10px !important;
+.mapp-due-date-card {
+  width: min(100%, 520px);
+  max-height: min(88vh, 720px);
+  overflow: auto;
+  border: 1px solid rgba(226, 232, 240, .95);
+  border-radius: 28px;
+  padding: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fff7fb 100%);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
 }
 
-.mapp-receipt-customer-copy {
-  min-width: 0 !important;
-  display: grid !important;
-  gap: 3px !important;
+.mapp-due-date-head {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
-.mapp-receipt-customer-head em {
-  grid-column: 1 / -1 !important;
-  justify-self: stretch !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-height: 38px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 999px !important;
-  padding: 0 12px !important;
-  font-size: clamp(.78rem, 2.85vw, .92rem) !important;
-  line-height: 1.08 !important;
-  text-align: center !important;
-  white-space: normal !important;
+.mapp-due-date-head > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #ffe8f2;
+  color: #e91862;
 }
 
-/* Card da nota: corrige texto quebrando palavra por palavra. */
-.mapp-receipt-note-card {
-  padding: 12px !important;
-  border-radius: 22px !important;
-  overflow: visible !important;
+.mapp-due-date-head strong {
+  display: block;
+  color: #101116;
+  font-size: 1rem;
+  line-height: 1.12;
+  font-weight: 900;
+  letter-spacing: -.02em;
 }
 
-.mapp-receipt-note-card .mapp-credit-note-head {
-  width: 100% !important;
-  min-width: 0 !important;
-  display: grid !important;
-  grid-template-columns: 42px minmax(0, 1fr) auto !important;
-  grid-template-areas: "icon copy badge" !important;
-  align-items: center !important;
-  gap: 10px !important;
-  padding: 0 !important;
-  overflow: visible !important;
+.mapp-due-date-head small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: .8rem;
+  line-height: 1.2;
+  font-weight: 650;
 }
 
-.mapp-receipt-note-card .mapp-credit-note-head > span {
-  grid-area: icon !important;
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
+.mapp-due-date-summary {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid #f4c9d9;
+  border-radius: 18px;
+  background: #fff;
 }
 
-.mapp-credit-note-copy {
-  grid-area: copy !important;
-  min-width: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  display: grid !important;
-  gap: 3px !important;
-  align-content: center !important;
-  overflow: hidden !important;
+.mapp-due-date-summary span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: .78rem;
+  line-height: 1.2;
+  font-weight: 760;
 }
 
-.mapp-credit-note-copy strong {
-  min-width: 0 !important;
-  display: block !important;
-  color: #0b1933 !important;
-  font-size: clamp(1rem, 3.7vw, 1.16rem) !important;
-  line-height: 1.08 !important;
-  font-weight: 950 !important;
-  letter-spacing: -.018em !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.mapp-due-date-summary b {
+  color: #101116;
+  font-weight: 850;
+  text-align: right;
 }
 
-.mapp-credit-note-copy small {
-  min-width: 0 !important;
-  display: block !important;
-  margin-top: 0 !important;
-  color: #64748b !important;
-  font-size: clamp(.76rem, 2.75vw, .86rem) !important;
-  line-height: 1.16 !important;
-  font-weight: 760 !important;
-  white-space: normal !important;
-  overflow-wrap: normal !important;
-  word-break: normal !important;
+.mapp-due-date-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #fff8e8;
+  color: #7c4a03;
+  font-size: .78rem;
+  line-height: 1.32;
+  font-weight: 700;
 }
 
-.mapp-credit-note-meta,
-.mapp-credit-note-hint {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.mapp-due-date-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 10px;
+  margin-top: 14px;
 }
 
-.mapp-note-status-line {
-  display: inline !important;
-  color: #2563eb !important;
-  font-weight: 950 !important;
+.mapp-due-date-card .mapp-form-field {
+  margin-top: 10px;
 }
 
-.mapp-note-status-line.pending { color: #2563eb !important; }
-.mapp-note-status-line.paid { color: #047857 !important; }
-.mapp-note-status-line.partial { color: #b45309 !important; }
-.mapp-note-status-line.overdue,
-.mapp-note-status-line.danger { color: #b91c1c !important; }
-
-.mapp-receipt-note-card .mapp-credit-note-head em {
-  grid-area: badge !important;
-  align-self: center !important;
-  justify-self: end !important;
-  min-width: 68px !important;
-  max-width: 92px !important;
-  min-height: 32px !important;
-  display: inline-grid !important;
-  place-items: center !important;
-  border-radius: 999px !important;
-  padding: 0 10px !important;
-  font-size: clamp(.68rem, 2.5vw, .78rem) !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
-  text-align: center !important;
+.mapp-due-date-card input[type="date"],
+.mapp-due-date-card textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 12px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
 }
 
-/* Totais da nota: rótulos mais claros para não confundir com total aberto do cliente. */
-.mapp-receipt-note-card .mapp-credit-totals {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 8px !important;
-  margin-top: 12px !important;
+.mapp-due-date-card textarea {
+  resize: vertical;
+  min-height: 86px;
 }
 
-.mapp-receipt-note-card .mapp-credit-totals div {
-  min-width: 0 !important;
-  border-radius: 16px !important;
-  padding: 10px !important;
-  background: #f8fbff !important;
+.mapp-installment-actions-slim button:disabled {
+  opacity: .52;
+  cursor: not-allowed;
 }
 
-.mapp-receipt-note-card .mapp-credit-totals span {
-  font-size: clamp(.72rem, 2.65vw, .82rem) !important;
-  line-height: 1.1 !important;
-  font-weight: 900 !important;
-}
-
-.mapp-receipt-note-card .mapp-credit-totals strong {
-  font-size: clamp(.95rem, 3.5vw, 1.1rem) !important;
-  line-height: 1.1 !important;
-  font-weight: 950 !important;
-}
-
-/* Botões: evita ficar escondido pela barra inferior e mantém padrão leigo. */
-.mapp-credit-note-actions {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 8px !important;
-  margin-top: 12px !important;
-  margin-bottom: 4px !important;
-}
-
-.mapp-credit-note-actions button {
-  width: 100% !important;
-  min-height: 42px !important;
-  border-radius: 14px !important;
-  padding: 0 10px !important;
-  font-size: clamp(.78rem, 2.8vw, .88rem) !important;
-  line-height: 1.05 !important;
-}
-
-@media (max-width: 430px) {
-  .mapp-receipt-note-card .mapp-credit-note-head {
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    grid-template-areas: "copy badge" !important;
-    gap: 8px !important;
+@media (max-width: 520px) {
+  .mapp-due-date-modal {
+    align-items: end;
+    padding: 12px;
   }
 
-  .mapp-receipt-note-card .mapp-credit-note-head > span {
-    display: none !important;
+  .mapp-due-date-card {
+    border-radius: 24px;
+    padding: 14px;
   }
 
-  .mapp-credit-note-copy strong {
-    font-size: clamp(.98rem, 4vw, 1.12rem) !important;
-  }
-
-  .mapp-credit-note-copy small {
-    font-size: clamp(.75rem, 3vw, .84rem) !important;
-  }
-
-  .mapp-receipt-note-card .mapp-credit-note-head em {
-    min-width: 64px !important;
-    max-width: 82px !important;
-    padding: 0 8px !important;
-  }
-}
-
-@media (max-width: 370px) {
-  .mapp-receipt-note-card .mapp-credit-note-head {
-    grid-template-columns: 1fr !important;
-    grid-template-areas:
-      "copy"
-      "badge" !important;
-  }
-
-  .mapp-receipt-note-card .mapp-credit-note-head em {
-    justify-self: start !important;
-  }
-
-  .mapp-credit-note-actions {
-    grid-template-columns: 1fr !important;
+  .mapp-due-date-actions {
+    grid-template-columns: 1fr;
   }
 }

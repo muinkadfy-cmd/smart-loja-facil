@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v233-status-com-espaco';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v233-status-com-espaco';
+export const WEB_APP_VERSION = 'pwa-supabase-v234-status-com-espaco';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v234-status-com-espaco';
 
 
 export interface WebTrainingModeState {
@@ -3550,6 +3550,14 @@ async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
   }
   if (item.action === 'receiveInstallment') {
     await webReceiveInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'adjustCreditInstallment') {
+    await webAdjustCreditInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'correctCreditPayment') {
+    await webCorrectCreditPayment(item.payload.payload);
     return;
   }
   if (item.action === 'createOrder') {
