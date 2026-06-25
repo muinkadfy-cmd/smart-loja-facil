@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.236",
+  "version": "0.1.237",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com crediário expansível mostrando todas as parcelas v236",
+  "description": "PWA da loja com crediário expansível mostrando parcelas vencidas, abertas e pagas v237",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

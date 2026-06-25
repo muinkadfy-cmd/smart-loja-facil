@@ -13092,6 +13092,46 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
   display: none;
 }
 
+
+.mapp-credit-installment-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.mapp-credit-installment-summary span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-size: .83rem;
+  font-weight: 850;
+}
+
+.mapp-credit-installment-summary span.danger {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.mapp-credit-installment-summary span.warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #a16207;
+}
+
+.mapp-credit-installment-summary span.success {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
 .mapp-installment-list-open {
   display: grid;
   gap: 10px;

@@ -1067,14 +1067,21 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         <>
         <section className="mapp-credit-list" aria-label="Crediários para receber">
           {visibleCredits.map((credit) => {
-            const openInstallments = creditOpenInstallments(credit);
-            const nextInstallment = openInstallments[0] ?? credit.installments[0];
-            const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+            const orderedInstallments = [...credit.installments].sort((a, b) => {
+              const aNumber = Number(a.number || 0);
+              const bNumber = Number(b.number || 0);
+              return aNumber - bNumber;
+            });
+            const openInstallments = creditOpenInstallments({ ...credit, installments: orderedInstallments });
+            const nextInstallment = openInstallments[0] ?? orderedInstallments[0];
+            const paidCount = orderedInstallments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
+            const overdueCount = orderedInstallments.filter((item) => isOverdue(item)).length;
+            const openCount = Math.max(0, orderedInstallments.length - paidCount);
             const statusInfo = creditStatusInfo(credit);
             const isExpanded = Boolean(expandedCredits[credit.id]);
-            const visibleInstallments = isExpanded ? credit.installments : [];
-            const hiddenInstallments = Math.max(0, credit.installments.length - visibleInstallments.length);
-            const hasOverdue = credit.installments.some(isOverdue);
+            const visibleInstallments = isExpanded ? orderedInstallments : [];
+            const hiddenInstallments = Math.max(0, orderedInstallments.length - visibleInstallments.length);
+            const hasOverdue = orderedInstallments.some(isOverdue);
             const nextIsOverdue = nextInstallment ? isOverdue(nextInstallment) : false;
             return (
               <article key={credit.id} data-credit-id={credit.id} className={`mapp-credit-card mapp-credit-card-operations ${isExpanded ? 'expanded' : 'collapsed'} ${hasOverdue ? 'is-overdue' : ''}`}>
@@ -1089,8 +1096,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <div>
                     <strong>{credit.customer_name || 'Cliente sem nome'}</strong>
                     <small>Venda #{String(credit.sale_number).padStart(4, '0')} · {formatDateTime(credit.created_at)}</small>
-                    <small>{statusInfo.detail.replace(/\.$/, '')} · {formatNumber(credit.installments.length)} parcelas no total</small>
-                    <small>{isExpanded ? 'Parcelas abertas abaixo' : 'Toque no nome para abrir todas as parcelas'}</small>
+                    <small>{statusInfo.detail.replace(/\.$/, '')} · {formatNumber(orderedInstallments.length)} parcelas no total</small>
+                    <small>{formatNumber(overdueCount)} vencida(s) · {formatNumber(openCount)} em aberto · {formatNumber(paidCount)} paga(s)</small>
+                    <small>{isExpanded ? 'Parcelas vencidas, abertas e pagas listadas abaixo' : 'Toque no nome para abrir todas as parcelas'}</small>
                   </div>
                   <em className={statusInfo.tone}>{statusInfo.label}</em>
                 </button>
@@ -1112,11 +1120,18 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     <b>{formatCurrency(remainingOf(nextInstallment))}</b>
                   </div>
                 ) : null}
-                {!isExpanded && credit.installments.length > 1 ? (
+                {!isExpanded && orderedInstallments.length > 1 ? (
                   <button type="button" className="mapp-credit-expand-all-button" onClick={() => toggleCreditExpanded(credit.id)}>
-                    Abrir todas as {formatNumber(credit.installments.length)} parcelas desta nota
-                    <span>{formatNumber(hiddenInstallments)} parcelas escondidas no modo compacto</span>
+                    Abrir todas as {formatNumber(orderedInstallments.length)} parcelas desta nota
+                    <span>{formatNumber(overdueCount)} vencida(s) · {formatNumber(openCount)} em aberto · {formatNumber(paidCount)} paga(s)</span>
                   </button>
+                ) : null}
+                {isExpanded ? (
+                  <div className="mapp-credit-installment-summary" aria-label="Resumo das parcelas desta nota">
+                    <span className="danger">Vencidas {formatNumber(overdueCount)}</span>
+                    <span className="warning">Em aberto {formatNumber(Math.max(0, openCount - overdueCount))}</span>
+                    <span className="success">Pagas {formatNumber(paidCount)}</span>
+                  </div>
                 ) : null}
                 <div className={`mapp-installment-list ${isExpanded ? 'mapp-installment-list-open' : 'mapp-installment-list-closed'}`}>
                   {visibleInstallments.map((installment) => {
@@ -1125,7 +1140,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     return (
                       <div key={installment.id} className={`mapp-installment-row mapp-installment-row-${tone} ${isOverdue(installment) ? 'overdue' : ''}`}>
                         <div className="mapp-installment-main">
-                          <strong>Parcela {formatNumber(installment.number)}/{formatNumber(credit.installments.length)}</strong>
+                          <strong>Parcela {formatNumber(installment.number)}/{formatNumber(orderedInstallments.length)}</strong>
                           <small>{statusLabel} · vence {dateOnly(installment.due_date)}</small>
                           <div className="mapp-installment-values">
                             <span>Original <b>{formatCurrency(installment.amount)}</b></span>
@@ -1156,7 +1171,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     );
                   })}
                 </div>
-                {isExpanded && credit.installments.length > 1 ? (
+                {isExpanded && orderedInstallments.length > 1 ? (
                   <button type="button" className="mapp-credit-collapse-button" onClick={() => toggleCreditExpanded(credit.id)}>
                     Recolher parcelas
                   </button>

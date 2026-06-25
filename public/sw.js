@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v236-status-com-espaco';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v237-crediario-expansivel-completo';
 const APP_SHELL = [
   '/',
   '/index.html',

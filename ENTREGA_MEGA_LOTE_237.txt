@@ -1,0 +1,21 @@
+MEGA LOTE 237 — CREDIÁRIO EXPANDIR TODAS AS PARCELAS
+
+Resumo
+- Corrige a clareza do card do crediário quando existe parcela vencida.
+- Ao clicar no cliente/card, agora a área expandida mostra todas as parcelas.
+- Mostra parcelas vencidas, em aberto e pagas.
+- Adiciona resumo visual por status.
+- Mantém card compacto com próxima cobrança.
+- Não altera cálculo, saldo, pagamento, vencimento nem comprovantes.
+- Versão e cache atualizados para v237.
+
+Testes executados
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Resultado
+- Todos passaram.
+- Aviso conhecido do Vite sobre chunk acima de 500 kB não quebra build.
