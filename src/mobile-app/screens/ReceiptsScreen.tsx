@@ -1918,13 +1918,12 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     }
     setSaving(true);
     try {
-      const updated = await api.adjustCreditInstallment({
+      const updated = await api.updateCreditInstallmentDueDate({
+        request_id: `credit-due-date-${Date.now()}`,
         credit_id: dueDateEdit.credit.id,
         installment_id: dueDateEdit.installment.id,
-        amount: dueDateEdit.installment.amount,
         due_date: dueDate,
         reason,
-        redistribute_difference_to_next: false,
       }) as CreditSummary;
       setCredits((current) => current.map((credit) => credit.id === updated.id ? updated : credit));
       setSelected((current) => current && current.kind !== 'salvo' && current.credit.id === updated.id ? null : current);
@@ -2101,7 +2100,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                 rows={3}
               />
             </label>
-            <p className="mapp-due-date-note">A alteração muda somente o vencimento. Pode corrigir parcela vencida, aberta ou paga. Valor, saldo, pagamento, produto, cliente e histórico da venda continuam iguais.</p>
+            <p className="mapp-due-date-note">A alteração muda somente o vencimento desta parcela. Valor, saldo, pagamento, produto, cliente, caixa e histórico financeiro continuam iguais.</p>
             <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>

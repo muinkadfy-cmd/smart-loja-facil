@@ -50,6 +50,7 @@ import {
   webReceipts,
   webReceiveInstallment,
   webAdjustCreditInstallment,
+  webUpdateCreditInstallmentDueDate,
   webCorrectCreditPayment,
   webUpdateCreditDetails,
   webReportData,
@@ -128,6 +129,7 @@ const SOUND_COMMANDS = new Set([
   'receive_installment',
   'receive_installment_flex',
   'adjust_credit_installment',
+  'update_credit_installment_due_date',
   'correct_credit_payment',
   'create_order',
   'set_order_status',
@@ -216,6 +218,10 @@ export const api = {
   adjustCreditInstallment: (payload: unknown) => {
     const editPayload = withRequestId(payload, 'credit-edit');
     return isTauriRuntime() ? call<CreditSummary>('adjust_credit_installment', { payload: editPayload }) : webCall('Crediário', 'Parcela ajustada na nuvem.', () => { guardDemoWrite('ajustar parcela do crediário'); return webAdjustCreditInstallment(editPayload); }, { action: 'adjustCreditInstallment', payload: { payload: editPayload } });
+  },
+  updateCreditInstallmentDueDate: (payload: unknown) => {
+    const dueDatePayload = withRequestId(payload, 'credit-due-date');
+    return isTauriRuntime() ? call<CreditSummary>('update_credit_installment_due_date', { payload: dueDatePayload }) : webCall('Crediário', 'Vencimento da parcela salvo na nuvem.', () => { guardDemoWrite('editar vencimento da parcela'); return webUpdateCreditInstallmentDueDate(dueDatePayload); }, { action: 'updateCreditInstallmentDueDate', payload: { payload: dueDatePayload } });
   },
   correctCreditPayment: (payload: unknown) => {
     const correctionPayload = withRequestId(payload, 'credit-correction');

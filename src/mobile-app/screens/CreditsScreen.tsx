@@ -422,7 +422,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   function openEditInstallment(credit: CreditSummary, installment: CreditInstallment): void {
     setCorrectionMenu(null);
-    setFeedback({ tone: 'info', text: 'Ajuste aberto. Você pode corrigir o vencimento de qualquer parcela, inclusive vencida ou paga, com motivo para auditoria.' });
+    setFeedback({ tone: 'info', text: 'Edição de vencimento aberta. Essa ação altera somente a data desta parcela.' });
     setEditInstallment({
       credit,
       installment,
@@ -448,13 +448,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   async function submitEditInstallment(): Promise<void> {
     if (!editInstallment || saving) return;
-    const amountPreview = parseBrazilianMoneyInput(editInstallment.amount);
+    const dueDate = editInstallment.dueDate;
     const reason = editInstallment.reason.trim();
-    if (!amountPreview.ok) {
-      setFeedback({ tone: 'error', text: amountPreview.message });
-      return;
-    }
-    if (!editInstallment.dueDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) {
       setFeedback({ tone: 'error', text: 'Informe o vencimento correto da parcela.' });
       return;
     }
@@ -462,23 +458,18 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras para auditoria.' });
       return;
     }
-    if (!editInstallment.confirmed) {
-      setFeedback({ tone: 'error', text: 'Marque a confirmação de segurança antes de salvar o ajuste.' });
-      return;
-    }
     setSaving(true);
     try {
-      await api.adjustCreditInstallment({
-        request_id: requestId('credit-edit'),
+      const updated = await api.updateCreditInstallmentDueDate({
+        request_id: requestId('credit-due-date'),
         credit_id: editInstallment.credit.id,
         installment_id: editInstallment.installment.id,
-        amount: amountPreview.amount,
-        due_date: editInstallment.dueDate,
+        due_date: dueDate,
         reason,
-        redistribute_difference_to_next: editInstallment.redistributeDifferenceToNext,
-      });
+      }) as CreditSummary;
+      setCredits((current) => current.map((credit) => credit.id === updated.id ? updated : credit));
       setEditInstallment(null);
-      setFeedback({ tone: 'success', text: 'Parcela ajustada com auditoria. Valor, vencimento e saldo foram recalculados.' });
+      setFeedback({ tone: 'success', text: `Vencimento alterado de ${dateOnly(editInstallment.installment.due_date)} para ${dateOnly(dueDate)}. Valor, saldo e pagamento não foram alterados.` });
       await loadCredits();
       onRefresh();
     } catch (error) {
@@ -689,17 +680,13 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     setDeepLinkFocusHandled(true);
   }, [credits, deepLinkFocusHandled, loading]);
 
-  const editPreview = editInstallment ? (() => {
-    const parsed = parseBrazilianMoneyInput(editInstallment.amount);
-    const oldAmount = Number(editInstallment.installment.amount || 0);
-    const paid = paidOf(editInstallment.installment);
-    const next = nextInstallmentAfter(editInstallment.credit, editInstallment.installment);
-    const newAmount = parsed.ok ? parsed.amount : oldAmount;
-    const delta = Math.round((newAmount - oldAmount) * 100) / 100;
-    const saldoAfter = Math.max(0, newAmount - paid);
-    const nextAfter = next && editInstallment.redistributeDifferenceToNext ? Number(next.amount || 0) - delta : null;
-    return { parsed, oldAmount, paid, newAmount, delta, saldoAfter, next, nextAfter };
-  })() : null;
+  const editPreview = editInstallment ? {
+    oldDueDate: editInstallment.installment.due_date,
+    newDueDate: editInstallment.dueDate,
+    amount: Number(editInstallment.installment.amount || 0),
+    paid: paidOf(editInstallment.installment),
+    balance: remainingOf(editInstallment.installment),
+  } : null;
 
   const correctionPreview = correction ? (() => {
     const parsed = parseBrazilianMoneyInput(correction.amount);
@@ -844,7 +831,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
               <div>
-                <strong>Editar parcela {formatNumber(editInstallment.installment.number)}</strong>
+                <strong>Editar vencimento da parcela {formatNumber(editInstallment.installment.number)}</strong>
                 <p>{editInstallment.credit.customer_name} · venda #{String(editInstallment.credit.sale_number).padStart(4, '0')}</p>
               </div>
             </div>
@@ -855,42 +842,34 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             </div>
             <div className="mapp-form-grid">
               <label>
-                <span>Novo valor da parcela</span>
-                <input inputMode="decimal" value={editInstallment.amount} onChange={(event) => setEditInstallment({ ...editInstallment, amount: event.target.value, confirmed: false })} placeholder="Ex.: 100,00" />
+                <span>Valor da parcela</span>
+                <input inputMode="decimal" value={formatCurrency(editInstallment.installment.amount)} readOnly aria-readonly="true" />
               </label>
               <label>
-                <span>Novo vencimento — qualquer data</span>
-                <input type="date" value={editInstallment.dueDate} onChange={(event) => setEditInstallment({ ...editInstallment, dueDate: event.target.value, confirmed: false })} />
-              </label>
-              <label className="span-2 mapp-check-field">
-                <input type="checkbox" checked={editInstallment.redistributeDifferenceToNext} onChange={(event) => setEditInstallment({ ...editInstallment, redistributeDifferenceToNext: event.target.checked, confirmed: false })} disabled={!nextInstallmentAfter(editInstallment.credit, editInstallment.installment)} />
-                <span>Compensar diferença na próxima parcela para manter o total da nota</span>
+                <span>Novo vencimento — livre</span>
+                <input type="date" value={editInstallment.dueDate} onChange={(event) => setEditInstallment({ ...editInstallment, dueDate: event.target.value })} />
               </label>
               <label className="span-2">
                 <span>Motivo obrigatório</span>
-                <textarea value={editInstallment.reason} onChange={(event) => setEditInstallment({ ...editInstallment, reason: event.target.value, confirmed: false })} placeholder="Ex.: cliente pediu mudança de vencimento / valor lançado errado" rows={3} />
+                <textarea value={editInstallment.reason} onChange={(event) => setEditInstallment({ ...editInstallment, reason: event.target.value })} placeholder="Ex.: cliente pediu mudança de vencimento" rows={3} />
               </label>
             </div>
             <section className="mapp-credit-payment-review ok">
               <strong>Prévia antes/depois</strong>
               {editPreview ? (
                 <div className="mapp-credit-before-after">
-                  <span>Antes: <b>{formatCurrency(editPreview.oldAmount)}</b></span>
-                  <span>Depois: <b>{formatCurrency(editPreview.newAmount)}</b></span>
+                  <span>Vencimento atual: <b>{dateOnly(editPreview.oldDueDate)}</b></span>
+                  <span>Novo vencimento: <b>{dateOnly(editPreview.newDueDate)}</b></span>
+                  <span>Valor continua: <b>{formatCurrency(editPreview.amount)}</b></span>
                   <span>Pago continua: <b>{formatCurrency(editPreview.paid)}</b></span>
-                  <span>Saldo depois: <b>{formatCurrency(editPreview.saldoAfter)}</b></span>
-                  <span>Próxima parcela: <b>{editPreview.next && editInstallment.redistributeDifferenceToNext && editPreview.nextAfter !== null ? formatCurrency(editPreview.nextAfter) : 'não altera'}</b></span>
+                  <span>Saldo continua: <b>{formatCurrency(editPreview.balance)}</b></span>
                 </div>
               ) : null}
-              <p>Não apaga histórico. Para trocar só a data, mantenha o valor igual e altere apenas o vencimento. Parcela vencida, aberta ou paga pode ter a data corrigida.</p>
+              <p>Este salvamento altera somente a data da parcela. Não envia valor, não compensa próxima parcela, não altera saldo, caixa ou pagamento.</p>
             </section>
-            <label className="mapp-danger-ack">
-              <input type="checkbox" checked={editInstallment.confirmed} onChange={(event) => setEditInstallment({ ...editInstallment, confirmed: event.target.checked })} />
-              <span>Confirmo que conferi a data/valor e quero salvar esta correção com auditoria.</span>
-            </label>
             <div className="mapp-form-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setEditInstallment(null)}>Cancelar</button>
-              <button type="button" className="mapp-primary-button" onClick={() => void submitEditInstallment()} disabled={saving || !editInstallment.confirmed}>{saving ? 'Salvando...' : 'Salvar ajuste'}</button>
+              <button type="button" className="mapp-primary-button" onClick={() => void submitEditInstallment()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
             </div>
           </section>
         </div>

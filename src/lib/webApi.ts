@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v239-editar-data-qualquer-parcela';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v239-editar-data-qualquer-parcela';
+export const WEB_APP_VERSION = 'pwa-supabase-v240-vencimento-livre-parcela';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v240-vencimento-livre-parcela';
 
 
 export interface WebTrainingModeState {
@@ -588,6 +588,7 @@ export type WebOutboxAction =
   | 'addCashMovement'
   | 'receiveInstallment'
   | 'adjustCreditInstallment'
+  | 'updateCreditInstallmentDueDate'
   | 'correctCreditPayment'
   | 'updateCreditDetails'
   | 'createOrder'
@@ -641,6 +642,7 @@ function parseWebOutboxItems(raw: string | null): WebOutboxItem[] {
           action !== 'addCashMovement' &&
           action !== 'receiveInstallment' &&
           action !== 'adjustCreditInstallment' &&
+          action !== 'updateCreditInstallmentDueDate' &&
           action !== 'correctCreditPayment' &&
           action !== 'updateCreditDetails' &&
           action !== 'createOrder' &&
@@ -3184,6 +3186,57 @@ export async function webAdjustCreditInstallment(payload: unknown): Promise<Cred
 }
 
 
+
+export async function webUpdateCreditInstallmentDueDate(payload: unknown): Promise<CreditSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'editar vencimento da parcela do crediário');
+  assertWebTrainingModeAllowsWrite('editar vencimento de parcela real');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const installmentId = stringValue(source.installment_id);
+  const dueDate = stringValue(source.due_date).slice(0, 10);
+  const reason = assertCreditEditReason(stringValue(source.reason));
+
+  if (!creditId || !installmentId) throw new Error('Parcela inválida para alteração de vencimento.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) throw new Error('Informe um vencimento válido.');
+
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
+  const installmentBefore = creditBefore?.installments.find((item) => item.id === installmentId);
+  if (!creditBefore || !installmentBefore) throw new Error('Parcela não encontrada para alteração de vencimento.');
+
+  const status = String(installmentBefore.status || '').toLowerCase();
+  if (status.includes('cancel') || status.includes('estorn') || status.includes('exclu')) {
+    throw new Error('Parcela cancelada, estornada ou excluída não pode ter vencimento alterado.');
+  }
+
+  const oldDueDate = stringValue(installmentBefore.due_date).slice(0, 10);
+  const client = await getClient();
+  const { error } = await client
+    .from('credit_installments')
+    .update({ due_date: dueDate })
+    .eq('id', installmentId)
+    .eq('credit_id', creditId)
+    .eq('store_id', context.store.id);
+
+  if (error) throw new Error(`Não foi possível salvar o novo vencimento da parcela: ${error.message}`);
+
+  await insertAudit(context.store.id, context.userId, 'credit_installments', installmentId, 'due_date_updated', {
+    credit_id: creditId,
+    installment_number: installmentBefore.number,
+    old_due_date: oldDueDate,
+    new_due_date: dueDate,
+    reason,
+    untouched_fields: ['amount', 'paid_amount', 'balance', 'total', 'payment', 'cash', 'financial_status', 'customer', 'product'],
+  });
+
+  const credits = await webCredits();
+  const updated = credits.find((item) => item.id === creditId);
+  if (!updated) throw new Error('Vencimento atualizado, mas a nota não foi encontrada na atualização.');
+  return updated;
+}
+
+
 export async function webUpdateCreditDetails(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'editar crediário pronto');
@@ -3665,6 +3718,10 @@ async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
   }
   if (item.action === 'adjustCreditInstallment') {
     await webAdjustCreditInstallment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'updateCreditInstallmentDueDate') {
+    await webUpdateCreditInstallmentDueDate(item.payload.payload);
     return;
   }
   if (item.action === 'correctCreditPayment') {

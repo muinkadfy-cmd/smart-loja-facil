@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.239",
+  "version": "0.1.240",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com edição de data de qualquer parcela do crediário v239",
+  "description": "PWA da loja com vencimento livre e definitivo por parcela v240",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

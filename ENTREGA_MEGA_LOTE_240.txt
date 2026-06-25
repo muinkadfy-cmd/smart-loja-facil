@@ -1,0 +1,31 @@
+MEGA LOTE 240 — VENCIMENTO LIVRE E DEFINITIVO POR PARCELA
+
+Resumo
+- Criada função exclusiva para editar somente vencimento da parcela.
+- Payload novo usa apenas: credit_id, installment_id, due_date e reason.
+- Não envia amount, paid_amount, balance, total, status financeiro, pagamento, caixa ou compensação.
+- Aba Crediário agora salva vencimento sem usar ajuste financeiro.
+- Aba Comprovantes também passou a usar a função exclusiva.
+- Valor fica somente leitura no modal de vencimento.
+- Permite editar vencida, aberta, pendente, parcial e paga/quitada.
+- Bloqueia apenas cancelada/estornada/excluída.
+- Versão/cache atualizados para v240.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Resultado
+- Todos passaram.
+- Aviso conhecido do Vite sobre chunk acima de 500 kB não quebra build.
+
+Critério de aceite
+- Parcela 1 para 10/06/2026.
+- Parcela 2 para 20/07/2026.
+- Sair e voltar.
+- Pesquisar cliente.
+- As duas datas precisam continuar corretas.

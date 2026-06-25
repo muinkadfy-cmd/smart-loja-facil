@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v239-editar-data-qualquer-parcela';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v240-vencimento-livre-parcela';
 const APP_SHELL = [
   '/',
   '/index.html',

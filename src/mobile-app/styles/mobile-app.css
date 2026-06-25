@@ -13216,3 +13216,15 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-credits-screen .mapp-credit-payment-review p {
   overflow-wrap: anywhere;
 }
+
+
+/* Mega Lote 240 — vencimento livre e definitivo por parcela */
+.mapp-credits-screen input[readonly] {
+  background: #f8fafc;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.mapp-credit-payment-review .mapp-credit-before-after span {
+  min-width: 0;
+}
