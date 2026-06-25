@@ -55,6 +55,15 @@ type DueDateEditState = {
   reason: string;
 };
 
+type CreditBulkEditState = {
+  credit: CreditSummary;
+  customerName: string;
+  customerPhone: string;
+  customerWhatsapp: string;
+  installmentDueDates: Record<string, string>;
+  reason: string;
+};
+
 type ReceiptPreview =
   | { kind: 'salvo'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; fileStem: string }
   | { kind: 'nota'; id: string; title: string; customer: string; createdAt: string; total: number; status: string; html: string; phone: string; credit: CreditSummary; fileStem: string }
@@ -1668,6 +1677,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dueDateEdit, setDueDateEdit] = useState<DueDateEditState | null>(null);
+  const [creditEdit, setCreditEdit] = useState<CreditBulkEditState | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [focusHandled, setFocusHandled] = useState(false);
   const previewPanelRef = useRef<HTMLElement | null>(null);
@@ -1931,6 +1941,64 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
     }
   }
 
+  function openCreditBulkEdit(credit: CreditSummary): void {
+    setCreditEdit({
+      credit,
+      customerName: credit.customer_name || '',
+      customerPhone: credit.customer_phone || '',
+      customerWhatsapp: credit.customer_whatsapp || '',
+      installmentDueDates: credit.installments.reduce<Record<string, string>>((acc, installment) => {
+        acc[installment.id] = inputDateValue(installment.due_date);
+        return acc;
+      }, {}),
+      reason: '',
+    });
+    setFeedback(null);
+  }
+
+  async function saveCreditBulkEdit(): Promise<void> {
+    if (!creditEdit) return;
+    const customerName = creditEdit.customerName.trim();
+    const reason = creditEdit.reason.trim();
+    if (!customerName) {
+      setFeedback({ tone: 'error', text: 'Informe o nome do cliente antes de salvar o crediário.' });
+      return;
+    }
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe o motivo da alteração com pelo menos 6 letras.' });
+      return;
+    }
+    const installments = creditEdit.credit.installments.map((installment) => ({
+      installment_id: installment.id,
+      due_date: inputDateValue(creditEdit.installmentDueDates[installment.id] || installment.due_date),
+    }));
+    if (installments.some((item) => !/^\d{4}-\d{2}-\d{2}$/.test(item.due_date))) {
+      setFeedback({ tone: 'error', text: 'Confira as datas das parcelas antes de salvar.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await api.updateCreditDetails({
+        credit_id: creditEdit.credit.id,
+        customer_name: customerName,
+        customer_phone: creditEdit.customerPhone.trim(),
+        customer_whatsapp: creditEdit.customerWhatsapp.trim(),
+        installments,
+        reason,
+      }) as CreditSummary;
+      setCredits((current) => current.map((credit) => credit.id === updated.id ? updated : credit));
+      setSelected((current) => current && current.kind !== 'salvo' && current.credit.id === updated.id ? null : current);
+      setFullPreview((current) => current && current.kind !== 'salvo' && current.credit.id === updated.id ? null : current);
+      setCreditEdit(null);
+      setFeedback({ tone: 'success', text: `Crediário da nota #${String(updated.sale_number || 0).padStart(4, '0')} atualizado. PDF, PNG e compartilhamento já usam os novos dados.` });
+      notifyMobileAction({ title: 'Crediário atualizado', message: 'Nome, telefone e vencimentos foram salvos.', tone: 'success', page: 'receipts', actionLabel: 'Ver' });
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   useEffect(() => {
     if (selected) scrollToPreviewPanel();
   }, [selected?.id]);
@@ -2039,6 +2107,76 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
             <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {creditEdit ? (
+        <section className="mapp-due-date-modal mapp-credit-edit-modal" role="dialog" aria-modal="true" aria-label="Editar crediário pronto">
+          <div className="mapp-due-date-card mapp-credit-edit-card">
+            <div className="mapp-due-date-head">
+              <span><InlineIcon name="editar" size={24} /></span>
+              <div>
+                <strong>Editar crediário pronto</strong>
+                <small>Nota #{String(creditEdit.credit.sale_number || 0).padStart(4, '0')} · {formatNumber(creditEdit.credit.installments.length)} parcelas</small>
+              </div>
+            </div>
+            <div className="mapp-due-date-summary">
+              <span>Total da nota <b>{formatCurrency(creditEdit.credit.total)}</b></span>
+              <span>Pago <b>{formatCurrency(creditPaidTotal(creditEdit.credit))}</b></span>
+              <span>Restante <b>{formatCurrency(creditEdit.credit.balance)}</b></span>
+            </div>
+            <div className="mapp-credit-edit-grid">
+              <label className="mapp-form-field">
+                <span>Nome do cliente</span>
+                <input value={creditEdit.customerName} onChange={(event) => setCreditEdit((current) => current ? { ...current, customerName: event.target.value } : current)} placeholder="Nome do cliente" />
+              </label>
+              <label className="mapp-form-field">
+                <span>Telefone</span>
+                <input value={creditEdit.customerPhone} onChange={(event) => setCreditEdit((current) => current ? { ...current, customerPhone: event.target.value } : current)} placeholder="Telefone" />
+              </label>
+              <label className="mapp-form-field">
+                <span>WhatsApp</span>
+                <input value={creditEdit.customerWhatsapp} onChange={(event) => setCreditEdit((current) => current ? { ...current, customerWhatsapp: event.target.value } : current)} placeholder="WhatsApp" />
+              </label>
+            </div>
+            <div className="mapp-credit-edit-installments">
+              <div className="mapp-credit-edit-subtitle">
+                <strong>Vencimentos das parcelas</strong>
+                <small>Edite uma, várias ou todas. Valor e saldo não mudam.</small>
+              </div>
+              {creditEdit.credit.installments.map((installment) => {
+                const label = installmentStatusLabel(installment);
+                const tone = installmentStatusTone(installment);
+                return (
+                  <label key={installment.id} className={`mapp-credit-edit-installment ${tone}`}>
+                    <span>
+                      <b>Parcela {formatNumber(installment.number)}/{formatNumber(creditEdit.credit.installments.length)}</b>
+                      <small>{label} · {formatCurrency(installment.amount)}</small>
+                    </span>
+                    <input
+                      type="date"
+                      value={creditEdit.installmentDueDates[installment.id] || inputDateValue(installment.due_date)}
+                      onChange={(event) => setCreditEdit((current) => current ? { ...current, installmentDueDates: { ...current.installmentDueDates, [installment.id]: event.target.value } } : current)}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+            <label className="mapp-form-field">
+              <span>Motivo da alteração</span>
+              <textarea
+                value={creditEdit.reason}
+                onChange={(event) => setCreditEdit((current) => current ? { ...current, reason: event.target.value } : current)}
+                placeholder="Ex.: corrigir dados do cliente e reorganizar vencimentos"
+                rows={3}
+              />
+            </label>
+            <p className="mapp-due-date-note">Salva dados do cliente e vencimentos das parcelas. Não altera valores, pagamentos, produtos, saldo ou total da venda.</p>
+            <div className="mapp-due-date-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setCreditEdit(null)} disabled={saving}>Cancelar</button>
+              <button type="button" className="mapp-primary-button" onClick={() => void saveCreditBulkEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar crediário'}</button>
             </div>
           </div>
         </section>
@@ -2163,6 +2301,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                               <div><span>Parcelas</span><strong>{paidCount}/{credit.installments.length}</strong></div>
                             </div>
                             <div className="mapp-credit-note-actions" aria-label="Ações do comprovante geral da nota">
+                              <button type="button" onClick={() => openCreditBulkEdit(credit)} disabled={saving}>Editar crediário</button>
                               <button type="button" onClick={() => selectAndOpenPreview(creditReceipt)}>Visualizar</button>
                               <button type="button" onClick={() => void exportPreview(creditReceipt, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
                               <button type="button" onClick={() => void sharePreview(creditReceipt, 'png')} disabled={saving}>Extrato PNG</button>

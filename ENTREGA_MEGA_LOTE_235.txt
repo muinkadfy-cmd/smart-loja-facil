@@ -1,0 +1,27 @@
+MEGA LOTE 235 — EDITAR CREDIÁRIO PRONTO COMPLETO
+
+Resumo
+- Criado botão "Editar crediário" dentro da nota do crediário.
+- Agora pode editar nome do cliente, telefone, WhatsApp e vencimento de todas as parcelas.
+- Se tiver 10 parcelas, aparecem as 10 para editar.
+- Pode mudar uma, várias ou todas as datas.
+- Motivo obrigatório.
+- Salva tudo de uma vez.
+- Atualiza tela sem recarregar.
+- PDF/PNG/Compartilhar usam os dados novos.
+- Não altera valor, saldo, total, produto, pagamento ou número da nota.
+- Incluído api.updateCreditDetails e webUpdateCreditDetails.
+- Outbox/sincronização aceita updateCreditDetails.
+- Versão/cache atualizados para v235.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Resultado
+- Todos passaram.
+- Aviso conhecido do Vite sobre chunk acima de 500 kB não quebra build.

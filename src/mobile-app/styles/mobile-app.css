@@ -12931,3 +12931,136 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Mega Lote 235 — Editar crediário pronto completo */
+.mapp-credit-edit-modal .mapp-credit-edit-card {
+  width: min(100%, 620px);
+}
+
+.mapp-credit-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+
+.mapp-credit-edit-installments {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid #f4c9d9;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.mapp-credit-edit-subtitle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+.mapp-credit-edit-subtitle strong {
+  color: #101116;
+  font-size: .92rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.mapp-credit-edit-subtitle small {
+  max-width: 230px;
+  color: #64748b;
+  font-size: .76rem;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: right;
+}
+
+.mapp-credit-edit-installment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 148px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.mapp-credit-edit-installment.warn {
+  border-color: #fed7aa;
+  background: #fffaf0;
+}
+
+.mapp-credit-edit-installment.danger {
+  border-color: #fecdd3;
+  background: #fff5f7;
+}
+
+.mapp-credit-edit-installment.ok {
+  border-color: #bbf7d0;
+  background: #f7fff9;
+}
+
+.mapp-credit-edit-installment span {
+  min-width: 0;
+}
+
+.mapp-credit-edit-installment b {
+  display: block;
+  color: #101116;
+  font-size: .86rem;
+  line-height: 1.12;
+  font-weight: 900;
+}
+
+.mapp-credit-edit-installment small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: .74rem;
+  line-height: 1.15;
+  font-weight: 760;
+}
+
+.mapp-credit-edit-installment input[type="date"] {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 10px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 760;
+}
+
+@media (min-width: 560px) {
+  .mapp-credit-edit-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mapp-credit-edit-grid .mapp-form-field:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .mapp-credit-edit-subtitle {
+    display: grid;
+    gap: 3px;
+  }
+
+  .mapp-credit-edit-subtitle small {
+    max-width: none;
+    text-align: left;
+  }
+
+  .mapp-credit-edit-installment {
+    grid-template-columns: 1fr;
+  }
+}

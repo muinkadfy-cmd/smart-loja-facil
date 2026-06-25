@@ -58,8 +58,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v234-status-com-espaco';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v234-status-com-espaco';
+export const WEB_APP_VERSION = 'pwa-supabase-v235-status-com-espaco';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v235-status-com-espaco';
 
 
 export interface WebTrainingModeState {
@@ -589,6 +589,7 @@ export type WebOutboxAction =
   | 'receiveInstallment'
   | 'adjustCreditInstallment'
   | 'correctCreditPayment'
+  | 'updateCreditDetails'
   | 'createOrder'
   | 'setOrderStatus'
   | 'cancelOrder'
@@ -641,6 +642,7 @@ function parseWebOutboxItems(raw: string | null): WebOutboxItem[] {
           action !== 'receiveInstallment' &&
           action !== 'adjustCreditInstallment' &&
           action !== 'correctCreditPayment' &&
+          action !== 'updateCreditDetails' &&
           action !== 'createOrder' &&
           action !== 'setOrderStatus' &&
           action !== 'cancelOrder' &&
@@ -3181,6 +3183,115 @@ export async function webAdjustCreditInstallment(payload: unknown): Promise<Cred
   return credit;
 }
 
+
+export async function webUpdateCreditDetails(payload: unknown): Promise<CreditSummary> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'editar crediário pronto');
+  assertWebTrainingModeAllowsWrite('editar crediário pronto real');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const customerName = stringValue(source.customer_name).trim().slice(0, 120);
+  const customerPhone = stringValue(source.customer_phone).trim().slice(0, 40);
+  const customerWhatsapp = stringValue(source.customer_whatsapp).trim().slice(0, 40);
+  const reason = assertCreditEditReason(stringValue(source.reason));
+  const installmentsInput = Array.isArray(source.installments) ? source.installments : [];
+  if (!creditId) throw new Error('Crediário inválido para edição.');
+  if (!customerName) throw new Error('Informe o nome do cliente.');
+  if (installmentsInput.length === 0) throw new Error('Informe pelo menos uma parcela para conferir os vencimentos.');
+
+  const dueDateUpdates = installmentsInput
+    .map((item) => {
+      const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+      return {
+        installmentId: stringValue(row.installment_id),
+        dueDate: stringValue(row.due_date).slice(0, 10),
+      };
+    })
+    .filter((item) => item.installmentId);
+
+  if (dueDateUpdates.length === 0) throw new Error('Nenhuma parcela válida foi enviada para edição.');
+  for (const item of dueDateUpdates) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(item.dueDate)) throw new Error('Confira os vencimentos das parcelas antes de salvar.');
+  }
+
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
+  if (!creditBefore) throw new Error('Crediário não encontrado para edição.');
+  const knownInstallmentIds = new Set(creditBefore.installments.map((item) => item.id));
+  for (const item of dueDateUpdates) {
+    if (!knownInstallmentIds.has(item.installmentId)) throw new Error('Uma das parcelas não pertence a esta nota. Reabra o crediário e tente novamente.');
+  }
+
+  const client = await getClient();
+  const { data: creditRow, error: creditReadError } = await client
+    .from('credits')
+    .select('id, customer_id, sale_id, customer_name')
+    .eq('id', creditId)
+    .eq('store_id', context.store.id)
+    .single();
+  if (creditReadError) throw new Error(`Não foi possível conferir a nota do crediário: ${creditReadError.message}`);
+  const creditSource = creditRow as Record<string, unknown>;
+  const customerId = stringValue(creditSource.customer_id);
+  const saleId = stringValue(creditSource.sale_id);
+
+  const { error: creditError } = await client
+    .from('credits')
+    .update({ customer_name: customerName })
+    .eq('id', creditId)
+    .eq('store_id', context.store.id);
+  if (creditError) throw new Error(`Não foi possível atualizar o nome no crediário: ${creditError.message}`);
+
+  if (customerId) {
+    const { error: customerError } = await client
+      .from('customers')
+      .update({ name: customerName, phone: customerPhone, whatsapp: customerWhatsapp })
+      .eq('id', customerId)
+      .eq('store_id', context.store.id);
+    if (customerError) throw new Error(`Não foi possível atualizar os dados do cliente: ${customerError.message}`);
+  }
+
+  if (saleId) {
+    const { error: saleError } = await client
+      .from('sales')
+      .update({ customer_name: customerName })
+      .eq('id', saleId)
+      .eq('store_id', context.store.id);
+    if (saleError) throw new Error(`Cliente atualizado, mas falhou o nome da venda: ${saleError.message}`);
+  }
+
+  const changedInstallments: Array<{ installment_id: string; old_due_date: string; new_due_date: string; number: number }> = [];
+  for (const item of dueDateUpdates) {
+    const before = creditBefore.installments.find((installment) => installment.id === item.installmentId);
+    if (!before) continue;
+    if (String(before.due_date).slice(0, 10) === item.dueDate) continue;
+    const { error: installmentError } = await client
+      .from('credit_installments')
+      .update({ due_date: item.dueDate })
+      .eq('id', item.installmentId)
+      .eq('credit_id', creditId)
+      .eq('store_id', context.store.id);
+    if (installmentError) throw new Error(`Não foi possível atualizar a parcela ${before.number}: ${installmentError.message}`);
+    changedInstallments.push({ installment_id: item.installmentId, old_due_date: String(before.due_date).slice(0, 10), new_due_date: item.dueDate, number: before.number });
+  }
+
+  await insertAudit(context.store.id, context.userId, 'credits', creditId, 'details_updated', {
+    old_customer_name: creditBefore.customer_name,
+    new_customer_name: customerName,
+    old_customer_phone: creditBefore.customer_phone,
+    new_customer_phone: customerPhone,
+    old_customer_whatsapp: creditBefore.customer_whatsapp,
+    new_customer_whatsapp: customerWhatsapp,
+    changed_installments: changedInstallments,
+    reason,
+  });
+
+  const credits = await webCredits();
+  const credit = credits.find((item) => item.id === creditId);
+  if (!credit) throw new Error('Crediário atualizado, mas não foi encontrado na atualização.');
+  return credit;
+}
+
+
 export async function webCorrectCreditPayment(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin'], 'corrigir pagamento do crediário');
@@ -3558,6 +3669,10 @@ async function runWebOutboxItem(item: WebOutboxItem): Promise<void> {
   }
   if (item.action === 'correctCreditPayment') {
     await webCorrectCreditPayment(item.payload.payload);
+    return;
+  }
+  if (item.action === 'updateCreditDetails') {
+    await webUpdateCreditDetails(item.payload.payload);
     return;
   }
   if (item.action === 'createOrder') {

@@ -51,6 +51,7 @@ import {
   webReceiveInstallment,
   webAdjustCreditInstallment,
   webCorrectCreditPayment,
+  webUpdateCreditDetails,
   webReportData,
   webReportsCsv,
   webRestoreBackupContent,
@@ -219,6 +220,10 @@ export const api = {
   correctCreditPayment: (payload: unknown) => {
     const correctionPayload = withRequestId(payload, 'credit-correction');
     return isTauriRuntime() ? call<CreditSummary>('correct_credit_payment', { payload: correctionPayload }) : webCall('Crediário', 'Correção do pagamento sincronizada.', () => { guardDemoWrite('corrigir pagamento do crediário'); return webCorrectCreditPayment(correctionPayload); }, { action: 'correctCreditPayment', payload: { payload: correctionPayload } });
+  },
+  updateCreditDetails: (payload: unknown) => {
+    const editPayload = withRequestId(payload, 'credit-details');
+    return isTauriRuntime() ? call<CreditSummary>('update_credit_details', { payload: editPayload }) : webCall('Crediário', 'Crediário atualizado na nuvem.', () => { guardDemoWrite('editar crediário pronto'); return webUpdateCreditDetails(editPayload); }, { action: 'updateCreditDetails', payload: { payload: editPayload } });
   },
   orders: () => (isTauriRuntime() ? call<OrderSummary[]>('list_orders') : webRead('Pedidos', 'Pedidos carregados da nuvem.', webOrders, webDemoOrders)),
   createOrder: (payload: unknown) => {
