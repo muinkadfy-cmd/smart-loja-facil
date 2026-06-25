@@ -422,7 +422,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
   function openEditInstallment(credit: CreditSummary, installment: CreditInstallment): void {
     setCorrectionMenu(null);
-    setFeedback({ tone: 'info', text: 'Ajuste aberto. Edite valor/vencimento com motivo para manter auditoria.' });
+    setFeedback({ tone: 'info', text: 'Ajuste aberto. Você pode corrigir o vencimento de qualquer parcela, inclusive vencida ou paga, com motivo para auditoria.' });
     setEditInstallment({
       credit,
       installment,
@@ -859,7 +859,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                 <input inputMode="decimal" value={editInstallment.amount} onChange={(event) => setEditInstallment({ ...editInstallment, amount: event.target.value, confirmed: false })} placeholder="Ex.: 100,00" />
               </label>
               <label>
-                <span>Novo vencimento</span>
+                <span>Novo vencimento — qualquer data</span>
                 <input type="date" value={editInstallment.dueDate} onChange={(event) => setEditInstallment({ ...editInstallment, dueDate: event.target.value, confirmed: false })} />
               </label>
               <label className="span-2 mapp-check-field">
@@ -882,11 +882,11 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   <span>Próxima parcela: <b>{editPreview.next && editInstallment.redistributeDifferenceToNext && editPreview.nextAfter !== null ? formatCurrency(editPreview.nextAfter) : 'não altera'}</b></span>
                 </div>
               ) : null}
-              <p>Não apaga histórico. O ajuste recalcula saldo, mantém auditoria e bloqueia valor menor que o já pago.</p>
+              <p>Não apaga histórico. Para trocar só a data, mantenha o valor igual e altere apenas o vencimento. Parcela vencida, aberta ou paga pode ter a data corrigida.</p>
             </section>
             <label className="mapp-danger-ack">
               <input type="checkbox" checked={editInstallment.confirmed} onChange={(event) => setEditInstallment({ ...editInstallment, confirmed: event.target.checked })} />
-              <span>Confirmo que conferi o antes/depois e quero salvar esta correção.</span>
+              <span>Confirmo que conferi a data/valor e quero salvar esta correção com auditoria.</span>
             </label>
             <div className="mapp-form-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setEditInstallment(null)}>Cancelar</button>
@@ -1078,7 +1078,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             const overdueCount = orderedInstallments.filter((item) => isOverdue(item)).length;
             const openCount = Math.max(0, orderedInstallments.length - paidCount);
             const statusInfo = creditStatusInfo(credit);
-            const isExpanded = Boolean(expandedCredits[credit.id]);
+            const autoExpandedBySearch = Boolean(debouncedQuery.trim()) || filter === 'vencidos';
+            const isExpanded = Boolean(expandedCredits[credit.id]) || autoExpandedBySearch;
             const visibleInstallments = isExpanded ? orderedInstallments : [];
             const hiddenInstallments = Math.max(0, orderedInstallments.length - visibleInstallments.length);
             const hasOverdue = orderedInstallments.some(isOverdue);
@@ -1099,6 +1100,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     <small>{statusInfo.detail.replace(/\.$/, '')} · {formatNumber(orderedInstallments.length)} parcelas no total</small>
                     <small>{formatNumber(overdueCount)} vencida(s) · {formatNumber(openCount)} em aberto · {formatNumber(paidCount)} paga(s)</small>
                     <small>{isExpanded ? 'Parcelas vencidas, abertas e pagas listadas abaixo' : 'Toque no nome para abrir todas as parcelas'}</small>
+                    {autoExpandedBySearch ? <small>Busca/filtro vencidos: todas as parcelas aparecem abertas automaticamente</small> : null}
                   </div>
                   <em className={statusInfo.tone}>{statusInfo.label}</em>
                 </button>
@@ -1171,7 +1173,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                     );
                   })}
                 </div>
-                {isExpanded && orderedInstallments.length > 1 ? (
+                {isExpanded && orderedInstallments.length > 1 && !autoExpandedBySearch ? (
                   <button type="button" className="mapp-credit-collapse-button" onClick={() => toggleCreditExpanded(credit.id)}>
                     Recolher parcelas
                   </button>

@@ -1340,11 +1340,9 @@ function inputDateValue(value: string): string {
 }
 
 function canEditInstallmentDueDate(installment: CreditInstallment): boolean {
-  const label = installmentStatusLabel(installment).toLowerCase();
   const status = String(installment.status || '').toLowerCase();
-  if (label.includes('paga') || status.includes('pago') || remainingOf(installment) <= 0.009) return false;
   if (status.includes('cancel') || status.includes('estorn')) return false;
-  return true;
+  return Boolean(installment.id);
 }
 
 function receiptStatusTone(label: string): ReceiptVisualTone {
@@ -1889,7 +1887,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
 
   function openDueDateEdit(credit: CreditSummary, installment: CreditInstallment): void {
     if (!canEditInstallmentDueDate(installment)) {
-      setFeedback({ tone: 'info', text: 'Esta parcela já foi paga ou encerrada. Para corrigir pagamento, use Correção de pagamento.' });
+      setFeedback({ tone: 'info', text: 'Esta parcela está cancelada/encerrada. Vencimento de parcela ativa, vencida ou paga pode ser corrigido.' });
       return;
     }
     setDueDateEdit({
@@ -1914,7 +1912,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       return;
     }
     if (!canEditInstallmentDueDate(dueDateEdit.installment)) {
-      setFeedback({ tone: 'error', text: 'Esta parcela já foi paga ou encerrada e não pode ter o vencimento alterado.' });
+      setFeedback({ tone: 'error', text: 'Esta parcela está cancelada/encerrada e não pode ter o vencimento alterado.' });
       setDueDateEdit(null);
       return;
     }
@@ -2103,7 +2101,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                 rows={3}
               />
             </label>
-            <p className="mapp-due-date-note">A alteração muda somente o vencimento. Valor, saldo, produto, cliente e histórico da venda continuam iguais.</p>
+            <p className="mapp-due-date-note">A alteração muda somente o vencimento. Pode corrigir parcela vencida, aberta ou paga. Valor, saldo, pagamento, produto, cliente e histórico da venda continuam iguais.</p>
             <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>

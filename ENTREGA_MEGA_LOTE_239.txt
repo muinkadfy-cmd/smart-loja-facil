@@ -1,0 +1,22 @@
+MEGA LOTE 239 — EDITAR DATA DE QUALQUER PARCELA
+
+Resumo
+- Agora pode alterar o vencimento/data de qualquer parcela depois de pronta.
+- Funciona para parcela vencida, aberta, parcial e paga/quitada.
+- Exige motivo e mantém auditoria.
+- Para trocar somente a data, mantenha o valor igual e altere apenas o vencimento.
+- Aba Comprovantes também libera Editar vencimento em parcela paga/pronta.
+- Bloqueia apenas parcela cancelada/estornada.
+- Não altera saldo, pagamento, produto, cliente ou número da nota.
+- Versão/cache atualizados para v239.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Resultado
+- Todos passaram.

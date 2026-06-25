@@ -13193,3 +13193,26 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Mega Lote 238 — busca do crediário abre todas as parcelas */
+.mapp-credit-note-head small:last-child {
+  color: #475569;
+}
+
+.mapp-credit-card.expanded .mapp-credit-installment-summary {
+  margin-top: 12px;
+}
+
+@media (max-width: 520px) {
+  .mapp-credit-note-head small {
+    line-height: 1.28;
+  }
+}
+
+
+/* Mega Lote 239 — qualquer parcela pode ter vencimento corrigido */
+.mapp-receipts-screen .mapp-due-date-note,
+.mapp-credits-screen .mapp-credit-payment-review p {
+  overflow-wrap: anywhere;
+}
