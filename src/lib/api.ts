@@ -44,6 +44,7 @@ import {
   webCreateBackup,
   webExportHtmlPdf,
   webInactivateProduct,
+  webDeleteProductSafe,
   webOrders,
   webProducts,
   webOpenCash,
@@ -51,6 +52,7 @@ import {
   webReceiveInstallment,
   webAdjustCreditInstallment,
   webUpdateCreditInstallmentDueDate,
+  webCancelCredit,
   webCorrectCreditPayment,
   webUpdateCreditDetails,
   webReportData,
@@ -71,10 +73,12 @@ import type {
   CashSummary,
   DashboardSalesPoint,
   CreditSummary,
+  CreditCancellationResult,
   Customer,
   DashboardData,
   OrderSummary,
   Product,
+  ProductDeletionResult,
   ReceiptSummary,
   ReportData,
   SaleSummary,
@@ -196,6 +200,9 @@ export const api = {
     return isTauriRuntime() ? call<Product>('upsert_product', { product }) : webCall('Produtos', 'Produto sincronizado na nuvem.', () => { guardDemoWrite('salvar produto'); return webSaveProduct(productPayload); }, { action: 'saveProduct', payload: { product: productPayload } });
   },
   inactivateProduct: (productId: string) => (isTauriRuntime() ? call<Product>('inactivate_product', { productId }) : webCall('Produtos', 'Produto atualizado na nuvem.', () => { guardDemoWrite('inativar produto'); return webInactivateProduct(productId); }, { action: 'inactivateProduct', payload: { productId } })),
+  deleteProductSafe: (productId: string, reason: string) => (isTauriRuntime()
+    ? call<ProductDeletionResult>('delete_product_safe', { productId, reason })
+    : webCall('Produtos', 'Cadastro do produto excluído com segurança.', () => { guardDemoWrite('excluir cadastro de produto'); return webDeleteProductSafe(productId, reason); })),
   adjustStock: (productId: string, delta: number, reason: string) => (isTauriRuntime() ? call<Product>('adjust_stock', { productId, delta, reason }) : webCall('Produtos', 'Estoque sincronizado na nuvem.', () => { guardDemoWrite('ajustar estoque'); return webAdjustStock(productId, delta, reason); }, { action: 'adjustStock', payload: { productId, delta, reason } })),
   createSale: (payload: unknown) => {
     const salePayload = withRequestId(payload, 'web-sale');
@@ -223,6 +230,9 @@ export const api = {
     const dueDatePayload = withRequestId(payload, 'credit-due-date');
     return isTauriRuntime() ? call<CreditSummary>('update_credit_installment_due_date', { payload: dueDatePayload }) : webCall('Crediário', 'Vencimento da parcela salvo na nuvem.', () => { guardDemoWrite('editar vencimento da parcela'); return webUpdateCreditInstallmentDueDate(dueDatePayload); }, { action: 'updateCreditInstallmentDueDate', payload: { payload: dueDatePayload } });
   },
+  cancelCredit: (payload: unknown) => (isTauriRuntime()
+    ? call<CreditCancellationResult>('cancel_credit_safe', { payload })
+    : webCall('Crediário', 'Crediário cancelado com histórico preservado.', () => { guardDemoWrite('cancelar crediário'); return webCancelCredit(payload); })),
   correctCreditPayment: (payload: unknown) => {
     const correctionPayload = withRequestId(payload, 'credit-correction');
     return isTauriRuntime() ? call<CreditSummary>('correct_credit_payment', { payload: correctionPayload }) : webCall('Crediário', 'Correção do pagamento sincronizada.', () => { guardDemoWrite('corrigir pagamento do crediário'); return webCorrectCreditPayment(correctionPayload); }, { action: 'correctCreditPayment', payload: { payload: correctionPayload } });

@@ -1302,6 +1302,7 @@ function dateOnly(value: string): string {
 }
 
 function remainingOf(installment: CreditInstallment): number {
+  if (installment.status === 'cancelada' || installment.status === 'cancelado') return 0;
   return remainingInstallmentAmount(installment);
 }
 
@@ -1310,13 +1311,14 @@ function paidOf(installment: CreditInstallment): number {
 }
 
 function isOverdue(installment: CreditInstallment): boolean {
-  if (installment.status === 'pago') return false;
+  if (installment.status === 'pago' || installment.status === 'cancelada' || installment.status === 'cancelado') return false;
   const dueDate = new Date(`${installment.due_date}T00:00:00`);
   if (Number.isNaN(dueDate.getTime())) return false;
   return dueDate < startOfToday();
 }
 
 function installmentStatusLabel(installment: CreditInstallment): string {
+  if (installment.status === 'cancelada' || installment.status === 'cancelado') return paidOf(installment) > 0.009 ? 'Cancelada · pago preservado' : 'Cancelada';
   if (installment.status === 'pago' || remainingOf(installment) <= 0.009) return 'Paga';
   if (isOverdue(installment)) return paidOf(installment) > 0 ? 'Parcial vencida' : 'Vencida';
   if (installment.status === 'parcial' || paidOf(installment) > 0) return 'Parcial';
@@ -1325,6 +1327,7 @@ function installmentStatusLabel(installment: CreditInstallment): string {
 
 function installmentStatusTone(installment: CreditInstallment): 'ok' | 'warn' | 'danger' | 'neutral' {
   const label = installmentStatusLabel(installment).toLowerCase();
+  if (label.includes('cancel')) return 'neutral';
   if (label.includes('paga')) return 'ok';
   if (label.includes('venc')) return 'danger';
   if (label.includes('parcial') || label.includes('pend')) return 'warn';
@@ -1356,7 +1359,7 @@ function receiptStatusTone(label: string): ReceiptVisualTone {
 }
 
 function creditPaidTotal(credit: CreditSummary): number {
-  return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
+  return credit.installments.reduce((sum, installment) => sum + paidOf(installment), 0);
 }
 
 function creditNoteStatusDetails(credit: CreditSummary): { label: string; tone: ReceiptVisualTone; detail: string; overdueCount: number; partialCount: number; paidCount: number } {
@@ -1365,6 +1368,7 @@ function creditNoteStatusDetails(credit: CreditSummary): { label: string; tone: 
   const paidCount = installments.filter((installment) => installmentStatusLabel(installment) === 'Paga').length;
   const overdueCount = installments.filter(isOverdue).length;
   const partialCount = installments.filter((installment) => remainingOf(installment) > 0.009 && paidOf(installment) > 0).length;
+  if (credit.status === 'cancelado') return { label: 'Cancelada', tone: 'danger', detail: 'Nota cancelada com pagamentos e histórico preservados.', overdueCount, partialCount, paidCount };
   if (balance <= 0.009) return { label: 'Paga', tone: 'paid', detail: 'Nota quitada, sem saldo restante.', overdueCount, partialCount, paidCount };
   if (overdueCount > 0) return { label: 'Atrasada', tone: 'overdue', detail: `${formatNumber(overdueCount)} parcelas atrasadas.`, overdueCount, partialCount, paidCount };
   if (partialCount > 0) return { label: 'Parcial', tone: 'partial', detail: `${formatNumber(partialCount)} parcelas com pagamento parcial.`, overdueCount, partialCount, paidCount };

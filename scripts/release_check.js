@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v240-vencimento-livre-parcela';
-const currentCache = 'smart-loja-pwa-supabase-v240-vencimento-livre-parcela';
+const currentVersion = 'pwa-supabase-v241-cancelar-crediario-produto-seguro';
+const currentCache = 'smart-loja-pwa-supabase-v241-cancelar-crediario-produto-seguro';
 
 const requiredCore = [
   'package.json',
@@ -117,10 +117,29 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v240 vencimento livre parcela.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v240 vencimento livre parcela.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v241 cancelar crediario produto seguro.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v241 cancelar crediario produto seguro.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
+const apiSource = read('src/lib/api.ts');
+const creditsSource = read('src/mobile-app/screens/CreditsScreen.tsx');
+const productsCustomersSource = read('src/mobile-app/screens/ProductsCustomersScreens.tsx');
+const receiptsSource = read('src/mobile-app/screens/ReceiptsScreen.tsx');
+const safeCancelMigration = 'supabase/migrations/202607302245_mega_lote_241_cancel_credit_delete_product_safe.sql';
+if (!webApiSource.includes('webCancelCredit') || !webApiSource.includes('webDeleteProductSafe')) fail('webApi precisa conter cancelamento seguro de crediário e exclusão segura de produto do lote 241.');
+if (!apiSource.includes('cancelCredit:') || !apiSource.includes('deleteProductSafe:')) fail('api.ts precisa expor cancelCredit e deleteProductSafe.');
+if (!creditsSource.includes('Cancelar crediário') || !creditsSource.includes('Digite CANCELAR')) fail('Crediário mobile precisa oferecer cancelamento com confirmação forte.');
+if (!productsCustomersSource.includes('Excluir cadastro') || !productsCustomersSource.includes('Digite EXCLUIR')) fail('Produtos mobile precisa oferecer exclusão segura somente após confirmação.');
+if (!receiptsSource.includes("credit.status === 'cancelado'") && !receiptsSource.includes("credit.status === 'cancelada'")) fail('Comprovantes precisam reconhecer crediário cancelado.');
+if (!exists(safeCancelMigration)) fail(`Migration segura ausente: ${safeCancelMigration}`);
+else {
+  const migrationSource = read(safeCancelMigration);
+  for (const rpcName of ['web_cancel_credit_safe', 'web_delete_product_safe']) {
+    if (!migrationSource.includes(rpcName)) fail(`Migration do lote 241 precisa conter ${rpcName}.`);
+  }
+  if (!migrationSource.includes("product_row.status <> 'inactive'")) fail('Exclusão segura precisa exigir produto inativo.');
+  if (!migrationSource.includes('payments_changed') || !migrationSource.includes('cash_movements_changed')) fail('Cancelamento seguro precisa auditar preservação de pagamentos e caixa.');
+}
 const mobileAppSource = read('src/mobile-app/MobileApp.tsx');
 const mobileHeaderSource = read('src/mobile-app/layout/MobileHeader.tsx');
 if (!mobileAppSource.includes('Central de avisos')) fail('MobileApp precisa renderizar Central de avisos leigos.');
@@ -171,4 +190,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v240 PWA passou. Vencimento livre por parcela conferido.');
+console.log('OK: release_check v241 PWA passou. Cancelamento seguro de crediário e produto conferido.');

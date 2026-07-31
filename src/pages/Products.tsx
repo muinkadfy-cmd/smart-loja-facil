@@ -215,6 +215,7 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
   const [adjust, setAdjust] = useState({ productId: '', delta: 0, reason: '' });
   const [preview, setPreview] = useState<{ src: string; title: string } | null>(null);
   const [details, setDetails] = useState<Product | null>(null);
+  const [deleteProduct, setDeleteProduct] = useState<{ product: Product; reason: string; confirmation: string } | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const productFormRef = useRef<HTMLElement | null>(null);
@@ -416,6 +417,45 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
     }
   }
 
+  function openDeleteProduct(product: Product) {
+    if (product.status !== 'inativo') {
+      setError('Inative o produto antes de tentar excluir o cadastro.');
+      return;
+    }
+    setError('');
+    setMessage('');
+    setDeleteProduct({ product, reason: '', confirmation: '' });
+  }
+
+  async function submitDeleteProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deleteProduct || saving) return;
+    const reason = deleteProduct.reason.trim();
+    if (reason.length < 6) {
+      setError('Informe um motivo com pelo menos 6 letras.');
+      return;
+    }
+    if (deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR') {
+      setError('Digite EXCLUIR para confirmar.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await api.deleteProductSafe(deleteProduct.product.id, reason);
+      setDeleteProduct(null);
+      setSelectedProductId(null);
+      if (form.id === result.product_id) resetForm();
+      await reload();
+      setMessage(result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function copyProductText(product: Product, mode: 'all' | 'price' | 'color' = 'all') {
     const text = mode === 'price'
       ? `Preço de ${product.name}: ${productDisplayPrice(product)}`
@@ -565,7 +605,8 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <div className="classic-table-actions">
               <button type="button" className="secondary-btn" onClick={startNewProduct}><AppIcon name="produtos" size={16} className="app-icon-button-inline" />Novo Produto</button>
               <button type="button" className="ghost-btn" onClick={() => selectedProduct && editProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="editar" size={16} className="app-icon-button-inline" />Editar</button>
-              <button type="button" className="ghost-btn" onClick={() => selectedProduct && void inactivateProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="excluir" size={16} className="app-icon-button-inline" />Excluir</button>
+              <button type="button" className="ghost-btn" onClick={() => selectedProduct && void inactivateProduct(selectedProduct)} disabled={!selectedProduct || selectedProduct.status === 'inativo'}><AppIcon name="excluir" size={16} className="app-icon-button-inline" />Inativar</button>
+              <button type="button" className="danger-btn" onClick={() => selectedProduct && openDeleteProduct(selectedProduct)} disabled={!selectedProduct || selectedProduct.status !== 'inativo'}><AppIcon name="excluir" size={16} className="app-icon-button-inline" />Excluir cadastro</button>
               <button type="button" className="ghost-btn" onClick={() => void reload()}><AppIcon name="atualizar" size={16} className="app-icon-button-inline" />Atualizar</button>
             </div>
           </div>
@@ -618,6 +659,8 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
             <button type="button" onClick={() => selectedProduct && void saveProductPhoto(selectedProduct, true)} disabled={!selectedProduct || !selectedProduct.image_data}><AppIcon name="imprimir" size={24} className="app-icon-button-inline" />Salvar foto</button>
             <button type="button" onClick={() => selectedProduct && void shareProduct(selectedProduct)} disabled={!selectedProduct}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />Enviar WhatsApp</button>
             <button type="button" onClick={() => void openWhatsappOnly()}><AppIcon name="whatsapp" size={24} className="app-icon-button-inline" />WhatsApp Web</button>
+            <button type="button" onClick={() => selectedProduct && void inactivateProduct(selectedProduct)} disabled={!selectedProduct || selectedProduct.status === 'inativo'}><AppIcon name="excluir" size={24} className="app-icon-button-inline" />Inativar produto</button>
+            <button type="button" className="danger-btn" onClick={() => selectedProduct && openDeleteProduct(selectedProduct)} disabled={!selectedProduct || selectedProduct.status !== 'inativo'}><AppIcon name="excluir" size={24} className="app-icon-button-inline" />Excluir cadastro</button>
             <button type="button" onClick={() => void reload()}><AppIcon name="atualizar" size={24} className="app-icon-button-inline" />Atualizar lista</button>
           </div>
         </aside>
@@ -680,6 +723,21 @@ export function ProductsPage({ refreshToken, onChanged }: PageProps): JSX.Elemen
           </form>
         </section>
       </section>
+
+      <Modal open={Boolean(deleteProduct)} title="Excluir cadastro do produto" onClose={() => !saving && setDeleteProduct(null)}>
+        {deleteProduct && (
+          <form className="form-grid compact" onSubmit={submitDeleteProduct}>
+            <label className="span-2">Produto<input value={deleteProduct.product.name} readOnly /></label>
+            <div className="notice span-2">A exclusão só será permitida se não existir histórico de venda, pedido ou estoque. Se houver histórico, mantenha o produto inativo.</div>
+            <label className="span-2">Motivo obrigatório<textarea value={deleteProduct.reason} onChange={(event) => setDeleteProduct({ ...deleteProduct, reason: event.target.value })} rows={3} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
+            <label className="span-2">Digite EXCLUIR<input value={deleteProduct.confirmation} onChange={(event) => setDeleteProduct({ ...deleteProduct, confirmation: event.target.value })} autoComplete="off" /></label>
+            <div className="table-actions span-2">
+              <button type="button" className="ghost-btn" onClick={() => setDeleteProduct(null)} disabled={saving}>Voltar</button>
+              <button className="danger-btn" disabled={saving || deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR'}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       <Modal open={Boolean(details)} title={details ? `Produto - ${details.name}` : 'Produto'} onClose={() => setDetails(null)}>
         {details && (

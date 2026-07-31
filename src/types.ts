@@ -97,6 +97,20 @@ export interface Product {
   id: string; name: string; category: string; cost_price: number; price: number; promo_price: number | null; stock: number; unit: string; size: string; color: string; internal_code: string; barcode: string; image_data: string; status: 'ativo' | 'inativo'; created_at: string; updated_at: string;
 }
 
+export interface ProductDeletionResult {
+  deleted: boolean;
+  product_id: string;
+  product_name: string;
+  message: string;
+}
+
+export interface CreditCancellationResult {
+  credit: CreditSummary;
+  stock_restored: boolean;
+  paid_total_preserved: number;
+  message: string;
+}
+
 export interface SaleSummary {
   id: string; number: number; customer_name: string; payment_method: PaymentMethod; subtotal?: number; discount?: number; total: number; status: string; created_at: string; thumbnail_url?: string; first_product_name?: string; item_count?: number;
 }

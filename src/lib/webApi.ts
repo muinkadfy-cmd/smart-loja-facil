@@ -17,12 +17,14 @@ import type {
   Customer,
   CreditInstallment,
   CreditSummary,
+  CreditCancellationResult,
   DashboardData,
   DashboardSalesPeriod,
   DashboardSalesPoint,
   PaymentMethod,
   PaymentSummary,
   Product,
+  ProductDeletionResult,
   ProductInsight,
   OrderSummary,
   ReceiptSummary,
@@ -58,8 +60,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v240-vencimento-livre-parcela';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v240-vencimento-livre-parcela';
+export const WEB_APP_VERSION = 'pwa-supabase-v241-cancelar-crediario-produto-seguro';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v241-cancelar-crediario-produto-seguro';
 
 
 export interface WebTrainingModeState {
@@ -1872,6 +1874,35 @@ export async function webInactivateProduct(productId: string): Promise<Product> 
   return mapProduct(data as Record<string, unknown>);
 }
 
+
+export async function webDeleteProductSafe(productId: string, reason: string): Promise<ProductDeletionResult> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'excluir cadastro de produto');
+  assertWebTrainingModeAllowsWrite('excluir cadastro de produto real');
+  const cleanReason = reason.trim();
+  if (!productId) throw new Error('Produto inválido para exclusão.');
+  if (cleanReason.length < 6) throw new Error('Informe um motivo com pelo menos 6 letras para excluir o cadastro.');
+  const client = await getClient();
+  const { data, error } = await client.rpc('web_delete_product_safe', {
+    target_product_id: productId,
+    delete_reason_text: cleanReason,
+  });
+  if (error) {
+    const detail = error.message || String(error);
+    if (/function .*web_delete_product_safe|schema cache|could not find/i.test(detail)) {
+      throw new Error(`A exclusão segura ainda não está instalada no Supabase. Aplique a migration do Mega Lote 241. Detalhe: ${detail}`);
+    }
+    throw new Error(`Não foi possível excluir o cadastro do produto: ${detail}`);
+  }
+  const source = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+  return {
+    deleted: Boolean(source.deleted),
+    product_id: stringValue(source.product_id, productId),
+    product_name: stringValue(source.product_name, 'Produto'),
+    message: stringValue(source.message, 'Cadastro do produto excluído com segurança.'),
+  };
+}
+
 export async function webAdjustStock(productId: string, delta: number, reason: string): Promise<Product> {
   const context = await getWebStoreContext({ createIfMissing: true });
   requireWebRole(context, ['owner', 'admin', 'operator'], 'ajustar estoque');
@@ -3186,6 +3217,44 @@ export async function webAdjustCreditInstallment(payload: unknown): Promise<Cred
 }
 
 
+
+
+export async function webCancelCredit(payload: unknown): Promise<CreditCancellationResult> {
+  const context = await getWebStoreContext({ createIfMissing: true });
+  requireWebRole(context, ['owner', 'admin'], 'cancelar crediário');
+  assertWebTrainingModeAllowsWrite('cancelar crediário real');
+  const source = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+  const creditId = stringValue(source.credit_id);
+  const reason = stringValue(source.reason).trim();
+  const restoreStock = source.restore_stock !== false;
+  if (!creditId) throw new Error('Crediário inválido para cancelamento.');
+  if (reason.length < 6) throw new Error('Informe um motivo com pelo menos 6 letras para cancelar o crediário.');
+
+  const client = await getClient();
+  const { data, error } = await client.rpc('web_cancel_credit_safe', {
+    target_credit_id: creditId,
+    cancel_reason_text: reason,
+    restore_stock: restoreStock,
+  });
+  if (error) {
+    const detail = error.message || String(error);
+    if (/function .*web_cancel_credit_safe|schema cache|could not find/i.test(detail)) {
+      throw new Error(`O cancelamento seguro do crediário ainda não está instalado no Supabase. Aplique a migration do Mega Lote 241. Detalhe: ${detail}`);
+    }
+    throw new Error(`Não foi possível cancelar o crediário: ${detail}`);
+  }
+
+  const result = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+  const credits = await webCredits();
+  const updated = credits.find((item) => item.id === creditId);
+  if (!updated) throw new Error('Crediário cancelado, mas não foi possível recarregar o registro atualizado.');
+  return {
+    credit: updated,
+    stock_restored: Boolean(result.stock_restored),
+    paid_total_preserved: numberValue(result.paid_total_preserved),
+    message: stringValue(result.message, 'Crediário cancelado com histórico preservado.'),
+  };
+}
 
 export async function webUpdateCreditInstallmentDueDate(payload: unknown): Promise<CreditSummary> {
   const context = await getWebStoreContext({ createIfMissing: true });

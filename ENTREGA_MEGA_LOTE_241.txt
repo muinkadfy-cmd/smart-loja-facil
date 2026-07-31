@@ -1,0 +1,49 @@
+MEGA LOTE 241 — CANCELAR CREDIÁRIO E EXCLUIR PRODUTO COM SEGURANÇA
+
+BASE
+- Fonte real enviada pelo usuário: smart-loja-fonte-temp-20260730-222852.zip
+- Base encontrada: v240
+- Entrega: v241
+
+CREDIÁRIO
+- Novo botão Cancelar crediário.
+- Exige motivo e digitar CANCELAR.
+- Opção devolver ou não os produtos ao estoque.
+- Nota, parcelas, venda e comprovantes ficam cancelados.
+- Sai de cobranças e vencidos e aparece no filtro Cancelados.
+- Pagamentos e caixa anteriores são preservados.
+- Não há estorno financeiro automático.
+- Extrato/PDF/PNG continuam disponíveis e mostram cancelamento.
+
+PRODUTO
+- Ação antiga corrigida para Inativar.
+- Produto inativo ganha Excluir cadastro.
+- Exige motivo e digitar EXCLUIR.
+- Produto só é excluído se não tiver venda, pedido ou movimento de estoque.
+- Com histórico, o banco bloqueia a exclusão e exige manter Inativo.
+
+BANCO/SUPABASE
+- Migration nova:
+  supabase/migrations/202607302245_mega_lote_241_cancel_credit_delete_product_safe.sql
+- RPCs:
+  public.web_cancel_credit_safe
+  public.web_delete_product_safe
+- Aplicar obrigatoriamente antes de usar os novos botões.
+
+VALIDAÇÕES QUE PASSARAM
+- Sintaxe/transpile TypeScript e TSX dos arquivos alterados.
+- npm run lint.
+- npm run release:commercial:check.
+- release:check estrutural com env temporário não secreto, removido após o teste.
+- Checklist das RPCs, confirmações, bloqueio de histórico e preservação de pagamentos/caixa.
+
+LIMITAÇÃO HONESTA
+- npm install falhou porque o registry interno não encontrou youch-core@0.3.3.
+- Sem dependências locais, tsc --noEmit e vite build não puderam ser executados neste ambiente.
+- Executar obrigatoriamente no computador real antes do deploy.
+
+STATUS
+- ZIP Delta: PRONTO.
+- Código: PRONTO PARA APLICAÇÃO E TESTE REAL.
+- Supabase: PENDENTE APLICAR MIGRATION.
+- Build final: PENDENTE VALIDAR NO COMPUTADOR DE PUBLICAÇÃO.

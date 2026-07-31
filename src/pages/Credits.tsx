@@ -51,6 +51,13 @@ interface RefundState {
   confirmed: boolean;
 }
 
+interface CancelCreditState {
+  credit: CreditSummary;
+  reason: string;
+  restoreStock: boolean;
+  confirmation: string;
+}
+
 function dateOnly(value: string): string {
   const parsed = new Date(`${value}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -64,7 +71,7 @@ function startOfToday(): Date {
 }
 
 function isInstallmentOverdue(installment: CreditInstallment): boolean {
-  if (installment.status === 'pago') return false;
+  if (installment.status === 'pago' || installment.status === 'cancelada' || installment.status === 'cancelado') return false;
   const dueDate = new Date(`${installment.due_date}T00:00:00`);
   if (Number.isNaN(dueDate.getTime())) return false;
   return dueDate < startOfToday();
@@ -78,6 +85,7 @@ function normalizeWhatsapp(value: string): string {
 }
 
 function installmentStatusLabel(installment: CreditInstallment): string {
+  if (installment.status === 'cancelada' || installment.status === 'cancelado') return installment.paid_amount > 0 ? 'Cancelada · pago preservado' : 'Cancelada';
   if (installment.status === 'pago') return 'Paga';
   if (installment.status === 'parcial') return 'Parcial';
   return 'Em aberto';
@@ -85,11 +93,13 @@ function installmentStatusLabel(installment: CreditInstallment): string {
 
 function creditStatusLabel(status: string): string {
   if (status === 'quitado') return 'Quitada';
+  if (status === 'cancelado') return 'Cancelada';
   return 'Em aberto';
 }
 
 function creditStatusClass(status: string): string {
   if (status === 'quitado') return 'pill pill-success';
+  if (status === 'cancelado') return 'pill pill-danger';
   return 'pill';
 }
 
@@ -618,6 +628,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
   const [receiving, setReceiving] = useState<ReceiveState | null>(null);
   const [editing, setEditing] = useState<EditState | null>(null);
   const [refunding, setRefunding] = useState<RefundState | null>(null);
+  const [canceling, setCanceling] = useState<CancelCreditState | null>(null);
   const [preview, setPreview] = useState<PreviewState | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -701,6 +712,49 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
       reason: '',
       confirmed: false,
     });
+  }
+
+  function openCancelCreditModal(credit: CreditSummary) {
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode cancelar crediário.');
+      return;
+    }
+    setError('');
+    setMessage('');
+    setReceiving(null);
+    setEditing(null);
+    setRefunding(null);
+    setCanceling({ credit, reason: '', restoreStock: true, confirmation: '' });
+  }
+
+  async function submitCancelCredit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canceling || saving) return;
+    if (!canCorrectCredit) {
+      setError('Somente dono ou administrador pode cancelar crediário.');
+      return;
+    }
+    if (canceling.reason.trim().length < 6) {
+      setError('Informe um motivo com pelo menos 6 letras.');
+      return;
+    }
+    if (canceling.confirmation.trim().toUpperCase() !== 'CANCELAR') {
+      setError('Digite CANCELAR para confirmar.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await api.cancelCredit({ credit_id: canceling.credit.id, reason: canceling.reason.trim(), restore_stock: canceling.restoreStock });
+      await reload();
+      setCanceling(null);
+      setMessage(`${result.message}${result.stock_restored ? ' Os produtos voltaram ao estoque.' : ' O estoque não foi alterado.'}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function submitReceive(event: FormEvent<HTMLFormElement>) {
@@ -885,7 +939,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
 
   function nextImportantInstallment(credit: CreditSummary): CreditInstallment | null {
     return [...credit.installments]
-      .filter((item) => item.status !== 'pago')
+      .filter((item) => item.status !== 'pago' && item.status !== 'cancelada' && item.status !== 'cancelado')
       .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number)[0]
       ?? credit.installments[0]
       ?? null;
@@ -936,6 +990,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
                 { value: 'todos', label: 'Todos' },
                 { value: 'aberto', label: 'Abertos' },
                 { value: 'quitado', label: 'Quitados' },
+                { value: 'cancelado', label: 'Cancelados' },
               ],
             },
           ]}
@@ -971,6 +1026,7 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
               <button type="button" className="ghost-btn small" onClick={() => setExpandedCredits((current) => ({ ...current, [credit.id]: !expanded }))}>
                 {expanded ? 'Recolher parcelas' : 'Ver todas as parcelas'}
               </button>
+              {credit.status !== 'cancelado' && canCorrectCredit ? <button type="button" className="danger-btn small" onClick={() => openCancelCreditModal(credit)}>Cancelar crediário</button> : null}
             </div>
           </div>
           {nextInstallment ? (
@@ -996,11 +1052,11 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
                   <div className="table-actions">
                     <button type="button" className="ghost-btn small" onClick={() => openPdfPreview(credit, row)}>PDF</button>
                     <button type="button" className="ghost-btn small" onClick={() => sendWhatsapp(credit, row)}>WhatsApp</button>
-                    {canCorrectCredit ? <button type="button" className="ghost-btn small" onClick={() => openEditModal(credit, row)}>Editar</button> : null}
-                    {canCorrectCredit && row.paid_amount > 0 ? <button type="button" className="ghost-btn small" onClick={() => openRefundModal(credit, row)}>Estornar</button> : null}
+                    {canCorrectCredit && credit.status !== 'cancelado' ? <button type="button" className="ghost-btn small" onClick={() => openEditModal(credit, row)}>Editar</button> : null}
+                    {canCorrectCredit && credit.status !== 'cancelado' && row.paid_amount > 0 ? <button type="button" className="ghost-btn small" onClick={() => openRefundModal(credit, row)}>Estornar</button> : null}
                     {row.status === 'pago'
                       ? <span className="muted">Recebida</span>
-                      : <button type="button" className="secondary-btn small" onClick={() => openReceiveModal(credit, row)} disabled={!canOperate}>Receber</button>}
+                      : credit.status === 'cancelado' ? <span className="muted">Cancelada</span> : <button type="button" className="secondary-btn small" onClick={() => openReceiveModal(credit, row)} disabled={!canOperate}>Receber</button>}
                   </div>
                 ),
               },
@@ -1022,6 +1078,28 @@ export function CreditsPage({ refreshToken, onChanged }: PageProps): JSX.Element
             </div>
             <div className="table-actions span-2">
               <button className="primary-btn" disabled={saving}>{saving ? 'Lançando...' : 'Confirmar recebimento'}</button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      <Modal open={Boolean(canceling)} title="Cancelar crediário inteiro" onClose={() => !saving && setCanceling(null)}>
+        {canceling && (
+          <form className="form-grid compact" onSubmit={submitCancelCredit}>
+            <label>Cliente<input value={canceling.credit.customer_name} readOnly /></label>
+            <label>Venda<input value={`#${canceling.credit.sale_number}`} readOnly /></label>
+            <div className="notice span-2">
+              A cobrança e todas as parcelas serão canceladas. Pagamentos e movimentos de caixa anteriores ficam preservados no histórico.
+            </div>
+            <label className="span-2">
+              <input type="checkbox" checked={canceling.restoreStock} onChange={(e) => setCanceling({ ...canceling, restoreStock: e.target.checked })} />
+              Devolver ao estoque os produtos desta venda
+            </label>
+            <label className="span-2">Motivo obrigatório<textarea value={canceling.reason} onChange={(e) => setCanceling({ ...canceling, reason: e.target.value })} rows={3} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" /></label>
+            <label className="span-2">Digite CANCELAR<input value={canceling.confirmation} onChange={(e) => setCanceling({ ...canceling, confirmation: e.target.value })} autoComplete="off" /></label>
+            <div className="table-actions span-2">
+              <button type="button" className="ghost-btn" onClick={() => setCanceling(null)} disabled={saving}>Voltar</button>
+              <button className="danger-btn" disabled={saving || canceling.confirmation.trim().toUpperCase() !== 'CANCELAR'}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
             </div>
           </form>
         )}

@@ -585,6 +585,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const [filter, setFilter] = useState<ProductFilter>('todos');
   const [form, setForm] = useState<ProductFormState | null>(null);
   const [stockAdjust, setStockAdjust] = useState<{ product: Product; delta: string; reason: string } | null>(null);
+  const [deleteProduct, setDeleteProduct] = useState<{ product: Product; reason: string; confirmation: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingStock, setSavingStock] = useState(false);
@@ -605,6 +606,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
 
   function openProductForm(next: ProductFormState, feedbackText: string) {
     setStockAdjust(null);
+    setDeleteProduct(null);
     setForm(next);
     setFeedback({ tone: 'info', text: feedbackText });
     scrollPanelIntoPage(productFormRef, productNameInputRef);
@@ -639,6 +641,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
 
   function openStockAdjust(product: Product, delta = '+1', reason = 'Reposição rápida pelo celular') {
     setForm(null);
+    setDeleteProduct(null);
     setStockAdjust({ product, delta, reason });
     setFeedback({ tone: 'info', text: `Ajuste rápido aberto para ${product.name}.` });
     scrollPanelIntoPage(stockAdjustRef, stockAdjustInputRef);
@@ -772,6 +775,43 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         setFeedback({ tone: 'success', text: 'Produto reativado e pronto para vender.' });
         notifyMobileAction({ title: 'Produto reativado', message: `${product.name} voltou para o PDV.`, tone: 'success', page: 'products', actionLabel: 'Ver produtos' });
       }
+      await loadProducts();
+      onRefresh();
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDeleteProduct = (product: Product) => {
+    if (product.status !== 'inativo') {
+      setFeedback({ tone: 'warning', text: 'Inative o produto antes de tentar excluir o cadastro.' });
+      return;
+    }
+    setForm(null);
+    setStockAdjust(null);
+    setDeleteProduct({ product, reason: '', confirmation: '' });
+    setFeedback({ tone: 'warning', text: 'Exclusão segura aberta. Se existir venda, pedido ou movimento de estoque, o sistema vai bloquear e recomendar Inativar.' });
+  };
+
+  const submitDeleteProduct = async () => {
+    if (!deleteProduct || saving) return;
+    const reason = deleteProduct.reason.trim();
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras.' });
+      return;
+    }
+    if (deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR') {
+      setFeedback({ tone: 'error', text: 'Digite EXCLUIR para confirmar.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await api.deleteProductSafe(deleteProduct.product.id, reason);
+      setDeleteProduct(null);
+      setFeedback({ tone: 'success', text: result.message });
+      notifyMobileAction({ title: 'Produto excluído', message: `${result.product_name} saiu das listas.`, tone: 'warning', page: 'products', actionLabel: 'Ver produtos' });
       await loadProducts();
       onRefresh();
     } catch (error) {
@@ -958,6 +998,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
                         <button type="button" onClick={() => void changeProductStatus(product, product.status === 'ativo' ? 'inativo' : 'ativo')} disabled={saving}>
                           {product.status === 'ativo' ? 'Inativar' : 'Ativar'}
                         </button>
+                        {product.status === 'inativo' ? <button type="button" className="mapp-danger-button" onClick={() => openDeleteProduct(product)} disabled={saving}>Excluir cadastro</button> : null}
                       </>
                     ) : null}
                   </div>
@@ -973,6 +1014,30 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
         </section>
       ) : !loading ? (
         <EmptyState icon="produtos" title="Nenhum produto encontrado" detail={query ? 'Tente buscar por outro nome, código ou categoria.' : 'Cadastre o primeiro produto para começar a vender.'} actionLabel="Novo produto" actionPage="products" onNavigate={startNewProduct} />
+      ) : null}
+
+      {deleteProduct ? (
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setDeleteProduct(null)}>
+          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" onClick={(event) => event.stopPropagation()}>
+            <span className="mapp-receive-drawer-grip" aria-hidden="true" />
+            <div className="mapp-form-head">
+              <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
+              <div><strong>Excluir cadastro do produto</strong><p>{deleteProduct.product.name}</p></div>
+            </div>
+            <section className="mapp-credit-cancel-warning">
+              <strong>Proteção de histórico</strong>
+              <p>A exclusão só será permitida se o produto nunca apareceu em venda, pedido ou movimento de estoque. Se houver histórico, use Inativar.</p>
+            </section>
+            <div className="mapp-form-grid">
+              <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => setDeleteProduct({ ...deleteProduct, reason: event.target.value })} rows={3} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
+              <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => setDeleteProduct({ ...deleteProduct, confirmation: event.target.value })} autoComplete="off" /></label>
+            </div>
+            <div className="mapp-form-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setDeleteProduct(null)} disabled={saving}>Voltar</button>
+              <button type="button" className="mapp-danger-button" onClick={() => void submitDeleteProduct()} disabled={saving || deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR'}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
+            </div>
+          </section>
+        </div>
       ) : null}
 
       {photoPreview ? (

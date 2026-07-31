@@ -24,7 +24,7 @@ interface CreditsScreenProps {
   onRefresh: () => void;
 }
 
-type CreditFilter = 'todos' | 'aberto' | 'vencidos' | 'quitado';
+type CreditFilter = 'todos' | 'aberto' | 'vencidos' | 'quitado' | 'cancelado';
 type CreditStatusTone = 'ok' | 'warn' | 'danger' | 'neutral';
 type CreditMode = 'simples' | 'avancado';
 
@@ -77,6 +77,13 @@ type CorrectionMenuState = {
   installment: CreditInstallment;
 };
 
+type CancelCreditState = {
+  credit: CreditSummary;
+  reason: string;
+  restoreStock: boolean;
+  confirmation: string;
+};
+
 const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
 
 function requestId(prefix: string): string {
@@ -99,13 +106,14 @@ function dateOnly(value: string): string {
 }
 
 function isOverdue(installment: CreditInstallment): boolean {
-  if (installment.status === 'pago') return false;
+  if (installment.status === 'pago' || installment.status === 'cancelada' || installment.status === 'cancelado') return false;
   const dueDate = new Date(`${installment.due_date}T00:00:00`);
   if (Number.isNaN(dueDate.getTime())) return false;
   return dueDate < startOfToday();
 }
 
 function remainingOf(installment: CreditInstallment): number {
+  if (installment.status === 'cancelada' || installment.status === 'cancelado') return 0;
   return remainingInstallmentAmount(installment);
 }
 
@@ -114,6 +122,7 @@ function paidOf(installment: CreditInstallment): number {
 }
 
 function installmentStatusLabel(installment: CreditInstallment): string {
+  if (installment.status === 'cancelada' || installment.status === 'cancelado') return paidOf(installment) > 0.009 ? 'Cancelada · pago preservado' : 'Cancelada';
   if (installment.status === 'pago' || remainingOf(installment) <= 0.009) return 'Paga';
   if (isOverdue(installment)) return paidOf(installment) > 0 ? 'Parcial vencida' : 'Vencida';
   if (installment.status === 'parcial' || paidOf(installment) > 0) return 'Parcial';
@@ -122,6 +131,7 @@ function installmentStatusLabel(installment: CreditInstallment): string {
 
 function installmentStatusTone(installment: CreditInstallment): CreditStatusTone {
   const label = installmentStatusLabel(installment).toLowerCase();
+  if (label.includes('cancel')) return 'neutral';
   if (label.includes('paga')) return 'ok';
   if (label.includes('venc')) return 'danger';
   if (label.includes('parcial') || label.includes('pend')) return 'warn';
@@ -130,7 +140,7 @@ function installmentStatusTone(installment: CreditInstallment): CreditStatusTone
 
 function creditOpenInstallments(credit: CreditSummary): CreditInstallment[] {
   return [...credit.installments]
-    .filter((installment) => installment.status !== 'pago' && remainingOf(installment) > 0.009)
+    .filter((installment) => installment.status !== 'pago' && installment.status !== 'cancelada' && installment.status !== 'cancelado' && remainingOf(installment) > 0.009)
     .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.number - b.number);
 }
 
@@ -258,7 +268,7 @@ function installmentInputDate(value: string): string {
 }
 
 function creditPaidTotal(credit: CreditSummary): number {
-  return Math.max(0, Number(credit.total || 0) - Number(credit.balance || 0));
+  return credit.installments.reduce((sum, installment) => sum + paidOf(installment), 0);
 }
 
 function pluralLabel(count: number, singular: string, plural: string): string {
@@ -269,6 +279,10 @@ function creditStatusInfo(credit: CreditSummary): { label: string; tone: CreditS
   const paidCount = credit.installments.filter((item) => installmentStatusLabel(item) === 'Paga').length;
   const openCount = creditOpenInstallments(credit).length;
   const overdueCount = credit.installments.filter(isOverdue).length;
+
+  if (credit.status === 'cancelado') {
+    return { label: 'Cancelado', tone: 'neutral', detail: 'Cobrança encerrada com histórico preservado.' };
+  }
 
   if (credit.status === 'quitado' || Number(credit.balance || 0) <= 0.009) {
     return { label: 'Quitado', tone: 'ok', detail: 'Todas as parcelas estão pagas.' };
@@ -309,6 +323,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [editInstallment, setEditInstallment] = useState<EditInstallmentState | null>(null);
   const [correction, setCorrection] = useState<CorrectionState | null>(null);
   const [correctionMenu, setCorrectionMenu] = useState<CorrectionMenuState | null>(null);
+  const [cancelCredit, setCancelCredit] = useState<CancelCreditState | null>(null);
   const [creditMode, setCreditMode] = useState<CreditMode>('simples');
   const [showCreditHelp, setShowCreditHelp] = useState(true);
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
@@ -339,7 +354,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
     const installments = credits.flatMap((credit) => credit.installments);
     const overdue = installments.filter(isOverdue);
     const nextOpen = installments
-      .filter((installment) => installment.status !== 'pago')
+      .filter((installment) => installment.status !== 'pago' && installment.status !== 'cancelada' && installment.status !== 'cancelado')
       .sort((a, b) => a.due_date.localeCompare(b.due_date))[0] ?? null;
     return {
       openCount: openCredits.length,
@@ -358,7 +373,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         filter === 'todos'
         || (filter === 'aberto' && credit.status === 'aberto')
         || (filter === 'vencidos' && hasOverdue)
-        || (filter === 'quitado' && credit.status === 'quitado');
+        || (filter === 'quitado' && credit.status === 'quitado')
+        || (filter === 'cancelado' && credit.status === 'cancelado');
       const installmentText = credit.installments.map((item) => `parcela ${item.number} ${installmentStatusLabel(item)} ${item.due_date}`).join(' ');
       const matchesTerm = !term || [
         credit.customer_name,
@@ -444,6 +460,43 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   function openCorrectionMenu(credit: CreditSummary, installment: CreditInstallment): void {
     setCorrectionMenu({ credit, installment });
     setFeedback({ tone: 'info', text: 'Escolha o que quer corrigir. As ações perigosas continuam com motivo e confirmação.' });
+  }
+
+  function openCancelCredit(credit: CreditSummary): void {
+    setCorrectionMenu(null);
+    setCancelCredit({ credit, reason: '', restoreStock: true, confirmation: '' });
+    setFeedback({ tone: 'info', text: 'Cancelamento seguro aberto. O histórico e os pagamentos anteriores serão preservados.' });
+  }
+
+  async function submitCancelCredit(): Promise<void> {
+    if (!cancelCredit || saving) return;
+    const reason = cancelCredit.reason.trim();
+    if (reason.length < 6) {
+      setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras para cancelar o crediário.' });
+      return;
+    }
+    if (cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR') {
+      setFeedback({ tone: 'error', text: 'Digite CANCELAR para confirmar esta operação.' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await api.cancelCredit({
+        credit_id: cancelCredit.credit.id,
+        reason,
+        restore_stock: cancelCredit.restoreStock,
+      });
+      setCredits((current) => current.map((credit) => credit.id === result.credit.id ? result.credit : credit));
+      setCancelCredit(null);
+      setFeedback({ tone: 'success', text: `${result.message}${result.stock_restored ? ' Os produtos voltaram ao estoque.' : ' O estoque não foi alterado.'}` });
+      notifyMobileAction({ title: 'Crediário cancelado', message: `${cancelCredit.credit.customer_name}: cobrança encerrada com histórico preservado.`, tone: 'warning', page: 'credits', actionLabel: 'Ver crediário' });
+      await loadCredits();
+      onRefresh();
+    } catch (error) {
+      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function submitEditInstallment(): Promise<void> {
@@ -774,11 +827,54 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             ['aberto', `Abertos ${formatNumber(credits.filter((credit) => credit.status === 'aberto').length)}`],
             ['vencidos', `Vencidos ${formatNumber(summary.overdueCount)}`],
             ['quitado', `Quitados ${formatNumber(credits.filter((credit) => credit.status === 'quitado').length)}`],
+            ['cancelado', `Cancelados ${formatNumber(credits.filter((credit) => credit.status === 'cancelado').length)}`],
           ].map(([key, label]) => (
             <button key={key} type="button" className={filter === key ? 'active' : ''} onClick={() => setFilter(key as CreditFilter)}>{label}</button>
           ))}
         </div>
       </section>
+
+      {cancelCredit ? (
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setCancelCredit(null)}>
+          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel" role="dialog" aria-modal="true" aria-label="Cancelar crediário" onClick={(event) => event.stopPropagation()}>
+            <span className="mapp-receive-drawer-grip" aria-hidden="true" />
+            <div className="mapp-form-head">
+              <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
+              <div>
+                <strong>Cancelar crediário inteiro</strong>
+                <p>{cancelCredit.credit.customer_name} · venda #{String(cancelCredit.credit.sale_number).padStart(4, '0')}</p>
+              </div>
+            </div>
+            <div className="mapp-sale-total-box">
+              <div><span>Total</span><strong>{formatCurrency(cancelCredit.credit.total)}</strong></div>
+              <div><span>Pago preservado</span><strong>{formatCurrency(creditPaidTotal(cancelCredit.credit))}</strong></div>
+              <div><span>Saldo encerrado</span><strong>{formatCurrency(cancelCredit.credit.balance)}</strong></div>
+            </div>
+            <section className="mapp-credit-cancel-warning">
+              <strong>O que será feito</strong>
+              <p>A nota e todas as parcelas serão marcadas como canceladas e sairão das cobranças e vencidos. Pagamentos e caixa anteriores não serão apagados nem estornados automaticamente.</p>
+            </section>
+            <div className="mapp-form-grid">
+              <label className="span-2 mapp-check-field">
+                <input type="checkbox" checked={cancelCredit.restoreStock} onChange={(event) => setCancelCredit({ ...cancelCredit, restoreStock: event.target.checked })} />
+                <span>Devolver ao estoque os produtos desta venda</span>
+              </label>
+              <label className="span-2">
+                <span>Motivo obrigatório</span>
+                <textarea value={cancelCredit.reason} onChange={(event) => setCancelCredit({ ...cancelCredit, reason: event.target.value })} rows={3} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" />
+              </label>
+              <label className="span-2">
+                <span>Digite CANCELAR para confirmar</span>
+                <input value={cancelCredit.confirmation} onChange={(event) => setCancelCredit({ ...cancelCredit, confirmation: event.target.value })} autoComplete="off" />
+              </label>
+            </div>
+            <div className="mapp-form-actions">
+              <button type="button" className="mapp-secondary-button" onClick={() => setCancelCredit(null)} disabled={saving}>Voltar</button>
+              <button type="button" className="mapp-danger-button" onClick={() => void submitCancelCredit()} disabled={saving || cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR'}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {correctionMenu ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setCorrectionMenu(null)}>
@@ -1132,15 +1228,15 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                         <b className={`mapp-installment-status ${tone}`}>{statusLabel}</b>
                         <div className="mapp-installment-actions mapp-installment-actions-slim">
                           <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit, installment)}>Ver recibo</button>
-                          {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
+                          {credit.status !== 'cancelado' && installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
                             <button type="button" className="mapp-primary-button" onClick={() => openReceive(credit, installment)}>Receber</button>
                           ) : null}
-                          <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, installment)}>Editar</button>
-                          {paidOf(installment) > 0.009 ? (
+                          {credit.status !== 'cancelado' ? <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, installment)}>Editar</button> : null}
+                          {credit.status !== 'cancelado' && paidOf(installment) > 0.009 ? (
                             <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'estorno')}>Estornar</button>
                           ) : null}
-                          <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, installment)}>Mais correções</button>
-                          {creditMode === 'avancado' ? (
+                          {credit.status !== 'cancelado' ? <button type="button" className="mapp-secondary-button strong" onClick={() => openCorrectionMenu(credit, installment)}>Mais correções</button> : null}
+                          {creditMode === 'avancado' && credit.status !== 'cancelado' ? (
                             <>
                               {installment.status !== 'pago' && remainingOf(installment) > 0.009 ? (
                                 <button type="button" className="mapp-secondary-button" onClick={() => openCorrection(credit, installment, 'complemento')}>Complemento</button>
@@ -1158,13 +1254,14 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
                   </button>
                 ) : null}
                 <div className="mapp-credit-note-actions mapp-credit-note-actions-muted" aria-label="Ações do crediário">
-                  {nextInstallment && credit.status !== 'quitado' ? (
+                  {nextInstallment && credit.status !== 'quitado' && credit.status !== 'cancelado' ? (
                     <button type="button" className="mapp-credit-primary-action" onClick={() => openReceive(credit, nextInstallment)}>
                       Receber próxima parcela
                     </button>
                   ) : null}
                   <button type="button" className="mapp-secondary-button" onClick={() => openReceiptsForCredit(credit)}>Ver extrato da nota</button>
-                  {nextInstallment ? (
+                  {credit.status !== 'cancelado' ? <button type="button" className="mapp-danger-button" onClick={() => openCancelCredit(credit)}>Cancelar crediário</button> : <span className="mapp-credit-canceled-note">Crediário cancelado · histórico preservado</span>}
+                  {nextInstallment && credit.status !== 'cancelado' ? (
                     <>
                       <button type="button" className="mapp-secondary-button" onClick={() => openEditInstallment(credit, nextInstallment)}>Editar</button>
                       {paidOf(nextInstallment) > 0.009 ? (

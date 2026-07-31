@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v240-vencimento-livre-parcela';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v241-cancelar-crediario-produto-seguro';
 const APP_SHELL = [
   '/',
   '/index.html',

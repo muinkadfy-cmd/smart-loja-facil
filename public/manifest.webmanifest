@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v240",
-  "short_name": "Jaque v240",
-  "description": "PWA da loja v240 com vencimento livre e definitivo por parcela.",
+  "name": "Jaque Confecções e Presentes v241",
+  "short_name": "Jaque v241",
+  "description": "PWA da loja v241 com cancelamento seguro de crediário e produto.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

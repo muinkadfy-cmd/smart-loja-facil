@@ -13228,3 +13228,77 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
 .mapp-credit-payment-review .mapp-credit-before-after span {
   min-width: 0;
 }
+
+/* Mega Lote 241 — cancelar crediário e excluir produto com segurança */
+.mapp-danger-button {
+  min-height: 42px;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mapp-danger-button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.mapp-credit-cancel-warning {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 16px;
+  background: #fff7ed;
+  color: #7c2d12;
+}
+
+.mapp-credit-cancel-warning strong {
+  font-size: .94rem;
+}
+
+.mapp-credit-cancel-warning p {
+  margin: 0;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.mapp-credit-canceled-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: .82rem;
+  font-weight: 850;
+}
+
+.mapp-credit-card:has(.mapp-credit-canceled-note) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.mapp-cancel-credit-panel,
+.mapp-delete-product-panel {
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+}
+
+@media (max-width: 520px) {
+  .mapp-cancel-credit-panel .mapp-sale-total-box {
+    grid-template-columns: 1fr;
+  }
+
+  .mapp-credit-note-actions .mapp-danger-button,
+  .mapp-product-actions .mapp-danger-button {
+    width: 100%;
+  }
+}
