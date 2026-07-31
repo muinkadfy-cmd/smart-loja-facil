@@ -1,0 +1,22 @@
+HOTFIX 244 — CORRIGIR ESTADO AUSENTE NO MODAL DE PRODUTO
+
+CAUSA
+- deleteProductFeedback e setDeleteProductFeedback eram usados, mas o useState não existia.
+- Isso gerava 14 erros no type-check/build.
+
+CORREÇÃO
+- Estado e setter adicionados dentro de ProductsScreen.
+- release_check reforçado para impedir que a mesma falha passe novamente.
+- Versão/cache atualizados para v244.
+
+NÃO ALTERA
+- Banco, Supabase, pagamentos, caixa, estoque ou regras de negócio.
+- Modal de cancelamento do crediário.
+- Confirmações CANCELAR e EXCLUIR.
+
+TESTE LOCAL OBRIGATÓRIO
+npm run type-check
+npm run build
+npm run lint
+npm run release:check
+npm run release:commercial:check

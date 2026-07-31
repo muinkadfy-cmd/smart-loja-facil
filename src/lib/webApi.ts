@@ -60,8 +60,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v242-modal-iphone-acessivel';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v242-modal-iphone-acessivel';
+export const WEB_APP_VERSION = 'pwa-supabase-v244-hotfix-feedback-produto';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v244-hotfix-feedback-produto';
 
 
 export interface WebTrainingModeState {
@@ -3230,6 +3230,8 @@ export async function webCancelCredit(payload: unknown): Promise<CreditCancellat
   if (!creditId) throw new Error('Crediário inválido para cancelamento.');
   if (reason.length < 6) throw new Error('Informe um motivo com pelo menos 6 letras para cancelar o crediário.');
 
+  const creditsBefore = await webCredits();
+  const creditBefore = creditsBefore.find((item) => item.id === creditId);
   const client = await getClient();
   const { data, error } = await client.rpc('web_cancel_credit_safe', {
     target_credit_id: creditId,
@@ -3245,9 +3247,22 @@ export async function webCancelCredit(payload: unknown): Promise<CreditCancellat
   }
 
   const result = data && typeof data === 'object' ? data as Record<string, unknown> : {};
-  const credits = await webCredits();
-  const updated = credits.find((item) => item.id === creditId);
-  if (!updated) throw new Error('Crediário cancelado, mas não foi possível recarregar o registro atualizado.');
+  let updated: CreditSummary | undefined;
+  try {
+    const credits = await webCredits();
+    updated = credits.find((item) => item.id === creditId);
+  } catch {
+    updated = undefined;
+  }
+  if (!updated && creditBefore) {
+    updated = {
+      ...creditBefore,
+      status: 'cancelado',
+      balance: 0,
+      installments: creditBefore.installments.map((installment) => ({ ...installment, status: 'cancelada' })),
+    };
+  }
+  if (!updated) throw new Error('O banco confirmou o cancelamento, mas a tela não conseguiu recarregar a nota. Atualize a página para conferir.');
   return {
     credit: updated,
     stock_restored: Boolean(result.stock_restored),

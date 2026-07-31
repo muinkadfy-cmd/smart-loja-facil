@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v242-modal-iphone-acessivel';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v244-hotfix-feedback-produto';
 const APP_SHELL = [
   '/',
   '/index.html',

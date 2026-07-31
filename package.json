@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.242",
+  "version": "0.1.244",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com modais críticos acessíveis no iPhone e celulares v242",
+  "description": "PWA da loja com hotfix do feedback de exclusão de produto v244",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

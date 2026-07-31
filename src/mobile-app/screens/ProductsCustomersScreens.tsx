@@ -579,6 +579,10 @@ function CustomerForm({
   );
 }
 
+function normalizeCriticalConfirmation(value: string): string {
+  return String(value || '').replace(/\s+/g, '').toUpperCase();
+}
+
 export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCustomersScreenProps): JSX.Element {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
@@ -586,6 +590,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const [form, setForm] = useState<ProductFormState | null>(null);
   const [stockAdjust, setStockAdjust] = useState<{ product: Product; delta: string; reason: string } | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<{ product: Product; reason: string; confirmation: string } | null>(null);
+  const [deleteProductFeedback, setDeleteProductFeedback] = useState<{ tone: 'info' | 'error'; text: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingStock, setSavingStock] = useState(false);
@@ -792,30 +797,36 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
     setForm(null);
     setStockAdjust(null);
     setDeleteProduct({ product, reason: '', confirmation: '' });
-    setFeedback({ tone: 'warning', text: 'Exclusão segura aberta. Se existir venda, pedido ou movimento de estoque, o sistema vai bloquear e recomendar Inativar.' });
+    setDeleteProductFeedback({ tone: 'info', text: 'Informe o motivo e digite EXCLUIR. O botão mostrará qualquer bloqueio dentro deste painel.' });
+    setFeedback(null);
   };
 
   const submitDeleteProduct = async () => {
     if (!deleteProduct || saving) return;
     const reason = deleteProduct.reason.trim();
+    const confirmation = normalizeCriticalConfirmation(deleteProduct.confirmation);
     if (reason.length < 6) {
-      setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras.' });
+      setDeleteProductFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras. O produto ainda não foi excluído.' });
       return;
     }
-    if (deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR') {
-      setFeedback({ tone: 'error', text: 'Digite EXCLUIR para confirmar.' });
+    if (confirmation !== 'EXCLUIR') {
+      setDeleteProductFeedback({ tone: 'error', text: 'Digite exatamente EXCLUIR. O produto ainda não foi excluído.' });
       return;
     }
+    setDeleteProductFeedback({ tone: 'info', text: 'Verificando histórico e excluindo o cadastro. Aguarde...' });
     setSaving(true);
     try {
       const result = await api.deleteProductSafe(deleteProduct.product.id, reason);
       setDeleteProduct(null);
+      setDeleteProductFeedback(null);
       setFeedback({ tone: 'success', text: result.message });
       notifyMobileAction({ title: 'Produto excluído', message: `${result.product_name} saiu das listas.`, tone: 'warning', page: 'products', actionLabel: 'Ver produtos' });
       await loadProducts();
       onRefresh();
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      const message = error instanceof Error ? error.message : String(error);
+      setDeleteProductFeedback({ tone: 'error', text: message });
+      setFeedback({ tone: 'error', text: message });
     } finally {
       setSaving(false);
     }
@@ -1017,7 +1028,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       ) : null}
 
       {deleteProduct ? (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setDeleteProduct(null)}>
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setDeleteProduct(null); setDeleteProductFeedback(null); } }}>
           <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
@@ -1029,12 +1040,17 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
               <p>A exclusão só será permitida se o produto nunca apareceu em venda, pedido ou movimento de estoque. Se houver histórico, use Inativar.</p>
             </section>
             <div className="mapp-form-grid">
-              <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => setDeleteProduct({ ...deleteProduct, reason: event.target.value })} rows={2} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
-              <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => setDeleteProduct({ ...deleteProduct, confirmation: event.target.value })} autoComplete="off" autoCapitalize="characters" enterKeyHint="done" spellCheck={false} /></label>
+              <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => { setDeleteProduct({ ...deleteProduct, reason: event.target.value }); setDeleteProductFeedback(null); }} rows={2} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
+              <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => { setDeleteProduct({ ...deleteProduct, confirmation: event.target.value }); setDeleteProductFeedback(null); }} autoComplete="off" autoCapitalize="characters" autoCorrect="off" enterKeyHint="done" spellCheck={false} /></label>
             </div>
             <div className="mapp-form-actions mapp-critical-dialog-actions">
-              <button type="button" className="mapp-secondary-button" onClick={() => setDeleteProduct(null)} disabled={saving}>Voltar</button>
-              <button type="submit" className="mapp-danger-button" disabled={saving || deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR'}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
+              {deleteProductFeedback ? (
+                <div className={`mapp-critical-inline-feedback ${deleteProductFeedback.tone}`} role={deleteProductFeedback.tone === 'error' ? 'alert' : 'status'} aria-live="assertive">
+                  {deleteProductFeedback.text}
+                </div>
+              ) : null}
+              <button type="button" className="mapp-secondary-button" onClick={() => { setDeleteProduct(null); setDeleteProductFeedback(null); }} disabled={saving}>Voltar</button>
+              <button type="submit" className="mapp-danger-button" disabled={saving}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
             </div>
           </form>
         </div>

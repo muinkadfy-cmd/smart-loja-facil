@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v242-modal-iphone-acessivel';
-const currentCache = 'smart-loja-pwa-supabase-v242-modal-iphone-acessivel';
+const currentVersion = 'pwa-supabase-v244-hotfix-feedback-produto';
+const currentCache = 'smart-loja-pwa-supabase-v244-hotfix-feedback-produto';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v242 modal iphone acessivel.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v242 modal iphone acessivel.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v244 hotfix feedback produto.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v244 hotfix feedback produto.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const apiSource = read('src/lib/api.ts');
@@ -172,6 +172,14 @@ for (const token of ['mapp-critical-dialog', 'mapp-critical-dialog-actions', 'en
 for (const token of ['Mega Lote 242 — modais críticos acessíveis', 'height: 100dvh', 'bottom: 0', 'env(safe-area-inset-bottom)', 'touch-action: manipulation']) {
   if (!css.includes(token)) fail(`mobile-app.css do lote 242 precisa conter ${token}.`);
 }
+for (const token of ['Hotfix 243 — botões críticos', 'mapp-critical-inline-feedback', 'pointer-events: auto']) {
+  if (!css.includes(token)) fail(`mobile-app.css do hotfix 243 precisa conter ${token}.`);
+}
+if (!creditsSource.includes('cancelCreditFeedback')) fail('CreditsScreen precisa mostrar feedback dentro do modal de cancelamento.');
+if (!creditsSource.includes('disabled={saving}>{saving ? \'Cancelando...\' : \'Cancelar crediário\'}')) fail('Botão Cancelar crediário não pode ficar desabilitado silenciosamente por confirmação incompleta.');
+if (!productsCustomersSource.includes('deleteProductFeedback')) fail('Produtos precisa mostrar feedback dentro do modal de exclusão.');
+if (!productsCustomersSource.includes("const [deleteProductFeedback, setDeleteProductFeedback] = useState")) fail('ProductsScreen precisa declarar o estado deleteProductFeedback e seu setter.');
+if (!productsCustomersSource.includes('disabled={saving}>{saving ? \'Excluindo...\' : \'Excluir cadastro\'}')) fail('Botão Excluir cadastro não pode ficar desabilitado silenciosamente por confirmação incompleta.');
 
 const routeSource = read('src/mobile-app/mobileAppRoutes.ts');
 for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web', 'Cupom']) {
@@ -200,4 +208,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v242 PWA passou. Modais críticos acessíveis no iPhone e celulares conferidos.');
+console.log('OK: release_check v244 PWA passou. Estado de feedback do produto declarado e validado.');
