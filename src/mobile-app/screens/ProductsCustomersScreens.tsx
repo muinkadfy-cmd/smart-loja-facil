@@ -1018,7 +1018,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
 
       {deleteProduct ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setDeleteProduct(null)}>
-          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" onClick={(event) => event.stopPropagation()}>
+          <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
@@ -1029,14 +1029,14 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
               <p>A exclusão só será permitida se o produto nunca apareceu em venda, pedido ou movimento de estoque. Se houver histórico, use Inativar.</p>
             </section>
             <div className="mapp-form-grid">
-              <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => setDeleteProduct({ ...deleteProduct, reason: event.target.value })} rows={3} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
-              <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => setDeleteProduct({ ...deleteProduct, confirmation: event.target.value })} autoComplete="off" /></label>
+              <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => setDeleteProduct({ ...deleteProduct, reason: event.target.value })} rows={2} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
+              <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => setDeleteProduct({ ...deleteProduct, confirmation: event.target.value })} autoComplete="off" autoCapitalize="characters" enterKeyHint="done" spellCheck={false} /></label>
             </div>
-            <div className="mapp-form-actions">
+            <div className="mapp-form-actions mapp-critical-dialog-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDeleteProduct(null)} disabled={saving}>Voltar</button>
-              <button type="button" className="mapp-danger-button" onClick={() => void submitDeleteProduct()} disabled={saving || deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR'}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
+              <button type="submit" className="mapp-danger-button" disabled={saving || deleteProduct.confirmation.trim().toUpperCase() !== 'EXCLUIR'}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
             </div>
-          </section>
+          </form>
         </div>
       ) : null}
 

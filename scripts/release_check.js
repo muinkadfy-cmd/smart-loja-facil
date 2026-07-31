@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v241-cancelar-crediario-produto-seguro';
-const currentCache = 'smart-loja-pwa-supabase-v241-cancelar-crediario-produto-seguro';
+const currentVersion = 'pwa-supabase-v242-modal-iphone-acessivel';
+const currentCache = 'smart-loja-pwa-supabase-v242-modal-iphone-acessivel';
 
 const requiredCore = [
   'package.json',
@@ -117,8 +117,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v241 cancelar crediario produto seguro.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v241 cancelar crediario produto seguro.');
+if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v242 modal iphone acessivel.');
+if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v242 modal iphone acessivel.');
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const apiSource = read('src/lib/api.ts');
@@ -163,6 +163,16 @@ for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page'
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
 
+const creditsMobileSource = read('src/mobile-app/screens/CreditsScreen.tsx');
+const productsMobileSource = read('src/mobile-app/screens/ProductsCustomersScreens.tsx');
+for (const token of ['mapp-critical-dialog', 'mapp-critical-dialog-actions', 'enterKeyHint="done"', 'type="submit"']) {
+  if (!creditsMobileSource.includes(token)) fail(`Crediário mobile precisa conter ${token} no modal crítico.`);
+  if (!productsMobileSource.includes(token)) fail(`Produtos mobile precisa conter ${token} no modal crítico.`);
+}
+for (const token of ['Mega Lote 242 — modais críticos acessíveis', 'height: 100dvh', 'bottom: 0', 'env(safe-area-inset-bottom)', 'touch-action: manipulation']) {
+  if (!css.includes(token)) fail(`mobile-app.css do lote 242 precisa conter ${token}.`);
+}
+
 const routeSource = read('src/mobile-app/mobileAppRoutes.ts');
 for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web', 'Cupom']) {
   if (!routeSource.includes(label)) fail(`Rota nova ausente: ${label}`);
@@ -190,4 +200,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v241 PWA passou. Cancelamento seguro de crediário e produto conferido.');
+console.log('OK: release_check v242 PWA passou. Modais críticos acessíveis no iPhone e celulares conferidos.');

@@ -13302,3 +13302,151 @@ html.smart-mobile-rebuild-v153 .mapp-header-actions .mapp-page-reload-button {
     width: 100%;
   }
 }
+
+
+/* Mega Lote 242 — modais críticos acessíveis no iPhone e celulares */
+.mapp-credit-receive-backdrop,
+.mapp-bottom-sheet-backdrop {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.mapp-receive-drawer,
+.mapp-bottom-sheet {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scroll-padding-bottom: calc(148px + env(safe-area-inset-bottom));
+}
+
+.mapp-receive-drawer .mapp-form-actions,
+.mapp-bottom-sheet-actions {
+  bottom: 0;
+  z-index: 25;
+  isolation: isolate;
+  box-shadow: 0 -14px 32px rgba(15, 23, 42, 0.13);
+}
+
+.mapp-receive-drawer input,
+.mapp-receive-drawer textarea,
+.mapp-receive-drawer select,
+.mapp-bottom-sheet input,
+.mapp-bottom-sheet textarea,
+.mapp-bottom-sheet select {
+  scroll-margin-top: 90px;
+  scroll-margin-bottom: calc(154px + env(safe-area-inset-bottom));
+}
+
+.mapp-receive-drawer .mapp-form-actions button,
+.mapp-bottom-sheet-actions button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 520px) {
+  .mapp-credit-receive-backdrop,
+  .mapp-bottom-sheet-backdrop {
+    align-items: flex-end;
+    padding:
+      max(6px, env(safe-area-inset-top))
+      6px
+      max(6px, env(safe-area-inset-bottom));
+  }
+
+  .mapp-receive-drawer,
+  .mapp-bottom-sheet {
+    width: 100%;
+    max-height: calc(100vh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 12px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border-radius: 24px 24px 14px 14px !important;
+  }
+
+  .mapp-receive-drawer {
+    padding: 12px 12px 0 !important;
+  }
+
+  .mapp-bottom-sheet {
+    padding: 12px 12px 0;
+  }
+
+  .mapp-receive-drawer .mapp-form-actions,
+  .mapp-bottom-sheet-actions {
+    position: sticky;
+    bottom: 0;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 12px -12px 0;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(148, 163, 184, 0.24);
+    background: linear-gradient(180deg, rgba(255,255,255,.90), #fff 28%, #fff 100%);
+  }
+
+  .mapp-receive-drawer .mapp-form-actions button,
+  .mapp-bottom-sheet-actions button {
+    width: 100%;
+    min-height: 56px;
+    border-radius: 16px;
+    font-size: 1rem;
+  }
+
+  .mapp-critical-dialog-actions .mapp-danger-button {
+    order: -1;
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: 0 12px 26px rgba(185, 28, 28, 0.24);
+  }
+
+  .mapp-critical-dialog-actions .mapp-danger-button:disabled {
+    border-color: #fecaca;
+    background: #fff1f2;
+    color: #b91c1c;
+    box-shadow: none;
+  }
+
+  .mapp-cancel-credit-panel .mapp-sale-total-box {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .mapp-cancel-credit-panel .mapp-sale-total-box div {
+    min-height: 54px;
+    padding: 7px 5px;
+  }
+
+  .mapp-cancel-credit-panel .mapp-sale-total-box span {
+    font-size: .70rem;
+    line-height: 1.1;
+  }
+
+  .mapp-cancel-credit-panel .mapp-sale-total-box strong {
+    font-size: .88rem;
+  }
+
+  .mapp-critical-dialog .mapp-credit-cancel-warning {
+    margin: 8px 0 10px;
+    padding: 10px 12px;
+  }
+
+  .mapp-critical-dialog .mapp-credit-cancel-warning p {
+    line-height: 1.32;
+    font-size: .84rem;
+  }
+
+  .mapp-critical-dialog .mapp-form-grid {
+    gap: 8px;
+  }
+
+  .mapp-critical-dialog textarea {
+    min-height: 74px;
+  }
+}
+
+@media (max-width: 360px) {
+  .mapp-cancel-credit-panel .mapp-sale-total-box {
+    grid-template-columns: 1fr;
+  }
+}

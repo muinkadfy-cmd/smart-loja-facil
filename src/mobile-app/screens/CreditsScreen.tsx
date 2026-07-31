@@ -836,7 +836,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
       {cancelCredit ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setCancelCredit(null)}>
-          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel" role="dialog" aria-modal="true" aria-label="Cancelar crediário" onClick={(event) => event.stopPropagation()}>
+          <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Cancelar crediário" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitCancelCredit(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
@@ -861,18 +861,18 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
               </label>
               <label className="span-2">
                 <span>Motivo obrigatório</span>
-                <textarea value={cancelCredit.reason} onChange={(event) => setCancelCredit({ ...cancelCredit, reason: event.target.value })} rows={3} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" />
+                <textarea value={cancelCredit.reason} onChange={(event) => setCancelCredit({ ...cancelCredit, reason: event.target.value })} rows={2} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" />
               </label>
               <label className="span-2">
                 <span>Digite CANCELAR para confirmar</span>
-                <input value={cancelCredit.confirmation} onChange={(event) => setCancelCredit({ ...cancelCredit, confirmation: event.target.value })} autoComplete="off" />
+                <input value={cancelCredit.confirmation} onChange={(event) => setCancelCredit({ ...cancelCredit, confirmation: event.target.value })} autoComplete="off" autoCapitalize="characters" enterKeyHint="done" spellCheck={false} />
               </label>
             </div>
-            <div className="mapp-form-actions">
+            <div className="mapp-form-actions mapp-critical-dialog-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setCancelCredit(null)} disabled={saving}>Voltar</button>
-              <button type="button" className="mapp-danger-button" onClick={() => void submitCancelCredit()} disabled={saving || cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR'}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
+              <button type="submit" className="mapp-danger-button" disabled={saving || cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR'}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
             </div>
-          </section>
+          </form>
         </div>
       ) : null}
 

@@ -1,0 +1,30 @@
+MEGA LOTE 242 — MODAIS ACESSÍVEIS NO IPHONE E CELULARES
+
+CORREÇÃO PRINCIPAL
+- Botão Cancelar crediário fica visível e clicável no iPhone.
+- Rodapé do modal permanece preso na parte inferior.
+- Respeita a área segura e a barra inferior do Safari.
+- Ajusta altura quando o teclado abre.
+- Botão crítico aparece primeiro no celular.
+- Área de toque aumentada para 56 px.
+
+OUTRAS ABAS
+- Exclusão segura de Produto recebeu o mesmo ajuste.
+- Modais baseados em mapp-receive-drawer foram protegidos.
+- Cliente rápido no PDV recebeu rodapé sticky corrigido.
+
+ANTI-REGRESSÃO
+- Não altera banco, pagamentos, caixa, estoque ou cálculos.
+- Não altera as confirmações CANCELAR e EXCLUIR.
+- Não precisa de migration Supabase nova.
+
+TESTES
+- Transpile TSX: OK.
+- Validação CSS/seletores: OK.
+- npm run lint: OK.
+- npm run release:check estrutural: OK.
+- npm run release:commercial:check: OK.
+- Build Vite completo: precisa ser repetido localmente porque o registry interno falhou no pacote youch-core@0.3.3.
+
+VERSÃO
+- 0.1.242

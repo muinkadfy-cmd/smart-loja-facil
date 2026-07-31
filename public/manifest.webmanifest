@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v241",
-  "short_name": "Jaque v241",
-  "description": "PWA da loja v241 com cancelamento seguro de crediário e produto.",
+  "name": "Jaque Confecções e Presentes v242",
+  "short_name": "Jaque v242",
+  "description": "PWA da loja v242 com modais críticos acessíveis no iPhone e celulares.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

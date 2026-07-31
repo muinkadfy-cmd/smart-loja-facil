@@ -60,8 +60,8 @@ export interface WebStoreContext {
 
 const ACTIVE_STORE_KEY = 'smart-loja:web-active-store-id';
 const WEB_SYNC_STATUS_KEY = 'smart-loja:web-sync-status';
-export const WEB_APP_VERSION = 'pwa-supabase-v241-cancelar-crediario-produto-seguro';
-export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v241-cancelar-crediario-produto-seguro';
+export const WEB_APP_VERSION = 'pwa-supabase-v242-modal-iphone-acessivel';
+export const WEB_CACHE_VERSION = 'smart-loja-pwa-supabase-v242-modal-iphone-acessivel';
 
 
 export interface WebTrainingModeState {
