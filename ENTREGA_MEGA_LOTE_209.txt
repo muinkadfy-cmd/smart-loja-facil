@@ -1,0 +1,23 @@
+MEGA LOTE 209 — CREDIÁRIO FÁCIL PARA USUÁRIO LEIGO
+
+Resumo
+- Criado modo Simples / Avançado na aba Crediário.
+- Modo Simples mostra somente ações essenciais: Ver recibo, Receber e Corrigir.
+- Botão Corrigir abre assistente guiado com opções humanas.
+- Edição de valor/vencimento mostra prévia Antes/Depois.
+- Estorno e complemento mostram impacto no caixa e saldo antes de confirmar.
+- Confirmação obrigatória antes de salvar edição/correção.
+- Textos de sobra/falta foram reescritos para usuário leigo.
+- Mantida auditoria, motivo obrigatório, caixa e fluxo oficial do lote 208.
+- Cache/PWA atualizado para v209.
+
+Testes executados
+- npm install
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- Vite mostra somente aviso de chunk acima de 500 kB.

@@ -1,0 +1,27 @@
+MEGA LOTE 201 — COMPROVANTE FONTES MAIORES
+
+Resumo
+- Aumentei as letras dos comprovantes.
+- Descrição do produto ficou maior e sem negrito pesado.
+- Vencimento ficou maior.
+- Parcela, valor, unitário e total ficaram maiores.
+- Descrição e vencimento ficam com o mesmo tamanho visual.
+- Linhas ganharam mais altura para não ficar espremido.
+- Badge/palavra ABERTA micro ajustada.
+- Mantido Sora no sistema e nos comprovantes.
+- Mantido padrão unificado para aba Comprovantes, Vendas Recentes e Atividades Recentes.
+- PDF/PNG/Compartilhar continuam usando o padrão unificado.
+- Compartilhamento continua somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v201.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Vite ainda avisa sobre chunk acima de 500 kB.
+- O Vite também avisa que as fontes Sora não existem no sandbox, porque os arquivos .ttf não foram incluídos no ZIP. No projeto local, mantenha public/fonts com as fontes Sora.

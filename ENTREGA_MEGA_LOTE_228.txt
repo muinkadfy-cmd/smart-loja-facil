@@ -1,0 +1,28 @@
+MEGA LOTE 228 — EXTRATOS E COMPROVANTES PREMIUM LEGÍVEIS
+
+Resumo
+- Aplicado COMANDO MESTRE 10/10 com especialistas: PDF/PNG/canvas, UI/UX mobile-first, tipografia comercial, QA e usuário leigo.
+- Extrato do crediário, comprovantes, PDF, PNG e compartilhar receberam escala visual maior.
+- Nome do cliente ficou maior e protegido contra corte.
+- Descrição/produto ficou maior, mais forte e com linha mais alta.
+- Vencimento ficou maior, com coluna mais larga e mais destaque.
+- Status, valores, quantidade, unitário e total ficaram mais fortes.
+- Bloco de cliente ficou mais respirado.
+- Tabelas de produtos e parcelas ganharam altura e hierarquia.
+- Totais do rodapé ficaram maiores.
+- Ajustado nos dois motores:
+  1) ReceiptsScreen.tsx — Aba Comprovantes / Extrato / Crediário / Recibo.
+  2) receiptShare.ts — Vendas recentes / Atividades recentes / Compartilhar.
+- Não altera cálculo, pagamento, crediário, estoque, venda ou parcelas.
+- Cache/PWA atualizado para v228.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

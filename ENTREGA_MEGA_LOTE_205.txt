@@ -1,0 +1,24 @@
+MEGA LOTE 205 — EXTRATO SEM ANOTAÇÕES
+
+Resumo
+- Removido bloco ANOTAÇÕES do Extrato PNG.
+- Removida chamada de anotações do Extrato PDF/fallback.
+- Mantido PNG fiel da aba Comprovantes sem anotações.
+- Removidas notas operacionais que poluíam os comprovantes.
+- Rodapé ficou mais limpo e com melhor respiro.
+- Mantida fonte Sora.
+- Mantidas fontes maiores.
+- Mantido padrão PDF/PNG/Compartilhar.
+- Compartilhamento continua somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v205.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Vite segue avisando somente chunk acima de 500 kB.

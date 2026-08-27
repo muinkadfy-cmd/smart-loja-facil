@@ -307,7 +307,16 @@ function ReportsScreen({ refreshToken, onRefresh }: { refreshToken: number; onRe
             ['crediario', 'Crediário'],
             ['estoque_baixo', 'Estoque'],
           ].map(([value, label]) => (
-            <button key={value} type="button" className={kind === value ? 'active' : ''} onClick={() => setKind(value as ReportKind)}>{label}</button>
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={kind === value}
+              className={kind === value ? 'active' : ''}
+              onClick={() => setKind(value as ReportKind)}
+            >
+              {label}
+            </button>
           ))}
         </div>
         <div className="mapp-report-help">

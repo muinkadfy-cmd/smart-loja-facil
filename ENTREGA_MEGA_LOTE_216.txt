@@ -1,0 +1,24 @@
+MEGA LOTE 216 — CORREÇÃO MOBILE PDV + DASHBOARD PREMIUM
+
+Resumo
+- Corrigida herança antiga brigando com a lista de produtos na aba Vendas.
+- Produto agora fica travado em grid seguro: foto, nome/código/estoque, preço e botão.
+- Corrigido texto sobreposto no PDV.
+- Subnav Operação compactada na aba Vendas.
+- Resumo Carrinho/Subtotal/Cliente mais compacto no mobile.
+- Etapas 1/2/3/4 reduzidas no mobile.
+- Mini carrinho e pagamento rápido mais compactos.
+- Nova Dashboard/Painel no padrão da imagem enviada.
+- Dashboard com cards 2x2, alerta de estoque baixo, ações rápidas, produtos em destaque e atividades recentes compactas.
+- Cache/PWA atualizado para v216.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

@@ -1,0 +1,21 @@
+MEGA LOTE 193 — CUPOM MICRO AJUSTE ACIMA
+
+Resumo
+- Conteúdo dinâmico do cupom subido mais um pouco.
+- Desconto principal levemente mais alto.
+- Símbolo % e OFF micro ajustados para cima.
+- Nome do cliente subido e refinado para não escapar da margem.
+- Código do cupom subido e levemente ajustado.
+- Preview mobile refinado para ficar mais centralizado visualmente.
+- Cache/PWA atualizado para v193.
+
+Testes executados
+- npm install
+- npm run type-check
+- npm run build
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O build passou. O Vite continua emitindo apenas aviso de chunk acima de 500 kB, sem bloquear o app.

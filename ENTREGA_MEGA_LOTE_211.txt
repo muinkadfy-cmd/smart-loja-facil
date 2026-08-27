@@ -1,0 +1,25 @@
+MEGA LOTE 211 — ORTOGRAFIA, EXPANSÍVEIS E LAYOUT PREMIUM
+
+Resumo
+- Corrigido CREDIARIO/Crediario/crediario em textos visíveis dos comprovantes e extratos.
+- Removida a palavra Anotações dos HTML/A4, substituindo por Resumo.
+- Aba Comprovantes começa com clientes fechados por padrão para ocupar menos espaço.
+- Produtos e Clientes agora têm cards compactos com botão Detalhes/Recolher.
+- Dashboard virou Painel na navegação visível.
+- Comprov. virou Comprovantes no mobile.
+- Diag. Web virou Diagnóstico no rótulo curto.
+- Próx. venc. virou Próximo vencimento.
+- item(ns), parcela(s), crediário(s) reduzidos em telas principais.
+- Cache/PWA atualizado para v211.
+
+Testes executados
+- npm install --no-audit --no-fund
+- tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Vite segue mostrando apenas aviso de chunk acima de 500 kB.
+- Não inclui .env, node_modules, dist, logs, fontes ou bancos.

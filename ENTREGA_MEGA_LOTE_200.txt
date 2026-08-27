@@ -1,0 +1,30 @@
+MEGA LOTE 200 — SORA + COMPROVANTES UNIFICADOS
+
+RESUMO
+- Fonte Sora aplicada ao sistema inteiro via CSS global.
+- Fonte Sora aplicada nos comprovantes gerados em canvas.
+- Aba Comprovantes, Vendas Recentes e Atividades Recentes auditadas para manter padrão visual unificado em PDF/PNG/Compartilhar.
+- Descrição do produto e vencimento com mesmo tamanho de fonte e sem negrito.
+- Badge ABERTA refinado/centralizado.
+- Compartilhamento permanece somente com arquivo, sem texto e sem link.
+- Service Worker atualizado para cache runtime de /fonts/.
+- Versão/cache PWA: v200.
+
+IMPORTANTE SOBRE FONTES
+- O ZIP não inclui arquivos .ttf.
+- Mantenha no projeto a pasta public/fonts com:
+  Sora-Regular.ttf, Sora-Medium.ttf, Sora-SemiBold.ttf, Sora-Bold.ttf.
+- No seu print, essa pasta já existe no projeto local.
+
+TESTES EXECUTADOS
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+OBSERVAÇÃO HONESTA
+- Build passou.
+- O Vite avisou que as fontes /fonts/Sora-*.ttf não existem dentro deste sandbox porque não incluí fontes no ZIP.
+- No seu projeto local, com public/fonts presente, elas resolvem em runtime.
+- O Vite ainda mostra aviso de chunk acima de 500 kB, sem quebrar o app.

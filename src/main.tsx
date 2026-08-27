@@ -4,7 +4,12 @@ import App from './App';
 import './mobile-app/styles/mobile-app.css';
 
 
-document.documentElement.className = 'smart-mobile-rebuild smart-mobile-rebuild-v189 smart-mobile-rebuild-v175';
+document.documentElement.classList.add(
+  'smart-mobile-rebuild',
+  'smart-mobile-rebuild-v245',
+  'smart-mobile-rebuild-v189',
+  'smart-mobile-rebuild-v175',
+);
 
 function applyMobileViewportMetrics(): void {
   const root = document.documentElement;

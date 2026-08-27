@@ -1,0 +1,24 @@
+MEGA LOTE 220 — COMPROVANTES COM TIPOGRAFIA LEGÍVEL
+
+Resumo
+- Comprovantes, PNG, PDF, compartilhar e extratos com tipografia mais legível.
+- Nome, descrição/produto e vencimentos com fonte maior e mais uniforme.
+- Os dois motores foram alinhados: aba Comprovantes e Vendas recentes/Atividades recentes.
+- Linhas de produtos ficaram mais altas para não apertar descrição.
+- Linhas de parcelas ficaram mais altas para vencimento ficar legível.
+- Mantidos acentos, cedilha e fonte Sora.
+- PDF principal continua sendo imagem fiel do PNG.
+- Mantido fluxo iPhone sem link automático.
+- Sem alterar cálculos, venda, pagamento ou crediário.
+- Cache/PWA atualizado para v220.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

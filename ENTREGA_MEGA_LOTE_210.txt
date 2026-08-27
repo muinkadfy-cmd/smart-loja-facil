@@ -1,0 +1,24 @@
+MEGA LOTE 210 — CREDIÁRIO AUTOMÁTICO MAIS/MENOS
+
+Resumo
+- Modo simples não exige mais clicar em caixas para sobra/falta.
+- Usuário digita o valor recebido, confere a prévia e confirma.
+- Valor exato: quita somente a parcela atual.
+- Valor maior: quita a parcela atual e abate automaticamente a sobra nas próximas parcelas.
+- Valor menor com próxima parcela: fecha a parcela atual com o valor recebido e joga automaticamente a falta para a próxima parcela.
+- Valor menor na última parcela: mantém o restante em aberto na própria parcela.
+- Valor maior que saldo total: bloqueia e mostra alerta.
+- Modo avançado mantém opção manual para responsável.
+- Mensagens ficaram mais humanas para usuário leigo.
+- Cache/PWA atualizado para v210.
+
+Testes executados
+- npm install
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- Vite segue com aviso de chunk acima de 500 kB, sem quebrar o app.

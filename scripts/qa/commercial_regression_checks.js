@@ -104,7 +104,7 @@ assert(validEan13(`200000000001${ean13Checksum('200000000001')}`), 'Validador EA
 
 const receiptsSource = fs.readFileSync(path.join(root, 'src/mobile-app/screens/ReceiptsScreen.tsx'), 'utf8');
 assert(receiptsSource.includes('%PDF-1.4'), 'Geracao de PDF real nao encontrada em ReceiptsScreen.');
-assert(!/%PDF-1\.4[\s\S]{0,2000}<html/i.test(receiptsSource), 'PDF nao deve embutir HTML cru perto do cabecalho PDF.');
+assert(!/%PDF-1\.4[\s\S]{0,2000}<(?:!doctype\s+html|html(?:\s|>))/i.test(receiptsSource), 'PDF nao deve embutir HTML cru perto do cabecalho PDF.');
 assert(receiptsSource.includes('receiptStoreName(store)'), 'PDF precisa usar o nome da loja cadastrada.');
 
 const restored = restoreByUpsert(

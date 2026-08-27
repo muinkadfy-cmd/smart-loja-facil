@@ -1,0 +1,25 @@
+MEGA LOTE 229 — MICRO ALINHAMENTO PREMIUM DOS COMPROVANTES
+
+Resumo
+- Aplicado micro alinhamento pixel a pixel nos comprovantes, extratos, PDF, PNG e compartilhar.
+- Centralização vertical real por célula no canvas.
+- QTD, R$ UN, TOTAL, parcela, vencimento e valor ficaram alinhados por caixa.
+- Badge/status passou a usar centro vertical real.
+- Produto recebeu micro respiro lateral.
+- Cards finais receberam micro ajuste de linha e valor.
+- Aplicado nos dois motores:
+  1) ReceiptsScreen.tsx.
+  2) receiptShare.ts.
+- Não altera cálculo, venda, crediário, estoque, pagamento ou parcelas.
+- Cache/PWA atualizado para v229.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

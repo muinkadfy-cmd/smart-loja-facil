@@ -86,6 +86,10 @@ type CancelCreditState = {
 
 const RECEIPTS_FOCUS_SALE_KEY = 'smart-loja:receipts-focus-sale-v1';
 
+function normalizeCriticalConfirmation(value: string): string {
+  return String(value || '').replace(/\s+/g, '').toUpperCase();
+}
+
 function requestId(prefix: string): string {
   const random = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -324,6 +328,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [correction, setCorrection] = useState<CorrectionState | null>(null);
   const [correctionMenu, setCorrectionMenu] = useState<CorrectionMenuState | null>(null);
   const [cancelCredit, setCancelCredit] = useState<CancelCreditState | null>(null);
+  const [cancelCreditFeedback, setCancelCreditFeedback] = useState<{ tone: 'info' | 'error'; text: string } | null>(null);
   const [creditMode, setCreditMode] = useState<CreditMode>('simples');
   const [showCreditHelp, setShowCreditHelp] = useState(true);
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
@@ -465,35 +470,44 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   function openCancelCredit(credit: CreditSummary): void {
     setCorrectionMenu(null);
     setCancelCredit({ credit, reason: '', restoreStock: true, confirmation: '' });
-    setFeedback({ tone: 'info', text: 'Cancelamento seguro aberto. O histórico e os pagamentos anteriores serão preservados.' });
+    setCancelCreditFeedback({ tone: 'info', text: 'Informe o motivo e digite CANCELAR. O botão sempre responderá e mostrará o que estiver faltando.' });
+    setFeedback(null);
   }
 
   async function submitCancelCredit(): Promise<void> {
     if (!cancelCredit || saving) return;
     const reason = cancelCredit.reason.trim();
+    const confirmation = normalizeCriticalConfirmation(cancelCredit.confirmation);
+
     if (reason.length < 6) {
-      setFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras para cancelar o crediário.' });
+      setCancelCreditFeedback({ tone: 'error', text: 'Informe um motivo com pelo menos 6 letras. O crediário ainda não foi cancelado.' });
       return;
     }
-    if (cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR') {
-      setFeedback({ tone: 'error', text: 'Digite CANCELAR para confirmar esta operação.' });
+    if (confirmation !== 'CANCELAR') {
+      setCancelCreditFeedback({ tone: 'error', text: 'Digite exatamente CANCELAR no campo de confirmação. O crediário ainda não foi cancelado.' });
       return;
     }
+
+    setCancelCreditFeedback({ tone: 'info', text: 'Cancelando o crediário na nuvem. Aguarde sem tocar novamente...' });
     setSaving(true);
     try {
+      const currentCredit = cancelCredit.credit;
       const result = await api.cancelCredit({
-        credit_id: cancelCredit.credit.id,
+        credit_id: currentCredit.id,
         reason,
         restore_stock: cancelCredit.restoreStock,
       });
       setCredits((current) => current.map((credit) => credit.id === result.credit.id ? result.credit : credit));
       setCancelCredit(null);
+      setCancelCreditFeedback(null);
       setFeedback({ tone: 'success', text: `${result.message}${result.stock_restored ? ' Os produtos voltaram ao estoque.' : ' O estoque não foi alterado.'}` });
-      notifyMobileAction({ title: 'Crediário cancelado', message: `${cancelCredit.credit.customer_name}: cobrança encerrada com histórico preservado.`, tone: 'warning', page: 'credits', actionLabel: 'Ver crediário' });
+      notifyMobileAction({ title: 'Crediário cancelado', message: `${currentCredit.customer_name}: cobrança encerrada com histórico preservado.`, tone: 'warning', page: 'credits', actionLabel: 'Ver crediário' });
       await loadCredits();
       onRefresh();
     } catch (error) {
-      setFeedback({ tone: 'error', text: error instanceof Error ? error.message : String(error) });
+      const message = error instanceof Error ? error.message : String(error);
+      setCancelCreditFeedback({ tone: 'error', text: message });
+      setFeedback({ tone: 'error', text: message });
     } finally {
       setSaving(false);
     }
@@ -835,7 +849,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       </section>
 
       {cancelCredit ? (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => !saving && setCancelCredit(null)}>
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setCancelCredit(null); setCancelCreditFeedback(null); } }}>
           <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Cancelar crediário" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitCancelCredit(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
@@ -856,21 +870,26 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
             </section>
             <div className="mapp-form-grid">
               <label className="span-2 mapp-check-field">
-                <input type="checkbox" checked={cancelCredit.restoreStock} onChange={(event) => setCancelCredit({ ...cancelCredit, restoreStock: event.target.checked })} />
+                <input type="checkbox" checked={cancelCredit.restoreStock} onChange={(event) => { setCancelCredit({ ...cancelCredit, restoreStock: event.target.checked }); setCancelCreditFeedback(null); }} />
                 <span>Devolver ao estoque os produtos desta venda</span>
               </label>
               <label className="span-2">
                 <span>Motivo obrigatório</span>
-                <textarea value={cancelCredit.reason} onChange={(event) => setCancelCredit({ ...cancelCredit, reason: event.target.value })} rows={2} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" />
+                <textarea value={cancelCredit.reason} onChange={(event) => { setCancelCredit({ ...cancelCredit, reason: event.target.value }); setCancelCreditFeedback(null); }} rows={2} placeholder="Ex.: venda lançada para cliente errado / produto devolvido" />
               </label>
               <label className="span-2">
                 <span>Digite CANCELAR para confirmar</span>
-                <input value={cancelCredit.confirmation} onChange={(event) => setCancelCredit({ ...cancelCredit, confirmation: event.target.value })} autoComplete="off" autoCapitalize="characters" enterKeyHint="done" spellCheck={false} />
+                <input value={cancelCredit.confirmation} onChange={(event) => { setCancelCredit({ ...cancelCredit, confirmation: event.target.value }); setCancelCreditFeedback(null); }} autoComplete="off" autoCapitalize="characters" autoCorrect="off" enterKeyHint="done" spellCheck={false} />
               </label>
             </div>
             <div className="mapp-form-actions mapp-critical-dialog-actions">
-              <button type="button" className="mapp-secondary-button" onClick={() => setCancelCredit(null)} disabled={saving}>Voltar</button>
-              <button type="submit" className="mapp-danger-button" disabled={saving || cancelCredit.confirmation.trim().toUpperCase() !== 'CANCELAR'}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
+              {cancelCreditFeedback ? (
+                <div className={`mapp-critical-inline-feedback ${cancelCreditFeedback.tone}`} role={cancelCreditFeedback.tone === 'error' ? 'alert' : 'status'} aria-live="assertive">
+                  {cancelCreditFeedback.text}
+                </div>
+              ) : null}
+              <button type="button" className="mapp-secondary-button" onClick={() => { setCancelCredit(null); setCancelCreditFeedback(null); }} disabled={saving}>Voltar</button>
+              <button type="submit" className="mapp-danger-button" disabled={saving}>{saving ? 'Cancelando...' : 'Cancelar crediário'}</button>
             </div>
           </form>
         </div>

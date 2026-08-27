@@ -1,0 +1,21 @@
+MEGA LOTE 191 — CUPOM BASE LIMPA
+
+Resumo da entrega
+- Remove a base visual anterior do cupom e substitui pela nova arte limpa enviada.
+- Mantém desconto, nome do cliente e código dentro da própria foto.
+- Ajusta posição, proporção, fonte, limite de caracteres e redução automática.
+- Exporta PNG 1080x1350 sem corte.
+- Mantém botão Baixar PNG e Compartilhar PNG.
+- Mantém descontos rápidos 10/20/30/50.
+- Atualiza PWA/cache/service worker para v191.
+
+Testes executados
+- npm run type-check: OK
+- npm run build: OK, com aviso do Vite sobre chunk acima de 500 kB
+- npm run lint: OK
+- npm run release:check: OK, com avisos esperados de src-tauri legado e .env.production local fora do ZIP
+- npm run release:commercial:check: OK, com avisos de arquivos locais protegidos por .gitignore
+
+Observações
+- Não inclui node_modules, .env, logs, dist, bancos, .wrangler ou secrets.
+- O cupom é gerado localmente no aparelho e não grava dados pessoais na nuvem.

@@ -1,0 +1,25 @@
+MEGA LOTE 203 — SORA SEM FONTE QUEBRADA
+
+Diagnóstico do print
+- O console mostra Failed to decode downloaded font.
+- O erro OTS invalid sfntVersion 1008821359 indica que o navegador está recebendo conteúdo inválido no lugar do .ttf.
+- Na prática, /fonts/Sora-*.ttf no deploy estava retornando HTML/fallback ou arquivo inválido, então o Chrome tentava ler HTML como fonte.
+
+Correção aplicada
+- Removidos @font-face locais que apontavam para /fonts/Sora-*.ttf.
+- Sora agora carrega por CSS via Google Fonts, evitando erro de fonte local quebrada.
+- Comprovantes aguardam a Sora carregar antes de desenhar o canvas.
+- Se a rede bloquear a fonte, fica fallback seguro.
+- Não inclui arquivos .ttf no ZIP.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- Build passou sem os avisos de Failed to decode downloaded font no build.
+- O Vite segue avisando apenas chunk acima de 500 kB.

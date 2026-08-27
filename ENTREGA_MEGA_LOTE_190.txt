@@ -1,0 +1,25 @@
+MEGA LOTE 190 — CUPOM PIXEL FIEL
+
+Resumo da entrega
+- Nova aba Cupom adicionada no PWA/mobile.
+- Preview fiel baseado na arte original enviada.
+- Exportação PNG 1080x1350 sem corte.
+- Compartilhamento PNG com fallback para download.
+- Desconto rápido 10/20/30/50.
+- Nome do cliente com limite e redução automática.
+- Código do cupom editável, com padrão automático CLIENTEJAQUE + porcentagem.
+- Atalho no Dashboard e shortcut no manifest.
+- Cache/PWA atualizado para v190.
+
+Testes executados
+- npm install
+- npm run type-check
+- npm run build
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observações
+- O template usa a própria arte enviada como base para maximizar a fidelidade visual.
+- O PNG final é gerado via canvas para manter o tamanho correto 1080x1350 e evitar cortes.
+- Em navegadores sem suporte ao compartilhamento de arquivos, o sistema baixa o PNG automaticamente.

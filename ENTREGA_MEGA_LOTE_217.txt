@@ -1,0 +1,25 @@
+MEGA LOTE 217 — PDV MOBILE COMPACTO COM 5 PRODUTOS
+
+Resumo
+- Corrigida poluição visual da lista de produtos na aba Vendas/PDV.
+- Produto não usa mais strong/small/b/em para evitar briga com CSS antigo.
+- Produto agora usa classes próprias mapp-sales-product-*.
+- Grid travado: foto, nome, código, estoque, preço e botão.
+- Status Em estoque/Sem estoque ficou menor.
+- Tela inicial mostra só 5 produtos.
+- Botão Mostrar mais produtos carrega mais 5 por vez.
+- Busca e categorias ficaram mais compactas.
+- Mini carrinho ficou mais compacto.
+- Mantida lógica de venda, carrinho, pagamento, crediário e comprovantes.
+- Cache/PWA atualizado para v217.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

@@ -1,0 +1,29 @@
+MEGA LOTE 208 — CREDIÁRIO PRO COM CORREÇÃO SEGURA
+
+Resumo
+- Adicionado botão Editar em cada parcela.
+- Edita valor da parcela e vencimento.
+- Motivo obrigatório para auditoria.
+- Opção de compensar diferença na próxima parcela para manter total da nota.
+- Botão Estornar quando existe valor pago.
+- Botão Complemento quando existe saldo a receber.
+- Estorno lança saída no caixa, devolve saldo ao crediário e grava auditoria.
+- Complemento usa o fluxo oficial de recebimento sem apagar pagamento antigo.
+- Receber parcela agora separa as opções:
+  1. Abater sobra nas próximas parcelas quando pagar a mais.
+  2. Se pagar a menos, jogar a falta para a próxima parcela.
+- Preserva histórico e não apaga recibos antigos.
+- Cache/PWA atualizado para v208.
+
+Testes executados
+- npm install
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observações
+- Build passou. Apenas aviso padrão de chunk acima de 500 kB.
+- Funções novas para web/PWA: webAdjustCreditInstallment e webCorrectCreditPayment.
+- No modo Tauri/desktop antigo, os comandos novos dependem de backend Rust equivalente; no PWA/Supabase já foram implementados no webApi.

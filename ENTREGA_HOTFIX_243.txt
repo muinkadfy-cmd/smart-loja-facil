@@ -1,0 +1,30 @@
+HOTFIX 243 — CANCELAR CREDIÁRIO SEMPRE RESPONDE
+
+CAUSA RAIZ
+- O botão ficava desabilitado enquanto CANCELAR não estivesse exato.
+- Botão desabilitado não mostrava o que faltava.
+- Erros eram exibidos atrás do modal e pareciam não acontecer nada.
+
+CORREÇÃO
+- Botão Cancelar crediário fica clicável, exceto durante o salvamento.
+- Validações e erros do Supabase aparecem dentro do próprio modal.
+- Mostra estado Cancelando...
+- Confirmação tolera espaços acidentais do teclado do iPhone.
+- autoCorrect desligado.
+- Mesmo hotfix aplicado ao botão Excluir cadastro do Produto.
+- Fallback visual quando a RPC confirma e a recarga imediata falha.
+
+NÃO ALTERA
+- Banco/migration do lote 241.
+- Pagamentos, caixa, estoque e cálculos.
+- Regras CANCELAR, EXCLUIR e motivo obrigatório.
+
+TESTES
+- Sintaxe TS/TSX: OK.
+- npm run lint: OK.
+- npm run release:check: OK.
+- npm run release:commercial:check: OK.
+- npm install/build completo: não executado por 404 do registry interno em youch-core@0.3.3.
+
+VERSÃO
+- 0.1.243

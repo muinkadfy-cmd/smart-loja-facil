@@ -4691,6 +4691,12 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
 
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
+      <details className="mapp-diagnostics-group" open>
+        <summary>
+          <span>Ambiente e apresentação</span>
+          <small>Demo, tour e proposta comercial</small>
+        </summary>
+        <div className="mapp-diagnostics-group-body">
       <section className={`mapp-section-block mapp-demo-panel ${demoActive ? 'is-active' : ''}`}>
         <div className="mapp-section-title"><h2>Ambiente demo separado</h2><button type="button" onClick={() => void copyDemoMode()}>Copiar resumo</button></div>
         <div className="mapp-demo-hero">
@@ -4850,7 +4856,15 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         </div>
         <small className="mapp-final-honesty">Proposta é apoio comercial, não contrato automático. Antes de vender como final, valide dois aparelhos, permissões, impressão, nuvem e aceite final.</small>
       </section>
+        </div>
+      </details>
 
+      <details className="mapp-diagnostics-group">
+        <summary>
+          <span>Cliente, suporte e implantação</span>
+          <small>Termo, pós-venda, auditoria e acompanhamento</small>
+        </summary>
+        <div className="mapp-diagnostics-group-body">
       <section className={`mapp-section-block mapp-term-panel ${termAccepted ? 'is-accepted' : ''}`}>
         <div className="mapp-section-title"><h2>Contrato / termo de implantação</h2><button type="button" onClick={() => void copyImplementationTerm()}>Copiar termo</button></div>
         <div className="mapp-term-hero">
@@ -5301,8 +5315,15 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         </div>
         <small className="mapp-final-honesty">Aprovado: {firstClientCloseoutState.approvedAt ? `${firstClientCloseoutState.approvedBy || 'responsável'} em ${formatDateTime(firstClientCloseoutState.approvedAt)}` : 'não aprovado'}. Não use cliente como modelo se houver P0/P1 aberto, Dia 2 sem aceite, evidência solta, pendência local ou autorização de referência indefinida.</small>
       </section>
+        </div>
+      </details>
 
-
+      <details className="mapp-diagnostics-group">
+        <summary>
+          <span>Treinamento, testes e aceite</span>
+          <small>Roteiros, execução assistida e fechamento</small>
+        </summary>
+        <div className="mapp-diagnostics-group-body">
       <section className={`mapp-section-block mapp-training-panel ${trainingActive ? 'is-active' : ''}`}>
         <div className="mapp-section-title"><h2>Modo treinamento seguro</h2><button type="button" onClick={() => void copyTrainingMode()}>Copiar orientação</button></div>
         <div className="mapp-training-hero">
@@ -5577,7 +5598,15 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
           ))}
         </div>
       </section>
+        </div>
+      </details>
 
+      <details className="mapp-diagnostics-group">
+        <summary>
+          <span>Sistema e pendências</span>
+          <small>Impressão, conexão, fila local e ações técnicas</small>
+        </summary>
+        <div className="mapp-diagnostics-group-body">
       <section className="mapp-form-panel mapp-print-test-panel">
         <div className="mapp-form-head">
           <span className="mapp-form-icon tone-sky"><InlineIcon name="comprovantes" size={24} /></span>
@@ -5651,6 +5680,8 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
         </div>
         <button type="button" onClick={() => void copyDiagnostic()}>Copiar</button>
       </section>
+        </div>
+      </details>
     </div>
   );
 }

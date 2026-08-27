@@ -1,0 +1,23 @@
+MEGA LOTE 195 — AVISOS RESPONSIVO + COMPROVANTE SEM TEXTO/LINK
+
+Resumo
+- Central de Avisos ficou mais responsiva no mobile.
+- Painel de alertas externos foi compactado para liberar espaço para notificações.
+- Lista de notificações ganhou altura mínima visível.
+- Botões da central foram compactados e reorganizados.
+- Compartilhamento de comprovantes agora envia somente arquivo em files, sem text e sem url.
+- Atividades recentes e vendas recentes mantêm PDF/PNG/Compartilhar usando arquivo anexo.
+- Ajuste no PNG/PDF do extrato para evitar ícones renderizando como traço.
+- Micro ajuste de layout do comprovante.
+- Cache/PWA atualizado para v195.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Web Share do Android/Chrome varia por aparelho, mas o payload do app agora não manda mensagem, palavra nem link junto: somente o arquivo PNG ou PDF.

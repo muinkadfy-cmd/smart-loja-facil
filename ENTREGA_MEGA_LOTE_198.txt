@@ -1,0 +1,23 @@
+MEGA LOTE 198 — COMPROVANTE TOP AJUSTE ABERTA
+
+RESUMO
+- Micro ajuste no topo do comprovante.
+- Refinado o alinhamento da área de status.
+- Ajustado o badge "ABERTA" para ficar mais bem posicionado e com respiro melhor.
+- Validado que Comprovante, Vendas Recentes e Atividades Recentes mantêm o mesmo padrão visual de exportação via PDF/PNG/Compartilhar.
+- Compartilhamento continua enviando somente o arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v198.
+
+ARQUIVOS-CHAVE
+- src/mobile-app/screens/ReceiptsScreen.tsx
+- src/mobile-app/components/receiptShare.ts
+
+TESTES
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+OBSERVAÇÃO HONESTA
+- O Vite continua apenas com aviso de chunk > 500 kB, sem quebrar a aplicação.

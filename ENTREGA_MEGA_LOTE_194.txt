@@ -1,0 +1,21 @@
+MEGA LOTE 194 — EXTRATO FIEL + CENTRAL DE AVISOS V2
+
+Resumo
+- Layout de extrato do crediário refinado no padrão visual da referência enviada.
+- PNG usa o novo padrão fiel com logo, título, cliente, produtos, parcelas, totais e rodapé.
+- PDF agora é gerado a partir da imagem PNG fiel, mantendo a mesma aparência do extrato.
+- Compartilhar usa o arquivo PDF/PNG gerado, sem link solto.
+- Central de avisos v2 com modal mais polido, painel de alerta mais legível e botões/cards compactos no mobile.
+- Cache/PWA atualizado para v194.
+
+Testes executados
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O comando npm run build iniciou, mas em uma execução encadeada ficou sem resposta dentro do limite do ambiente. A build equivalente via Vite direto passou em 6.08s.
+- O Vite mantém aviso de chunk acima de 500 kB, sem bloquear o app.
+- Não houve alteração de banco, Supabase, RLS ou migrations.

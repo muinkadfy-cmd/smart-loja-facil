@@ -1,0 +1,23 @@
+MEGA LOTE 212 — IPHONE SEM LINK + ACENTOS NO PDF/PNG
+
+Resumo
+- Corrigido compartilhamento no iPhone/iPadOS para evitar link automático junto.
+- No iPhone/iPadOS, PDF/PNG agora baixa o arquivo e orienta anexar manualmente no WhatsApp.
+- Android/PC continuam usando compartilhamento direto quando suportado.
+- Corrigido canvas da aba Comprovantes para preservar acentos e cedilha.
+- Preserva: ç, Ç, ã, õ, á, é, í, ó, ú e maiúsculas.
+- PDF principal continua sendo imagem fiel do PNG, então mantém acentos.
+- Aplicado em Comprovantes, Extrato, Crediário, Vendas recentes e Atividades recentes.
+- Cache/PWA atualizado para v212.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.
+- O PDF manual antigo/fallback mantém limitação de fonte básica; o PDF principal usado no app é o PDF fiel via PNG.

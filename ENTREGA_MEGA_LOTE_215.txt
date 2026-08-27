@@ -1,0 +1,26 @@
+MEGA LOTE 215 — VENDAS / PDV PREMIUM FIEL À REFERÊNCIA
+
+Resumo
+- Aba Vendas / PDV redesenhada para ficar mais fiel à referência enviada.
+- Barra de etapas Produto/Carrinho/Pagamento/Finalizar ajustada.
+- Resumo superior com Carrinho, Subtotal e Cliente.
+- Layout em duas áreas: produtos à esquerda, mini carrinho/pagamento/vendas recentes à direita.
+- Busca de produto e chips de categoria dinâmicos.
+- Lista de produtos compacta com foto, código/categoria, estoque, preço e botão Adicionar.
+- Mini carrinho lateral com itens, subtotal, desconto, total, Ir para pagamento, Limpar carrinho e Mais ações.
+- Pagamento rápido com Dinheiro, Pix, Cartão e Crediário.
+- Vendas recentes compactas na lateral.
+- Responsivo para telas menores.
+- Mantida lógica de venda, carrinho, desconto, pagamento, crediário, cliente, finalização e comprovantes.
+- Cache/PWA atualizado para v215.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

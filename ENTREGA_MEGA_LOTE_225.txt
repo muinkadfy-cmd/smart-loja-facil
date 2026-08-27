@@ -1,0 +1,21 @@
+MEGA LOTE 225 — REALINHAMENTO DE VERSÃO + AUDITORIA
+
+Resumo
+- Realinhado o projeto atual de 0.1.220 / v220 para 0.1.225 / v225.
+- Atualizado package.json, package-lock, manifest, webApi, service worker e scripts de release.
+- Mantido o estado atual do projeto sem tentar voltar para v224, já que a v224 não apareceu no Git/reflog.
+- Preservados os ajustes atuais, inclusive comprovantes com tipografia legível.
+- Não altera regra de venda, pagamento, crediário, estoque, cálculo ou layout.
+- Cache/PWA atualizado para v225.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- Este lote não recupera uma v224 que não estava no Git.
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

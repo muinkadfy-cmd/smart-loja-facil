@@ -1,0 +1,27 @@
+MEGA LOTE 196 — COMPROVANTE FIEL À REFERÊNCIA
+
+Auditoria rápida
+- O comprovante compartilhado ainda não seguia totalmente a referência.
+- Ícones do cliente/produtos/parcelas dependiam de símbolos/emoji e alguns celulares renderizavam como traço.
+- Cabeçalhos pretos de atividades recentes/vendas recentes não tinham círculo branco com ícone rosa como a referência.
+- Caixa do cliente estava menos fiel: sem coluna visual de ícones e sem separação rosa no padrão do extrato.
+
+O que foi ajustado
+- Ícones do comprovante viraram desenho vetorial no canvas, sem depender de fonte do aparelho.
+- Cabeçalhos pretos receberam círculo branco com ícone rosa vetorial.
+- Caixa de cliente ganhou coluna de ícone, divisória vertical e linhas horizontais em rosa claro.
+- Tabelas mantêm preto/pink/branco no padrão da referência.
+- Atividades recentes e vendas recentes usam o mesmo padrão visual no PNG/PDF/Compartilhar.
+- Compartilhar continua enviando somente arquivo PNG ou PDF, sem texto e sem link junto.
+- Cache/PWA atualizado para v196.
+
+Testes executados
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observações
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas a build passa.
+- Não foram criadas tabelas, migrations, buckets ou policies.

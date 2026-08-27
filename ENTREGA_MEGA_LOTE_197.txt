@@ -1,0 +1,30 @@
+MEGA LOTE 197 — COMPROVANTE FIEL COM MARGENS AJUSTADAS
+
+AUDITORIA
+- Havia desalinhamento visual no cabeçalho do comprovante compartilhado.
+- Os marcadores da área de nota/status não estavam fiéis à referência.
+- O topo precisava de mais respiro entre logo, título e box de cliente.
+- O rodapé ainda precisava de acabamento mais fiel.
+- Era necessário revisar margens, hierarquia e micro acabamento.
+
+AJUSTES APLICADOS
+- Novo mapeamento de margens e espaçamentos do comprovante.
+- Área de cabeçalho refinada com ícones vetoriais próprios para data e status.
+- Ajuste fino do bloco do logo, título e badge de status.
+- Linhas decorativas e rodapé mais próximos da referência.
+- Micro polimento dos cards/resumos.
+- Mesmo refinamento aplicado no comprovante compartilhado (PNG/PDF/Compartilhar).
+- Mantido compartilhamento apenas do arquivo, sem link e sem texto extra.
+- Reincorporados arquivos do módulo Cupom exigidos pelo release check.
+
+TESTES EXECUTADOS
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+OBSERVAÇÃO HONESTA
+- O build passou.
+- O Vite ainda emite apenas aviso de chunk acima de 500 kB, sem bloquear o app.

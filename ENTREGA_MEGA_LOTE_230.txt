@@ -1,0 +1,22 @@
+MEGA LOTE 230 — COMPROVANTES COM FONTES SEM NEGRITO
+
+Resumo
+- Mantido o layout aprovado do lote 229.
+- Ajustado somente o peso das fontes para tirar o aspecto de negrito pesado.
+- Aplicado nos dois motores:
+  1) ReceiptsScreen.tsx — Aba Comprovantes / Extratos / Crediário / Recibos.
+  2) receiptShare.ts — Vendas recentes / Atividades recentes / Compartilhar.
+- Tamanhos, alinhamentos, margens, tabelas, cards, status, vencimento, produto e cliente foram preservados.
+- Não altera cálculo, venda, crediário, estoque, pagamento ou parcelas.
+- Cache/PWA atualizado para v230.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

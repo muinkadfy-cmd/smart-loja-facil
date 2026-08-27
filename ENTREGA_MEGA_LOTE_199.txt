@@ -1,0 +1,25 @@
+MEGA LOTE 199 — COMPROVANTE TIPOGRAFIA + ABERTA
+
+RESUMO
+- Letras de vencimento e descrição no mesmo tamanho.
+- Descrição do produto sem negrito.
+- Tipografia suavizada para melhorar hierarquia visual.
+- Palavra/Badge "ABERTA" refinada e melhor posicionada.
+- Mesmos ajustes aplicados ao fluxo compartilhado que atende Comprovante, Vendas Recentes e Atividades Recentes.
+- Compartilhamento continua enviando somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v199.
+
+AUDITORIA
+- Comprovante usa src/mobile-app/screens/ReceiptsScreen.tsx.
+- Vendas Recentes e Atividades Recentes usam src/mobile-app/components/receiptShare.ts.
+- PDF/PNG/Compartilhar seguem o mesmo padrão visual do lote atual.
+
+TESTES
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+OBSERVAÇÃO HONESTA
+- O Vite continua apenas com aviso de chunk > 500 kB, sem quebrar a aplicação.

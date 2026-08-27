@@ -1,0 +1,25 @@
+MEGA LOTE 226 — COMPROVANTES LEGÍVEIS 10/10
+
+Resumo
+- Auditados os dois motores de comprovante:
+  1) Aba Comprovantes / Extrato / Crediário / Recibo de parcela.
+  2) Vendas recentes / Atividades recentes / Compartilhar.
+- Nome do cliente ficou maior e protegido contra corte.
+- Descrição/produto ficou maior e com peso mais forte.
+- Vencimento ficou maior e com coluna mais larga.
+- Linhas de produto e parcelas ficaram mais altas.
+- PNG, PDF principal e compartilhamento seguem o mesmo padrão visual.
+- Sora reforçada nos pesos/tamanhos usados.
+- Mantidos acentos, cedilha e fluxo iPhone sem link.
+- Corrigidos ajustes de tipagem herdados do estado atual para o type-check passar.
+- Cache/PWA atualizado para v226.
+
+Testes executados
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

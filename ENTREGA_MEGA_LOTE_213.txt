@@ -1,0 +1,28 @@
+MEGA LOTE 213 — CREDIÁRIO COMPACTO PREMIUM MOBILE
+
+Resumo
+- Aba Crediário ajustada para ficar mais próxima da segunda imagem enviada.
+- Barra Operação ficou compacta.
+- Resumo financeiro virou faixa compacta de 4 colunas.
+- Banner verde ficou menor, sem ilustração grande e com botão de fechar.
+- Modo Simples/Avançado mais limpo.
+- Busca e filtros refinados.
+- Card do cliente mais compacto.
+- Removido Contato da visão principal do card.
+- Mantido Total/Pago/Saldo em linha limpa.
+- Próxima cobrança com valor à direita.
+- Botões principais alinhados: Receber próxima parcela, Ver extrato da nota e Corrigir.
+- Quando o card está fechado, parcelas detalhadas não ocupam espaço.
+- Mantidas regras do crediário automático maior/menor e correção segura.
+- Cache/PWA atualizado para v213.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

@@ -1,0 +1,24 @@
+MEGA LOTE 204 — REMOVER CARD ABERTA
+
+Resumo
+- Removido o card rosa ABERTA do topo da aba Comprovantes.
+- Removido o card rosa ABERTA dos comprovantes de Vendas Recentes.
+- Removido o card rosa ABERTA dos comprovantes de Atividades Recentes.
+- Mantida a informação textual Status: Aberta.
+- Micro ajuste no alinhamento da linha de status.
+- Mantida fonte Sora.
+- Mantidas fontes maiores.
+- Mantido padrão PDF/PNG/Compartilhar.
+- Compartilhamento continua somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v204.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Vite segue avisando somente chunk acima de 500 kB.

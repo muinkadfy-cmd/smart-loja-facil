@@ -1,0 +1,23 @@
+MEGA LOTE 227 — CREDIÁRIO/COMPROVANTES COM CLAREZA TOTAL
+
+Resumo
+- Corrigida a confusão visual entre total aberto do cliente e restante de cada nota.
+- O cálculo foi preservado: não altera saldo, parcelas, pagamento, venda ou crediário.
+- Badge do cliente agora explica: Total aberto do cliente / Total atrasado do cliente.
+- Card da nota agora explica que o restante é da nota individual.
+- Texto "Toque para abrir parcelas" não deve mais quebrar palavra por palavra.
+- Badge "Aberta" menor e alinhado.
+- Botões do card em 2 colunas e com mais respiro para o menu inferior.
+- Padding inferior de segurança na aba Comprovantes.
+- Cache/PWA atualizado para v227.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

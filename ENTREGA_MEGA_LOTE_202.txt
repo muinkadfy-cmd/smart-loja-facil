@@ -1,0 +1,21 @@
+MEGA LOTE 202 — CARD ABERTA ACIMA
+
+Resumo
+- Card rosa ABERTA subido levemente no topo do comprovante.
+- Mesmo micro ajuste aplicado no comprovante de Vendas Recentes e Atividades Recentes.
+- Mantido padrão PDF/PNG/Compartilhar.
+- Mantido compartilhamento somente arquivo, sem texto e sem link.
+- Mantida fonte Sora e fontes maiores do lote anterior.
+- Cache/PWA atualizado para v202.
+
+Testes executados
+- npm install
+- npm run type-check
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O Vite ainda avisa sobre chunk acima de 500 kB.
+- O Vite também avisa que as fontes Sora não existem no sandbox, porque os .ttf não foram incluídos no ZIP. No projeto local, mantenha public/fonts com as fontes Sora.

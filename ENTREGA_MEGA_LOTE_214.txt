@@ -1,0 +1,22 @@
+MEGA LOTE 214 — PADRÃO COMPACTO PREMIUM EM PRODUTOS, CLIENTES E COMPROVANTES
+
+Resumo
+- Produtos, Clientes e Comprovantes receberam o mesmo padrão compacto premium do Crediário v213.
+- Produtos: hero menor, resumo em 4 colunas, busca/filtros refinados, cards compactos e detalhes expansíveis.
+- Clientes: hero menor, resumo em 4 colunas, cards compactos e detalhes expansíveis.
+- Comprovantes: ajuda mais curta, resumo compacto, clientes fechados por padrão, notas/parcelas com cartões menores.
+- Botões PDF/PNG/Compartilhar mais alinhados.
+- Mantido compartilhamento iPhone sem link do lote 212.
+- Mantido Crediário compacto do lote 213.
+- Cache/PWA atualizado para v214.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

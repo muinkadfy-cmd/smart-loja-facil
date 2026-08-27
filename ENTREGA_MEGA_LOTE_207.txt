@@ -1,0 +1,28 @@
+MEGA LOTE 207 — DESCONTO UNIFICADO NOS COMPROVANTES
+
+Resumo
+- Campo visual de desconto adicionado aos comprovantes.
+- Quando houver desconto, o comprovante mostra SUBTOTAL, DESCONTO e TOTAL FINAL.
+- Quando desconto for zero, a faixa de desconto não aparece.
+- Aplicado na aba Comprovantes.
+- Aplicado em Vendas Recentes.
+- Aplicado em Atividades Recentes.
+- Mantido total final destacado.
+- Mantido sem card ABERTA.
+- Mantido sem bloco ANOTAÇÕES.
+- Mantida fonte Sora e fonte maior.
+- Mantido PDF/PNG/Compartilhar no mesmo padrão.
+- Compartilhamento continua somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v207.
+
+Testes executados
+- npm install
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação
+- O desconto do extrato do crediário é inferido quando a soma dos produtos é maior que o total final da nota.
+- O Vite continua apenas com aviso de chunk acima de 500 kB.

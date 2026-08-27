@@ -1,0 +1,24 @@
+MEGA LOTE 206 — COMPROVANTE CREDIÁRIO ALINHADO
+
+Resumo
+- Status textual subido para não invadir a tabela do cliente.
+- Início do bloco cliente reposicionado com mais respiro.
+- Produto centralizado melhor dentro da linha.
+- Resumo do crediário ganhou separação real do card TOTAL.
+- Texto "Acompanhe vencimentos..." agora quebra dentro do card e não invade o total.
+- Valor total continua destacado sem brigar com o resumo.
+- Mantido sem card rosa ABERTA.
+- Mantido sem bloco ANOTAÇÕES.
+- Mantida fonte Sora.
+- Mantidas fontes maiores.
+- Mantido padrão PDF/PNG/Compartilhar.
+- Compartilhamento continua somente arquivo, sem texto e sem link.
+- Cache/PWA atualizado para v206.
+
+Testes
+- npm install: executado.
+- npm run type-check: OK.
+- Build/lint/release/commercial: não concluídos nesta sessão por interrupção automática do ambiente durante a build, mas o patch é restrito a canvas/layout e passou type-check.
+
+Observação
+- Recomendo rodar os comandos completos no seu PC antes do deploy.

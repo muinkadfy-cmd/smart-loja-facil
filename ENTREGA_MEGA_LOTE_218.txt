@@ -1,0 +1,25 @@
+MEGA LOTE 218 — PDV PREMIUM DEFINITIVO SEM POLUIÇÃO VISUAL
+
+Resumo
+- Auditoria sênior do PDV com foco mobile-first, web/mobile principal e aparência comercial premium.
+- Corrigida definitivamente a herança antiga que ainda brigava com a lista de produtos.
+- As informações do produto não usam mais span direto como filho do botão, evitando regra antiga de miniatura.
+- Produto agora fica com foto, nome, código, status, preço e botão sem cruzar.
+- Status Em estoque/Sem estoque ficou menor e não compete com o nome.
+- Preço e botão ficam presos no lado direito.
+- Tela inicial continua mostrando só 5 produtos.
+- Mostrar mais produtos carrega mais 5 por vez.
+- Busca, chips, lista, mini carrinho, pagamento rápido e finalização ficaram mais compactos.
+- Mantida lógica de venda, carrinho, pagamento, crediário e comprovantes.
+- Cache/PWA atualizado para v218.
+
+Testes executados
+- npm install --no-audit --no-fund
+- ./node_modules/.bin/tsc --noEmit --pretty false --incremental false
+- npx vite build --configLoader runner --outDir dist-test --emptyOutDir true
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Aviso real
+- O Vite ainda mostra aviso de chunk acima de 500 kB, mas não quebra.

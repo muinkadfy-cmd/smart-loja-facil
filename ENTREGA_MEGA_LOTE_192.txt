@@ -1,0 +1,24 @@
+MEGA LOTE 192 — CUPOM CENTRALIZADO SEGURO
+
+Correções aplicadas após teste real no celular:
+- preview do cupom levemente menor para caber melhor no card;
+- desconto reposicionado e reduzido para ficar mais centralizado na área limpa;
+- % e OFF micro ajustados;
+- nome do cliente reduzido e centralizado dentro do campo branco;
+- nome com área de recorte para não escapar das margens;
+- código do cupom centralizado dentro do campo branco;
+- código com área de recorte para não escapar das margens;
+- exportação PNG 1080x1350 preservada;
+- baixar PNG e compartilhar PNG preservados;
+- cache/PWA atualizado para v192.
+
+Testes executados:
+- npm install
+- npm run type-check
+- npm run build
+- npm run lint
+- npm run release:check
+- npm run release:commercial:check
+
+Observação:
+- O build passou com aviso do Vite sobre chunk acima de 500 kB. Não quebra o app, mas fica como otimização futura.
