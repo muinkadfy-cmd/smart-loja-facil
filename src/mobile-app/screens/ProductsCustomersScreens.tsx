@@ -7,6 +7,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatNumber } from '../components/format';
 import { notifyMobileAction } from '../components/actionToast';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 interface ProductsCustomersScreenProps {
   status: AppStatus | null;
@@ -603,6 +604,18 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
   const stockAdjustRef = useRef<HTMLElement>(null);
   const stockAdjustInputRef = useRef<HTMLInputElement>(null);
 
+  const setActiveDialogNode = useDialogAccessibility({
+    open: Boolean(deleteProduct || photoPreview),
+    dialogKey: deleteProduct ? 'delete-product' : photoPreview ? 'photo-preview' : '',
+    onClose: () => {
+      if (photoPreview) setPhotoPreview(null);
+      else if (deleteProduct && !saving) {
+        setDeleteProduct(null);
+        setDeleteProductFeedback(null);
+      }
+    },
+  });
+
   const lowLimit = status?.settings.low_stock_limit ?? 3;
 
   function toggleProductDetails(productId: string): void {
@@ -1029,7 +1042,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
 
       {deleteProduct ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setDeleteProduct(null); setDeleteProductFeedback(null); } }}>
-          <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
+          <form ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" tabIndex={-1} onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
@@ -1057,7 +1070,7 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       ) : null}
 
       {photoPreview ? (
-        <div className="mapp-photo-modal" role="dialog" aria-modal="true" aria-label="Foto ampliada do produto" onClick={() => setPhotoPreview(null)}>
+        <div ref={setActiveDialogNode} className="mapp-photo-modal" role="dialog" aria-modal="true" aria-label="Foto ampliada do produto" tabIndex={-1} onClick={() => setPhotoPreview(null)}>
           <div className="mapp-photo-modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="mapp-photo-modal-head">
               <div>

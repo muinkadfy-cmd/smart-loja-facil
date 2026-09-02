@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const releaseNumber = String(packageJson.version ?? '').split('.').at(-1);
 const strict = process.argv.includes('--strict');
 const warnings = [];
 const errors = [];
@@ -80,7 +82,7 @@ if (largeFiles.length) warnings.push(`Arquivos grandes para revisar: ${largeFile
 if (!gitignoreRules.includes('.env.production')) warnings.push('Recomendado manter .env.production listado explicitamente no .gitignore.');
 if (!gitignoreRules.includes('.wrangler/')) warnings.push('Recomendado manter .wrangler/ listado explicitamente no .gitignore.');
 
-process.stdout.write('Commercial package check v244 - Jaque Confeccoes e Presentes\n');
+process.stdout.write(`Commercial package check v${releaseNumber} - Jaque Confeccoes e Presentes\n`);
 process.stdout.write(`Modo: ${strict ? 'strict' : 'relatório'}\n`);
 if (!warnings.length && !errors.length) process.stdout.write('OK: nenhum risco de pacote comercial encontrado.\n');
 for (const warning of warnings) process.stdout.write(`AVISO: ${warning}\n`);

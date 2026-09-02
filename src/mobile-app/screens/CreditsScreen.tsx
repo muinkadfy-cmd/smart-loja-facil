@@ -16,6 +16,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { notifyMobileAction } from '../components/actionToast';
 import { clearCreditFocusPayload, readCreditFocusPayload } from '../deepLinks';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 interface CreditsScreenProps {
   status: AppStatus | null;
@@ -27,6 +28,7 @@ interface CreditsScreenProps {
 type CreditFilter = 'todos' | 'aberto' | 'vencidos' | 'quitado' | 'cancelado';
 type CreditStatusTone = 'ok' | 'warn' | 'danger' | 'neutral';
 type CreditMode = 'simples' | 'avancado';
+type CreditsFeedback = { tone: 'success' | 'error' | 'info'; text: string };
 
 type ReceiveState = {
   credit: CreditSummary;
@@ -51,6 +53,11 @@ type AutomaticReceivePlan = {
   detail: string;
   tone: 'ok' | 'warn' | 'danger' | 'neutral';
 };
+
+function CreditDialogFeedback({ feedback }: { feedback: CreditsFeedback | null }): JSX.Element | null {
+  if (!feedback) return null;
+  return <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div>;
+}
 
 type EditInstallmentState = {
   credit: CreditSummary;
@@ -334,8 +341,32 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
   const [paymentReview, setPaymentReview] = useState<CreditPaymentReview | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<CreditsFeedback | null>(null);
   const [deepLinkFocusHandled, setDeepLinkFocusHandled] = useState(false);
+  const activeDialogKey = cancelCredit ? 'cancel-credit'
+    : correctionMenu ? 'correction-menu'
+      : editInstallment ? 'edit-installment'
+        : correction ? `correction-${correction.mode}`
+          : receive ? 'receive-installment'
+            : '';
+
+  const setActiveDialogNode = useDialogAccessibility({
+    open: Boolean(activeDialogKey),
+    dialogKey: activeDialogKey,
+    onClose: () => {
+      if (saving) return;
+      if (cancelCredit) {
+        setCancelCredit(null);
+        setCancelCreditFeedback(null);
+      } else if (correctionMenu) setCorrectionMenu(null);
+      else if (editInstallment) setEditInstallment(null);
+      else if (correction) setCorrection(null);
+      else if (receive) {
+        setReceive(null);
+        setPaymentReview(null);
+      }
+    },
+  });
 
   const loadCredits = async () => {
     setLoading(true);
@@ -850,7 +881,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
       {cancelCredit ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setCancelCredit(null); setCancelCreditFeedback(null); } }}>
-          <form className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Cancelar crediário" onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitCancelCredit(); }}>
+          <form ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-cancel-credit-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Cancelar crediário" tabIndex={-1} onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitCancelCredit(); }}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
@@ -897,7 +928,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
 
       {correctionMenu ? (
         <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setCorrectionMenu(null)}>
-          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Assistente de correção" onClick={(event) => event.stopPropagation()}>
+          <section ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Assistente de correção" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
@@ -932,6 +963,7 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
               <strong>Para usuário leigo</strong>
               <p>Correção não apaga pagamento antigo. Tudo pede motivo e mostra o impacto antes de salvar.</p>
             </section>
+            <CreditDialogFeedback feedback={feedback} />
             <div className="mapp-form-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setCorrectionMenu(null)}>Fechar</button>
             </div>
@@ -940,8 +972,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       ) : null}
 
       {editInstallment ? (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setEditInstallment(null)}>
-          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Editar parcela" onClick={(event) => event.stopPropagation()}>
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) setEditInstallment(null); }}>
+          <section ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Editar parcela" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
@@ -982,8 +1014,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
               ) : null}
               <p>Este salvamento altera somente a data da parcela. Não envia valor, não compensa próxima parcela, não altera saldo, caixa ou pagamento.</p>
             </section>
+            <CreditDialogFeedback feedback={feedback} />
             <div className="mapp-form-actions">
-              <button type="button" className="mapp-secondary-button" onClick={() => setEditInstallment(null)}>Cancelar</button>
+              <button type="button" className="mapp-secondary-button" onClick={() => setEditInstallment(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void submitEditInstallment()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
             </div>
           </section>
@@ -991,8 +1024,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
       ) : null}
 
       {correction ? (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => setCorrection(null)}>
-          <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Corrigir pagamento" onClick={(event) => event.stopPropagation()}>
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) setCorrection(null); }}>
+          <section ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Corrigir pagamento" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
@@ -1042,8 +1075,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
               <input type="checkbox" checked={correction.confirmed} onChange={(event) => setCorrection({ ...correction, confirmed: event.target.checked })} />
               <span>Confirmo que conferi o impacto no caixa e no saldo do cliente.</span>
             </label>
+            <CreditDialogFeedback feedback={feedback} />
             <div className="mapp-form-actions">
-              <button type="button" className="mapp-secondary-button" onClick={() => setCorrection(null)}>Cancelar</button>
+              <button type="button" className="mapp-secondary-button" onClick={() => setCorrection(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void submitCorrection()} disabled={saving || !correction.confirmed}>{saving ? 'Corrigindo...' : 'Confirmar correção'}</button>
             </div>
           </section>
@@ -1055,8 +1089,8 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
         const activeRedistribute = creditMode === 'avancado' ? receive.redistribute : plan.redistribute;
         const activeMoveShortfall = creditMode === 'avancado' ? receive.moveShortfallToNext : plan.moveShortfallToNext;
         return (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { setReceive(null); setPaymentReview(null); }}>
-        <section className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Receber parcela" onClick={(event) => event.stopPropagation()}>
+        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setReceive(null); setPaymentReview(null); } }}>
+        <section ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer" role="dialog" aria-modal="true" aria-label="Receber parcela" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
           <span className="mapp-receive-drawer-grip" aria-hidden="true" />
           <div className="mapp-form-head">
             <span className="mapp-form-icon tone-purple"><InlineIcon name="crediario" size={24} /></span>
@@ -1137,8 +1171,9 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
               <small>Se recebeu errado, registre a correção com cuidado no caixa/crediário ou procure o responsável.</small>
             </section>
           ) : null}
+          <CreditDialogFeedback feedback={feedback} />
           <div className="mapp-form-actions">
-            <button type="button" className="mapp-secondary-button" onClick={() => { setReceive(null); setPaymentReview(null); }}>Cancelar</button>
+            <button type="button" className="mapp-secondary-button" onClick={() => { setReceive(null); setPaymentReview(null); }} disabled={saving}>Cancelar</button>
             {paymentReview ? <button type="button" className="mapp-secondary-button" onClick={() => setPaymentReview(null)}>Corrigir valor</button> : null}
             {paymentReview && !paymentReview.ok ? <button type="button" className="mapp-secondary-button" onClick={setExactReceiveAmount}>Usar valor da parcela</button> : null}
             {paymentReview && !paymentReview.ok ? <button type="button" className="mapp-secondary-button" onClick={setTotalOpenReceiveAmount}>Usar saldo total</button> : null}

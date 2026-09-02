@@ -5,6 +5,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { readWebDemoMode, readWebTrainingMode, type WebDemoModeState, type WebTrainingModeState } from '../../lib/webApi';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 interface MobileShellProps {
   activePage: PageKey;
@@ -90,9 +91,15 @@ export function MobileShell({
   const activeGroup = useMemo(() => getMobileRouteGroup(activePage), [activePage]);
   const relatedRoutes = useMemo(() => getMobileRoutesByGroup(activeGroup), [activeGroup]);
 
+  const setActiveDialogNode = useDialogAccessibility({
+    open: menuOpen,
+    onClose: () => setMenuOpen(false),
+    isolateBackground: false,
+  });
+
   return (
     <div className="mapp-root">
-      <aside className={`mapp-sidebar ${menuOpen ? 'open' : ''}`}>
+      <aside ref={setActiveDialogNode} className={`mapp-sidebar ${menuOpen ? 'open' : ''}`} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? 'true' : undefined} aria-label={menuOpen ? 'Menu principal' : undefined} tabIndex={menuOpen ? -1 : undefined}>
         <div className="mapp-sidebar-head">
           <span className="mapp-logo-badge"><InlineIcon name="app_logo_cadeado_carrinho" size={32} /></span>
           <div>

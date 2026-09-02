@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
-    "preview": "vite preview --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1 --outDir dist-codex-build",
     "lint": "node scripts/lint.js",
     "type-check": "tsc --noEmit",
     "tauri:dev": "tauri dev",

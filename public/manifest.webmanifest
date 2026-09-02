@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v244",
-  "short_name": "Jaque v244",
-  "description": "PWA da loja v244 com hotfix do feedback de exclusão de produto.",
+  "name": "Jaque Confecções e Presentes v245",
+  "short_name": "Jaque v245",
+  "description": "PWA da loja v245 com polimento para iPhone e mobile.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

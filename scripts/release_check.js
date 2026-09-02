@@ -2,8 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const currentVersion = 'pwa-supabase-v244-hotfix-feedback-produto';
-const currentCache = 'smart-loja-pwa-supabase-v244-hotfix-feedback-produto';
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const releaseNumber = String(packageJson.version ?? '').split('.').at(-1);
+const currentVersion = `pwa-supabase-v${releaseNumber}-iphone-mobile-polimento`;
+const currentCache = `smart-loja-pwa-supabase-v${releaseNumber}-iphone-mobile-polimento`;
 
 const requiredCore = [
   'package.json',
@@ -64,9 +66,13 @@ for (const file of requiredCore) {
 
 if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote é PWA web/mobile e não exige Tauri. Não incluir target/ nem bancos no GitHub.');
 
-const packageJson = JSON.parse(read('package.json'));
+if (!/^0\.1\.\d+$/.test(String(packageJson.version ?? ''))) fail('package.json precisa usar versão 0.1.<lote>.');
+if (!releaseNumber) fail('Não foi possível derivar o lote atual da versão de package.json.');
 for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
+}
+if (!String(packageJson.scripts?.preview ?? '').includes('--outDir dist-codex-build')) {
+  fail('npm run preview precisa servir explicitamente dist-codex-build para não abrir um build antigo.');
 }
 
 function parseEnvContent(content) {
@@ -117,8 +123,8 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
 if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(currentCache)) fail('WEB_CACHE_VERSION precisa estar no cache v244 hotfix feedback produto.');
-if (!serviceWorkerSource.includes(currentCache)) fail('Service worker precisa usar cache v244 hotfix feedback produto.');
+if (!webApiSource.includes(`WEB_CACHE_VERSION = '${currentCache}'`)) fail(`WEB_CACHE_VERSION precisa estar no cache v${releaseNumber} atual.`);
+if (!serviceWorkerSource.includes(`CACHE_NAME = '${currentCache}'`)) fail(`Service worker precisa usar cache v${releaseNumber} atual.`);
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const apiSource = read('src/lib/api.ts');
@@ -162,9 +168,37 @@ const css = read('src/mobile-app/styles/mobile-app.css');
 for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
+if (!css.includes('html.smart-mobile-rebuild-v245 .mapp-report-toolbar .mapp-button-grid')) {
+  fail('mobile-app.css precisa impedir overflow horizontal das ações de relatório no mobile.');
+}
 
 const creditsMobileSource = read('src/mobile-app/screens/CreditsScreen.tsx');
 const productsMobileSource = read('src/mobile-app/screens/ProductsCustomersScreens.tsx');
+const dialogAccessibilitySource = read('src/mobile-app/hooks/useDialogAccessibility.ts');
+const dialogConsumerSources = [
+  'src/mobile-app/layout/MobileShell.tsx',
+  'src/mobile-app/components/NotificationCenter.tsx',
+  'src/mobile-app/screens/CreditsScreen.tsx',
+  'src/mobile-app/screens/ProductsCustomersScreens.tsx',
+  'src/mobile-app/screens/SalesScreen.tsx',
+  'src/mobile-app/screens/ReceiptsScreen.tsx',
+].map(read);
+const dialogAccessibilityBundle = [dialogAccessibilitySource, ...dialogConsumerSources].join('\n');
+if (!dialogAccessibilitySource.includes('useRef<HTMLElement | null>(null)')) fail('useDialogAccessibility precisa controlar internamente um ref mutável de HTMLElement.');
+if (!dialogAccessibilitySource.includes('const setActiveDialogNode = useCallback')) fail('useDialogAccessibility precisa expor um callback ref estável.');
+if (!dialogAccessibilitySource.includes('return setActiveDialogNode')) fail('useDialogAccessibility precisa retornar o callback ref controlado pelo hook.');
+if (dialogConsumerSources.some((source) => source.includes('dialogRef:'))) fail('Consumidores de useDialogAccessibility não devem receber nem alterar RefObject diretamente.');
+if (dialogConsumerSources.some((source) => /activeDialogRef\.current\s*=/.test(source))) fail('Consumidor está alterando activeDialogRef.current diretamente.');
+for (const [pattern, label] of [
+  [/\bas\s+any\b/, 'cast as any'],
+  [/@ts-ignore\b/, '@ts-ignore'],
+  [/@ts-nocheck\b/, '@ts-nocheck'],
+  [/@ts-expect-error\b/, '@ts-expect-error'],
+]) {
+  if (pattern.test(dialogAccessibilityBundle)) fail(`Acessibilidade de diálogos não pode usar supressão TypeScript: ${label}.`);
+}
+if (!creditsMobileSource.includes('ref={setActiveDialogNode}')) fail('Crediário precisa usar o callback ref do hook nos diálogos.');
+if (!productsMobileSource.includes('ref={setActiveDialogNode}')) fail('Produtos precisa usar o callback ref do hook nos diálogos.');
 for (const token of ['mapp-critical-dialog', 'mapp-critical-dialog-actions', 'enterKeyHint="done"', 'type="submit"']) {
   if (!creditsMobileSource.includes(token)) fail(`Crediário mobile precisa conter ${token} no modal crítico.`);
   if (!productsMobileSource.includes(token)) fail(`Produtos mobile precisa conter ${token} no modal crítico.`);
@@ -208,4 +242,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log('OK: release_check v244 PWA passou. Estado de feedback do produto declarado e validado.');
+console.log(`OK: release_check v${releaseNumber} PWA passou. Hook de acessibilidade e versão do lote validados.`);

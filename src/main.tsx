@@ -6,6 +6,7 @@ import './mobile-app/styles/mobile-app.css';
 
 document.documentElement.classList.add(
   'smart-mobile-rebuild',
+  'smart-mobile-rebuild-v246',
   'smart-mobile-rebuild-v245',
   'smart-mobile-rebuild-v189',
   'smart-mobile-rebuild-v175',
@@ -14,9 +15,14 @@ document.documentElement.classList.add(
 function applyMobileViewportMetrics(): void {
   const root = document.documentElement;
   const visualViewport = window.visualViewport;
-  const viewportHeight = Math.max(320, Math.round(visualViewport?.height ?? window.innerHeight));
-  const viewportWidth = Math.max(280, Math.round(visualViewport?.width ?? window.innerWidth));
-  const keyboardOpen = Math.max(0, window.innerHeight - viewportHeight) > 120;
+  const viewportHeight = Math.max(1, Math.round(visualViewport?.height ?? window.innerHeight));
+  const viewportWidth = Math.max(1, Math.round(visualViewport?.width ?? window.innerWidth));
+  const focusedElement = document.activeElement;
+  const editableFocused = focusedElement instanceof HTMLElement && focusedElement.matches('input, textarea, select, [contenteditable="true"]');
+  const screenHeight = Math.max(1, window.screen?.height || window.outerHeight || window.innerHeight);
+  const visualViewportReduced = Math.max(0, window.innerHeight - viewportHeight) > 80;
+  const layoutViewportReduced = viewportHeight < screenHeight * 0.76;
+  const keyboardOpen = editableFocused && (visualViewportReduced || layoutViewportReduced);
   const ua = navigator.userAgent || '';
 
   root.style.setProperty('--mapp-vh', `${viewportHeight * 0.01}px`);
@@ -33,6 +39,8 @@ window.addEventListener('resize', applyMobileViewportMetrics, { passive: true })
 window.addEventListener('orientationchange', () => window.setTimeout(applyMobileViewportMetrics, 250), { passive: true });
 window.visualViewport?.addEventListener('resize', applyMobileViewportMetrics, { passive: true });
 window.visualViewport?.addEventListener('scroll', applyMobileViewportMetrics, { passive: true });
+document.addEventListener('focusin', () => window.setTimeout(applyMobileViewportMetrics, 60), { passive: true });
+document.addEventListener('focusout', () => window.setTimeout(applyMobileViewportMetrics, 120), { passive: true });
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>

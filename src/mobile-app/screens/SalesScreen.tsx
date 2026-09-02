@@ -15,6 +15,7 @@ import { ListCard } from '../components/ListCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 import { notifyMobileAction } from '../components/actionToast';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 interface SalesScreenProps {
   status: AppStatus | null;
@@ -231,13 +232,28 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const availableProductsCount = products.filter((product) => product.stock > 0).length;
   const outOfStockCount = products.length - availableProductsCount;
   const isCreditSale = paymentMethod === 'crediario';
-  const canFinishSale = cart.length > 0 && (!isCreditSale || Boolean(customerId)) && total > 0;
+  const canFinishSale = cart.length > 0 && (!isCreditSale || Boolean(customerId && firstDueDate)) && total > 0;
   const currentStep = cart.length === 0 ? 1 : canFinishSale ? 4 : 3;
+  const finishSaleGuidance = saving
+    ? 'Enviando a venda para a nuvem...'
+    : cart.length === 0
+      ? 'Adicione um produto para finalizar'
+      : total <= 0
+        ? 'Revise o desconto para finalizar'
+        : isCreditSale && !customerId
+          ? 'Selecione o cliente para finalizar'
+          : isCreditSale && !firstDueDate
+            ? 'Informe o vencimento para finalizar'
+            : 'Pronto para finalizar a venda';
   const paymentHelper = isCreditSale
     ? selectedCustomer
       ? `${normalizeInstallmentCount(installmentCount)}x · primeiro vencimento ${firstDueDate ? new Date(`${firstDueDate}T00:00:00`).toLocaleDateString('pt-BR') : 'não definido'}`
       : 'Selecione um cliente cadastrado para liberar o crediário.'
     : `Recebimento em ${paymentLabel(paymentMethod)}${paymentMethod === 'dinheiro' && change > 0 ? ` · troco ${formatCurrency(change)}` : ''}`;
+  const setActiveDialogNode = useDialogAccessibility({
+    open: quickCustomerOpen,
+    onClose: () => { if (!savingQuickCustomer) setQuickCustomerOpen(false); },
+  });
 
   useEffect(() => {
     if (paymentMethod === 'crediario') {
@@ -589,7 +605,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           <strong>Total <b>{formatCurrency(total)}</b></strong>
         </div>
         <button type="button" className="mapp-primary-button mapp-sales-payment-jump" disabled={!cart.length} onClick={() => document.getElementById('mapp-payment-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-          Ir para pagamento
+          {cart.length ? 'Ir para pagamento' : 'Adicione um produto para pagar'}
         </button>
         <div className="mapp-sales-mini-cart-actions">
           {cart.length ? <button type="button" className="danger" onClick={() => { if (window.confirm('Limpar todos os produtos do carrinho?')) setCart([]); }}>Limpar carrinho</button> : null}
@@ -718,20 +734,21 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
           <div><span>Troco</span><strong>{formatCurrency(change)}</strong></div>
           <small>{selectedCustomer ? `Cliente: ${selectedCustomer.name}` : 'Venda para consumidor final'}</small>
         </section>
-        <button type="button" className="mapp-primary-button mapp-finish-sale" disabled={saving || !canFinishSale} onClick={() => void finishSale()}>
-          {saving ? 'Enviando para a nuvem...' : '4. Finalizar venda'}
+        <p id="mapp-finish-sale-guidance" className={canFinishSale ? 'mapp-finish-sale-guidance is-ready' : 'mapp-finish-sale-guidance'} aria-live="polite">{finishSaleGuidance}</p>
+        <button type="button" className="mapp-primary-button mapp-finish-sale" disabled={saving || !canFinishSale} aria-describedby="mapp-finish-sale-guidance" onClick={() => void finishSale()}>
+          {saving ? 'Enviando para a nuvem...' : canFinishSale ? '4. Finalizar venda' : finishSaleGuidance}
         </button>
       </section>
 
       {quickCustomerOpen ? (
-        <div className="mapp-bottom-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Criar cliente rápido" onClick={() => setQuickCustomerOpen(false)}>
-          <section className="mapp-bottom-sheet mapp-quick-customer-sheet" onClick={(event) => event.stopPropagation()}>
+        <div className="mapp-bottom-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Criar cliente rápido" onClick={() => { if (!savingQuickCustomer) setQuickCustomerOpen(false); }}>
+          <section ref={setActiveDialogNode} className="mapp-bottom-sheet mapp-quick-customer-sheet" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
             <div className="mapp-bottom-sheet-head">
               <div>
                 <strong>Criar cliente para esta venda</strong>
                 <p>Salva e já seleciona no crediário sem perder o carrinho.</p>
               </div>
-              <button type="button" onClick={() => setQuickCustomerOpen(false)}>Fechar</button>
+              <button type="button" onClick={() => setQuickCustomerOpen(false)} disabled={savingQuickCustomer}>Fechar</button>
             </div>
             <div className="mapp-form-grid mapp-quick-customer-grid">
               <label className="span-2">
@@ -751,8 +768,9 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 <input value={quickCustomer.address} onChange={(event) => setQuickCustomer((current) => ({ ...current, address: event.target.value }))} placeholder="Rua, número, bairro" />
               </label>
             </div>
+            {error ? <div className="mapp-form-feedback mapp-form-feedback-error mapp-dialog-feedback" role="alert">{error}</div> : null}
             <div className="mapp-bottom-sheet-actions">
-              <button type="button" className="mapp-secondary-button" onClick={() => setQuickCustomerOpen(false)}>Cancelar</button>
+              <button type="button" className="mapp-secondary-button" onClick={() => setQuickCustomerOpen(false)} disabled={savingQuickCustomer}>Cancelar</button>
               <button type="button" className="mapp-primary-button" disabled={savingQuickCustomer} onClick={() => void saveQuickCustomer()}>{savingQuickCustomer ? 'Salvando...' : 'Salvar e usar na venda'}</button>
             </div>
           </section>

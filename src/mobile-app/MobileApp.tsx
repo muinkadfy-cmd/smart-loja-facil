@@ -88,7 +88,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       setActionToasts((current) => [toast, ...current].slice(0, 3));
       window.setTimeout(() => {
         setActionToasts((current) => current.filter((item) => item.id !== id));
-      }, 5200);
+      }, 8000);
     };
     window.addEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
     return () => window.removeEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
@@ -279,11 +279,14 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
                 <strong>{toast.title}</strong>
                 <p>{toast.message}</p>
               </div>
-              {toast.page ? (
-                <button type="button" onClick={() => { navigate(toast.page as PageKey); setActionToasts((current) => current.filter((item) => item.id !== toast.id)); }}>
-                  {toast.actionLabel || 'Abrir'}
-                </button>
-              ) : null}
+              <span className="mapp-action-toast-actions">
+                {toast.page ? (
+                  <button type="button" onClick={() => { navigate(toast.page as PageKey); setActionToasts((current) => current.filter((item) => item.id !== toast.id)); }}>
+                    {toast.actionLabel || 'Abrir'}
+                  </button>
+                ) : null}
+                <button type="button" className="mapp-action-toast-close" aria-label={`Fechar aviso: ${toast.title}`} onClick={() => setActionToasts((current) => current.filter((item) => item.id !== toast.id))}>×</button>
+              </span>
             </article>
           ))}
         </div>

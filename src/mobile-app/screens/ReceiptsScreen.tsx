@@ -8,6 +8,7 @@ import { InlineIcon } from '../components/InlineIcon';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
 import { notifyMobileAction } from '../components/actionToast';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 interface ReceiptsScreenProps {
   status: AppStatus | null;
@@ -1684,6 +1685,17 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
   const [focusHandled, setFocusHandled] = useState(false);
   const previewPanelRef = useRef<HTMLElement | null>(null);
 
+  const setActiveDialogNode = useDialogAccessibility({
+    open: Boolean(dueDateEdit || creditEdit || fullPreview),
+    dialogKey: dueDateEdit ? 'due-date-edit' : creditEdit ? 'credit-edit' : fullPreview ? 'receipt-preview' : '',
+    onClose: () => {
+      if (saving) return;
+      if (dueDateEdit) setDueDateEdit(null);
+      else if (creditEdit) setCreditEdit(null);
+      else if (fullPreview) setFullPreview(null);
+    },
+  });
+
   const receiptStore = useMemo(() => normalizeReceiptStore(status?.settings), [status?.settings]);
 
   const loadReceipts = async () => {
@@ -2073,8 +2085,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
       {dueDateEdit ? (
-        <section className="mapp-due-date-modal" role="dialog" aria-modal="true" aria-label="Editar vencimento da parcela">
-          <div className="mapp-due-date-card">
+        <section ref={setActiveDialogNode} className="mapp-due-date-modal" role="dialog" aria-modal="true" aria-label="Editar vencimento da parcela" tabIndex={-1} onClick={() => { if (!saving) setDueDateEdit(null); }}>
+          <div className="mapp-due-date-card" onClick={(event) => event.stopPropagation()}>
             <div className="mapp-due-date-head">
               <span><InlineIcon name="calendario_data" size={24} /></span>
               <div>
@@ -2105,6 +2117,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               />
             </label>
             <p className="mapp-due-date-note">A alteração muda somente o vencimento desta parcela. Valor, saldo, pagamento, produto, cliente, caixa e histórico financeiro continuam iguais.</p>
+            {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div> : null}
             <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
@@ -2114,8 +2127,8 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       ) : null}
 
       {creditEdit ? (
-        <section className="mapp-due-date-modal mapp-credit-edit-modal" role="dialog" aria-modal="true" aria-label="Editar crediário pronto">
-          <div className="mapp-due-date-card mapp-credit-edit-card">
+        <section ref={setActiveDialogNode} className="mapp-due-date-modal mapp-credit-edit-modal" role="dialog" aria-modal="true" aria-label="Editar crediário pronto" tabIndex={-1} onClick={() => { if (!saving) setCreditEdit(null); }}>
+          <div className="mapp-due-date-card mapp-credit-edit-card" onClick={(event) => event.stopPropagation()}>
             <div className="mapp-due-date-head">
               <span><InlineIcon name="editar" size={24} /></span>
               <div>
@@ -2175,6 +2188,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               />
             </label>
             <p className="mapp-due-date-note">Salva dados do cliente e vencimentos das parcelas. Não altera valores, pagamentos, produtos, saldo ou total da venda.</p>
+            {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div> : null}
             <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setCreditEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveCreditBulkEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar crediário'}</button>
@@ -2203,7 +2217,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       </section>
 
       {fullPreview ? (
-        <section className="mapp-receipt-fullscreen" role="dialog" aria-modal="true" aria-label={`Visualização do ${fullPreview.title}`}>
+        <section ref={setActiveDialogNode} className="mapp-receipt-fullscreen" role="dialog" aria-modal="true" aria-label={`Visualização do ${fullPreview.title}`} tabIndex={-1}>
           <div className="mapp-receipt-fullscreen-toolbar">
             <button type="button" className="mapp-secondary-button" onClick={() => setFullPreview(null)}>Voltar</button>
             <div>

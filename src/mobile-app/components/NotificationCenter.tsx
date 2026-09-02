@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import type { DelphiIconName } from '../../lib/icons';
 import type { PageKey } from '../../types';
 import { InlineIcon } from './InlineIcon';
+import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
 
 export type NotificationTone = 'orange' | 'purple' | 'blue' | 'green';
 
@@ -116,8 +117,8 @@ export function NotificationActions({
 }): JSX.Element {
   return (
     <footer className="mapp-notification-actions">
-      <button type="button" className="mapp-notification-mark-all" onClick={onMarkAllRead} disabled={disabled} aria-label="Marcar todas as notificações como lidas">
-        Marcar todas como lidas
+      <button type="button" className="mapp-notification-mark-all" onClick={onMarkAllRead} disabled={disabled} aria-label={disabled ? 'Nenhuma notificação não lida para marcar' : 'Marcar todas as notificações como lidas'}>
+        {disabled ? 'Nenhum aviso pendente' : 'Marcar todas como lidas'}
       </button>
       <button type="button" className="mapp-notification-primary" onClick={onOpenFull} aria-label="Diagnóstico de avisos">
         Diagnóstico
@@ -135,15 +136,7 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
   const [activeTab, setActiveTab] = useState<NotificationTab>('unread');
   const [state, setState] = useState<NotificationState>(() => readNotificationState());
   const [actionPending, setActionPending] = useState(false);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !actionPending) onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [actionPending, onClose, open]);
+  const setActiveDialogNode = useDialogAccessibility({ open, onClose: () => { if (!actionPending) onClose(); } });
 
   useEffect(() => {
     writeNotificationState(state);
@@ -211,11 +204,13 @@ export function NotificationCenter({ open, notifications, onClose, onNavigate, o
   return (
     <div className="mapp-notification-layer" role="presentation" onMouseDown={() => { if (!actionPending) onClose(); }}>
       <section
+        ref={setActiveDialogNode}
         className="mapp-notification-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="mapp-notification-title"
         aria-describedby="mapp-notification-subtitle"
+        tabIndex={-1}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="mapp-notification-head">

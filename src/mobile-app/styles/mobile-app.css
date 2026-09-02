@@ -14228,6 +14228,17 @@ html.smart-mobile-rebuild-v245 .mapp-report-tabs button.active {
     text-align: left;
   }
 
+  html.smart-mobile-rebuild-v245 .mapp-report-toolbar {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  html.smart-mobile-rebuild-v245 .mapp-report-toolbar .mapp-button-grid {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   html.smart-mobile-rebuild-v245 .mapp-notification-actions {
     grid-template-columns: 1fr !important;
   }
@@ -14291,5 +14302,181 @@ html.smart-mobile-rebuild-v245 .mapp-report-tabs button.active {
     animation-duration: .01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
+  }
+}
+
+/* v246 — superfícies modais, teclado virtual e CTAs sem regressão */
+html.smart-mobile-rebuild-v246 .mapp-bottom-sheet-backdrop,
+html.smart-mobile-rebuild-v246 .mapp-credit-receive-backdrop,
+html.smart-mobile-rebuild-v246 .mapp-notification-layer,
+html.smart-mobile-rebuild-v246 .mapp-due-date-modal,
+html.smart-mobile-rebuild-v246 .mapp-photo-modal,
+html.smart-mobile-rebuild-v246 .mapp-receipt-fullscreen {
+  z-index: 200 !important;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-finish-sale-guidance {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  background: #fffbeb;
+  color: #854d0e;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-finish-sale-guidance.is-ready {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-form-actions > .mapp-primary-button {
+  order: initial !important;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-due-date-modal {
+  height: var(--mapp-app-height);
+  min-height: var(--mapp-app-height);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-due-date-card {
+  max-height: calc(var(--mapp-app-height) - max(10px, var(--mapp-safe-top)) - max(10px, var(--mapp-safe-bottom)));
+  padding-bottom: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: calc(148px + var(--mapp-safe-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-due-date-card input,
+html.smart-mobile-rebuild-v246 .mapp-due-date-card textarea,
+html.smart-mobile-rebuild-v246 .mapp-due-date-card select {
+  min-height: 48px;
+  font-size: max(16px, 1rem);
+  scroll-margin-top: 84px;
+  scroll-margin-bottom: calc(150px + var(--mapp-safe-bottom));
+}
+
+html.smart-mobile-rebuild-v246 .mapp-due-date-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 14px -16px 0;
+  padding: 10px 16px calc(10px + var(--mapp-safe-bottom));
+  border-top: 1px solid rgba(148, 163, 184, .24);
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 -12px 28px rgba(18, 42, 78, .1);
+}
+
+html.smart-mobile-rebuild-v246 .mapp-due-date-actions button {
+  min-height: 50px;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-photo-modal-card {
+  max-height: calc(var(--mapp-app-height) - max(12px, var(--mapp-safe-top)) - max(12px, var(--mapp-safe-bottom)));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-action-toast-stack {
+  z-index: 78;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-action-toast-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-action-toast-actions button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html.smart-mobile-rebuild-v246 .mapp-action-toast-close {
+  padding: 0 12px;
+  background: #eef2f7;
+  color: #334155;
+  font-size: 1.15rem;
+}
+
+@media (max-width: 860px) {
+  html.smart-mobile-rebuild-v246 .mapp-page-sales .mapp-action-toast-stack {
+    bottom: calc(var(--mapp-bottom-nav-height) + var(--mapp-safe-bottom) + 86px);
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-sidebar:not(.open) {
+    visibility: hidden;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-sidebar.open {
+    visibility: visible;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-action-toast {
+    grid-template-columns: 6px minmax(0, 1fr);
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-action-toast-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-finish-sale {
+    z-index: 70;
+  }
+
+  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-bottom-nav {
+    display: none !important;
+  }
+
+  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-form-panel > .mapp-form-actions,
+  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-settings-screen .mapp-form-actions,
+  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-orders-screen .mapp-form-actions {
+    bottom: max(8px, var(--mapp-safe-bottom));
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-bottom-sheet,
+  html.smart-mobile-rebuild-v246 .mapp-receive-drawer,
+  html.smart-mobile-rebuild-v246 .mapp-due-date-card {
+    max-height: calc(var(--mapp-app-height) - max(6px, var(--mapp-safe-top)) - max(6px, var(--mapp-safe-bottom)));
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-bottom-sheet-actions,
+  html.smart-mobile-rebuild-v246 .mapp-receive-drawer .mapp-form-actions,
+  html.smart-mobile-rebuild-v246 .mapp-due-date-actions {
+    grid-template-columns: 1fr;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-sales-category-row button,
+  html.smart-mobile-rebuild-v246 .mapp-sales-show-more-products,
+  html.smart-mobile-rebuild-v246 .mapp-sales-mini-cart-actions button,
+  html.smart-mobile-rebuild-v246 .mapp-receipt-button-grid button,
+  html.smart-mobile-rebuild-v246 .mapp-receipt-card .mapp-receipt-actions button,
+  html.smart-mobile-rebuild-v246 .mapp-receipt-note-card .mapp-credit-note-actions button {
+    min-height: 44px !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-sales-mini-cart .mapp-cart-list {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 340px) {
+  html.smart-mobile-rebuild-v246 .mapp-bottom-nav button > span:not(.app-svg-icon) {
+    max-width: none !important;
+    overflow: visible !important;
+    font-size: 11px !important;
+    letter-spacing: -.04em;
+    text-overflow: clip !important;
   }
 }
