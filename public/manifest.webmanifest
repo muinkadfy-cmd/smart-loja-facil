@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v245",
-  "short_name": "Jaque v245",
-  "description": "PWA da loja v245 com polimento para iPhone e mobile.",
+  "name": "Jaque Confecções e Presentes v246",
+  "short_name": "Jaque v246",
+  "description": "PWA da loja v246 com recebimento tocável no iPhone e listas recentes refinadas.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

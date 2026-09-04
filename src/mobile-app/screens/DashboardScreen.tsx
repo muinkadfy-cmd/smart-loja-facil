@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api';
-import type { AppStatus, DashboardData, PageKey, PaymentMethod, ProductInsight, ReceiptSummary, SaleSummary } from '../../types';
+import type { AppStatus, DashboardData, PageKey, ProductInsight, ReceiptSummary, SaleSummary } from '../../types';
 import { ActionTile } from '../components/ActionTile';
 import { InlineIcon } from '../components/InlineIcon';
-import { ListCard } from '../components/ListCard';
+import { RecentSaleCard } from '../components/RecentSaleCard';
 import { StatCard } from '../components/StatCard';
-import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { formatCurrency, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 
 interface DashboardScreenProps {
@@ -31,13 +31,6 @@ function emptyDashboard(): DashboardData {
   };
 }
 
-function paymentLabel(method: PaymentMethod): string {
-  if (method === 'dinheiro') return 'Dinheiro';
-  if (method === 'pix') return 'Pix';
-  if (method === 'cartao') return 'Cartão';
-  return 'Crediário';
-}
-
 function productInsightToneClass(tone: ProductInsight['tone']): string {
   if (tone === 'danger') return 'danger';
   if (tone === 'warning') return 'warning';
@@ -56,9 +49,13 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([]);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const [shareError, setShareError] = useState(false);
+  const [sharingSaleId, setSharingSaleId] = useState<string | null>(null);
+  const sharingRef = useRef(false);
+  const [activityLimit, setActivityLimit] = useState(4);
   const dashboard = status?.dashboard ?? emptyDashboard();
   const lowStock = dashboard.low_stock_count ?? 0;
-  const activities = dashboard.recent_sales.slice(0, 4);
+  const activities = dashboard.recent_sales.slice(0, activityLimit);
   const averageTicket = dashboard.today_sales_count > 0 ? dashboard.today_sales_total / dashboard.today_sales_count : 0;
 
   function navigateToLowStock() {
@@ -72,12 +69,24 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
       .then((rows) => { if (active) setReceipts(rows); })
       .catch(() => { if (active) setReceipts([]); });
     return () => { active = false; };
-  }, []);
+  }, [status?.dashboard]);
 
   async function shareActivityReceipt(sale: SaleSummary, format: ReceiptShareFormat = 'pdf'): Promise<void> {
-    const receipt = findReceiptForSale(receipts, sale);
-    const message = await shareSaleReceipt(sale, receipt, format);
-    setShareFeedback(message);
+    if (sharingRef.current) return;
+    sharingRef.current = true;
+    setSharingSaleId(sale.id);
+    setShareError(false);
+    setShareFeedback('Preparando comprovante…');
+    try {
+      const receipt = findReceiptForSale(receipts, sale);
+      setShareFeedback(await shareSaleReceipt(sale, receipt, format));
+    } catch (error) {
+      setShareError(true);
+      setShareFeedback(error instanceof Error ? error.message : 'Não foi possível preparar o comprovante. Tente novamente.');
+    } finally {
+      sharingRef.current = false;
+      setSharingSaleId(null);
+    }
   }
 
   return (
@@ -151,52 +160,43 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
         </section>
       ) : null}
 
-      <section className="mapp-section-block mapp-dashboard-activities-block">
-        <div className="mapp-section-title">
-          <h2>Atividades recentes</h2>
-          <button type="button" onClick={() => onNavigate('sales')}>Ver todas</button>
-        </div>
-        {activities.length ? (
-          <div className="mapp-list-stack">
-            {shareFeedback ? <div className="mapp-form-feedback mapp-form-feedback-info">{shareFeedback}</div> : null}
-            {activities.map((sale) => (
-              <ListCard
-                key={sale.id}
-                icon="vendas_pdv"
-                title={`Venda #${String(sale.number).padStart(4, '0')}`}
-                subtitle={`${sale.first_product_name || sale.customer_name || 'Consumidor'} · ${formatDateTime(sale.created_at)}`}
-                value={formatCurrency(sale.total)}
-                tone="blue"
-                thumbnailSrc={sale.thumbnail_url}
-                thumbnailAlt={sale.first_product_name || `Venda #${sale.number}`}
-                expanded={expandedSaleId === sale.id}
-                onClick={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
-              >
-                <div className="mapp-sale-detail-grid">
-                  <span>Cliente <b>{sale.customer_name || 'Consumidor'}</b></span>
-                  <span>Forma <b>{paymentLabel(sale.payment_method)}</b></span>
-                  <span>Itens <b>{formatNumber(sale.item_count || 1)}</b></span>
-                  <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
-                </div>
-                <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'pdf')}>PDF</button>
-                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'png')}>Extrato PNG</button>
-                  <button type="button" onClick={() => void shareActivityReceipt(sale, 'share')}>Compartilhar</button>
-                  <button type="button" onClick={() => onNavigate('sales')}>Abrir vendas</button>
-                </div>
-              </ListCard>
-            ))}
+      <section className="mapp-section-block mapp-dashboard-activities-block mapp-recent-list" aria-labelledby="recent-activities-title" aria-busy={!status}>
+        <div className="mapp-recent-list-heading">
+          <div>
+            <h2 id="recent-activities-title">Atividades recentes</h2>
+            <p>Últimas vendas com acesso rápido aos detalhes e comprovantes.</p>
           </div>
+          <button type="button" aria-label="Abrir todas as vendas" onClick={() => onNavigate('sales')}>Ver vendas</button>
+        </div>
+        {shareFeedback ? <p className={`mapp-recent-list-message ${shareError ? 'is-error' : ''}`} role={shareError ? 'alert' : 'status'}>{shareFeedback}</p> : null}
+        {!status ? <p className="mapp-recent-list-message" role="status">Carregando atividades…</p> : activities.length ? (
+          <ul className="mapp-recent-list-items">
+            {activities.map((sale) => (
+              <li key={sale.id}><RecentSaleCard
+                sale={sale}
+                expanded={expandedSaleId === sale.id}
+                onToggle={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
+              >
+                  <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareActivityReceipt(sale, 'pdf')}>{sharingSaleId === sale.id ? 'Preparando…' : 'Comprovante PDF'}</button>
+                  <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareActivityReceipt(sale, 'png')}>Extrato PNG</button>
+                  <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareActivityReceipt(sale, 'share')}>Compartilhar</button>
+                  <button type="button" onClick={() => onNavigate('sales')}>Abrir vendas</button>
+              </RecentSaleCard></li>
+            ))}
+          </ul>
         ) : (
           <button type="button" className="mapp-dashboard-empty-activity" onClick={() => onNavigate('sales')}>
             <span><InlineIcon name="vendas_pdv" size={24} /></span>
             <div>
-              <strong>Nenhuma venda hoje</strong>
+              <strong>Nenhuma atividade recente</strong>
               <small>Abra o PDV para registrar a primeira venda.</small>
             </div>
             <b aria-hidden="true">›</b>
           </button>
         )}
+        {activities.length < dashboard.recent_sales.length ? (
+          <button type="button" className="mapp-recent-list-more" onClick={() => setActivityLimit((limit) => limit + 4)}>Mostrar mais atividades ({dashboard.recent_sales.length - activities.length})</button>
+        ) : null}
       </section>
     </div>
   );

@@ -1,0 +1,33 @@
+HOTFIX 246 — RECEBER PARCELA NO IPHONE + RECENTES
+
+VERSÃO: 0.1.246
+
+CORREÇÃO PRINCIPAL
+- Footer do Receber Parcela separado do scroll.
+- CTA mobile de 56 px.
+- pointer-events/touch-action/z-index explícitos.
+- safe-area e teclado tratados.
+- caminho explícito onClick + onSubmit.
+- regra financeira/payload api.receiveInstallment não alterados.
+
+RECENTES
+- Atividades Recentes e Vendas Recentes receberam hierarquia, status semântico, respiro, ações mobile e acessibilidade.
+
+QA BROWSER HARNESS
+- 375x700: PASS
+- 390x700: PASS
+- 430x700: PASS
+- 390x430 teclado simulado: PASS
+- elementFromPoint: PASS em todos
+- clique: 1 em todos
+- CTA visível: PASS em todos
+- Recentes 390/1366: zero overflow horizontal
+
+CHECKS
+- lint: OK
+- commercial check v246: OK
+- release check v246: OK (validação estrutural com env temporário removido)
+- sintaxe/transpile dos arquivos alterados: OK
+- npm type-check/build completos: PENDENTES NO PC porque o RAR não inclui node_modules.
+
+STATUS: PARCIAL DE PRODUÇÃO — pronto para type-check/build e teste físico final no iPhone antes do deploy.

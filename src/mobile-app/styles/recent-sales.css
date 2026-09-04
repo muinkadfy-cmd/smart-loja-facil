@@ -1,0 +1,176 @@
+/* Scoped to the active dashboard/PDV lists; independent of legacy ListCard overrides. */
+.mapp-recent-list {
+  min-width: 0;
+}
+
+.mapp-recent-list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mapp-recent-list-heading > div { min-width: 0; }
+.mapp-recent-list-heading h2 {
+  margin: 0;
+  color: #142640;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+}
+.mapp-recent-list-heading p {
+  margin: 5px 0 0;
+  color: #53627a;
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.mapp-recent-list-heading > button,
+.mapp-recent-list-more {
+  flex: 0 0 auto;
+  min-width: 96px;
+  min-height: 44px;
+  border: 1px solid #d8e3f2;
+  border-radius: 12px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #194f9e;
+  font-size: .8rem;
+  font-weight: 750;
+  touch-action: manipulation;
+}
+.mapp-recent-list-items {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mapp-recent-list-items > li { min-width: 0; }
+.mapp-recent-list-more { width: 100%; margin-top: 12px; }
+.mapp-recent-list-message,
+.mapp-recent-list-empty {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 10px;
+  padding: 14px;
+  border: 1px solid #d8e3f2;
+  border-radius: 14px;
+  background: #f7faff;
+  color: #24415f;
+  font-size: .85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.mapp-recent-list-message.is-error { border-color: #edc3b9; background: #fff7f3; color: #9c3924; }
+.mapp-recent-list-empty small { font-size: .8rem; color: #53627a; }
+.mapp-recent-sale {
+  min-width: 0;
+  border: 1px solid #d8e3ef;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgb(22 46 79 / 6%);
+  overflow: hidden;
+}
+.mapp-recent-sale.is-expanded { border-color: #8fb6ee; box-shadow: 0 10px 24px rgb(38 94 171 / 10%); }
+.mapp-recent-sale-trigger {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 28px;
+  grid-template-areas: 'image identity chevron' 'amount amount amount' 'meta meta meta';
+  align-items: center;
+  gap: 9px 10px;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  padding: 14px;
+  color: #142640;
+  text-align: left;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.mapp-recent-sale-trigger:active { background: #eff5fd; }
+.mapp-recent-sale-image {
+  grid-area: image;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #eef5ff;
+  color: #235dae;
+}
+.mapp-recent-sale-image > img { width: 100%; height: 100%; object-fit: cover; }
+.mapp-recent-sale-identity { grid-area: identity; display: grid; gap: 3px; min-width: 0; }
+.mapp-recent-sale-identity > strong { font-size: .9rem; line-height: 1.35; font-weight: 800; }
+.mapp-recent-sale-customer { color: #53627a; font-size: .8rem; line-height: 1.45; overflow-wrap: anywhere; }
+.mapp-recent-sale-chevron { grid-area: chevron; color: #2f5f9d; font-size: 1.3rem; text-align: center; }
+.mapp-recent-sale-amount-row {
+  grid-area: amount;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px 12px;
+  min-width: 0;
+}
+.mapp-recent-sale-amount { color: #163e78; font-size: 1.14rem; font-weight: 850; line-height: 1.4; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.mapp-recent-sale-status { padding: 3px 8px; border-radius: 7px; background: #edf3fb; color: #2f527f; font-size: .72rem; line-height: 1.4; font-weight: 750; overflow-wrap: anywhere; }
+.mapp-recent-sale-status.is-cancelled { background: #fff0e3; color: #944314; }
+.mapp-recent-sale-status.is-complete { background: #ecfdf3; color: #167348; }
+.mapp-recent-sale-status.is-open { background: #fff7dd; color: #8a5a08; }
+.mapp-recent-sale-status.is-neutral { background: #edf3fb; color: #2f527f; }
+.mapp-recent-sale-meta { grid-area: meta; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; color: #53627a; font-size: .75rem; line-height: 1.5; }
+.mapp-recent-sale-meta > span { font-weight: 750; }
+.mapp-recent-sale-details { margin: 0; padding: 14px; border-top: 1px solid #e4ebf4; background: #f9fbfe; }
+.mapp-recent-sale-details[hidden] { display: none; }
+.mapp-recent-sale-facts { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; margin: 0 0 14px; }
+.mapp-recent-sale-facts > div { min-width: 0; }
+.mapp-recent-sale-facts dt { color: #53627a; font-size: .73rem; line-height: 1.5; }
+.mapp-recent-sale-facts dd { margin: 3px 0 0; color: #203854; font-size: .82rem; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.mapp-recent-sale-product { grid-column: 1 / -1; }
+.mapp-recent-sale-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.mapp-recent-sale-actions > button {
+  flex: 1 1 110px;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #d6e2f1;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #f5f8fd;
+  color: #204e8f;
+  font-size: .8rem;
+  line-height: 1.4;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.mapp-recent-list button:focus-visible { outline: 3px solid #2463c5; outline-offset: 3px; }
+.mapp-recent-list button:disabled { opacity: .65; cursor: wait; }
+
+@media (max-width: 520px) {
+  .mapp-recent-list-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px;
+  }
+  .mapp-recent-sale-trigger { padding: 13px; }
+  .mapp-recent-sale-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mapp-recent-sale-actions > button:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 374px) {
+  .mapp-recent-list-heading { grid-template-columns: 1fr; }
+  .mapp-recent-list-heading > button { width: 100%; }
+  .mapp-recent-sale-trigger { padding: 12px; }
+  .mapp-recent-sale-facts { grid-template-columns: 1fr; }
+  .mapp-recent-sale-product { grid-column: auto; }
+  .mapp-recent-sale-actions { grid-template-columns: 1fr; }
+  .mapp-recent-sale-actions > button:last-child:nth-child(odd) { grid-column: auto; }
+}

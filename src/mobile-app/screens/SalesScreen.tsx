@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import {
   INITIAL_LIST_LIMIT,
@@ -11,8 +11,8 @@ import {
 } from '../../lib/listLimits';
 import type { AppStatus, CashSummary, Customer, PaymentMethod, Product, ReceiptSummary, SaleSummary } from '../../types';
 import { InlineIcon } from '../components/InlineIcon';
-import { ListCard } from '../components/ListCard';
-import { formatCurrency, formatDateTime, formatNumber } from '../components/format';
+import { RecentSaleCard } from '../components/RecentSaleCard';
+import { formatCurrency, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
 import { notifyMobileAction } from '../components/actionToast';
 import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
@@ -141,6 +141,12 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const [dueDay, setDueDay] = useState(dayFromDateValue(todayInputValue()));
   const [cart, setCart] = useState<CartItem[]>([]);
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
+  const [recentSaleLimit, setRecentSaleLimit] = useState(3);
+  const [salesLoadError, setSalesLoadError] = useState<string | null>(null);
+  const [saleShareFeedback, setSaleShareFeedback] = useState<string | null>(null);
+  const [saleShareError, setSaleShareError] = useState(false);
+  const [sharingSaleId, setSharingSaleId] = useState<string | null>(null);
+  const sharingSaleRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -149,6 +155,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   const loadData = async () => {
     setLoading(true);
     setError(null);
+    setSalesLoadError(null);
     try {
       const [productRows, customerRows, saleRows, cashSummary, receiptRows] = await Promise.all([
         api.products(),
@@ -163,6 +170,7 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       setCash(cashSummary);
       setReceipts(receiptRows);
     } catch (err) {
+      setSalesLoadError('Não foi possível atualizar as vendas. Tente novamente.');
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
@@ -426,10 +434,24 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
   }
 
   async function shareRecentSale(sale: SaleSummary, format: ReceiptShareFormat = 'pdf'): Promise<void> {
-    const receipt = findReceiptForSale(receipts, sale);
-    const message = await shareSaleReceipt(sale, receipt, format);
-    setFeedback(message);
-    notifyMobileAction({ title: format === 'png' ? 'Imagem do comprovante' : 'Comprovante PDF', message, tone: message.startsWith('Ainda') ? 'warning' : 'success', page: 'receipts', actionLabel: 'Abrir' });
+    if (sharingSaleRef.current) return;
+    sharingSaleRef.current = true;
+    setSharingSaleId(sale.id);
+    setSaleShareError(false);
+    setSaleShareFeedback('Preparando comprovante…');
+    try {
+      const receipt = findReceiptForSale(receipts, sale);
+      const message = await shareSaleReceipt(sale, receipt, format);
+      setSaleShareFeedback(message);
+      setFeedback(message);
+      notifyMobileAction({ title: format === 'png' ? 'Imagem do comprovante' : 'Comprovante PDF', message, tone: message.startsWith('Ainda') ? 'warning' : 'success', page: 'receipts', actionLabel: 'Abrir' });
+    } catch (err) {
+      setSaleShareError(true);
+      setSaleShareFeedback(err instanceof Error ? err.message : 'Não foi possível preparar o comprovante. Tente novamente.');
+    } finally {
+      sharingSaleRef.current = false;
+      setSharingSaleId(null);
+    }
   }
 
   function setDueDaySelection(day: number): void {
@@ -741,19 +763,20 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
       </section>
 
       {quickCustomerOpen ? (
-        <div className="mapp-bottom-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Criar cliente rápido" onClick={() => { if (!savingQuickCustomer) setQuickCustomerOpen(false); }}>
-          <section ref={setActiveDialogNode} className="mapp-bottom-sheet mapp-quick-customer-sheet" tabIndex={-1} onClick={(event) => event.stopPropagation()}>
-            <div className="mapp-bottom-sheet-head">
+        <div className="mapp-bottom-sheet-backdrop mapp-dialog-backdrop" role="presentation" onClick={() => { if (!savingQuickCustomer) setQuickCustomerOpen(false); }}>
+          <section ref={setActiveDialogNode} className="mapp-bottom-sheet mapp-quick-customer-sheet mapp-dialog-frame" role="dialog" aria-modal="true" aria-label="Criar cliente rápido" aria-busy={savingQuickCustomer} tabIndex={-1} onClick={(event) => event.stopPropagation()}>
+            <header className="mapp-bottom-sheet-head mapp-dialog-header">
               <div>
                 <strong>Criar cliente para esta venda</strong>
                 <p>Salva e já seleciona no crediário sem perder o carrinho.</p>
               </div>
               <button type="button" onClick={() => setQuickCustomerOpen(false)} disabled={savingQuickCustomer}>Fechar</button>
-            </div>
+            </header>
+            <div className="mapp-dialog-body">
             <div className="mapp-form-grid mapp-quick-customer-grid">
               <label className="span-2">
                 <span>Nome do cliente *</span>
-                <input value={quickCustomer.name} onChange={(event) => setQuickCustomer((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Maria Silva" autoFocus />
+                <input value={quickCustomer.name} onChange={(event) => setQuickCustomer((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Maria Silva" />
               </label>
               <label>
                 <span>Telefone</span>
@@ -768,58 +791,50 @@ export function SalesScreen({ status, refreshToken, onRefresh }: SalesScreenProp
                 <input value={quickCustomer.address} onChange={(event) => setQuickCustomer((current) => ({ ...current, address: event.target.value }))} placeholder="Rua, número, bairro" />
               </label>
             </div>
-            {error ? <div className="mapp-form-feedback mapp-form-feedback-error mapp-dialog-feedback" role="alert">{error}</div> : null}
-            <div className="mapp-bottom-sheet-actions">
+            </div>
+            <footer className="mapp-bottom-sheet-actions mapp-dialog-footer">
+              {error ? <div className="mapp-form-feedback mapp-form-feedback-error mapp-dialog-feedback" role="alert">{error}</div> : null}
               <button type="button" className="mapp-secondary-button" onClick={() => setQuickCustomerOpen(false)} disabled={savingQuickCustomer}>Cancelar</button>
               <button type="button" className="mapp-primary-button" disabled={savingQuickCustomer} onClick={() => void saveQuickCustomer()}>{savingQuickCustomer ? 'Salvando...' : 'Salvar e usar na venda'}</button>
-            </div>
+            </footer>
           </section>
         </div>
       ) : null}
 
-      <section className="mapp-section-block mapp-recent-sales-block mapp-sales-recent-side">
-        <div className="mapp-section-title mapp-section-title-compact">
+      <section className="mapp-section-block mapp-recent-sales-block mapp-sales-recent-side mapp-recent-list" aria-labelledby="recent-sales-title" aria-busy={loading}>
+        <div className="mapp-recent-list-heading">
           <div>
-            <h2>Vendas recentes</h2>
-            <small>Toque em uma venda para abrir ações e comprovante.</small>
+            <h2 id="recent-sales-title">Vendas recentes</h2>
+            <p>Mais recentes primeiro. Toque para ver cliente, itens e comprovantes.</p>
           </div>
-          <button type="button" onClick={() => void loadData()}>Atualizar</button>
+          <button type="button" aria-label="Atualizar vendas recentes" disabled={loading} onClick={() => void loadData()}>{loading ? 'Atualizando…' : 'Atualizar'}</button>
         </div>
+        {salesLoadError ? <p className="mapp-recent-list-message is-error" role="alert">{salesLoadError}{sales.length ? ' A lista anterior foi mantida.' : ''}</p> : null}
+        {saleShareFeedback ? <p className={`mapp-recent-list-message ${saleShareError ? 'is-error' : ''}`} role={saleShareError ? 'alert' : 'status'}>{saleShareFeedback}</p> : null}
+        {loading ? <p className="mapp-recent-list-message" role="status">Atualizando vendas…</p> : null}
         {sales.length ? (
-          <div className="mapp-list-stack">
-            {sales.slice(0, 3).map((sale) => (
-              <ListCard
-                key={sale.id}
-                icon="vendas_pdv"
-                title={`Venda #${String(sale.number).padStart(4, '0')}`}
-                subtitle={`${sale.first_product_name || sale.customer_name || 'Balcão'} · ${paymentLabel(sale.payment_method)} · ${formatDateTime(sale.created_at)}`}
-                value={formatCurrency(sale.total)}
-                tone={sale.status === 'cancelada' ? 'orange' : 'blue'}
-                thumbnailSrc={sale.thumbnail_url}
-                thumbnailAlt={sale.first_product_name || `Venda #${sale.number}`}
+          <ul className="mapp-recent-list-items">
+            {sales.slice(0, recentSaleLimit).map((sale) => (
+              <li key={sale.id}><RecentSaleCard
+                sale={sale}
                 expanded={expandedSaleId === sale.id}
-                onClick={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
+                onToggle={() => setExpandedSaleId((current) => current === sale.id ? null : sale.id)}
               >
-                <div className="mapp-sale-detail-grid">
-                  <span>Cliente <b>{sale.customer_name || 'Balcão'}</b></span>
-                  <span>Forma <b>{paymentLabel(sale.payment_method)}</b></span>
-                  <span>Itens <b>{formatNumber(sale.item_count || 1)}</b></span>
-                  <span>Data <b>{formatDateTime(sale.created_at)}</b></span>
-                </div>
-                <div className="mapp-sale-detail-actions">
-                  <button type="button" onClick={() => void shareRecentSale(sale, 'pdf')}>PDF</button>
-                  <button type="button" onClick={() => void shareRecentSale(sale, 'png')}>Extrato PNG</button>
-                  <button type="button" onClick={() => void shareRecentSale(sale, 'share')}>Compartilhar</button>
-                </div>
-              </ListCard>
+                <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareRecentSale(sale, 'pdf')}>{sharingSaleId === sale.id ? 'Preparando…' : 'Comprovante PDF'}</button>
+                <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareRecentSale(sale, 'png')}>Extrato PNG</button>
+                <button type="button" disabled={sharingSaleId !== null} onClick={() => void shareRecentSale(sale, 'share')}>Compartilhar</button>
+              </RecentSaleCard></li>
             ))}
-          </div>
-        ) : (
-          <div className="mapp-pdv-compact-empty">
+          </ul>
+        ) : !loading && !salesLoadError ? (
+          <div className="mapp-recent-list-empty">
             <strong>Nenhuma venda registrada</strong>
             <small>Finalize uma venda para acompanhar aqui.</small>
           </div>
-        )}
+        ) : null}
+        {recentSaleLimit < sales.length ? (
+          <button type="button" className="mapp-recent-list-more" onClick={() => setRecentSaleLimit((limit) => limit + 3)}>Mostrar mais vendas ({Math.min(3, sales.length - recentSaleLimit)})</button>
+        ) : null}
       </section>
         </aside>
       </section>

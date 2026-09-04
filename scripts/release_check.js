@@ -109,7 +109,9 @@ if (!exists('.env.production')) {
 }
 
 const mainSource = read('src/main.tsx');
-if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.includes('"./mobile-app/styles/mobile-app.css"')) fail('main.tsx precisa carregar somente a base nova mobile-app.css.');
+if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.includes('\"./mobile-app/styles/mobile-app.css\"')) fail('main.tsx precisa carregar a base mobile-app.css.');
+if (!mainSource.includes('dialog-hotfix.css')) fail('main.tsx precisa carregar dialog-hotfix.css depois da base mobile para proteger modais no iPhone.');
+if (!mainSource.includes(`smart-mobile-rebuild-v${releaseNumber}`)) fail(`main.tsx precisa aplicar smart-mobile-rebuild-v${releaseNumber}.`);
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
 }
@@ -165,6 +167,9 @@ try {
 }
 
 const css = read('src/mobile-app/styles/mobile-app.css');
+const dialogHotfixCss = read('src/mobile-app/styles/dialog-hotfix.css');
+const recentSalesCss = read('src/mobile-app/styles/recent-sales.css');
+const recentSaleCardSource = read('src/mobile-app/components/RecentSaleCard.tsx');
 for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
@@ -215,6 +220,17 @@ if (!productsCustomersSource.includes('deleteProductFeedback')) fail('Produtos p
 if (!productsCustomersSource.includes("const [deleteProductFeedback, setDeleteProductFeedback] = useState")) fail('ProductsScreen precisa declarar o estado deleteProductFeedback e seu setter.');
 if (!productsCustomersSource.includes('disabled={saving}>{saving ? \'Excluindo...\' : \'Excluir cadastro\'}')) fail('Botão Excluir cadastro não pode ficar desabilitado silenciosamente por confirmação incompleta.');
 
+for (const token of ['mapp-dialog-footer', 'pointer-events: auto', 'safe-area-inset-bottom', 'mapp-receive-primary-action']) {
+  if (!dialogHotfixCss.includes(token)) fail(`dialog-hotfix.css precisa conter ${token} para proteger o toque no iPhone.`);
+}
+if (!creditsMobileSource.includes('handleReceivePrimaryAction')) fail('Receber parcela precisa usar um handler explícito para a ação principal.');
+if (!creditsMobileSource.includes('data-receive-action="confirm"')) fail('Receber parcela precisa identificar a ação Confirmar recebimento para QA.');
+if (!creditsMobileSource.includes('onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}')) fail('Botão de recebimento precisa responder por onClick explícito além do submit do formulário.');
+for (const token of ['mapp-recent-sale-actions', 'mapp-recent-sale-status.is-complete', '@media (max-width: 520px)']) {
+  if (!recentSalesCss.includes(token)) fail(`recent-sales.css precisa conter ${token}.`);
+}
+if (!recentSaleCardSource.includes('statusToneClass') || !recentSaleCardSource.includes('aria-label={`${title}')) fail('RecentSaleCard precisa manter status visual e rótulo acessível refinados.');
+
 const routeSource = read('src/mobile-app/mobileAppRoutes.ts');
 for (const label of ['Vendas / PDV', 'Produtos', 'Clientes', 'Pedidos', 'Caixa', 'Crediário', 'Relatórios', 'Comprovantes', 'Backup', 'Configurações', 'Logs / Diagnóstico', 'Diagnóstico Web', 'Cupom']) {
   if (!routeSource.includes(label)) fail(`Rota nova ausente: ${label}`);
@@ -242,4 +258,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log(`OK: release_check v${releaseNumber} PWA passou. Hook de acessibilidade e versão do lote validados.`);
+console.log(`OK: release_check v${releaseNumber} PWA passou. Diálogos iPhone, recebimento e listas recentes validados.`);
