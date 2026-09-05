@@ -2,10 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './mobile-app/styles/mobile-app.css';
+import './mobile-app/styles/dialog-hotfix.css';
 
 
 document.documentElement.classList.add(
   'smart-mobile-rebuild',
+  'smart-mobile-rebuild-v247',
   'smart-mobile-rebuild-v246',
   'smart-mobile-rebuild-v245',
   'smart-mobile-rebuild-v189',
@@ -29,6 +31,7 @@ function applyMobileViewportMetrics(): void {
   root.style.setProperty('--mapp-vw', `${viewportWidth * 0.01}px`);
   root.style.setProperty('--mapp-viewport-height-px', `${viewportHeight}px`);
   root.style.setProperty('--mapp-viewport-width-px', `${viewportWidth}px`);
+  root.style.setProperty('--mapp-viewport-top-px', `${Math.max(0, visualViewport?.offsetTop ?? 0)}px`);
   root.classList.toggle('mapp-keyboard-open', keyboardOpen);
   root.classList.toggle('mapp-ios-device', /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
   root.classList.toggle('mapp-android-device', /Android/i.test(ua));

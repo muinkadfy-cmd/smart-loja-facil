@@ -139,6 +139,15 @@ if (!apiSource.includes('cancelCredit:') || !apiSource.includes('deleteProductSa
 if (!creditsSource.includes('Cancelar crediário') || !creditsSource.includes('Digite CANCELAR')) fail('Crediário mobile precisa oferecer cancelamento com confirmação forte.');
 if (!productsCustomersSource.includes('Excluir cadastro') || !productsCustomersSource.includes('Digite EXCLUIR')) fail('Produtos mobile precisa oferecer exclusão segura somente após confirmação.');
 if (!receiptsSource.includes("credit.status === 'cancelado'") && !receiptsSource.includes("credit.status === 'cancelada'")) fail('Comprovantes precisam reconhecer crediário cancelado.');
+if (!creditsSource.includes('mapp-dialog-cancel-action') || !creditsSource.includes('data-receive-action="confirm"')) fail('Receber parcela precisa manter Cancelar e Confirmar identificados no rodapé protegido.');
+if (!creditsSource.includes('Conferir recebimento')) fail('Receber parcela precisa usar CTA inicial curto e legível no iPhone.');
+if (!receiptsSource.includes('mapp-receipt-note-copy')) fail('Comprovantes precisam usar bloco dedicado para o cabeçalho da nota no mobile.');
+const dialogHotfixSource = read('src/mobile-app/styles/dialog-hotfix.css');
+for (const token of ['Hotfix 247 — iPhone: CTA financeiro', 'mapp-dialog-open .mapp-bottom-nav', 'grid-template-areas: "cancel primary"', 'mapp-receipt-note-copy']) {
+  if (!dialogHotfixSource.includes(token)) fail(`Hotfix 247 de iPhone/Comprovantes precisa conter ${token}.`);
+}
+const dialogHookSource = read('src/mobile-app/hooks/useDialogAccessibility.ts');
+if (!dialogHookSource.includes("classList.add('mapp-dialog-open')") || !dialogHookSource.includes("classList.remove('mapp-dialog-open')")) fail('Hook de diálogo precisa ocultar/restaurar a navegação inferior durante modais.');
 if (!exists(safeCancelMigration)) fail(`Migration segura ausente: ${safeCancelMigration}`);
 else {
   const migrationSource = read(safeCancelMigration);
@@ -258,4 +267,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log(`OK: release_check v${releaseNumber} PWA passou. Diálogos iPhone, recebimento e listas recentes validados.`);
+console.log(`OK: release_check v${releaseNumber} PWA passou. Recebimento no iPhone e Comprovantes mobile validados.`);

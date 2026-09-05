@@ -1221,12 +1221,12 @@ export function CreditsScreen({ status, refreshToken, onNavigate, onRefresh }: C
           </div>
             <footer className="mapp-form-actions mapp-dialog-footer">
             <CreditDialogFeedback feedback={saving || feedback?.tone === 'error' ? feedback : null} />
-            <button type="button" className="mapp-secondary-button" onClick={() => { setReceive(null); setPaymentReview(null); }} disabled={saving}>Cancelar</button>
+            <button type="button" className="mapp-secondary-button mapp-dialog-cancel-action" onClick={() => { setReceive(null); setPaymentReview(null); }} disabled={saving}>Cancelar</button>
 
             {!paymentReview ? (
-              <button type="submit" className="mapp-primary-button mapp-receive-primary-action" data-receive-action="review" disabled={saving} onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}>{saving ? 'Conferindo...' : 'Conferir antes de receber'}</button>
+              <button type="submit" className="mapp-primary-button mapp-receive-primary-action" data-receive-action="review" aria-label="Conferir recebimento da parcela" disabled={saving} onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}>{saving ? 'Conferindo...' : 'Conferir recebimento'}</button>
             ) : paymentReview.ok ? (
-              <button type="submit" className="mapp-primary-button mapp-receive-primary-action" data-receive-action="confirm" disabled={saving} onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}>
+              <button type="submit" className="mapp-primary-button mapp-receive-primary-action" data-receive-action="confirm" aria-label="Confirmar recebimento da parcela" disabled={saving} onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}>
                 {saving ? 'Recebendo...' : 'Confirmar recebimento'}
               </button>
             ) : <button type="submit" className="mapp-primary-button mapp-receive-primary-action" data-receive-action="review-again" disabled={saving} onClick={(event) => { event.preventDefault(); handleReceivePrimaryAction(); }}>Conferir novamente</button>}

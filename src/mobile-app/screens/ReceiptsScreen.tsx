@@ -2085,15 +2085,16 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
       {dueDateEdit ? (
-        <section ref={setActiveDialogNode} className="mapp-due-date-modal" role="dialog" aria-modal="true" aria-label="Editar vencimento da parcela" tabIndex={-1} onClick={() => { if (!saving) setDueDateEdit(null); }}>
-          <div className="mapp-due-date-card" onClick={(event) => event.stopPropagation()}>
-            <div className="mapp-due-date-head">
+        <div className="mapp-due-date-modal mapp-dialog-backdrop" role="presentation" onClick={() => { if (!saving) setDueDateEdit(null); }}>
+          <section ref={setActiveDialogNode} className="mapp-due-date-card mapp-dialog-frame" role="dialog" aria-modal="true" aria-label="Editar vencimento da parcela" aria-busy={saving} tabIndex={-1} onClick={(event) => event.stopPropagation()}>
+            <header className="mapp-due-date-head mapp-dialog-header">
               <span><InlineIcon name="calendario_data" size={24} /></span>
               <div>
                 <strong>Editar vencimento da parcela</strong>
                 <small>Parcela {formatNumber(dueDateEdit.installment.number)}/{formatNumber(dueDateEdit.credit.installments.length)} · Nota #{String(dueDateEdit.credit.sale_number || 0).padStart(4, '0')}</small>
               </div>
-            </div>
+            </header>
+            <div className="mapp-dialog-body">
             <div className="mapp-due-date-summary">
               <span>Cliente <b>{dueDateEdit.credit.customer_name || 'Cliente'}</b></span>
               <span>Vencimento atual <b>{dateOnly(dueDateEdit.installment.due_date)}</b></span>
@@ -2117,25 +2118,27 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               />
             </label>
             <p className="mapp-due-date-note">A alteração muda somente o vencimento desta parcela. Valor, saldo, pagamento, produto, cliente, caixa e histórico financeiro continuam iguais.</p>
+            </div>
+            <footer className="mapp-due-date-actions mapp-dialog-footer">
             {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div> : null}
-            <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setDueDateEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveDueDateEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar vencimento'}</button>
-            </div>
-          </div>
-        </section>
+            </footer>
+          </section>
+        </div>
       ) : null}
 
       {creditEdit ? (
-        <section ref={setActiveDialogNode} className="mapp-due-date-modal mapp-credit-edit-modal" role="dialog" aria-modal="true" aria-label="Editar crediário pronto" tabIndex={-1} onClick={() => { if (!saving) setCreditEdit(null); }}>
-          <div className="mapp-due-date-card mapp-credit-edit-card" onClick={(event) => event.stopPropagation()}>
-            <div className="mapp-due-date-head">
+        <div className="mapp-due-date-modal mapp-credit-edit-modal mapp-dialog-backdrop" role="presentation" onClick={() => { if (!saving) setCreditEdit(null); }}>
+          <section ref={setActiveDialogNode} className="mapp-due-date-card mapp-credit-edit-card mapp-dialog-frame" role="dialog" aria-modal="true" aria-label="Editar crediário pronto" aria-busy={saving} tabIndex={-1} onClick={(event) => event.stopPropagation()}>
+            <header className="mapp-due-date-head mapp-dialog-header">
               <span><InlineIcon name="editar" size={24} /></span>
               <div>
                 <strong>Editar crediário pronto</strong>
                 <small>Nota #{String(creditEdit.credit.sale_number || 0).padStart(4, '0')} · {formatNumber(creditEdit.credit.installments.length)} parcelas</small>
               </div>
-            </div>
+            </header>
+            <div className="mapp-dialog-body">
             <div className="mapp-due-date-summary">
               <span>Total da nota <b>{formatCurrency(creditEdit.credit.total)}</b></span>
               <span>Pago <b>{formatCurrency(creditPaidTotal(creditEdit.credit))}</b></span>
@@ -2188,13 +2191,14 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
               />
             </label>
             <p className="mapp-due-date-note">Salva dados do cliente e vencimentos das parcelas. Não altera valores, pagamentos, produtos, saldo ou total da venda.</p>
+            </div>
+            <footer className="mapp-due-date-actions mapp-dialog-footer">
             {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div> : null}
-            <div className="mapp-due-date-actions">
               <button type="button" className="mapp-secondary-button" onClick={() => setCreditEdit(null)} disabled={saving}>Cancelar</button>
               <button type="button" className="mapp-primary-button" onClick={() => void saveCreditBulkEdit()} disabled={saving}>{saving ? 'Salvando...' : 'Salvar crediário'}</button>
-            </div>
-          </div>
-        </section>
+            </footer>
+          </section>
+        </div>
       ) : null}
 
       <section className="mapp-success-card mapp-receipts-help-card">
@@ -2217,12 +2221,13 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
       </section>
 
       {fullPreview ? (
-        <section ref={setActiveDialogNode} className="mapp-receipt-fullscreen" role="dialog" aria-modal="true" aria-label={`Visualização do ${fullPreview.title}`} tabIndex={-1}>
+        <section ref={setActiveDialogNode} className="mapp-receipt-fullscreen mapp-dialog-backdrop" role="dialog" aria-modal="true" aria-label={`Visualização do ${fullPreview.title}`} aria-busy={saving} tabIndex={-1}>
           <div className="mapp-receipt-fullscreen-toolbar">
             <button type="button" className="mapp-secondary-button" onClick={() => setFullPreview(null)}>Voltar</button>
             <div>
               <strong>{fullPreview.title}</strong>
               <span>{fullPreview.customer} · {fullPreview.status}</span>
+              {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone} mapp-dialog-feedback`} role={feedback.tone === 'error' ? 'alert' : 'status'}>{feedback.text}</div> : null}
             </div>
             <button type="button" className="mapp-primary-button" onClick={() => void exportPreview(fullPreview, 'a4')} disabled={saving}>{saving ? 'Gerando...' : 'PDF'}</button>
           </div>
@@ -2301,7 +2306,7 @@ export function ReceiptsScreen({ status, refreshToken, onNavigate }: ReceiptsScr
                           <article key={credit.id} className={`mapp-credit-card mapp-receipt-note-card ${expanded ? 'expanded' : ''}`}>
                             <button type="button" className="mapp-credit-note-head" onClick={() => toggleCredit(credit.id)} aria-expanded={expanded}>
                               <span><InlineIcon name="comprovantes" size={24} /></span>
-                              <div>
+                              <div className="mapp-receipt-note-copy">
                                 <strong>Nota/Venda #{String(credit.sale_number).padStart(4, '0')}</strong>
                                 <small>{formatDateTime(credit.created_at)} · {paidCount}/{credit.installments.length} parcelas pagas</small>
                                 <small className={`mapp-note-status-line ${noteStatus.tone}`}>{noteStatus.detail}</small>

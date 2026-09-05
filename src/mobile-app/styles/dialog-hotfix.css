@@ -188,3 +188,223 @@ html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-receive-form .mapp-dialo
     font-size: 1rem;
   }
 }
+
+
+/* Hotfix 247 — iPhone: CTA financeiro sempre visível + Comprovantes sem compressão */
+html.mapp-dialog-open .mapp-bottom-nav,
+body.mapp-dialog-open .mapp-bottom-nav {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(calc(100% + 40px)) !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-dialog-backdrop,
+html.smart-mobile-rebuild-v247 .mapp-credit-receive-backdrop {
+  z-index: 2400 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form {
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(720px, 100%) !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  isolation: isolate;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-bottom: 20px;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-footer {
+  position: relative !important;
+  inset: auto !important;
+  bottom: auto !important;
+  z-index: 60 !important;
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr) !important;
+  grid-template-areas: "cancel primary" !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 10px 12px max(12px, env(safe-area-inset-bottom, 0px)) !important;
+  border: 0 !important;
+  border-top: 1px solid #dbe3ee !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: 0 -8px 22px rgba(15, 23, 42, .10) !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form .mapp-dialog-cancel-action {
+  grid-area: cancel !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form .mapp-receive-primary-action {
+  grid-area: primary !important;
+  min-height: 58px !important;
+  border-radius: 16px !important;
+  font-size: .95rem !important;
+  font-weight: 900 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.01em !important;
+  white-space: normal !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form .mapp-dialog-cancel-action {
+  min-height: 58px !important;
+  border-radius: 16px !important;
+  font-size: 1rem !important;
+  font-weight: 850 !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receive-form .mapp-dialog-footer > :is([role="alert"], [role="status"], .mapp-critical-inline-feedback) {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+}
+
+html.smart-mobile-rebuild-v247.mapp-keyboard-open .mapp-receive-form > .mapp-dialog-header {
+  padding-block: 8px !important;
+}
+
+html.smart-mobile-rebuild-v247.mapp-keyboard-open .mapp-receive-form > .mapp-dialog-body {
+  padding-block: 8px !important;
+}
+
+html.smart-mobile-rebuild-v247.mapp-keyboard-open .mapp-receive-form > .mapp-dialog-footer {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Comprovantes — o cabeçalho da nota usa a largura inteira no iPhone. */
+html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-head {
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-receipt-note-copy {
+  min-width: 0 !important;
+}
+
+html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-receipt-note-copy :is(strong, small) {
+  max-width: 100% !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+@media (max-width: 520px) {
+  html.smart-mobile-rebuild-v247 .mapp-dialog-backdrop,
+  html.smart-mobile-rebuild-v247 .mapp-credit-receive-backdrop {
+    align-items: flex-end !important;
+    padding: max(6px, env(safe-area-inset-top, 0px)) 6px max(6px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receive-form {
+    max-height: calc(var(--mapp-viewport-height-px, 100dvh) - max(12px, env(safe-area-inset-top, 0px)) - max(12px, env(safe-area-inset-bottom, 0px))) !important;
+    border-radius: 26px 26px 18px 18px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-footer > button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card {
+    padding: 12px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 5px !important;
+    align-items: start !important;
+    padding: 2px 34px 4px 0 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-head > span {
+    display: none !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-receipt-note-copy {
+    grid-column: 1 !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-receipt-note-copy strong {
+    font-size: 1rem !important;
+    line-height: 1.12 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-receipt-note-copy small {
+    font-size: .79rem !important;
+    line-height: 1.3 !important;
+    margin-top: 3px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-head > em {
+    grid-column: 1 !important;
+    justify-self: start !important;
+    width: fit-content !important;
+    max-width: calc(100% - 6px) !important;
+    margin-top: 3px !important;
+    white-space: normal !important;
+    line-height: 1.15 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-head::after {
+    position: absolute !important;
+    top: 8px !important;
+    right: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    margin: 0 !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-actions button {
+    min-height: 48px !important;
+    padding: 8px 10px !important;
+    font-size: .84rem !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+  }
+}
+
+@media (max-width: 340px) {
+  html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-footer {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: "primary" "cancel" !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-receipts-screen .mapp-receipt-note-card .mapp-credit-note-actions {
+    grid-template-columns: 1fr !important;
+  }
+}

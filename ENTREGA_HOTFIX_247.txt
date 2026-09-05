@@ -1,0 +1,31 @@
+HOTFIX 247 — RECEBER PARCELA IPHONE + COMPROVANTES MOBILE
+
+PROBLEMA 1 — RECEBER PARCELA
+- Bottom nav podia ocupar a região das ações e o usuário via apenas Cancelar.
+- Corrigido com navegação inferior oculta durante diálogo, body rolável separado e footer protegido.
+- Cancelar + Conferir/Confirmar ficam na mesma linha no iPhone.
+- CTA principal 56–58 px, pointer-events e touch-action protegidos.
+- Testado em 375, 390, 430 e 390x430 com viewport de teclado.
+- elementFromPoint e clique real: PASS.
+
+PROBLEMA 2 — COMPROVANTES
+- Cabeçalho da nota ficava espremido e quebrava textos mesmo sobrando largura.
+- Corrigido com bloco de texto dedicado em largura inteira, status separado e seta absoluta.
+- Totais e ações refinados para duas colunas no mobile.
+- 0 overflow horizontal em 375/390/430.
+
+ANTI-REGRESSÃO
+- Sem mudança financeira, caixa, saldo, Supabase ou migrations.
+
+VERSÃO: 0.1.247
+
+VALIDAÇÕES DISPONÍVEIS NESTE AMBIENTE
+- sintaxe/transpile TS/TSX: OK
+- lint: OK
+- release check: OK
+- commercial check: OK
+- QA Chromium/Playwright: PASS
+
+VALIDAÇÃO LOCAL OBRIGATÓRIA ANTES DO DEPLOY
+- npm run type-check
+- npm run build
