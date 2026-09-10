@@ -1,0 +1,318 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "capturedAt": "2026-09-10T14:36:22.076Z",
+  "routes": [
+    {
+      "route": "dashboard",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\dashboard.png",
+      "ready": {
+        "ready": true,
+        "title": "Painel",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Painel",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "sales",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\sales.png",
+      "ready": {
+        "ready": true,
+        "title": "Vendas / PDV",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Vendas / PDV",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "cash",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\cash.png",
+      "ready": {
+        "ready": true,
+        "title": "Caixa",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Caixa",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "orders",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\orders.png",
+      "ready": {
+        "ready": true,
+        "title": "Pedidos",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Pedidos",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "credits",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\credits.png",
+      "ready": {
+        "ready": true,
+        "title": "Crediário",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Crediário",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "receipts",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\receipts.png",
+      "ready": {
+        "ready": true,
+        "title": "Comprovantes",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Comprovantes",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "coupons",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\coupons.png",
+      "ready": {
+        "ready": true,
+        "title": "Cupom",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Cupom",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "products",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\products.png",
+      "ready": {
+        "ready": true,
+        "title": "Produtos",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Produtos",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "customers",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\customers.png",
+      "ready": {
+        "ready": true,
+        "title": "Clientes",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Clientes",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "reports",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\reports.png",
+      "ready": {
+        "ready": true,
+        "title": "Relatórios",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Relatórios",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "backup",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\backup.png",
+      "ready": {
+        "ready": true,
+        "title": "Backup",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Backup",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "settings",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\settings.png",
+      "ready": {
+        "ready": true,
+        "title": "Configurações",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Configurações",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "audit",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\audit.png",
+      "ready": {
+        "ready": true,
+        "title": "Logs / Diagnóstico",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Logs / Diagnóstico",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "diagnostics",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-desktop\\1366\\diagnostics.png",
+      "ready": {
+        "ready": true,
+        "title": "Diagnóstico Web",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Diagnóstico Web",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

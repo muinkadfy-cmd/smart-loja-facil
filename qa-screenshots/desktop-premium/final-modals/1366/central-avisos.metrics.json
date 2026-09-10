@@ -1,0 +1,32 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "capturedAt": "2026-09-10T14:43:07.364Z",
+  "routes": [
+    {
+      "route": "dashboard",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-modals\\1366\\central-avisos.png",
+      "ready": {
+        "ready": true,
+        "title": "Painel",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Painel",
+        "online": "Online",
+        "dialogs": 1,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

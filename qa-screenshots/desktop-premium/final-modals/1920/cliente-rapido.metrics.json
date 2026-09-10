@@ -1,0 +1,32 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "capturedAt": "2026-09-10T14:43:07.359Z",
+  "routes": [
+    {
+      "route": "sales",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-modals\\1920\\cliente-rapido.png",
+      "ready": {
+        "ready": true,
+        "title": "Vendas / PDV",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1920,
+        "innerHeight": 1080,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080,
+        "title": "Vendas / PDV",
+        "online": "Online",
+        "dialogs": 1,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

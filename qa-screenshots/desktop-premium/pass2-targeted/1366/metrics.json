@@ -1,0 +1,142 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "capturedAt": "2026-09-10T14:30:49.287Z",
+  "routes": [
+    {
+      "route": "dashboard",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\dashboard.png",
+      "ready": {
+        "ready": true,
+        "title": "Painel",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Painel",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "cash",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\cash.png",
+      "ready": {
+        "ready": true,
+        "title": "Caixa",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Caixa",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "receipts",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\receipts.png",
+      "ready": {
+        "ready": true,
+        "title": "Comprovantes",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Comprovantes",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "reports",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\reports.png",
+      "ready": {
+        "ready": true,
+        "title": "Relatórios",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Relatórios",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "backup",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\backup.png",
+      "ready": {
+        "ready": true,
+        "title": "Backup",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Backup",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    },
+    {
+      "route": "diagnostics",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass2-targeted\\1366\\diagnostics.png",
+      "ready": {
+        "ready": true,
+        "title": "Diagnóstico Web",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Diagnóstico Web",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

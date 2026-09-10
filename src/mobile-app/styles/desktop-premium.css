@@ -1,0 +1,1297 @@
+/*
+ * Desktop Premium layer
+ * This file is intentionally isolated from phone and tablet layouts.
+ * Every visual declaration lives behind the 1024px desktop boundary.
+ */
+
+@media (min-width: 1024px) {
+  :root {
+    --desktop-sidebar: 260px;
+    --desktop-content-max: 1500px;
+    --desktop-radius-sm: 10px;
+    --desktop-radius-md: 14px;
+    --desktop-radius-lg: 18px;
+    --desktop-line: #d8e2ef;
+    --desktop-shadow: 0 1px 2px rgba(15, 35, 64, 0.035), 0 10px 28px rgba(15, 35, 64, 0.055);
+  }
+
+  html,
+  body {
+    overflow: hidden;
+  }
+
+  .mapp-root {
+    grid-template-columns: var(--desktop-sidebar) minmax(0, 1fr);
+    background: #eef4fa;
+  }
+
+  .mapp-shell {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(219, 234, 254, 0.34), transparent 34%),
+      linear-gradient(180deg, #f9fbfe 0%, #f1f6fb 100%);
+  }
+
+  /* Desktop sidebar */
+  .mapp-sidebar {
+    gap: 10px;
+    padding: 14px 12px 12px;
+    background: linear-gradient(180deg, #102237 0%, #0c1b2c 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 10px 0 34px rgba(10, 28, 49, 0.08);
+  }
+
+  .mapp-sidebar-head {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 50px;
+    padding: 0 4px 11px;
+  }
+
+  .mapp-sidebar-head > button {
+    display: none;
+  }
+
+  .mapp-sidebar-head .mapp-logo-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .mapp-sidebar-head .mapp-logo-badge .app-svg-icon {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .mapp-sidebar-head strong {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    text-overflow: clip;
+    color: #f8fbff;
+    font-size: 0.88rem;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    font-weight: 800;
+  }
+
+  .mapp-sidebar-head small {
+    min-height: 20px;
+    margin-top: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .mapp-side-list {
+    align-content: start;
+    gap: 3px;
+    padding: 0 4px 2px 0;
+    scrollbar-color: rgba(169, 190, 216, 0.38) transparent;
+    scrollbar-width: thin;
+  }
+
+  .mapp-side-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .mapp-side-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mapp-side-list::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background: rgba(169, 190, 216, 0.32);
+  }
+
+  .mapp-side-group {
+    gap: 3px;
+    padding: 2px 0 6px;
+  }
+
+  .mapp-side-group-title {
+    display: block;
+    padding: 6px 10px 3px;
+  }
+
+  .mapp-side-group-title strong {
+    color: #93a9c2;
+    font-size: 0.66rem;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    font-weight: 800;
+  }
+
+  .mapp-side-group-title small {
+    display: none;
+  }
+
+  .mapp-side-list button {
+    position: relative;
+    min-height: 40px;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 9px;
+    border-radius: 11px;
+    padding: 5px 8px;
+    color: #dce7f4;
+    font-size: 0.83rem;
+    transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  }
+
+  .mapp-side-list button span {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.065);
+  }
+
+  .mapp-side-list button span .app-svg-icon {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .mapp-side-list button strong {
+    font-weight: 720;
+  }
+
+  .mapp-side-list button.active,
+  .mapp-side-list button.has-pending.active {
+    background: linear-gradient(90deg, rgba(65, 133, 244, 0.22), rgba(65, 133, 244, 0.09));
+    color: #ffffff;
+    box-shadow: inset 3px 0 0 #6aa5ff, inset 0 0 0 1px rgba(125, 178, 255, 0.16);
+  }
+
+  .mapp-side-list button.active span,
+  .mapp-side-list button.has-pending.active span {
+    background: rgba(107, 162, 248, 0.18);
+    color: #8cbaff;
+  }
+
+  .mapp-side-list button.has-pending:not(.active) {
+    background: transparent;
+    color: #dce7f4;
+    box-shadow: none;
+  }
+
+  .mapp-side-list button.has-pending:not(.active) span {
+    background: rgba(255, 255, 255, 0.065);
+    color: #8cbaff;
+  }
+
+  .mapp-side-list button em,
+  .mapp-context-subnav-track button em {
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border: 2px solid currentColor;
+    background: #b42318;
+    color: #fff;
+    font-size: 0.65rem;
+    font-style: normal;
+  }
+
+  .mapp-side-footer {
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 8px;
+    padding: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .mapp-side-footer > span {
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .mapp-side-footer > strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    color: #f5f9ff;
+    font-size: 0.74rem;
+    font-weight: 720;
+  }
+
+  .mapp-sidebar-logout {
+    grid-column: 1 / -1;
+    min-height: 38px;
+    margin-top: 4px;
+    border-radius: 10px;
+    font-size: 0.73rem;
+    letter-spacing: 0.02em;
+  }
+
+  .mapp-sidebar-logout .app-svg-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mapp-sidebar-logout span {
+    color: #c8d6e7;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Compact desktop top bar */
+  .mapp-mobile-top {
+    min-height: 64px;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 9px 24px;
+    border-bottom-color: rgba(203, 215, 230, 0.82);
+    box-shadow: 0 1px 8px rgba(22, 45, 78, 0.025);
+  }
+
+  .mapp-header {
+    gap: 20px;
+  }
+
+  .mapp-header-brand {
+    gap: 10px;
+  }
+
+  .mapp-header-brand strong {
+    max-width: min(32vw, 420px);
+    font-size: 1.18rem;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+  }
+
+  .mapp-brand-dot {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .mapp-brand-dot .app-svg-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .mapp-header-actions {
+    gap: 8px;
+  }
+
+  .mapp-icon-button,
+  .mapp-page-reload-button {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+    box-shadow: none;
+    transition: border-color 140ms ease, background 140ms ease, color 140ms ease, transform 140ms ease;
+  }
+
+  .mapp-page-reload-button {
+    color: #4b607d;
+    background: #f6f9fd;
+    border-style: dashed;
+  }
+
+  .mapp-icon-button .app-svg-icon,
+  .mapp-bell-shape svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .mapp-logout-top-button {
+    width: auto;
+    min-width: 72px;
+    padding: 0 11px;
+    gap: 6px;
+  }
+
+  .mapp-logout-top-button span {
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .mapp-badge {
+    right: -6px;
+    top: -7px;
+    min-width: 21px;
+    height: 21px;
+    padding: 0 5px;
+    background: #b42318;
+    border-width: 2px;
+    font-size: 0.68rem;
+  }
+
+  /* Content frame and page hierarchy */
+  .mapp-page {
+    padding: 16px 24px 32px;
+    scrollbar-color: #bdcadd transparent;
+    scrollbar-width: thin;
+  }
+
+  .mapp-page::-webkit-scrollbar {
+    width: 9px;
+  }
+
+  .mapp-page::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 99px;
+    background: #bdcadd;
+    background-clip: padding-box;
+  }
+
+  .mapp-page > * {
+    width: min(var(--desktop-content-max), 100%);
+  }
+
+  .mapp-store-card {
+    min-height: 54px;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 7px 10px;
+    border-radius: var(--desktop-radius-lg);
+    box-shadow: 0 4px 16px rgba(20, 43, 74, 0.035);
+  }
+
+  .mapp-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.78rem;
+  }
+
+  .mapp-store-card div {
+    gap: 0;
+  }
+
+  .mapp-store-card small {
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .mapp-store-card strong {
+    font-size: 0.86rem;
+    font-weight: 800;
+  }
+
+  .mapp-store-card button {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #f4f7fa;
+  }
+
+  .mapp-update-banner,
+  .mapp-inline-status,
+  .mapp-error-box {
+    min-height: 46px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-page-title-row,
+  .mapp-page-dashboard .mapp-page-title-row {
+    align-items: center;
+    margin: 0 auto 14px !important;
+  }
+
+  .mapp-page-title-row h1 {
+    font-size: 1.82rem;
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+    font-weight: 850;
+  }
+
+  .mapp-page-title-row p {
+    margin-top: 4px;
+    font-size: 0.84rem;
+    line-height: 1.35;
+    font-weight: 620;
+  }
+
+  .mapp-online-chip,
+  .mapp-warn-chip {
+    min-height: 32px;
+    margin-top: 0;
+    padding: 0 12px;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .mapp-context-subnav {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 54px;
+    margin: -2px auto 14px;
+    padding: 7px 9px;
+    border-radius: var(--desktop-radius-lg);
+    box-shadow: 0 4px 16px rgba(22, 45, 78, 0.035);
+  }
+
+  .mapp-context-subnav-head {
+    display: block;
+    padding: 0 7px;
+  }
+
+  .mapp-context-subnav-head strong {
+    font-size: 0.67rem;
+    letter-spacing: 0.11em;
+    font-weight: 800;
+  }
+
+  .mapp-context-subnav-head span {
+    display: none;
+  }
+
+  .mapp-context-subnav-track {
+    gap: 6px;
+    padding: 0;
+  }
+
+  .mapp-context-subnav-track button {
+    min-height: 36px;
+    gap: 6px;
+    padding: 0 11px;
+    border-radius: 11px;
+    box-shadow: none;
+    font-size: 0.76rem;
+    font-weight: 750;
+  }
+
+  .mapp-context-subnav-track button svg,
+  .mapp-context-subnav-track button img,
+  .mapp-context-subnav-track button .app-svg-icon {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .mapp-context-subnav-track button.active {
+    box-shadow: 0 6px 16px rgba(14, 99, 244, 0.16);
+  }
+
+  .mapp-screen {
+    gap: 14px;
+  }
+
+  .mapp-section-block,
+  .mapp-panel,
+  .mapp-empty-state,
+  .mapp-version-card,
+  .mapp-form-panel {
+    border-radius: var(--desktop-radius-lg);
+    box-shadow: var(--desktop-shadow);
+  }
+
+  .mapp-section-block,
+  .mapp-panel,
+  .mapp-form-panel {
+    padding: 16px;
+  }
+
+  .mapp-section-title {
+    margin-bottom: 12px;
+  }
+
+  .mapp-section-title h2,
+  .mapp-section-title-row h2,
+  .mapp-recent-list-heading h2 {
+    font-size: 1.04rem;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+  }
+
+  .mapp-section-title p,
+  .mapp-section-title-row p,
+  .mapp-recent-list-heading p {
+    margin-top: 3px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .mapp-mini-stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mapp-mini-stat-grid > * {
+    min-height: 82px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-card {
+    min-height: 92px;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-icon .app-svg-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-label {
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-value {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(1.18rem, 1.75vw, 1.58rem);
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+  }
+
+  .mapp-mini-stat-grid .mapp-stat-detail {
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .mapp-stat-card {
+    border-radius: var(--desktop-radius-lg);
+    box-shadow: var(--desktop-shadow);
+  }
+
+  .mapp-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+  }
+
+  .mapp-form-actions,
+  .mapp-button-grid,
+  .mapp-inline-actions {
+    gap: 9px;
+  }
+
+  .mapp-form-actions button,
+  .mapp-button-grid button,
+  .mapp-primary-button,
+  .mapp-secondary-button {
+    min-height: 42px;
+    border-radius: 11px;
+  }
+
+  .mapp-form-panel :is(input:not([type="checkbox"]):not([type="radio"]), select),
+  .mapp-crud-toolbar input,
+  .mapp-search-field input {
+    min-height: 44px;
+  }
+
+  .mapp-list-stack,
+  .mapp-crud-list,
+  .mapp-credit-list,
+  .mapp-installment-list {
+    gap: 9px;
+  }
+
+  /* Dashboard workspace */
+  .mapp-dashboard-screen {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 12px !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mapp-dashboard-screen > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-card {
+    min-height: 88px !important;
+    gap: 10px !important;
+    padding: 13px 14px !important;
+    border-radius: var(--desktop-radius-lg) !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-icon .app-svg-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-label {
+    font-size: 0.74rem !important;
+    line-height: 1.2 !important;
+    font-weight: 720 !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-value {
+    font-size: clamp(1.15rem, 1.6vw, 1.42rem) !important;
+    line-height: 1.08 !important;
+    font-weight: 850 !important;
+  }
+
+  .mapp-dashboard-screen .mapp-dashboard-stats .mapp-stat-detail {
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .mapp-dashboard-stock-alert {
+    min-height: 54px !important;
+    grid-template-columns: 38px minmax(0, 1fr) auto !important;
+    gap: 10px !important;
+    padding: 7px 10px !important;
+    border-radius: var(--desktop-radius-lg) !important;
+  }
+
+  .mapp-dashboard-alert-icon {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 11px !important;
+    font-size: 1rem !important;
+  }
+
+  .mapp-dashboard-stock-alert strong {
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
+    font-weight: 800 !important;
+  }
+
+  .mapp-dashboard-stock-alert p {
+    margin-top: 1px !important;
+    font-size: 0.69rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .mapp-dashboard-stock-alert button {
+    min-width: 104px !important;
+    min-height: 36px !important;
+    border-radius: 10px !important;
+    padding: 0 11px !important;
+    font-size: 0.73rem !important;
+  }
+
+  .mapp-dashboard-actions-block,
+  .mapp-dashboard-product-intel,
+  .mapp-dashboard-activities-block {
+    margin-top: 0 !important;
+  }
+
+  .mapp-dashboard-actions-grid {
+    gap: 9px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile {
+    min-height: 72px !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    grid-template-rows: auto !important;
+    justify-content: start !important;
+    padding: 10px 12px !important;
+    border-radius: var(--desktop-radius-md) !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile > span {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile .app-svg-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mapp-dashboard-actions-grid .mapp-action-tile strong {
+    text-align: left;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-card {
+    min-height: 68px !important;
+    grid-template-columns: 50px minmax(0, 1fr) auto !important;
+    padding: 8px !important;
+    border-radius: var(--desktop-radius-md) !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-icon {
+    width: 50px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-copy strong {
+    font-size: 0.8rem !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-copy small {
+    font-size: 0.69rem !important;
+  }
+
+  .mapp-dashboard-product-intel .mapp-product-intel-card b {
+    font-size: 0.66rem !important;
+  }
+
+  .mapp-dashboard-activities-block {
+    align-self: start;
+  }
+
+  .mapp-recent-list-items {
+    gap: 8px;
+  }
+
+  .mapp-recent-sale {
+    border-radius: var(--desktop-radius-md);
+    box-shadow: 0 3px 12px rgba(22, 46, 79, 0.04);
+  }
+
+  .mapp-recent-sale-trigger {
+    grid-template-columns: 34px minmax(140px, 1.35fr) minmax(110px, 0.75fr) minmax(150px, 1fr) 24px;
+    grid-template-areas: "image identity amount meta chevron";
+    gap: 10px;
+    min-height: 62px;
+    padding: 9px 11px;
+  }
+
+  .mapp-recent-sale-image {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .mapp-recent-sale-amount-row {
+    display: grid;
+    justify-items: start;
+    gap: 2px;
+  }
+
+  .mapp-recent-sale-amount {
+    font-size: 0.9rem;
+  }
+
+  .mapp-recent-sale-meta {
+    display: grid;
+    justify-content: start;
+    gap: 1px;
+    font-size: 0.68rem;
+  }
+
+  .mapp-recent-sale-identity > strong {
+    font-size: 0.76rem;
+  }
+
+  .mapp-recent-sale-customer {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.69rem;
+  }
+
+  /* PDV */
+  .mapp-sales-screen {
+    gap: 12px !important;
+  }
+
+  .mapp-sales-flow-premium {
+    min-height: 50px;
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-sales-flow-steps {
+    min-width: 390px;
+  }
+
+  .mapp-sales-topbar {
+    min-height: 66px;
+    border-radius: var(--desktop-radius-lg);
+  }
+
+  .mapp-sales-topbar-item {
+    padding: 10px 14px;
+  }
+
+  .mapp-sales-premium-layout {
+    grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.78fr) !important;
+    gap: 14px !important;
+    align-items: start;
+  }
+
+  .mapp-sales-products-column,
+  .mapp-sales-side-column {
+    gap: 12px !important;
+  }
+
+  .mapp-sales-side-column {
+    position: sticky;
+    top: 0;
+  }
+
+  .mapp-sales-product-browser,
+  .mapp-sales-mini-cart,
+  .mapp-pdv-checkout,
+  .mapp-pdv-quick-payment {
+    padding: 14px !important;
+  }
+
+  .mapp-page-sales .mapp-sales-product-browser .mapp-product-pick-list > button {
+    min-height: 68px !important;
+    padding: 7px 0 !important;
+  }
+
+  .mapp-sales-customer-compact:focus-within {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95), 0 0 0 6px rgba(37, 99, 235, 0.22);
+  }
+
+  .mapp-sales-recent-side .mapp-recent-sale-trigger {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-areas: "image identity chevron" "amount amount amount" "meta meta meta";
+  }
+
+  /* CRUD, credits, receipts and dense operational lists */
+  .mapp-crud-hero {
+    min-height: 70px;
+    padding: 12px 14px;
+  }
+
+  .mapp-crud-toolbar {
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+    padding: 12px;
+    border-radius: var(--desktop-radius-lg);
+  }
+
+  .mapp-crud-toolbar > button {
+    min-width: 108px;
+  }
+
+  .mapp-crud-card {
+    min-height: 72px;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--desktop-radius-md);
+    box-shadow: 0 3px 12px rgba(22, 46, 79, 0.04);
+  }
+
+  .mapp-crud-icon,
+  .mapp-product-thumb,
+  .mapp-credit-customer-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .mapp-crud-title-row {
+    gap: 12px;
+  }
+
+  .mapp-crud-main p,
+  .mapp-crud-meta {
+    font-size: 0.73rem;
+    line-height: 1.35;
+  }
+
+  .mapp-product-actions,
+  .mapp-customer-actions,
+  .mapp-order-actions,
+  .mapp-credit-note-actions,
+  .mapp-installment-actions,
+  .mapp-receipt-actions {
+    display: flex !important;
+    flex-flow: row wrap !important;
+    gap: 7px !important;
+  }
+
+  .mapp-product-actions button,
+  .mapp-customer-actions button,
+  .mapp-order-actions button,
+  .mapp-credit-note-actions button,
+  .mapp-installment-actions button,
+  .mapp-receipt-actions button {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 9px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .mapp-credit-premium-summary,
+  .mapp-credit-totals,
+  .mapp-credit-customer-totals {
+    gap: 10px;
+  }
+
+  .mapp-credit-mode-card,
+  .mapp-credit-help-card,
+  .mapp-receipts-help-card,
+  .mapp-products-help-card {
+    padding: 11px 14px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-credit-customer-card,
+  .mapp-receipt-customer-card {
+    padding: 11px;
+    border-radius: var(--desktop-radius-lg);
+    box-shadow: var(--desktop-shadow);
+  }
+
+  .mapp-installment-row {
+    grid-template-columns: minmax(180px, 1.4fr) minmax(130px, 0.8fr) auto;
+    gap: 12px;
+    min-height: 66px;
+    padding: 9px 11px;
+    border-radius: 12px;
+  }
+
+  html.smart-mobile-rebuild .mapp-receipts-screen .mapp-receipts-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+  }
+
+  html.smart-mobile-rebuild .mapp-receipts-screen .mapp-receipts-stats > .mapp-stat-card {
+    grid-column: auto !important;
+    width: auto !important;
+  }
+
+  .mapp-reports-screen .mapp-mini-stat-grid,
+  .mapp-backup-screen .mapp-mini-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mapp-receipt-preview {
+    max-width: 1120px;
+  }
+
+  .mapp-receipt-button-grid {
+    grid-template-columns: repeat(4, minmax(120px, 1fr));
+  }
+
+  /* Reports, audit, configuration and diagnostics */
+  .mapp-report-toolbar {
+    padding: 13px 15px;
+  }
+
+  .mapp-report-toolbar .mapp-form-grid {
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+  }
+
+  .mapp-report-list,
+  .mapp-audit-list {
+    gap: 8px;
+  }
+
+  .mapp-audit-card {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.8fr) minmax(150px, 0.8fr) minmax(0, 2fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 12px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-diagnostic-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .mapp-diagnostic-grid span {
+    min-height: 76px;
+    padding: 11px;
+    border-radius: var(--desktop-radius-md);
+  }
+
+  .mapp-diagnostics-group,
+  .mapp-commercial-panel,
+  .mapp-guided-test-panel,
+  .mapp-assisted-execution-panel,
+  .mapp-onboarding-panel,
+  .mapp-proposal-panel {
+    border-radius: var(--desktop-radius-lg);
+  }
+
+  .mapp-diagnostics-group-body,
+  .mapp-demo-steps,
+  .mapp-executive-area-grid,
+  .mapp-commercial-groups,
+  .mapp-guided-groups,
+  .mapp-assisted-groups,
+  .mapp-onboarding-groups,
+  .mapp-proposal-plans {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mapp-coupon-layout {
+    grid-template-columns: minmax(360px, 0.8fr) minmax(460px, 1.2fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  /* Desktop dialogs: retain all iPhone geometry below 1024px. */
+  .mapp-dialog-backdrop,
+  .mapp-credit-receive-backdrop,
+  .mapp-bottom-sheet-backdrop,
+  .mapp-due-date-modal,
+  .mapp-photo-modal {
+    place-items: center !important;
+    align-items: center !important;
+    padding: 28px !important;
+    background: rgba(11, 26, 45, 0.48) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-dialog-frame,
+  html.smart-mobile-rebuild-v247 .mapp-dialog-frame {
+    width: min(720px, calc(100vw - 72px)) !important;
+    max-width: 720px !important;
+    max-height: min(86vh, 820px) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 28px 90px rgba(8, 24, 45, 0.28) !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-critical-dialog {
+    width: min(600px, calc(100vw - 72px)) !important;
+    max-width: 600px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-quick-customer-sheet {
+    width: min(760px, calc(100vw - 72px)) !important;
+    max-width: 760px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-credit-edit-card {
+    width: min(900px, calc(100vw - 72px)) !important;
+    max-width: 900px !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-dialog-frame > .mapp-dialog-header,
+  html.smart-mobile-rebuild-v247 .mapp-dialog-frame > .mapp-dialog-header {
+    min-height: 64px !important;
+    padding: 14px 18px !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-dialog-frame > .mapp-dialog-body,
+  html.smart-mobile-rebuild-v247 .mapp-dialog-frame > .mapp-dialog-body {
+    padding: 16px 18px !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-dialog-frame > .mapp-dialog-footer,
+  html.smart-mobile-rebuild-v247 .mapp-dialog-frame > .mapp-dialog-footer,
+  html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-footer {
+    position: static !important;
+    display: flex !important;
+    grid-template-columns: none !important;
+    flex-flow: row wrap !important;
+    justify-content: flex-end !important;
+    gap: 9px !important;
+    min-height: 62px !important;
+    padding: 10px 18px 14px !important;
+  }
+
+  html.smart-mobile-rebuild-v246 .mapp-dialog-footer > button,
+  html.smart-mobile-rebuild-v247 .mapp-dialog-footer > button,
+  html.smart-mobile-rebuild-v247 .mapp-receive-form > .mapp-dialog-footer > button {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 132px !important;
+    min-height: 42px !important;
+    border-radius: 11px !important;
+  }
+
+  html.smart-mobile-rebuild-v247 .mapp-dialog-footer > :is([role="alert"], [role="status"], .mapp-critical-inline-feedback),
+  html.smart-mobile-rebuild-v247 .mapp-receive-form .mapp-dialog-footer > :is([role="alert"], [role="status"], .mapp-critical-inline-feedback) {
+    flex: 1 0 100% !important;
+  }
+
+  .mapp-notification-layer {
+    place-items: center;
+    padding: 28px;
+  }
+
+  .mapp-notification-modal {
+    width: min(760px, calc(100vw - 72px));
+    max-height: min(84vh, 820px);
+    border-radius: 20px;
+    box-shadow: 0 28px 90px rgba(8, 24, 45, 0.28);
+  }
+
+  .mapp-notification-list {
+    gap: 8px;
+  }
+
+  .mapp-notification-card {
+    min-height: 68px;
+    padding: 10px 12px;
+    border-radius: 13px;
+  }
+
+  .mapp-receipt-fullscreen-frame {
+    width: min(1180px, calc(100vw - 72px));
+    max-height: calc(100vh - 56px);
+    border-radius: 20px;
+  }
+
+  .mapp-photo-modal-card {
+    width: min(900px, calc(100vw - 72px));
+    max-height: calc(100vh - 56px);
+    border-radius: 20px;
+  }
+
+  /* Strong, consistent keyboard focus on light and dark surfaces. */
+  .mapp-root :is(button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.96), 0 0 0 6px rgba(37, 99, 235, 0.2);
+  }
+
+  .mapp-sidebar :is(button, [tabindex]):focus-visible {
+    outline-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(16, 34, 55, 0.98), 0 0 0 6px rgba(147, 197, 253, 0.34);
+  }
+}
+
+@media (min-width: 1280px) {
+  .mapp-dashboard-screen .mapp-dashboard-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .mapp-dashboard-product-intel {
+    grid-column: span 6;
+  }
+
+  .mapp-dashboard-activities-block {
+    grid-column: span 6;
+  }
+
+  .mapp-header-actions > .mapp-icon-button:first-child,
+  .mapp-header-actions > .mapp-page-reload-button {
+    width: auto;
+    padding: 0 12px;
+    grid-auto-flow: column;
+    gap: 7px;
+  }
+
+  .mapp-header-actions > .mapp-icon-button:first-child::after,
+  .mapp-header-actions > .mapp-page-reload-button::after {
+    font-size: 0.7rem;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  .mapp-header-actions > .mapp-icon-button:first-child::after {
+    content: "Sincronizar";
+  }
+
+  .mapp-header-actions > .mapp-page-reload-button::after {
+    content: "Recarregar";
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --desktop-sidebar: 268px;
+  }
+
+  .mapp-page {
+    padding-inline: 30px;
+  }
+}
+
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+  .mapp-side-list button:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #ffffff;
+    transform: translateX(2px);
+  }
+
+  .mapp-side-list button.active:hover,
+  .mapp-side-list button.has-pending.active:hover {
+    background: linear-gradient(90deg, rgba(65, 133, 244, 0.29), rgba(65, 133, 244, 0.12));
+  }
+
+  .mapp-icon-button:hover,
+  .mapp-store-card button:hover {
+    border-color: #adc3de;
+    background: #edf5ff;
+    color: #174f9c;
+    transform: translateY(-1px);
+  }
+
+  .mapp-context-subnav-track button:hover,
+  .mapp-filter-pills button:hover,
+  .mapp-payment-segments button:hover,
+  .mapp-product-filter-row button:hover {
+    border-color: #a8c5ee;
+    background: #f1f6fd;
+  }
+
+  .mapp-crud-card:hover,
+  .mapp-recent-sale:hover,
+  .mapp-credit-customer-card:hover {
+    border-color: #b7cce5;
+    box-shadow: 0 8px 22px rgba(22, 46, 79, 0.075);
+  }
+
+  .mapp-root button:not(:disabled):hover {
+    filter: saturate(1.04);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .mapp-sidebar {
+    padding-block: 10px;
+  }
+
+  .mapp-sidebar-head {
+    min-height: 44px;
+    padding-bottom: 8px;
+  }
+
+  .mapp-side-list button {
+    min-height: 37px;
+  }
+
+  .mapp-side-list button span {
+    width: 28px;
+    height: 28px;
+  }
+
+  .mapp-side-group-title {
+    padding-top: 4px;
+  }
+
+  .mapp-side-footer {
+    padding: 8px;
+  }
+
+  .mapp-sidebar-logout {
+    min-height: 34px;
+  }
+
+  .mapp-page {
+    padding-top: 12px;
+  }
+
+  .mapp-store-card {
+    min-height: 50px;
+    margin-bottom: 9px;
+  }
+}

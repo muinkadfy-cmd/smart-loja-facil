@@ -19,13 +19,13 @@ export function MobileHeader({ status, settings, alertsCount, onOpenAlerts, onRe
         <strong className="mapp-header-store-name" title={storeName} aria-label={`Loja ${storeName}`}>{storeName}</strong>
       </div>
       <div className="mapp-header-actions">
-        <button type="button" className="mapp-icon-button" onClick={onRefresh} aria-label="Atualizar dados">
+        <button type="button" className="mapp-icon-button" onClick={onRefresh} aria-label="Atualizar dados" title="Sincronizar dados da loja">
           <InlineIcon name="atualizar" size={24} />
         </button>
-        <button type="button" className="mapp-icon-button mapp-page-reload-button" onClick={() => window.location.reload()} aria-label="Recarregar página">
+        <button type="button" className="mapp-icon-button mapp-page-reload-button" onClick={() => window.location.reload()} aria-label="Recarregar página" title="Recarregar o aplicativo">
           <InlineIcon name="atualizar" size={24} />
         </button>
-        <button type="button" className="mapp-icon-button mapp-bell-button" onClick={onOpenAlerts} aria-label={alertsCount > 0 ? `Abrir ${alertsCount} alerta(s)` : 'Abrir central de avisos'}>
+        <button type="button" className="mapp-icon-button mapp-bell-button" onClick={onOpenAlerts} aria-label={alertsCount > 0 ? `Abrir ${alertsCount} alerta(s)` : 'Abrir central de avisos'} title="Central de avisos">
           <span className="mapp-bell-shape" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false"><path d="M18 9.8a6 6 0 0 0-12 0c0 7-2.5 7.2-2.5 8.5h17C20.5 17 18 16.8 18 9.8Z" /><path d="M9.5 20a2.6 2.6 0 0 0 5 0" /></svg>
           </span>

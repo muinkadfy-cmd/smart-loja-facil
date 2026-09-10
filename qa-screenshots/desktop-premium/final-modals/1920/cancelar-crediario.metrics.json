@@ -1,0 +1,32 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "capturedAt": "2026-09-10T14:43:07.451Z",
+  "routes": [
+    {
+      "route": "credits",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-modals\\1920\\cancelar-crediario.png",
+      "ready": {
+        "ready": true,
+        "title": "Crediário",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1920,
+        "innerHeight": 1080,
+        "scrollWidth": 1920,
+        "scrollHeight": 1080,
+        "title": "Crediário",
+        "online": "Online",
+        "dialogs": 1,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

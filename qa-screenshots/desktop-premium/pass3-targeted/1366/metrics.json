@@ -1,0 +1,32 @@
+{
+  "baseUrl": "http://127.0.0.1:4182",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "capturedAt": "2026-09-10T14:35:52.927Z",
+  "routes": [
+    {
+      "route": "receipts",
+      "file": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\pass3-targeted\\1366\\receipts.png",
+      "ready": {
+        "ready": true,
+        "title": "Comprovantes",
+        "hasRoot": true,
+        "online": true,
+        "syncing": false,
+        "canEnter": false
+      },
+      "metrics": {
+        "innerWidth": 1366,
+        "innerHeight": 768,
+        "scrollWidth": 1366,
+        "scrollHeight": 768,
+        "title": "Comprovantes",
+        "online": "Online",
+        "dialogs": 0,
+        "horizontalOverflow": false
+      }
+    }
+  ]
+}

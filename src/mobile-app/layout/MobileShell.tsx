@@ -103,7 +103,7 @@ export function MobileShell({
         <div className="mapp-sidebar-head">
           <span className="mapp-logo-badge"><InlineIcon name="app_logo_cadeado_carrinho" size={32} /></span>
           <div>
-            <strong>{storeName}</strong>
+            <strong title={storeName}>{storeName}</strong>
             <small className={online ? 'is-online' : 'is-offline'}>{online ? 'Online' : 'Verificando'}</small>
           </div>
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Fechar menu">×</button>
@@ -122,6 +122,7 @@ export function MobileShell({
                     key={item.key}
                     type="button"
                     className={[item.key === activePage ? 'active' : '', pending > 0 ? 'has-pending' : ''].filter(Boolean).join(' ')}
+                    aria-current={item.key === activePage ? 'page' : undefined}
                     onClick={() => { setMenuOpen(false); onNavigate(item.key); }}
                   >
                     <span><InlineIcon name={item.icon} size={24} /></span>
@@ -137,7 +138,7 @@ export function MobileShell({
           <span>Ambiente</span>
           <strong>{demoMode.enabled ? 'Demo' : trainingMode.enabled ? 'Treinamento' : 'Produção'}</strong>
           <span>Versão</span>
-          <strong>{status?.version?.replace('pwa-supabase-', '') || 'v147 alertas'}</strong>
+          <strong title={status?.version?.replace('pwa-supabase-', '') || 'v147 alertas'}>{status?.version?.replace('pwa-supabase-', '') || 'v147 alertas'}</strong>
           <button type="button" className="mapp-sidebar-logout" onClick={onLogout}>
             <InlineIcon name="bloqueio_seguro" size={24} />
             <span>Sair da conta</span>
@@ -198,8 +199,8 @@ export function MobileShell({
             </section>
           ) : null}
 
-          {loading ? <div className="mapp-inline-status">Sincronizando dados da loja...</div> : null}
-          {error ? <div className="mapp-error-box">{error}</div> : null}
+          {loading ? <div className="mapp-inline-status" role="status">Sincronizando dados da loja...</div> : null}
+          {error ? <div className="mapp-error-box" role="alert">{error}</div> : null}
 
           <header className="mapp-page-title-row">
             <div>

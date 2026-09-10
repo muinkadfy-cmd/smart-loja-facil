@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './mobile-app/styles/mobile-app.css';
 import './mobile-app/styles/dialog-hotfix.css';
+import './mobile-app/styles/desktop-premium.css';
 
 
 document.documentElement.classList.add(

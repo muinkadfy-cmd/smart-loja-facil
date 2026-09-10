@@ -1,0 +1,67 @@
+{
+  "baselineDir": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\baseline-mobile\\390",
+  "currentDir": "C:\\smart-loja-facil-git\\qa-screenshots\\desktop-premium\\final-mobile\\390",
+  "generatedAt": "2026-09-10T14:42:25.476Z",
+  "comparisons": [
+    {
+      "file": "credits.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    },
+    {
+      "file": "customers.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    },
+    {
+      "file": "dashboard.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    },
+    {
+      "file": "products.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    },
+    {
+      "file": "receipts.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    },
+    {
+      "file": "sales.png",
+      "comparable": true,
+      "width": 390,
+      "height": 844,
+      "threshold": 24,
+      "changedPixels": 0,
+      "changedPercent": 0,
+      "meanMaxChannelDifference": 0
+    }
+  ]
+}
