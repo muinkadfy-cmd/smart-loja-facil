@@ -4,9 +4,11 @@ import App from './App';
 import './mobile-app/styles/mobile-app.css';
 import './mobile-app/styles/dialog-hotfix.css';
 import './mobile-app/styles/desktop-premium.css';
+import './mobile-app/styles/ui-premium-polish.css';
 
 
 document.documentElement.classList.add(
+  'smart-mobile-rebuild-v250',
   'smart-mobile-rebuild',
   'smart-mobile-rebuild-v249',
   'smart-mobile-rebuild-v248',

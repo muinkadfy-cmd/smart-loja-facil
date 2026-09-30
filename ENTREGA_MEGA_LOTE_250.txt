@@ -1,0 +1,27 @@
+MEGA LOTE 250 — UI PREMIUM GERAL WEB + MOBILE
+
+VERSÃO: 0.1.250
+
+FOCO:
+- Polimento visual geral web/mobile.
+- Avisos somente com dados reais.
+- Iconografia consistente.
+- Topbar e sidebar desktop refinadas.
+- Relatórios, configurações e logs com melhor uso de espaço.
+- Safe-area, foco, toque e respiro mobile preservados/refinados.
+- Modais financeiros e login seguro preservados.
+
+NÃO ALTERA:
+- Banco, RLS, migrations, pagamentos, caixa, estoque, crediário ou cálculos.
+
+VALIDAÇÃO OBRIGATÓRIA ANTES DO DEPLOY:
+- npm run type-check
+- npm run build
+- npm run verify:dist
+- npm run lint
+- npm run qa:ui
+- npm run release:check
+- npm run release:commercial:check
+
+MATRIZ DE AUDITORIA:
+- docs/MEGA_LOTE_250_MATRIZ_AUDITORIA.md

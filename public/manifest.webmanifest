@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v249",
-  "short_name": "Jaque v249",
-  "description": "PWA da loja v249 com login desktop estável, seguro e sem scroll interno.",
+  "name": "Jaque Confecções e Presentes v250",
+  "short_name": "Jaque v250",
+  "description": "PWA da loja v250 com acabamento premium geral, avisos reais e refinamento web/mobile.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

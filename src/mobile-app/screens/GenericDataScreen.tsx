@@ -181,7 +181,7 @@ export function GenericDataScreen({ page, status, refreshToken, onNavigate, onRe
   return (
     <div className="mapp-screen">
       <section className="mapp-panel mapp-action-panel">
-        <span className={`mapp-panel-icon tone-${route.tone}`}>{route.label.slice(0, 1)}</span>
+        <span className={`mapp-panel-icon tone-${route.tone}`} aria-hidden="true"><InlineIcon name={route.icon} size={24} /></span>
         <div>
           <strong>{route.primaryAction}</strong>
           <p>{route.subtitle}</p>
@@ -649,7 +649,7 @@ function PlaceholderScreen({ page, status, onNavigate, onRefresh }: PlaceholderP
   return (
     <div className="mapp-screen">
       <section className="mapp-panel mapp-action-panel">
-        <span className={`mapp-panel-icon tone-${route.tone}`}>{route.label.slice(0, 1)}</span>
+        <span className={`mapp-panel-icon tone-${route.tone}`} aria-hidden="true"><InlineIcon name={route.icon} size={24} /></span>
         <div>
           <strong>{route.primaryAction}</strong>
           <p>{route.subtitle}</p>
@@ -665,7 +665,7 @@ function PlaceholderScreen({ page, status, onNavigate, onRefresh }: PlaceholderP
       <EmptyState icon={route.icon} title={`${route.label} pronto para conectar`} detail="Esta tela já tem layout novo. A função completa pode ser migrada no próximo lote sem herdar CSS antigo." actionLabel="Voltar ao Painel" actionPage="dashboard" onNavigate={onNavigate} />
       <section className="mapp-version-card">
         <strong>Versão atual</strong>
-        <span>{status?.version ?? 'pwa-supabase-v135-proposta-comercial'}</span>
+        <span>{status?.version ?? 'sem versão'}</span>
       </section>
     </div>
   );
@@ -687,7 +687,7 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
       `Versão: ${status?.version ?? 'sem versão'}`,
       `Nuvem: ${status?.sqlite_ok ? 'online' : 'verificar login'}`,
       `Loja: ${status?.settings.store_name ?? 'sem loja'}`,
-      `Cache: smart-loja-pwa-supabase-v135-proposta-comercial`,
+      `Cache: ${status?.version?.replace('pwa-supabase-', 'smart-loja-pwa-supabase-') ?? 'sem versão confirmada'}`,
       `Largura: ${window.innerWidth}px`,
       `Altura: ${window.innerHeight}px`,
     ].join('\n');
@@ -699,9 +699,9 @@ function DiagnosticsScreen({ status, onRefresh }: { status: AppStatus | null; on
         <div className="mapp-section-title"><h2>Diagnóstico simples</h2><button type="button" onClick={onRefresh}>Atualizar</button></div>
         <div className="mapp-diagnostic-grid">
           <span><b>Nuvem</b><strong>{status?.sqlite_ok ? 'Online' : 'Verificar login'}</strong></span>
-          <span><b>Versão</b><strong>{status?.version ?? 'v135'}</strong></span>
+          <span><b>Versão</b><strong>{status?.version ?? 'sem versão'}</strong></span>
           <span><b>Mobile</b><strong>{window.innerWidth <= 860 ? 'Sim' : 'Desktop'}</strong></span>
-          <span><b>Cache</b><strong>v135 proposta</strong></span>
+          <span><b>Cache</b><strong>{status?.version ? status.version.replace('pwa-supabase-', 'v') : 'Verificar'}</strong></span>
         </div>
       </section>
       <section className="mapp-button-grid">

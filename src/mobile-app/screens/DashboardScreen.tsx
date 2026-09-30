@@ -100,7 +100,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
 
       {lowStock > 0 ? (
         <section className="mapp-warning-card mapp-dashboard-stock-alert">
-          <span className="mapp-dashboard-alert-icon" aria-hidden="true">⚠️</span>
+          <span className="mapp-dashboard-alert-icon" aria-hidden="true"><InlineIcon name="estoque_baixo" size={24} /></span>
           <div>
             <strong>Atenção: estoque baixo</strong>
             <p>{lowStock} produtos precisam de reposição.</p>
@@ -109,7 +109,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
         </section>
       ) : (
         <section className="mapp-success-card mapp-dashboard-stock-alert">
-          <span className="mapp-dashboard-alert-icon ok" aria-hidden="true">✓</span>
+          <span className="mapp-dashboard-alert-icon ok" aria-hidden="true"><InlineIcon name="produtos" size={24} /></span>
           <div>
             <strong>Tudo certo: estoque sem alertas críticos</strong>
             <p>Continue acompanhando produtos e vendas.</p>
@@ -125,7 +125,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
         </div>
         <div className="mapp-actions-grid mapp-dashboard-actions-grid">
           <ActionTile label="Abrir PDV" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
-          <ActionTile label="Nova venda" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
+          <ActionTile label="Receber parcela" icon="crediario" page="credits" tone="green" onNavigate={onNavigate} />
           <ActionTile label="Novo pedido" icon="pedidos" page="orders" tone="orange" intent="novo-pedido" onNavigate={onNavigate} />
           <ActionTile label="Novo cliente" icon="clientes" page="customers" tone="purple" intent="novo-cliente" onNavigate={onNavigate} />
         </div>
@@ -145,8 +145,8 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
                 className={`mapp-product-intel-card ${productInsightToneClass(insight.tone)}`}
                 onClick={() => { window.location.hash = `produto-${insight.product_id}`; onNavigate('products'); }}
               >
-                <span className="mapp-product-intel-icon">
-                  <span aria-hidden="true">{insight.kind === 'low_stock_hot' ? '⚠️' : insight.kind === 'dormant' ? '💡' : '🔥'}</span>
+                <span className="mapp-product-intel-icon" aria-hidden="true">
+                  <InlineIcon name={insight.kind === 'low_stock_hot' ? 'estoque_baixo' : insight.kind === 'dormant' ? 'manutencao_ajuste' : 'relatorios'} size={24} />
                 </span>
                 <span className="mapp-product-intel-copy">
                   <strong>{insight.title}</strong>

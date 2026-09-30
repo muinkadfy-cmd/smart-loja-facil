@@ -169,56 +169,24 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
 
   const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;
   const notificationItems = useMemo<NotificationItem[]>(() => {
-    const lowStock = status?.dashboard.low_stock_count ?? 0;
-    const productInsightItems: NotificationItem[] = (status?.dashboard.product_insights ?? []).slice(0, 3).map((insight) => ({
-      id: `product-insight-${insight.id}`,
-      title: insight.title,
-      description: `${insight.product_name}: ${insight.detail}`,
-      time: 'Agora',
-      tone: insight.tone === 'danger' ? 'orange' : insight.tone === 'warning' ? 'orange' : insight.tone === 'success' ? 'green' : 'blue',
-      icon: insight.kind === 'low_stock_hot' ? 'estoque_baixo' : 'produtos',
-      page: 'products',
-    }));
-    return [
-      ...productInsightItems,
-      {
-        id: `stock-low-${lowStock}`,
-        title: 'Estoque baixo',
-        description: lowStock > 0 ? `${lowStock} produto(s) precisam de reposição antes de vender mais.` : 'Confira produtos com pouca quantidade antes de abrir o PDV.',
-        time: '09:20',
-        tone: 'orange',
-        icon: 'estoque_baixo',
-        page: 'products',
-      },
-      {
-        id: 'customer-receipt-waiting',
-        title: 'Cliente aguardando comprovante',
-        description: 'Envie ou compartilhe o comprovante pelo WhatsApp quando o cliente tiver contato.',
-        time: '10:05',
-        tone: 'purple',
-        icon: 'comprovantes',
-        page: 'receipts',
-      },
-      {
-        id: 'backup-recommended-3-days',
-        title: 'Backup recomendado',
-        description: 'Seu último backup foi há 3 dias.',
-        time: 'Ontem',
-        tone: 'blue',
-        icon: 'backup',
-        page: 'backup',
-      },
-      {
-        id: 'sale-finished-12346',
-        title: 'Venda concluída',
-        description: 'Venda #12346 no valor de R$ 159,90 concluída com sucesso.',
+    const toneMap: Record<MobileAlertTone, NotificationItem['tone']> = {
+      danger: 'orange',
+      warning: 'orange',
+      info: 'blue',
+      success: 'green',
+    };
+    return alerts
+      .filter((alert) => !(alert.tone === 'success' && alert.title === 'Tudo certo'))
+      .map((alert, index) => ({
+        id: `runtime-alert-${alert.page}-${alert.icon}-${index}-${alert.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 36)}`,
+        title: alert.title,
+        description: alert.detail,
         time: 'Agora',
-        tone: 'green',
-        icon: 'vendas_pdv',
-        page: 'sales',
-      },
-    ];
-  }, [status?.dashboard.low_stock_count]);
+        tone: toneMap[alert.tone],
+        icon: alert.icon,
+        page: alert.page,
+      }));
+  }, [alerts]);
 
   const navigate = useCallback((page: PageKey) => {
     onNavigate(page);

@@ -28,6 +28,7 @@ const requiredCore = [
   'src/mobile-app/screens/DiagnosticsScreen.tsx',
   'src/mobile-app/styles/mobile-app.css',
   'src/mobile-app/styles/desktop-premium.css',
+  'src/mobile-app/styles/ui-premium-polish.css',
   'src/lib/api.ts',
   'src/lib/webApi.ts',
   'src/lib/env.ts',
@@ -69,7 +70,7 @@ if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote
 
 if (!/^0\.1\.\d+$/.test(String(packageJson.version ?? ''))) fail('package.json precisa usar versão 0.1.<lote>.');
 if (!releaseNumber) fail('Não foi possível derivar o lote atual da versão de package.json.');
-for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check', 'verify:dist']) {
+for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check', 'verify:dist', 'qa:ui']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
 }
 if (!String(packageJson.scripts?.preview ?? '').includes('--outDir dist-codex-build')) {
@@ -194,8 +195,8 @@ if (webAuthSource.includes('Salvar senha neste aparelho confiável')) fail('Logi
 if (webAuthSource.includes('entrar automaticamente ao abrir')) fail('Login web não deve oferecer auto-login por senha persistida.');
 if (!webAuthSource.includes(`data-auth-version="${releaseNumber}"`)) fail(`Login web precisa expor marcador seguro v${releaseNumber} para QA visual.`);
 if (!webAuthSource.includes('Salvar somente o e-mail neste aparelho')) fail('Login web precisa oferecer apenas lembrança segura do e-mail.');
-if (!desktopPremiumCss.includes('Login v249 desktop: sem painel estreito, sem scroll interno')) fail('desktop-premium.css precisa conter correção de login desktop v249.');
-if (!desktopPremiumCss.includes('max-height: none') || !desktopPremiumCss.includes('overflow: visible')) fail('Login desktop v249 precisa eliminar scroll interno do card.');
+if (!desktopPremiumCss.includes('Login v249 desktop: sem painel estreito, sem scroll interno')) fail('desktop-premium.css precisa preservar a correção estável de login desktop iniciada no v249.');
+if (!desktopPremiumCss.includes('max-height: none') || !desktopPremiumCss.includes('overflow: visible')) fail('Login desktop precisa continuar sem scroll interno do card.');
 if (!webAuthSource.includes('A senha não é salva pelo aplicativo')) fail('Login web precisa explicar claramente que a senha não é salva.');
 if (!webAuthSource.includes('Sessão segura encontrada neste aparelho')) fail('Login web precisa reutilizar a sessão persistente do Supabase sem armazenar a senha.');
 for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout']) {
@@ -267,6 +268,15 @@ for (const groupLabel of ['Operação', 'Gestão', 'Controle']) {
   if (!routeSource.includes(groupLabel)) fail(`Grupo de sub-abas/menu ausente: ${groupLabel}`);
 }
 
+const premiumPolishCss = read('src/mobile-app/styles/ui-premium-polish.css');
+if (!premiumPolishCss.includes('Mega Lote 250')) fail('Camada de polimento premium v250 ausente.');
+if (!mobileAppSource.includes('runtime-alert-')) fail('Central de avisos v250 precisa usar somente alertas derivados do estado real.');
+for (const fakeNotificationToken of ['sale-finished-12346', 'Cliente aguardando comprovante', 'Seu último backup foi há 3 dias']) {
+  if (mobileAppSource.includes(fakeNotificationToken)) fail(`Central de avisos não pode exibir dado fictício em produção: ${fakeNotificationToken}`);
+}
+if (!mobileHeaderSource.includes('mapp-header-action-label')) fail('Topbar v250 precisa diferenciar Sincronizar e Recarregar no desktop.');
+if (!routeSource.includes("key: 'dashboard'")) fail('Inventário de rotas v250 inválido.');
+
 const gitignore = readIf('.gitignore');
 for (const protectedEntry of ['.env', '.env.local', '.env.production', '.env.*.local', '.wrangler/']) {
   if (!gitignore.includes(protectedEntry)) fail(`.gitignore precisa proteger ${protectedEntry}.`);
@@ -286,4 +296,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log(`OK: release_check v${releaseNumber} PWA passou. Desktop SaaS isolado por breakpoint, login sem senha persistida e proteções mobile preservadas.`);
+console.log(`OK: release_check v${releaseNumber} PWA passou. UI premium web/mobile, avisos reais, login seguro e proteções de iPhone preservadas.`);

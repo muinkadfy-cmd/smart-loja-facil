@@ -1,0 +1,350 @@
+/* Mega Lote 250 — acabamento premium global, web + mobile.
+   Carregado por último e isolado por smart-mobile-rebuild-v250 para reduzir regressões. */
+
+html.smart-mobile-rebuild-v250 {
+  --m250-text: #10233f;
+  --m250-muted: #607089;
+  --m250-line: #d9e4f0;
+  --m250-soft: #f6f9fd;
+  --m250-blue: #246bf2;
+  --m250-focus: rgba(36, 107, 242, .36);
+  --m250-shadow: 0 8px 24px rgba(18, 42, 78, .065);
+}
+
+html.smart-mobile-rebuild-v250 .mapp-shell,
+html.smart-mobile-rebuild-v250 .mapp-page,
+html.smart-mobile-rebuild-v250 .mapp-screen,
+html.smart-mobile-rebuild-v250 .mapp-section-block,
+html.smart-mobile-rebuild-v250 .mapp-panel,
+html.smart-mobile-rebuild-v250 .mapp-form-panel,
+html.smart-mobile-rebuild-v250 .mapp-list-card,
+html.smart-mobile-rebuild-v250 .mapp-stat-card { min-width: 0; }
+
+html.smart-mobile-rebuild-v250 .mapp-page :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-page :is(button, a, input, select, textarea):focus-visible,
+html.smart-mobile-rebuild-v250 .mapp-header :is(button, a):focus-visible,
+html.smart-mobile-rebuild-v250 .mapp-sidebar :is(button, a):focus-visible {
+  outline: 3px solid var(--m250-focus);
+  outline-offset: 2px;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-page :is(p, small, strong, span, b, em, time, label) {
+  overflow-wrap: anywhere;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-header-action-label { display: none; }
+
+html.smart-mobile-rebuild-v250 .mapp-store-card button {
+  display: grid;
+  place-items: center;
+  color: #315a8f;
+}
+html.smart-mobile-rebuild-v250 .mapp-store-card button :is(svg, img, .app-svg-icon) {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-panel-icon {
+  display: grid;
+  place-items: center;
+  font-size: 0;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-dashboard-alert-icon,
+html.smart-mobile-rebuild-v250 .mapp-product-intel-icon {
+  display: grid;
+  place-items: center;
+}
+html.smart-mobile-rebuild-v250 .mapp-dashboard-alert-icon :is(svg, img, .app-svg-icon),
+html.smart-mobile-rebuild-v250 .mapp-product-intel-icon :is(svg, img, .app-svg-icon) {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* Densidade e hierarquia compartilhadas sem encolher alvos de toque. */
+html.smart-mobile-rebuild-v250 .mapp-section-title,
+html.smart-mobile-rebuild-v250 .mapp-form-head,
+html.smart-mobile-rebuild-v250 .mapp-crud-title-row,
+html.smart-mobile-rebuild-v250 .mapp-recent-list-heading {
+  min-width: 0;
+}
+html.smart-mobile-rebuild-v250 .mapp-section-title h2,
+html.smart-mobile-rebuild-v250 .mapp-form-head strong,
+html.smart-mobile-rebuild-v250 .mapp-recent-list-heading h2 {
+  color: var(--m250-text);
+}
+html.smart-mobile-rebuild-v250 .mapp-section-note,
+html.smart-mobile-rebuild-v250 .mapp-form-head p,
+html.smart-mobile-rebuild-v250 .mapp-recent-list-heading p {
+  color: var(--m250-muted);
+}
+
+html.smart-mobile-rebuild-v250 .mapp-section-block,
+html.smart-mobile-rebuild-v250 .mapp-panel,
+html.smart-mobile-rebuild-v250 .mapp-form-panel,
+html.smart-mobile-rebuild-v250 .mapp-empty-state,
+html.smart-mobile-rebuild-v250 .mapp-crud-toolbar,
+html.smart-mobile-rebuild-v250 .mapp-crud-list {
+  border-color: var(--m250-line);
+}
+
+html.smart-mobile-rebuild-v250 .mapp-inline-status {
+  border-color: #cfe0f7;
+  background: #f2f7ff;
+  color: #244d83;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-primary-button,
+html.smart-mobile-rebuild-v250 .mapp-secondary-button,
+html.smart-mobile-rebuild-v250 .mapp-danger-button,
+html.smart-mobile-rebuild-v250 .mapp-form-actions > button {
+  font-weight: 800;
+  letter-spacing: -.01em;
+  touch-action: manipulation;
+}
+
+html.smart-mobile-rebuild-v250 .mapp-filter-pills,
+html.smart-mobile-rebuild-v250 .mapp-report-tabs,
+html.smart-mobile-rebuild-v250 .mapp-context-subnav-track {
+  scrollbar-width: none;
+}
+html.smart-mobile-rebuild-v250 .mapp-filter-pills::-webkit-scrollbar,
+html.smart-mobile-rebuild-v250 .mapp-report-tabs::-webkit-scrollbar,
+html.smart-mobile-rebuild-v250 .mapp-context-subnav-track::-webkit-scrollbar { display: none; }
+
+/* Central de avisos: conteúdo real, leitura clara e rodapé sempre acessível. */
+html.smart-mobile-rebuild-v250 .mapp-notification-modal {
+  border-color: var(--m250-line);
+  box-shadow: 0 24px 70px rgba(15, 35, 64, .18);
+}
+html.smart-mobile-rebuild-v250 .mapp-notification-list {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+html.smart-mobile-rebuild-v250 .mapp-notification-card {
+  min-width: 0;
+}
+html.smart-mobile-rebuild-v250 .mapp-notification-card p { line-height: 1.45; }
+
+/* Mobile: respiro, leitura e toque; não altera regras de negócio. */
+@media (max-width: 1023px) {
+  html.smart-mobile-rebuild-v250 .mapp-page {
+    scroll-padding-bottom: calc(var(--mapp-bottom-safe, 96px) + env(safe-area-inset-bottom, 0px) + 12px);
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-mobile-top {
+    background: rgba(255, 255, 255, .96);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 1px 0 rgba(18, 42, 78, .055);
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-header,
+  html.smart-mobile-rebuild-v250 .mapp-header-brand,
+  html.smart-mobile-rebuild-v250 .mapp-header-actions { min-width: 0; }
+
+  html.smart-mobile-rebuild-v250 .mapp-header-store-name {
+    min-width: 0;
+    max-width: clamp(108px, 37vw, 190px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row {
+    gap: 10px;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row > div { min-width: 0; }
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row h1 {
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row p {
+    line-height: 1.35;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-context-subnav {
+    border-color: #dce7f3;
+    box-shadow: 0 5px 16px rgba(20, 48, 82, .045);
+  }
+  html.smart-mobile-rebuild-v250 .mapp-context-subnav-track {
+    scroll-snap-type: x proximity;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-context-subnav-track button {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-section-block,
+  html.smart-mobile-rebuild-v250 .mapp-panel,
+  html.smart-mobile-rebuild-v250 .mapp-form-panel,
+  html.smart-mobile-rebuild-v250 .mapp-empty-state,
+  html.smart-mobile-rebuild-v250 .mapp-version-card {
+    box-shadow: 0 6px 18px rgba(18, 42, 78, .05);
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-form-grid label,
+  html.smart-mobile-rebuild-v250 .mapp-form-grid label > span { min-width: 0; }
+
+  html.smart-mobile-rebuild-v250 .mapp-form-grid :is(input, select, textarea),
+  html.smart-mobile-rebuild-v250 .mapp-crud-toolbar input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-form-actions {
+    gap: 10px;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-form-actions > button,
+  html.smart-mobile-rebuild-v250 .mapp-primary-button,
+  html.smart-mobile-rebuild-v250 .mapp-secondary-button,
+  html.smart-mobile-rebuild-v250 .mapp-danger-button {
+    min-height: 50px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-list-card,
+  html.smart-mobile-rebuild-v250 .mapp-crud-card,
+  html.smart-mobile-rebuild-v250 .mapp-recent-sale {
+    border-radius: 18px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-bottom-nav {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -8px 26px rgba(18, 42, 78, .11);
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-notification-modal {
+    width: min(calc(100% - 16px), 560px);
+    max-height: calc(var(--mapp-viewport-height-px, 100dvh) - max(16px, env(safe-area-inset-top, 0px)) - max(16px, env(safe-area-inset-bottom, 0px)));
+  }
+}
+
+@media (max-width: 374px) {
+  html.smart-mobile-rebuild-v250 .mapp-page { padding-left: 10px; padding-right: 10px; }
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row h1 { font-size: 1.95rem; }
+  html.smart-mobile-rebuild-v250 .mapp-online-chip,
+  html.smart-mobile-rebuild-v250 .mapp-warn-chip { padding-inline: 9px; }
+}
+
+/* Desktop: remove duplicação mobile, aumenta densidade útil e mantém legibilidade. */
+@media (min-width: 1024px) {
+  html.smart-mobile-rebuild-v250 .mapp-page {
+    padding-top: 22px;
+    padding-bottom: 42px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-page > .mapp-store-card {
+    display: none;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row {
+    margin-bottom: 18px;
+    padding-bottom: 2px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-page-title-row h1 {
+    font-size: clamp(1.95rem, 2.15vw, 2.35rem);
+    letter-spacing: -.05em;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-screen { gap: 14px; }
+
+  html.smart-mobile-rebuild-v250 .mapp-header-actions .mapp-sync-button,
+  html.smart-mobile-rebuild-v250 .mapp-header-actions .mapp-page-reload-button {
+    width: auto;
+    min-width: 44px;
+    padding-inline: 11px;
+    gap: 7px;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-header-action-label {
+    display: inline;
+    font-size: .75rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-sidebar-head strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-side-footer > strong[title] {
+    max-width: 100%;
+    font-size: .82rem;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-mini-stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-report-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+    gap: 12px 18px;
+    align-items: start;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-report-tabs { grid-column: 1 / -1; }
+  html.smart-mobile-rebuild-v250 .mapp-report-help { grid-column: 1; }
+  html.smart-mobile-rebuild-v250 .mapp-report-toolbar > .mapp-form-grid {
+    grid-column: 2;
+    grid-row: 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html.smart-mobile-rebuild-v250 .mapp-report-toolbar > .mapp-button-grid {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(150px, .8fr) repeat(2, minmax(150px, .6fr));
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-settings-screen .mapp-form-panel {
+    max-width: 1040px;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-settings-screen .mapp-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-audit-screen .mapp-filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-audit-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  html.smart-mobile-rebuild-v250 .mapp-notification-modal {
+    width: min(620px, calc(100vw - 48px));
+    max-height: min(760px, calc(100dvh - 48px));
+  }
+}
+
+@media (min-width: 1200px) {
+  html.smart-mobile-rebuild-v250 .mapp-context-subnav {
+    display: none;
+  }
+  html.smart-mobile-rebuild-v250 .mapp-page {
+    padding-top: 24px;
+  }
+}
+
+@media (min-width: 1600px) {
+  html.smart-mobile-rebuild-v250 .mapp-page > * {
+    width: min(1540px, 100%);
+  }
+  html.smart-mobile-rebuild-v250 .mapp-stat-card { min-height: 92px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.smart-mobile-rebuild-v250 *,
+  html.smart-mobile-rebuild-v250 *::before,
+  html.smart-mobile-rebuild-v250 *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
