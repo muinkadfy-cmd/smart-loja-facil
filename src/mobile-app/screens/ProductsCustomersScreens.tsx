@@ -1041,13 +1041,16 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
       ) : null}
 
       {deleteProduct ? (
-        <div className="mapp-credit-receive-backdrop" role="presentation" onClick={() => { if (!saving) { setDeleteProduct(null); setDeleteProductFeedback(null); } }}>
-          <form ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" tabIndex={-1} onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
+        <div className="mapp-credit-receive-backdrop mapp-dialog-backdrop" role="presentation" onClick={() => { if (!saving) { setDeleteProduct(null); setDeleteProductFeedback(null); } }}>
+          <form ref={setActiveDialogNode} className="mapp-form-panel mapp-receive-panel mapp-receive-drawer mapp-delete-product-panel mapp-critical-dialog mapp-dialog-frame" role="dialog" aria-modal="true" aria-label="Excluir cadastro do produto" tabIndex={-1} aria-busy={saving} onClick={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void submitDeleteProduct(); }}>
+            <header className="mapp-dialog-header">
             <span className="mapp-receive-drawer-grip" aria-hidden="true" />
             <div className="mapp-form-head">
               <span className="mapp-form-icon tone-orange"><InlineIcon name="excluir" size={24} /></span>
               <div><strong>Excluir cadastro do produto</strong><p>{deleteProduct.product.name}</p></div>
             </div>
+            </header>
+            <div className="mapp-dialog-body">
             <section className="mapp-credit-cancel-warning">
               <strong>Proteção de histórico</strong>
               <p>A exclusão só será permitida se o produto nunca apareceu em venda, pedido ou movimento de estoque. Se houver histórico, use Inativar.</p>
@@ -1056,7 +1059,8 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
               <label className="span-2"><span>Motivo obrigatório</span><textarea value={deleteProduct.reason} onChange={(event) => { setDeleteProduct({ ...deleteProduct, reason: event.target.value }); setDeleteProductFeedback(null); }} rows={2} placeholder="Ex.: cadastro duplicado criado por engano" /></label>
               <label className="span-2"><span>Digite EXCLUIR para confirmar</span><input value={deleteProduct.confirmation} onChange={(event) => { setDeleteProduct({ ...deleteProduct, confirmation: event.target.value }); setDeleteProductFeedback(null); }} autoComplete="off" autoCapitalize="characters" autoCorrect="off" enterKeyHint="done" spellCheck={false} /></label>
             </div>
-            <div className="mapp-form-actions mapp-critical-dialog-actions">
+            </div>
+            <footer className="mapp-form-actions mapp-critical-dialog-actions mapp-dialog-footer">
               {deleteProductFeedback ? (
                 <div className={`mapp-critical-inline-feedback ${deleteProductFeedback.tone}`} role={deleteProductFeedback.tone === 'error' ? 'alert' : 'status'} aria-live="assertive">
                   {deleteProductFeedback.text}
@@ -1064,13 +1068,13 @@ export function ProductsScreen({ status, refreshToken, onRefresh }: ProductsCust
               ) : null}
               <button type="button" className="mapp-secondary-button" onClick={() => { setDeleteProduct(null); setDeleteProductFeedback(null); }} disabled={saving}>Voltar</button>
               <button type="submit" className="mapp-danger-button" disabled={saving}>{saving ? 'Excluindo...' : 'Excluir cadastro'}</button>
-            </div>
+            </footer>
           </form>
         </div>
       ) : null}
 
       {photoPreview ? (
-        <div ref={setActiveDialogNode} className="mapp-photo-modal" role="dialog" aria-modal="true" aria-label="Foto ampliada do produto" tabIndex={-1} onClick={() => setPhotoPreview(null)}>
+        <div ref={setActiveDialogNode} className="mapp-photo-modal mapp-dialog-backdrop" role="dialog" aria-modal="true" aria-label="Foto ampliada do produto" tabIndex={-1} onClick={() => setPhotoPreview(null)}>
           <div className="mapp-photo-modal-card" onClick={(event) => event.stopPropagation()}>
             <div className="mapp-photo-modal-head">
               <div>
