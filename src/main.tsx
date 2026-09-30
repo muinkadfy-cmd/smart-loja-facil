@@ -8,6 +8,7 @@ import './mobile-app/styles/ui-premium-polish.css';
 
 
 document.documentElement.classList.add(
+  'smart-mobile-rebuild-v253',
   'smart-mobile-rebuild-v250',
   'smart-mobile-rebuild',
   'smart-mobile-rebuild-v249',

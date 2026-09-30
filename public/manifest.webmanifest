@@ -1,7 +1,7 @@
 {
-  "name": "Jaque Confecções e Presentes v250",
-  "short_name": "Jaque v250",
-  "description": "PWA da loja v250 com acabamento premium geral, avisos reais e refinamento web/mobile.",
+  "name": "Jaque Confecções e Presentes v253",
+  "short_name": "Jaque v253",
+  "description": "PWA da loja v253 com Mega Lote 251 Fases 1, 2 e 3 e acabamento premium web/mobile.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
