@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.253",
+  "version": "0.1.254",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com acabamento premium geral web/mobile, avisos reais e UI consistente v253",
+  "description": "PWA da loja com acabamento premium geral web/mobile, avisos reais e UI consistente v254",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",

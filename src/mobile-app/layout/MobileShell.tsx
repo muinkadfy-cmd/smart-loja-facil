@@ -202,7 +202,7 @@ export function MobileShell({
             </section>
           ) : null}
 
-          {loading ? <div className="mapp-inline-status">Sincronizando dados da loja...</div> : null}
+          {loading ? <div className="mapp-inline-status mapp-sync-status">Sincronizando dados da loja...</div> : null}
           {error ? <div className="mapp-error-box">{error}</div> : null}
 
           <header className="mapp-page-title-row">
