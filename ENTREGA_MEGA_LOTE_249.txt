@@ -1,0 +1,9 @@
+MEGA LOTE 249 — LOGIN DESKTOP ESTÁVEL
+
+- Corrige card estreito e scroll interno do login no desktop.
+- Mantém somente lembrar e-mail; senha não é salva.
+- Remove legado de auto-login por senha.
+- Adiciona verificação anti-deploy de dist antigo.
+- Mantém mobile sem redesign.
+
+VERSÃO: 0.1.249

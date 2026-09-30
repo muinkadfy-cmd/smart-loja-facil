@@ -4,8 +4,8 @@ import path from 'node:path';
 const root = process.cwd();
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const releaseNumber = String(packageJson.version ?? '').split('.').at(-1);
-const currentVersion = `pwa-supabase-v${releaseNumber}-iphone-mobile-polimento`;
-const currentCache = `smart-loja-pwa-supabase-v${releaseNumber}-iphone-mobile-polimento`;
+const currentVersionPrefix = `pwa-supabase-v${releaseNumber}-`;
+const currentCachePrefix = `smart-loja-pwa-supabase-v${releaseNumber}-`;
 
 const requiredCore = [
   'package.json',
@@ -27,6 +27,7 @@ const requiredCore = [
   'src/mobile-app/screens/BackupScreen.tsx',
   'src/mobile-app/screens/DiagnosticsScreen.tsx',
   'src/mobile-app/styles/mobile-app.css',
+  'src/mobile-app/styles/desktop-premium.css',
   'src/lib/api.ts',
   'src/lib/webApi.ts',
   'src/lib/env.ts',
@@ -68,7 +69,7 @@ if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote
 
 if (!/^0\.1\.\d+$/.test(String(packageJson.version ?? ''))) fail('package.json precisa usar versão 0.1.<lote>.');
 if (!releaseNumber) fail('Não foi possível derivar o lote atual da versão de package.json.');
-for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check']) {
+for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check', 'verify:dist']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
 }
 if (!String(packageJson.scripts?.preview ?? '').includes('--outDir dist-codex-build')) {
@@ -111,6 +112,7 @@ if (!exists('.env.production')) {
 const mainSource = read('src/main.tsx');
 if (!mainSource.includes("'./mobile-app/styles/mobile-app.css'") && !mainSource.includes('\"./mobile-app/styles/mobile-app.css\"')) fail('main.tsx precisa carregar a base mobile-app.css.');
 if (!mainSource.includes('dialog-hotfix.css')) fail('main.tsx precisa carregar dialog-hotfix.css depois da base mobile para proteger modais no iPhone.');
+if (!mainSource.includes('desktop-premium.css')) fail('main.tsx precisa carregar desktop-premium.css depois dos estilos mobile/hotfix.');
 if (!mainSource.includes(`smart-mobile-rebuild-v${releaseNumber}`)) fail(`main.tsx precisa aplicar smart-mobile-rebuild-v${releaseNumber}.`);
 for (const rule of forbiddenLoadedCss) {
   if (rule.test(mainSource)) fail(`main.tsx ainda carrega CSS antigo/herdado: ${rule}`);
@@ -124,9 +126,9 @@ if (appSource.includes("./components/Shell") || appSource.includes("./pages/Dash
 
 const webApiSource = read('src/lib/webApi.ts');
 const serviceWorkerSource = read('public/sw.js');
-if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersion}'`)) fail(`WEB_APP_VERSION precisa estar em ${currentVersion}.`);
-if (!webApiSource.includes(`WEB_CACHE_VERSION = '${currentCache}'`)) fail(`WEB_CACHE_VERSION precisa estar no cache v${releaseNumber} atual.`);
-if (!serviceWorkerSource.includes(`CACHE_NAME = '${currentCache}'`)) fail(`Service worker precisa usar cache v${releaseNumber} atual.`);
+if (!webApiSource.includes(`WEB_APP_VERSION = '${currentVersionPrefix}`)) fail(`WEB_APP_VERSION precisa começar com ${currentVersionPrefix}.`);
+if (!webApiSource.includes(`WEB_CACHE_VERSION = '${currentCachePrefix}`)) fail(`WEB_CACHE_VERSION precisa começar com ${currentCachePrefix}.`);
+if (!serviceWorkerSource.includes(`CACHE_NAME = '${currentCachePrefix}`)) fail(`Service worker precisa usar cache v${releaseNumber} atual.`);
 if (!webApiSource.includes('day-two-follow-up-v142')) fail('webApi precisa verificar acompanhamento Dia 2 v142.');
 if (!webApiSource.includes('first-client-closeout-v144')) fail('webApi precisa verificar encerramento do primeiro cliente v144.');
 const apiSource = read('src/lib/api.ts');
@@ -179,6 +181,23 @@ const css = read('src/mobile-app/styles/mobile-app.css');
 const dialogHotfixCss = read('src/mobile-app/styles/dialog-hotfix.css');
 const recentSalesCss = read('src/mobile-app/styles/recent-sales.css');
 const recentSaleCardSource = read('src/mobile-app/components/RecentSaleCard.tsx');
+const desktopPremiumCss = read('src/mobile-app/styles/desktop-premium.css');
+const webAuthSource = read('src/components/WebAuthPanel.tsx');
+for (const token of ['@media (min-width: 1024px)', '--desktop-sidebar', '--desktop-content-max', '.mapp-dashboard-screen .mapp-dashboard-stats', '.mapp-side-list button:hover']) {
+  if (!desktopPremiumCss.includes(token)) fail(`desktop-premium.css precisa conter ${token}.`);
+}
+if (/@media\s*\(max-width:/i.test(desktopPremiumCss)) fail('desktop-premium.css deve ser exclusivamente desktop e não pode conter breakpoint max-width.');
+if (!webAuthSource.includes('LEGACY_REMEMBER_PASSWORD_KEY') || !webAuthSource.includes('removeStorage(LEGACY_REMEMBER_PASSWORD_KEY)')) fail('Login web precisa remover a senha legada salva no navegador.');
+if (!webAuthSource.includes("const [password, setPassword] = useState('')")) fail('Login web não pode inicializar senha a partir do localStorage.');
+if (webAuthSource.includes('encodeSavedPassword') || webAuthSource.includes('decodeSavedPassword') || webAuthSource.includes('readSavedPassword')) fail('Login web não pode manter mecanismo reversível de senha salva.');
+if (webAuthSource.includes('Salvar senha neste aparelho confiável')) fail('Login web não deve oferecer persistência da senha original.');
+if (webAuthSource.includes('entrar automaticamente ao abrir')) fail('Login web não deve oferecer auto-login por senha persistida.');
+if (!webAuthSource.includes(`data-auth-version="${releaseNumber}"`)) fail(`Login web precisa expor marcador seguro v${releaseNumber} para QA visual.`);
+if (!webAuthSource.includes('Salvar somente o e-mail neste aparelho')) fail('Login web precisa oferecer apenas lembrança segura do e-mail.');
+if (!desktopPremiumCss.includes('Login v249 desktop: sem painel estreito, sem scroll interno')) fail('desktop-premium.css precisa conter correção de login desktop v249.');
+if (!desktopPremiumCss.includes('max-height: none') || !desktopPremiumCss.includes('overflow: visible')) fail('Login desktop v249 precisa eliminar scroll interno do card.');
+if (!webAuthSource.includes('A senha não é salva pelo aplicativo')) fail('Login web precisa explicar claramente que a senha não é salva.');
+if (!webAuthSource.includes('Sessão segura encontrada neste aparelho')) fail('Login web precisa reutilizar a sessão persistente do Supabase sem armazenar a senha.');
 for (const token of ['mapp-root', 'mapp-bottom-nav', 'mapp-sidebar', 'mapp-page', 'mapp-stat-card', 'mapp-alert-card', 'mapp-context-subnav', 'mapp-side-group', 'mapp-guided-test-panel', 'mapp-assisted-execution-panel', 'mapp-triage-panel', 'mapp-final-release-panel', 'mapp-demo-panel', 'mapp-tour-panel', 'mapp-proposal-panel', 'mapp-client-feedback-panel', 'mapp-regression-audit-panel', 'mapp-day-one-panel', 'mapp-alert-icon', 'mapp-sidebar-logout']) {
   if (!css.includes(token)) fail(`mobile-app.css precisa conter ${token}.`);
 }
@@ -267,4 +286,4 @@ if (process.exitCode) {
   console.error('Release check encontrou problemas. Corrija antes de testar em cliente real.');
   process.exit(process.exitCode);
 }
-console.log(`OK: release_check v${releaseNumber} PWA passou. Recebimento no iPhone e Comprovantes mobile validados.`);
+console.log(`OK: release_check v${releaseNumber} PWA passou. Desktop SaaS isolado por breakpoint, login sem senha persistida e proteções mobile preservadas.`);

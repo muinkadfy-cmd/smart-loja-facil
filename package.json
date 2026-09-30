@@ -1,9 +1,9 @@
 {
   "name": "smart-loja-facil-offline",
-  "version": "0.1.247",
+  "version": "0.1.249",
   "private": true,
   "type": "module",
-  "description": "PWA da loja com CTA de recebimento protegido no iPhone e Comprovantes refinados v247",
+  "description": "Mega Lote 249: login desktop estável, seguro e sem scroll interno",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc && vite build --configLoader runner --outDir dist-codex-build --emptyOutDir true",
@@ -18,7 +18,8 @@
     "release:commercial:check": "node scripts/commercial_package_check.js --strict",
     "release:commercial:prepare": "node scripts/commercial_release_package.js",
     "css:clean-legacy": "node scripts/lote118_clean_legacy_css.js",
-    "qa:push": "node scripts/qa/push_notification_readiness_test.js"
+    "qa:push": "node scripts/qa/push_notification_readiness_test.js",
+    "verify:dist": "node scripts/verify_dist_version.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

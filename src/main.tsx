@@ -8,6 +8,8 @@ import './mobile-app/styles/desktop-premium.css';
 
 document.documentElement.classList.add(
   'smart-mobile-rebuild',
+  'smart-mobile-rebuild-v249',
+  'smart-mobile-rebuild-v248',
   'smart-mobile-rebuild-v247',
   'smart-mobile-rebuild-v246',
   'smart-mobile-rebuild-v245',

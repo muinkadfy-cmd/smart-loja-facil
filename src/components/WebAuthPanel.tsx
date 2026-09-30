@@ -5,8 +5,8 @@ import { getSupabaseClient, summarizeSession, type WebSessionSummary } from '../
 import { humanizeWebError, recordWebSyncSnapshot } from '../lib/webApi';
 
 const REMEMBER_EMAIL_KEY = 'smart-loja:web-auth-email';
-const REMEMBER_PASSWORD_KEY = 'smart-loja:web-auth-password-v1';
-const AUTO_LOGIN_KEY = 'smart-loja:web-auth-auto-login';
+const LEGACY_REMEMBER_PASSWORD_KEY = 'smart-loja:web-auth-password-v1';
+const LEGACY_AUTO_LOGIN_KEY = 'smart-loja:web-auth-auto-login';
 
 function readStorage(key: string): string {
   try {
@@ -32,26 +32,6 @@ function removeStorage(key: string): void {
   }
 }
 
-function encodeSavedPassword(value: string): string {
-  try {
-    return window.btoa(unescape(encodeURIComponent(value)));
-  } catch {
-    return '';
-  }
-}
-
-function decodeSavedPassword(value: string): string {
-  if (!value) return '';
-  try {
-    return decodeURIComponent(escape(window.atob(value)));
-  } catch {
-    return '';
-  }
-}
-
-function readSavedPassword(): string {
-  return decodeSavedPassword(readStorage(REMEMBER_PASSWORD_KEY));
-}
 
 interface WebAuthPanelProps {
   compact?: boolean;
@@ -64,10 +44,8 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   const env = useMemo(() => getPublicWebEnv(), []);
   const [session, setSession] = useState<WebSessionSummary | null>(null);
   const [email, setEmail] = useState(() => readStorage(REMEMBER_EMAIL_KEY));
-  const [password, setPassword] = useState(() => readSavedPassword());
-  const [rememberEmail, setRememberEmail] = useState(() => Boolean(readStorage(REMEMBER_EMAIL_KEY)) || Boolean(readSavedPassword()));
-  const [rememberPassword, setRememberPassword] = useState(() => Boolean(readSavedPassword()));
-  const [autoLogin, setAutoLogin] = useState(() => readStorage(AUTO_LOGIN_KEY) === '1' && Boolean(readSavedPassword()));
+  const [password, setPassword] = useState('');
+  const [rememberEmail, setRememberEmail] = useState(() => Boolean(readStorage(REMEMBER_EMAIL_KEY)));
   const [busy, setBusy] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -75,7 +53,6 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<'error' | 'success' | 'info'>('info');
   const continuedAfterAuthRef = useRef(false);
-  const autoLoginAttemptRef = useRef(false);
 
   const continueAfterAuth = useCallback((delayMs = 0) => {
     if (!onAuthenticated || continuedAfterAuthRef.current) return;
@@ -83,23 +60,13 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
     window.setTimeout(() => onAuthenticated(), delayMs);
   }, [onAuthenticated]);
 
-  const persistLoginOptions = useCallback((nextEmail: string, nextPassword: string) => {
+  const persistLoginOptions = useCallback((nextEmail: string) => {
     const cleanEmail = nextEmail.trim();
-    if (rememberEmail || rememberPassword || autoLogin) writeStorage(REMEMBER_EMAIL_KEY, cleanEmail);
+    if (rememberEmail) writeStorage(REMEMBER_EMAIL_KEY, cleanEmail);
     else removeStorage(REMEMBER_EMAIL_KEY);
+  }, [rememberEmail]);
 
-    if (rememberPassword || autoLogin) {
-      const encoded = encodeSavedPassword(nextPassword);
-      if (encoded) writeStorage(REMEMBER_PASSWORD_KEY, encoded);
-    } else {
-      removeStorage(REMEMBER_PASSWORD_KEY);
-    }
-
-    if (autoLogin && (rememberPassword || nextPassword)) writeStorage(AUTO_LOGIN_KEY, '1');
-    else removeStorage(AUTO_LOGIN_KEY);
-  }, [autoLogin, rememberEmail, rememberPassword]);
-
-  const authenticateAccount = useCallback(async (nextEmail: string, nextPassword: string, mode: 'manual' | 'auto' = 'manual'): Promise<void> => {
+  const authenticateAccount = useCallback(async (nextEmail: string, nextPassword: string): Promise<void> => {
     setMessage(null);
     setMessageTone('info');
     const client = getSupabaseClient();
@@ -121,24 +88,39 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
       return;
     }
     setBusy(true);
-    recordWebSyncSnapshot('syncing', 'Login', mode === 'auto' ? 'Entrando automaticamente em aparelho confiável...' : 'Validando login seguro...');
-    const { error } = await client.auth.signInWithPassword({ email: nextEmail.trim(), password: nextPassword });
-    setBusy(false);
-    if (error) {
+    recordWebSyncSnapshot('syncing', 'Login', 'Validando login seguro...');
+    try {
+      const { error } = await client.auth.signInWithPassword({ email: nextEmail.trim(), password: nextPassword });
+      if (error) {
+        const detail = humanizeWebError(error);
+        recordWebSyncSnapshot('error', 'Login', detail);
+        setMessageTone('error');
+        setMessage(detail);
+        return;
+      }
+      persistLoginOptions(nextEmail);
+      setPassword('');
+      recordWebSyncSnapshot('synced', 'Login', 'Tudo certo: login confirmado neste aparelho.');
+      window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-in' } }));
+      setMessageTone('success');
+      setMessage('Login confirmado. Abrindo o painel da loja...');
+      continueAfterAuth(250);
+    } catch (error) {
       const detail = humanizeWebError(error);
       recordWebSyncSnapshot('error', 'Login', detail);
       setMessageTone('error');
-      setMessage(detail);
-      return;
+      setMessage(detail || 'Não foi possível conectar à nuvem agora. Confira sua internet e tente novamente.');
+    } finally {
+      setBusy(false);
     }
-    persistLoginOptions(nextEmail, nextPassword);
-    if (!rememberPassword && !autoLogin) setPassword('');
-    recordWebSyncSnapshot('synced', 'Login', 'Tudo certo: login confirmado neste aparelho.');
-    window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-in' } }));
-    setMessageTone('success');
-    setMessage(mode === 'auto' ? 'Login automático confirmado. Abrindo o painel...' : 'Login confirmado. Abrindo o painel da loja...');
-    continueAfterAuth(mode === 'auto' ? 650 : 250);
-  }, [autoLogin, continueAfterAuth, env.hasUnsafeServiceRoleKey, env.securityWarnings, networkOnline, persistLoginOptions, rememberPassword]);
+  }, [continueAfterAuth, env.hasUnsafeServiceRoleKey, env.securityWarnings, networkOnline, persistLoginOptions]);
+
+  useEffect(() => {
+    // Migração de segurança: versões antigas guardavam senha/auto-login no localStorage.
+    // A sessão persistente do Supabase já mantém o acesso sem armazenar a senha original.
+    removeStorage(LEGACY_REMEMBER_PASSWORD_KEY);
+    removeStorage(LEGACY_AUTO_LOGIN_KEY);
+  }, []);
 
   useEffect(() => {
     const client = getSupabaseClient();
@@ -179,26 +161,15 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   }, []);
 
   useEffect(() => {
-    if (!autoContinueWhenSession || !autoLogin || autoLoginAttemptRef.current || sessionLoading || busy || !env.isConfigured) return;
-    if (!networkOnline) return;
-    autoLoginAttemptRef.current = true;
-    if (session) {
-      setMessageTone('success');
-      setMessage('Login automático ativo. Abrindo o painel...');
-      continueAfterAuth(850);
-      return;
-    }
-    const savedPassword = readSavedPassword();
-    if (email.trim() && savedPassword) {
-      setMessageTone('info');
-      setMessage('Login automático ativo neste aparelho. Entrando com segurança...');
-      void authenticateAccount(email, savedPassword, 'auto');
-    }
-  }, [authenticateAccount, autoContinueWhenSession, autoLogin, busy, continueAfterAuth, email, env.isConfigured, networkOnline, session, sessionLoading]);
+    if (!autoContinueWhenSession || sessionLoading || busy || !env.isConfigured || !networkOnline || !session) return;
+    setMessageTone('success');
+    setMessage('Sessão segura encontrada neste aparelho. Abrindo o painel...');
+    continueAfterAuth(450);
+  }, [autoContinueWhenSession, busy, continueAfterAuth, env.isConfigured, networkOnline, session, sessionLoading]);
 
   function signIn(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    void authenticateAccount(email, password, 'manual');
+    void authenticateAccount(email, password);
   }
 
   async function signOut(): Promise<void> {
@@ -211,55 +182,27 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
     recordWebSyncSnapshot('idle', 'Login', 'Sessão encerrada. Entre para sincronizar.');
     window.dispatchEvent(new CustomEvent('smart-loja:web-session-changed', { detail: { auth: 'signed-out' } }));
     continuedAfterAuthRef.current = false;
-    autoLoginAttemptRef.current = false;
     setMessageTone('info');
-    setMessage('Sessão encerrada neste aparelho. Seus dados salvos continuam disponíveis se você marcou para salvar.');
+    setMessage('Sessão encerrada neste aparelho. O e-mail salvo permanece disponível se você escolheu essa opção.');
   }
 
   function clearSavedAccess(): void {
     removeStorage(REMEMBER_EMAIL_KEY);
-    removeStorage(REMEMBER_PASSWORD_KEY);
-    removeStorage(AUTO_LOGIN_KEY);
+    removeStorage(LEGACY_REMEMBER_PASSWORD_KEY);
+    removeStorage(LEGACY_AUTO_LOGIN_KEY);
     setRememberEmail(false);
-    setRememberPassword(false);
-    setAutoLogin(false);
     setPassword('');
-    autoLoginAttemptRef.current = false;
     setMessageTone('info');
-    setMessage('Login, senha e entrada automática foram removidos deste aparelho.');
+    setMessage('E-mail salvo e dados antigos de acesso foram removidos deste aparelho.');
   }
-
-  const handleRememberPasswordChange = (checked: boolean) => {
-    setRememberPassword(checked);
-    if (checked) setRememberEmail(true);
-    if (!checked) {
-      setAutoLogin(false);
-      removeStorage(AUTO_LOGIN_KEY);
-      removeStorage(REMEMBER_PASSWORD_KEY);
-    }
-  };
-
-  const handleAutoLoginChange = (checked: boolean) => {
-    setAutoLogin(checked);
-    if (checked) {
-      setRememberEmail(true);
-      setRememberPassword(true);
-    } else {
-      removeStorage(AUTO_LOGIN_KEY);
-    }
-  };
 
   const statusTone = !env.isConfigured ? 'warn' : session ? 'ok' : networkOnline ? 'warn' : 'danger';
   const statusLabel = !env.isConfigured
     ? 'Nuvem não configurada'
     : session
-      ? autoLogin
-        ? 'Entrada automática ativa'
-        : 'Conta pronta neste aparelho'
+      ? 'Conta pronta neste aparelho'
       : networkOnline
-        ? autoLogin
-          ? 'Entrando automático'
-          : 'Aguardando login'
+        ? 'Aguardando login'
         : 'Sem internet';
 
   if (!env.isConfigured) {
@@ -300,7 +243,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   }
 
   return (
-    <section className={`web-card web-auth-panel ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
+    <section data-auth-version="249" className={`web-card web-auth-panel web-auth-panel-v249 ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
       <div className="web-auth-mini-status">
         <span className="web-kicker">Acesso da loja</span>
         <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{sessionLoading ? 'Verificando sessão...' : statusLabel}</div>
@@ -308,7 +251,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
       <h2>{session ? 'Login pronto' : 'Entrar no painel'}</h2>
       <p className="web-auth-primary-copy">
         {session
-          ? 'Ajuda rápida: a tela de login aparece sempre. Toque para abrir o painel ou deixe a entrada automática ativa neste aparelho.'
+          ? 'Sua sessão segura continua ativa neste aparelho. Abra o painel para continuar.'
           : 'Ajuda rápida: entre com a conta da loja para sincronizar no celular e no computador.'}
       </p>
       {session ? (
@@ -336,18 +279,10 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
               </button>
             </div>
           </label>
-          <div className="web-auth-save-grid" aria-label="Opções de acesso neste aparelho">
+          <div className="web-auth-save-grid" aria-label="Preferência segura neste aparelho">
             <label className="web-check-row">
               <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
-              <span>Salvar e-mail</span>
-            </label>
-            <label className="web-check-row web-check-row-warning">
-              <input type="checkbox" checked={rememberPassword} onChange={(event) => handleRememberPasswordChange(event.target.checked)} />
-              <span>Salvar senha neste aparelho confiável</span>
-            </label>
-            <label className="web-check-row web-check-row-auto">
-              <input type="checkbox" checked={autoLogin} onChange={(event) => handleAutoLoginChange(event.target.checked)} />
-              <span>Salvo neste aparelho: entrar automaticamente ao abrir</span>
+              <span>Salvar somente o e-mail neste aparelho</span>
             </label>
           </div>
           <div className="web-auth-login-tools">
@@ -375,7 +310,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
       )}
       <div className="web-auth-secure-note">
         <AppIcon name="bloqueio_seguro" size={16} />
-        <span>{rememberPassword || autoLogin ? 'Senha salva apenas neste aparelho. Use só em celular ou PC confiável.' : 'Senha protegida. Nunca compartilhe acesso de dono com funcionário.'}</span>
+        <span>A senha não é salva pelo aplicativo. A sessão segura é mantida pelo Supabase e pode ser encerrada em Sair.</span>
       </div>
       {message && <small className={`web-message web-message-${messageTone}`}>{message}</small>}
     </section>
