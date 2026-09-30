@@ -4,6 +4,7 @@ import type { AppStatus, DashboardData, PageKey, ProductInsight, ReceiptSummary,
 import { ActionTile } from '../components/ActionTile';
 import { InlineIcon } from '../components/InlineIcon';
 import { RecentSaleCard } from '../components/RecentSaleCard';
+import { SectionHeader } from '../components/SectionHeader';
 import { StatCard } from '../components/StatCard';
 import { formatCurrency, formatNumber } from '../components/format';
 import { findReceiptForSale, shareSaleReceipt, type ReceiptShareFormat } from '../components/receiptShare';
@@ -91,7 +92,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
 
   return (
     <div className="mapp-screen mapp-dashboard-screen">
-      <section className="mapp-stat-grid mapp-dashboard-stats">
+      <section className="mapp-stat-grid mapp-dashboard-stats" aria-label="Indicadores principais de hoje">
         <StatCard label="Vendas hoje" value={formatCurrency(dashboard.today_sales_total)} detail={`${formatNumber(dashboard.today_sales_count)} venda(s)`} icon="vendas_pdv" tone="blue" />
         <StatCard label="Ticket médio" value={formatCurrency(averageTicket)} detail="por venda" icon="caixa" tone="green" />
         <StatCard label="Pedidos" value={formatNumber(dashboard.orders_open)} detail="em aberto" icon="pedidos" tone="orange" />
@@ -99,7 +100,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
       </section>
 
       {lowStock > 0 ? (
-        <section className="mapp-warning-card mapp-dashboard-stock-alert">
+        <section className="mapp-warning-card mapp-dashboard-stock-alert" aria-live="polite">
           <span className="mapp-dashboard-alert-icon" aria-hidden="true"><InlineIcon name="estoque_baixo" size={24} /></span>
           <div>
             <strong>Atenção: estoque baixo</strong>
@@ -108,7 +109,7 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
           <button type="button" onClick={navigateToLowStock}>Ver produtos</button>
         </section>
       ) : (
-        <section className="mapp-success-card mapp-dashboard-stock-alert">
+        <section className="mapp-success-card mapp-dashboard-stock-alert" aria-live="polite">
           <span className="mapp-dashboard-alert-icon ok" aria-hidden="true"><InlineIcon name="produtos" size={24} /></span>
           <div>
             <strong>Tudo certo: estoque sem alertas críticos</strong>
@@ -119,10 +120,12 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
       )}
 
       <section className="mapp-section-block mapp-dashboard-actions-block">
-        <div className="mapp-section-title">
-          <h2>O que fazer agora?</h2>
-          <button type="button" onClick={() => onNavigate('diagnostics')}>Ajuda rápida</button>
-        </div>
+        <SectionHeader
+          title="O que fazer agora?"
+          actionLabel="Ajuda rápida"
+          actionAriaLabel="Abrir ajuda rápida e diagnóstico"
+          onAction={() => onNavigate('diagnostics')}
+        />
         <div className="mapp-actions-grid mapp-dashboard-actions-grid">
           <ActionTile label="Abrir PDV" icon="vendas_pdv" page="sales" tone="blue" onNavigate={onNavigate} />
           <ActionTile label="Receber parcela" icon="crediario" page="credits" tone="green" onNavigate={onNavigate} />
@@ -133,10 +136,11 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
 
       {(dashboard.product_insights ?? []).length ? (
         <section className="mapp-section-block mapp-product-intel-block mapp-dashboard-product-intel">
-          <div className="mapp-section-title">
-            <h2>Produtos em destaque</h2>
-            <button type="button" onClick={() => onNavigate('products')}>Ver produtos</button>
-          </div>
+          <SectionHeader
+            title="Produtos em destaque"
+            actionLabel="Ver produtos"
+            onAction={() => onNavigate('products')}
+          />
           <div className="mapp-product-intel-list">
             {(dashboard.product_insights ?? []).slice(0, 1).map((insight) => (
               <button
