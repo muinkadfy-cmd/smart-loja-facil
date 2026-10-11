@@ -90,6 +90,22 @@ export function DashboardScreen({ status, onNavigate }: DashboardScreenProps): J
     }
   }
 
+  if (!status) {
+    return (
+      <div className="mapp-screen mapp-dashboard-screen" aria-busy="true" aria-label="Carregando indicadores da loja">
+        <section className="mapp-stat-grid mapp-dashboard-stats" aria-label="Indicadores em carregamento">
+          {["Vendas hoje", "Ticket médio", "Pedidos", "Clientes"].map((label) => (
+            <div key={label} className="mapp-stat-card mapp-loading-stat">
+              <span>{label}</span><span className="mapp-loading-line" aria-hidden="true" />
+              <small>Conferindo dados...</small>
+            </div>
+          ))}
+        </section>
+        <div className="mapp-inline-status" role="status">Aguarde a sincronização para visualizar os valores reais.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="mapp-screen mapp-dashboard-screen">
       <section className="mapp-stat-grid mapp-dashboard-stats" aria-label="Indicadores principais de hoje">

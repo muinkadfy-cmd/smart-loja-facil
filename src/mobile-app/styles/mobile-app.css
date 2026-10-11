@@ -97,7 +97,7 @@ img, svg { max-width: 100%; }
   border: 1px solid #d5e5fb;
   box-shadow: 0 14px 30px rgba(36, 107, 242, 0.16);
 }
-.master-login-form-head strong { font-size: clamp(1.34rem, 4.8vw, 1.62rem); font-weight: 950; letter-spacing: -0.06em; line-height: .98; }
+.master-login-form-head :is(strong, .master-login-brand-title) { font-size: clamp(1.34rem, 4.8vw, 1.62rem); font-weight: 950; letter-spacing: -0.06em; line-height: .98; }
 .master-login-form-head b { color: #f04b23; }
 .master-login-form-head small { max-width: 300px; color: #5d6d84; font-weight: 750; line-height: 1.32; }
 .web-auth-panel, .master-login-local-card { display: grid; gap: 10px; }
@@ -238,7 +238,7 @@ img, svg { max-width: 100%; }
   .master-login-form-head .master-login-brand-icon,
   .master-login-form-head img,
   .master-login-form-head svg { width: 54px !important; height: 54px !important; }
-  .master-login-form-head strong { font-size: clamp(1.24rem, 7vw, 1.52rem); }
+  .master-login-form-head :is(strong, .master-login-brand-title) { font-size: clamp(1.24rem, 7vw, 1.52rem); }
   .master-login-form-head small { font-size: .86rem; max-width: 280px; }
   .web-input-row, .web-password-row { min-height: 52px; border-radius: 16px; }
   .primary-btn, .master-login-final-btn, .web-auth-panel button[type="submit"] { min-height: 52px; border-radius: 16px; }
@@ -14051,18 +14051,19 @@ html.smart-mobile-rebuild-v245 .mapp-report-tabs button.active {
   html.smart-mobile-rebuild-v245 .mapp-form-panel > .mapp-form-actions,
   html.smart-mobile-rebuild-v245 .mapp-settings-screen .mapp-form-actions,
   html.smart-mobile-rebuild-v245 .mapp-orders-screen .mapp-form-actions {
-    position: sticky;
-    bottom: calc(var(--mapp-bottom-nav-height) + var(--mapp-safe-bottom) + 12px);
-    z-index: 30;
+    position: static;
+    bottom: auto;
+    z-index: auto;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
     gap: 8px;
-    margin: 14px -10px -10px;
-    padding: 10px;
-    border: 1px solid rgba(201, 214, 231, .9);
+    margin: 14px 0 0;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid rgba(201, 214, 231, .9);
     border-radius: 18px;
-    background: rgba(255, 255, 255, .96);
-    box-shadow: 0 14px 34px rgba(18, 42, 78, .14);
-    backdrop-filter: blur(14px);
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   html.smart-mobile-rebuild-v245 .mapp-form-actions > button {
@@ -14438,11 +14439,7 @@ html.smart-mobile-rebuild-v246 .mapp-action-toast-close {
     display: none !important;
   }
 
-  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-form-panel > .mapp-form-actions,
-  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-settings-screen .mapp-form-actions,
-  html.smart-mobile-rebuild-v246.mapp-keyboard-open .mapp-orders-screen .mapp-form-actions {
-    bottom: max(8px, var(--mapp-safe-bottom));
-  }
+  /* Form actions stay in document flow while mobile keyboard is visible. */
 
   html.smart-mobile-rebuild-v246 .mapp-bottom-sheet,
   html.smart-mobile-rebuild-v246 .mapp-receive-drawer,

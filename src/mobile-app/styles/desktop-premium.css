@@ -337,7 +337,7 @@
   .master-login-form-head .master-login-brand-icon,
   .master-login-form-head img,
   .master-login-form-head svg { width: 48px !important; height: 48px !important; }
-  .master-login-form-head strong { font-size: 1.42rem; line-height: 1; }
+  .master-login-form-head :is(strong, .master-login-brand-title) { font-size: 1.42rem; line-height: 1; }
   .master-login-form-head small { max-width: 380px; font-size: .8rem; line-height: 1.28; }
   .web-auth-panel,
   .master-login-local-card { gap: 7px; }
@@ -368,7 +368,7 @@
     .master-login-form-head .master-login-brand-icon,
     .master-login-form-head img,
     .master-login-form-head svg { width: 42px !important; height: 42px !important; }
-    .master-login-form-head strong { font-size: 1.28rem; }
+    .master-login-form-head :is(strong, .master-login-brand-title) { font-size: 1.28rem; }
     .master-login-form-head small,
     .web-auth-primary-copy { font-size: .74rem; }
     .web-auth-panel, .master-login-local-card, .web-auth-form { gap: 6px; }

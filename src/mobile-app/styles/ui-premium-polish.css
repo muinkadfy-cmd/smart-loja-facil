@@ -4460,3 +4460,172 @@ html.smart-mobile-rebuild-v255 .mapp-installment-actions-slim button {
     transition: none !important;
   }
 }
+
+/* v256: correções funcionais dentro do tema atual (sem tema novo ou sobreposições). */
+.master-login-form-head .master-login-brand-title {
+  margin: 0;
+  font: inherit;
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -.05em;
+  text-align: center;
+}
+.master-login-centered-card .web-kicker,
+.master-login-single-card .web-kicker {
+  color: #173c72;
+  background: #eaf2ff;
+}
+.mapp-checking-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid #bfd4ed;
+  border-radius: 999px;
+  color: #22558b;
+  background: #ecf4ff;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.mapp-loading-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  min-height: 95px;
+  padding: 12px;
+  color: #4d627e;
+}
+.mapp-loading-stat > span:first-child { font-size: .86rem; font-weight: 750; }
+.mapp-loading-stat small { font-size: .73rem; font-weight: 500; }
+.mapp-loading-line { display: block; width: min(75%,150px); height: 21px; border-radius: 7px; background: #dfebf8; }
+.mapp-context-subnav-more { display: none; }
+.mapp-module-loading,.mapp-module-load-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px auto;
+  padding: 16px;
+  width: 100%;
+  max-width: 760px;
+  border: 1px solid #d0dff1;
+  border-radius: 14px;
+  background: #f7faff;
+  color: #17375f;
+}
+.mapp-module-loading strong,.mapp-module-load-error strong { font-size: .96rem; }
+.mapp-module-loading p,.mapp-module-load-error p { margin: 4px 0 0; font-size: .82rem; line-height: 1.5; color: #4e637e; }
+.mapp-module-loading-shape { flex: none; width: 36px; height: 36px; border-radius: 10px; background: #dfebf8; }
+.mapp-module-load-error { background: #fff8f8; border-color: #e9bdbd; flex-wrap: wrap; }
+.mapp-module-load-error button { min-height: 44px; padding: 8px 14px; background: #1e5bc7; color: white; font-weight: 750; border-radius: 10px; }
+@media (max-width: 1023px) {
+  html.smart-mobile-rebuild-v256 .mapp-context-subnav-track {
+    min-width: 0;
+    scroll-padding-inline: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-context-subnav-more {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    min-height: 44px;
+    min-width: 108px;
+    width: max-content;
+    margin: 3px 0 0 auto;
+    padding: 7px 12px;
+    border: 1px solid #c8d9f1;
+    border-radius: 10px;
+    color: #164c92;
+    background: #edf4ff;
+    font-size: .78rem;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-quick-customer-sheet .mapp-dialog-header {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: start;
+    gap: 10px;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-quick-customer-sheet .mapp-dialog-header > div {
+    min-width: 0;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-quick-customer-sheet .mapp-dialog-header > button {
+    min-width: 80px;
+    min-height: 44px;
+    padding-inline: 12px;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
+    font-size: .83rem;
+  }
+}
+@media (max-width: 600px) {
+  html.smart-mobile-rebuild-v256 .mapp-sales-flow-premium {
+    grid-template-columns: minmax(0,1fr) !important;
+    width: 100%;
+    min-width: 0;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-flow-premium .mapp-sales-flow-steps {
+    display: grid !important;
+    grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+    gap: 4px !important;
+    width: 100%;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-flow-premium .mapp-sales-flow-steps > span {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 6px 1px !important;
+    font-size: clamp(.59rem,2.5vw,.7rem) !important;
+    line-height: 1.15 !important;
+    text-align: center;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    hyphens: none !important;
+    white-space: nowrap !important;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-flow-premium .mapp-sales-flow-steps > span::before { display: none !important; }
+  html.smart-mobile-rebuild-v256 .mapp-sales-flow-premium .mapp-sales-flow-steps b {
+    width: 22px !important;
+    height: 22px !important;
+    font-size: .68rem !important;
+    flex: none;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar .mapp-sales-customer-compact {
+    grid-column: 1 / -1 !important;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar-item { min-width: 0; overflow: hidden; }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar-item > div { min-width: 0; overflow: hidden; }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar-item :is(strong,small) {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-sales-topbar-item > b { display: none; }
+  html.smart-mobile-rebuild-v256 .mapp-page-diagnostics .mapp-mini-stat-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  html.smart-mobile-rebuild-v256 .mapp-page-diagnostics .mapp-mini-stat-grid .mapp-stat-card {
+    min-height: 72px;
+  }
+}

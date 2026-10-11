@@ -243,7 +243,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
   }
 
   return (
-    <section data-auth-version="255" className={`web-card web-auth-panel web-auth-panel-v249 web-auth-panel-v250 web-auth-panel-v253 web-auth-panel-v254 web-auth-panel-v255 ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
+    <section data-auth-version="256" className={`web-card web-auth-panel web-auth-panel-v249 web-auth-panel-v250 web-auth-panel-v253 web-auth-panel-v254 web-auth-panel-v255 ${compact ? 'web-auth-panel-compact web-auth-panel-simple' : ''}`}>
       <div className="web-auth-mini-status">
         <span className="web-kicker">Acesso da loja</span>
         <div className={`web-auth-status-pill web-auth-status-${statusTone}`}>{sessionLoading ? 'Verificando sessão...' : statusLabel}</div>
@@ -266,7 +266,7 @@ export function WebAuthPanel({ compact = false, onOpenPanel, onAuthenticated, au
             <span>E-mail</span>
             <div className="web-input-row">
               <AppIcon name="usuario_administrador" size={24} className="web-input-icon" />
-              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="E-mail da loja" autoComplete="username email" inputMode="email" />
+              <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="E-mail da loja" autoComplete="username" type="email" inputMode="email" />
             </div>
           </label>
           <label>

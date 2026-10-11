@@ -1,21 +1,35 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { AppStatus, PageKey, Settings } from '../types';
-import { CreditsScreen } from './screens/CreditsScreen';
-import { BackupScreen } from './screens/BackupScreen';
-import { CashScreen } from './screens/CashScreen';
 import { DashboardScreen } from './screens/DashboardScreen';
-import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
-import { GenericDataScreen } from './screens/GenericDataScreen';
-import { OrdersScreen } from './screens/OrdersScreen';
-import { ReceiptsScreen } from './screens/ReceiptsScreen';
-import { CustomersScreen, ProductsScreen } from './screens/ProductsCustomersScreens';
-import { SalesScreen } from './screens/SalesScreen';
-import { CouponScreen } from './screens/CouponScreen';
+// Non-dashboard modules load on demand; business rules remain inside the original screens.
+const CreditsScreen = lazy(() => import('./screens/CreditsScreen').then((m) => ({ default: m.CreditsScreen })));
+const BackupScreen = lazy(() => import('./screens/BackupScreen').then((m) => ({ default: m.BackupScreen })));
+const CashScreen = lazy(() => import('./screens/CashScreen').then((m) => ({ default: m.CashScreen })));
+const DiagnosticsScreen = lazy(() => import('./screens/DiagnosticsScreen').then((m) => ({ default: m.DiagnosticsScreen })));
+const GenericDataScreen = lazy(() => import('./screens/GenericDataScreen').then((m) => ({ default: m.GenericDataScreen })));
+const OrdersScreen = lazy(() => import('./screens/OrdersScreen').then((m) => ({ default: m.OrdersScreen })));
+const ReceiptsScreen = lazy(() => import('./screens/ReceiptsScreen').then((m) => ({ default: m.ReceiptsScreen })));
+const SalesScreen = lazy(() => import('./screens/SalesScreen').then((m) => ({ default: m.SalesScreen })));
+const CouponScreen = lazy(() => import('./screens/CouponScreen').then((m) => ({ default: m.CouponScreen })));
+const ProductsScreen = lazy(() => import('./screens/ProductsCustomersScreens').then((m) => ({ default: m.ProductsScreen })));
+const CustomersScreen = lazy(() => import('./screens/ProductsCustomersScreens').then((m) => ({ default: m.CustomersScreen })));
 import { MobileShell } from './layout/MobileShell';
 import { NotificationCenter, type NotificationItem } from './components/NotificationCenter';
 import { ExternalPushPanel } from './components/ExternalPushPanel';
 import { MOBILE_ACTION_TOAST_EVENT, type MobileActionToastDetail } from './components/actionToast';
 import { getWebOutboxStats, readWebDemoMode, readWebSyncSnapshot, readWebTrainingMode, type WebOutboxStats, type WebSyncSnapshot } from '../lib/webApi';
+
+class ModuleErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError(): { failed: boolean } { return { failed: true }; }
+  render(): ReactNode {
+    if (!this.state.failed) return this.props.children;
+    return <section className="mapp-module-load-error" role="alert"><strong>Esta área não abriu.</strong><p>Verifique a conexão e tente novamente. Nenhum dado será apagado.</p><button type="button" onClick={() => window.location.reload()}>Tentar novamente</button></section>;
+  }
+}
+function ModuleLoading(): JSX.Element {
+  return <section className="mapp-module-loading" role="status" aria-live="polite"><span aria-hidden="true" className="mapp-module-loading-shape" /><div><strong>Abrindo esta área…</strong><p>Preparando dados e ferramentas da loja.</p></div></section>;
+}
 
 interface MobileAppProps {
   activePage: PageKey;
@@ -143,7 +157,7 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     const items: MobileAlertItem[] = [];
     if (!networkOnline) items.push({ title: 'Sem internet neste aparelho', detail: 'As ações podem ficar pendentes. Conecte a internet antes de vender de verdade.', action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'offline_local' });
     if (error) items.push({ title: 'Atenção no carregamento', detail: cleanMobileAlertDetail(error), action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'bloqueio_seguro' });
-    if (!status?.sqlite_ok) items.push({ title: 'Entre para sincronizar', detail: 'Faça login para ver a mesma loja no celular e no computador.', action: 'Diagnóstico', page: 'diagnostics', tone: networkOnline ? 'warning' : 'danger', icon: 'bloqueio_seguro' });
+    if (!loading && status && !status.sqlite_ok) items.push({ title: 'Entre para sincronizar', detail: 'Faça login para ver a mesma loja no celular e no computador.', action: 'Diagnóstico', page: 'diagnostics', tone: networkOnline ? 'warning' : 'danger', icon: 'bloqueio_seguro' });
     if (outboxStats.error > 0) items.push({ title: 'Pendência com erro', detail: `${outboxStats.error} alteração(ões) precisam de atenção antes de vender sem acompanhamento.`, action: 'Ver pendências', page: 'diagnostics', tone: 'danger', icon: 'backup' });
     if (outboxStats.pending > 0) items.push({ title: 'Ainda falta enviar', detail: `${outboxStats.pending} alteração(ões) estão guardadas neste aparelho aguardando sincronização.`, action: 'Enviar agora', page: 'diagnostics', tone: 'warning', icon: 'backup' });
     if (syncSnapshot.status === 'error') items.push({ title: 'Falha de sincronização', detail: syncSnapshot.detail || 'Não foi possível confirmar a última sincronização.', action: 'Diagnóstico', page: 'diagnostics', tone: 'danger', icon: 'offline_local' });
@@ -160,12 +174,12 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
         icon: insight.kind === 'low_stock_hot' ? 'estoque_baixo' : 'produtos',
       });
     }
-    if ((dashboard?.today_sales_count ?? 0) === 0) items.push({ title: 'Nenhuma venda hoje', detail: 'Abra o PDV para registrar a primeira venda do dia.', action: 'Abrir PDV', page: 'sales', tone: 'info', icon: 'vendas_pdv' });
+    if (!loading && dashboard && dashboard.today_sales_count === 0) items.push({ title: 'Nenhuma venda hoje', detail: 'Abra o PDV para registrar a primeira venda do dia.', action: 'Abrir PDV', page: 'sales', tone: 'info', icon: 'vendas_pdv' });
     if (updateAvailable) items.push({ title: 'Nova versão disponível', detail: 'Atualize o PWA neste aparelho para evitar cache antigo.', action: 'Atualizar', page: 'diagnostics', tone: 'info', icon: 'atualizar' });
     if (demoModeActive) items.push({ title: 'Ambiente demo ativo', detail: 'O app está usando dados fictícios separados da loja real.', action: 'Ver demo', page: 'diagnostics', tone: 'info', icon: 'loja_ativa' });
     if (trainingModeActive) items.push({ title: 'Modo treinamento ativo', detail: 'Gravações reais estão bloqueadas para demonstração segura.', action: 'Ver modo', page: 'diagnostics', tone: 'warning', icon: 'bloqueio_seguro' });
     return items.length ? items.slice(0, 8) : [{ title: 'Tudo certo', detail: 'Nenhum alerta importante agora. Dados prontos para conferência.', action: 'Painel', page: 'dashboard' as PageKey, tone: 'success', icon: 'painel_da_loja' }];
-  }, [status, updateAvailable, demoModeActive, trainingModeActive, networkOnline, syncSnapshot, outboxStats, error]);
+  }, [status, loading, updateAvailable, demoModeActive, trainingModeActive, networkOnline, syncSnapshot, outboxStats, error]);
 
   const importantAlertsCount = alerts.filter((alert) => alert.tone === 'danger' || alert.tone === 'warning').length;
   const notificationItems = useMemo<NotificationItem[]>(() => {
@@ -212,6 +226,8 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       onInstallUpdate={installUpdate}
       onLogout={onLogout}
     >
+      <ModuleErrorBoundary key={activePage}>
+        <Suspense fallback={<ModuleLoading />}>
       {activePage === 'dashboard' ? (
         <DashboardScreen status={status} onNavigate={navigate} />
       ) : activePage === 'sales' ? (
@@ -237,6 +253,8 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       ) : (
         <GenericDataScreen page={activePage} status={status} refreshToken={refreshToken} onNavigate={navigate} onRefresh={onRefresh} />
       )}
+        </Suspense>
+      </ModuleErrorBoundary>
 
       {actionToasts.length ? (
         <div className="mapp-action-toast-stack" aria-live="polite" aria-label="Avisos das ações">

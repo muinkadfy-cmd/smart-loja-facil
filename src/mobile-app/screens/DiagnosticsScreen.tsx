@@ -4691,7 +4691,7 @@ Ambiente demo: ${demoMode.enabled ? 'ativo - dados fictícios separados' : 'desa
 
       {feedback ? <div className={`mapp-form-feedback mapp-form-feedback-${feedback.tone}`}>{feedback.text}</div> : null}
 
-      <details className="mapp-diagnostics-group" open>
+      <details className="mapp-diagnostics-group">
         <summary>
           <span>Ambiente e apresentação</span>
           <small>Demo, tour e proposta comercial</small>

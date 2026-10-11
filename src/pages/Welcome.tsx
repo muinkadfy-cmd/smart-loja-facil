@@ -62,7 +62,7 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
               <span>Nuvem</span>
             </div>
             <img src="/brand/jaque-logo-premium.png" alt="Jaque Confecções e Presentes" className="master-login-brand-icon master-login-jaque-logo" />
-            <strong>JAQUE <b>CONFECÇÕES E PRESENTES</b></strong>
+            <h1 className="master-login-brand-title">JAQUE <b>CONFECÇÕES E PRESENTES</b></h1>
             <small>Entre para vender, controlar estoque e acompanhar sua loja no celular.</small>
           </div>
 

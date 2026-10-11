@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v255-mega-lote-255-visual-web-mobile';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v256-mega-lote-256-auditoria-mobile';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -42,7 +42,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith('smart-loja-pwa-') && key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });

@@ -43,12 +43,15 @@ export function MobileShell({
   children,
 }: MobileShellProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
+  const subnavRef = useRef<HTMLDivElement | null>(null);
+  const [subnavHasMore, setSubnavHasMore] = useState(false);
   const [trainingMode, setTrainingMode] = useState<WebTrainingModeState>(() => readWebTrainingMode());
   const [demoMode, setDemoMode] = useState<WebDemoModeState>(() => readWebDemoMode());
   const pageRef = useRef<HTMLElement | null>(null);
   const route = getMobileRoute(activePage);
   const storeName = (settings?.store_name || status?.settings.store_name || 'Jaque Confecções e Presentes').replace(/\s+Web$/i, '');
   const online = Boolean(status?.sqlite_ok);
+  const checkingConnection = loading && !status;
   const fullVersion = status?.version || 'versão não informada';
   const compactVersion = fullVersion.match(/v\d+/i)?.[0] || fullVersion.replace('pwa-supabase-', '').slice(0, 18);
   const pendingCounts = useMemo<Partial<Record<PageKey, number>>>(() => {
@@ -64,7 +67,7 @@ export function MobileShell({
     else if (lowStock > 0) counts.products = lowStock;
     if (openOrders > 0) counts.orders = openOrders;
     if (overdueCreditInstallments > 0) counts.credits = overdueCreditInstallments;
-    else if (activeCreditCustomers > 0) counts.credits = activeCreditCustomers;
+    // Clientes ativos não representam parcelas vencidas; sem badge de alerta por isso.
     if (alertsCount > 0 || updateAvailable) counts.diagnostics = alertsCount + (updateAvailable ? 1 : 0);
 
     return counts;
@@ -92,6 +95,17 @@ export function MobileShell({
 
   const activeGroup = useMemo(() => getMobileRouteGroup(activePage), [activePage]);
   const relatedRoutes = useMemo(() => getMobileRoutesByGroup(activeGroup), [activeGroup]);
+
+  useEffect(() => {
+    const track = subnavRef.current;
+    if (!track) { setSubnavHasMore(false); return; }
+    const current = track.querySelector<HTMLElement>('[aria-current="page"]');
+    if (current) track.scrollLeft = Math.max(0, current.offsetLeft - track.offsetLeft - 16);
+    const update = () => setSubnavHasMore(track.scrollLeft + track.clientWidth < track.scrollWidth - 5);
+    update();
+    window.addEventListener("resize", update, { passive: true });
+    return () => window.removeEventListener("resize", update);
+  }, [activePage, relatedRoutes]);
 
   const setActiveDialogNode = useDialogAccessibility({
     open: menuOpen,
@@ -210,7 +224,7 @@ export function MobileShell({
               <h1>{route.label}</h1>
               <p>{route.subtitle}</p>
             </div>
-            <span className={online ? 'mapp-online-chip' : 'mapp-warn-chip'}>{online ? 'Online' : 'Offline'}</span>
+            <span className={checkingConnection ? 'mapp-checking-chip' : online ? 'mapp-online-chip' : 'mapp-warn-chip'}>{checkingConnection ? 'Verificando' : online ? 'Online' : 'Offline'}</span>
           </header>
 
           {relatedRoutes.length > 1 ? (
@@ -219,7 +233,7 @@ export function MobileShell({
                 <strong>{activeGroup.label}</strong>
                 <span>{activeGroup.helper}</span>
               </div>
-              <div className="mapp-context-subnav-track">
+              <div ref={subnavRef} onScroll={(event) => { const t = event.currentTarget; setSubnavHasMore(t.scrollLeft + t.clientWidth < t.scrollWidth - 5); }} className="mapp-context-subnav-track">
                 {relatedRoutes.map((item) => {
                   const pending = Math.max(0, Number(pendingCounts[item.key] || 0));
                   return (
@@ -237,6 +251,7 @@ export function MobileShell({
                   );
                 })}
               </div>
+              {subnavHasMore ? <button type="button" className="mapp-context-subnav-more" onClick={() => subnavRef.current?.scrollBy({ left: 190, behavior: 'smooth' })}>Mais abas <span aria-hidden="true">→</span></button> : null}
             </nav>
           ) : null}
 
