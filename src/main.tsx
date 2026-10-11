@@ -8,6 +8,7 @@ import './mobile-app/styles/ui-premium-polish.css';
 
 
 document.documentElement.classList.add(
+  'smart-mobile-rebuild-v257',
   'smart-mobile-rebuild-v256',
   'smart-mobile-rebuild-v255',
   'smart-mobile-rebuild-v254',
@@ -61,12 +62,18 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
 );
 
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-  let reloadingForUpdate = false;
-
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then((registration) => {
-      void registration.update();
-      window.setInterval(() => void registration.update(), 30 * 60 * 1000);
+      const check = () => { if (navigator.onLine) void registration.update().catch(() => undefined); };
+      check();
+      if (registration.waiting && navigator.serviceWorker.controller) {
+        window.dispatchEvent(new CustomEvent('smart-loja:pwa-update'));
+      }
+      window.setInterval(check, 5 * 60 * 1000);
+      window.addEventListener('focus', check);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check();
+      });
 
       registration.addEventListener('updatefound', () => {
         const worker = registration.installing;
@@ -79,10 +86,5 @@ if ('serviceWorker' in navigator && window.location.protocol.startsWith('http'))
       });
     }).catch(() => undefined);
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloadingForUpdate) return;
-      reloadingForUpdate = true;
-      window.location.reload();
-    });
   });
 }

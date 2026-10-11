@@ -6,6 +6,7 @@ import { recordWebSyncSnapshot, subscribeWebStoreChanges } from './lib/webApi';
 import { MobileApp } from './mobile-app/MobileApp';
 import { cleanDeepLinkUrl, readSmartLojaDeepLink, storeCreditFocusFromDeepLink, storeReceiptFocusFromDeepLink, type SmartLojaDeepLink } from './mobile-app/deepLinks';
 import type { AppStatus, PageKey, Settings } from './types';
+import { usePwaUpdate } from './lib/pwaUpdates';
 
 export default function App(): JSX.Element {
   const [entered, setEntered] = useState(false);
@@ -16,19 +17,23 @@ export default function App(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
   const lastWebAutoRefreshRef = useRef(0);
+  const bootSequenceRef = useRef(0);
+  const pwaUpdate = usePwaUpdate();
   const pendingDeepLinkRef = useRef<SmartLojaDeepLink | null>(null);
 
   const boot = useCallback(async () => {
+    const sequence = ++bootSequenceRef.current;
     setLoading(true);
     setError(null);
     try {
       const payload = await api.boot();
+      if (sequence !== bootSequenceRef.current) return;
       setStatus(payload);
       setSettings(payload.settings);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (sequence === bootSequenceRef.current) setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setLoading(false);
+      if (sequence === bootSequenceRef.current) setLoading(false);
     }
   }, []);
 
@@ -91,6 +96,7 @@ export default function App(): JSX.Element {
   const logout = useCallback(async () => {
     const confirmed = window.confirm('Sair da conta neste aparelho? Dados já sincronizados continuam guardados na nuvem.');
     if (!confirmed) return;
+    bootSequenceRef.current += 1;
     setLoading(true);
     setError(null);
     try {
@@ -164,7 +170,7 @@ export default function App(): JSX.Element {
     };
   }, [boot, entered, status?.sqlite_ok]);
 
-  if (!entered) return <Welcome onEnter={() => setEntered(true)} />;
+  if (!entered) return <Welcome onEnter={() => setEntered(true)} pwaUpdate={pwaUpdate} />;
 
   return (
     <MobileApp
@@ -177,6 +183,7 @@ export default function App(): JSX.Element {
       onNavigate={navigate}
       onRefresh={refresh}
       onLogout={logout}
+      pwaUpdate={pwaUpdate}
     />
   );
 }

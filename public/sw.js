@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-loja-pwa-supabase-v256-mega-lote-256-auditoria-mobile';
+const CACHE_NAME = 'smart-loja-pwa-supabase-v257-mega-lote-257-aviso-pwa-premium';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -34,7 +34,6 @@ self.addEventListener('install', (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => precacheAppShell(cache))
-      .then(() => self.skipWaiting())
   );
 });
 
@@ -78,6 +77,11 @@ async function networkFirst(request) {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || event.request.method !== 'GET') return;
+
+  if (url.pathname === '/version.json') {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(networkFirst(event.request));

@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { AppIcon } from '../components/AppIcon';
 import { WebAuthPanel } from '../components/WebAuthPanel';
 import { getRuntimeInfo } from '../lib/runtime';
+import { PwaUpdateBanner } from '../components/PwaUpdateBanner';
+import type { PwaUpdateState } from '../lib/pwaUpdates';
 
 type WelcomeAction = (() => void) | undefined;
 
 interface WelcomeProps {
+  pwaUpdate?: PwaUpdateState;
   onEnter?: () => void;
   onContinue?: () => void;
   onStart?: () => void;
@@ -61,10 +64,12 @@ function WelcomeLayout(props: WelcomeProps): JSX.Element {
               <span>Mobile</span>
               <span>Nuvem</span>
             </div>
-            <img src="/brand/jaque-logo-premium.png" alt="Jaque Confecções e Presentes" className="master-login-brand-icon master-login-jaque-logo" />
+            <img src="/brand/jaque-logo-premium.webp" alt="Jaque Confecções e Presentes" decoding="async" fetchPriority="high" className="master-login-brand-icon master-login-jaque-logo" />
             <h1 className="master-login-brand-title">JAQUE <b>CONFECÇÕES E PRESENTES</b></h1>
             <small>Entre para vender, controlar estoque e acompanhar sua loja no celular.</small>
           </div>
+
+          {props.pwaUpdate ? <PwaUpdateBanner {...props.pwaUpdate} variant="login" /> : null}
 
           {isWeb ? (
             <>

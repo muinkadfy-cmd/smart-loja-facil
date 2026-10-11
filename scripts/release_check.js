@@ -35,6 +35,9 @@ const requiredCore = [
   'src/lib/supabaseClient.ts',
   'public/sw.js',
   'public/manifest.webmanifest',
+  'public/version.json',
+  'src/lib/pwaUpdates.ts',
+  'src/components/PwaUpdateBanner.tsx',
   'README.md',
 ];
 
@@ -70,6 +73,16 @@ if (exists('src-tauri')) warn('Pasta src-tauri encontrada como legado. Este lote
 
 if (!/^0\.1\.\d+$/.test(String(packageJson.version ?? ''))) fail('package.json precisa usar versão 0.1.<lote>.');
 if (!releaseNumber) fail('Não foi possível derivar o lote atual da versão de package.json.');
+try {
+  const currentPublicVersion = JSON.parse(read('public/version.json'));
+  if (currentPublicVersion.version !== packageJson.version) fail('version.json e package.json precisam coincidir em todo lote.');
+} catch (error) { fail('Verifique public/version.json: ' + (error instanceof Error ? error.message : String(error))); }
+const swUpdate = read('public/sw.js');
+if (!swUpdate.includes("event.data?.type === 'SKIP_WAITING'")) fail('O PWA deve permitir aplicação após confirmação do usuário.');
+if (!swUpdate.includes("url.pathname === '/version.json'")) fail('A verificação de versão precisa ignorar cache antigo.');
+if (swUpdate.includes('.then(() => self.skipWaiting())')) fail('Não ativar worker novo silenciosamente sem avisar o usuário.');
+const bannerSource = read('src/components/PwaUpdateBanner.tsx');
+if (!bannerSource.includes('Atualizar agora') || !bannerSource.includes('role="status"')) fail('Aviso de atualização acessível é obrigatório.');
 for (const script of ['type-check', 'build', 'release:check', 'lint', 'qa:commercial', 'qa:load', 'release:commercial:check', 'verify:dist', 'qa:ui']) {
   if (!packageJson.scripts?.[script]) fail(`Script npm essencial ausente: ${script}`);
 }

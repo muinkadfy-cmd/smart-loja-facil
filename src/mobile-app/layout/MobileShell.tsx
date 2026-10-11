@@ -6,6 +6,7 @@ import { MobileHeader } from './MobileHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { readWebDemoMode, readWebTrainingMode, type WebDemoModeState, type WebTrainingModeState } from '../../lib/webApi';
 import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
+import { PwaUpdateBanner } from '../../components/PwaUpdateBanner';
 
 interface MobileShellProps {
   activePage: PageKey;
@@ -15,6 +16,9 @@ interface MobileShellProps {
   error: string | null;
   alertsCount: number;
   updateAvailable: boolean;
+  updateLabel: string;
+  updateError: string | null;
+  updateBusy: boolean;
   onNavigate: (page: PageKey) => void;
   onRefresh: () => void;
   onOpenAlerts: () => void;
@@ -35,6 +39,9 @@ export function MobileShell({
   error,
   alertsCount,
   updateAvailable,
+  updateLabel,
+  updateError,
+  updateBusy,
   onNavigate,
   onRefresh,
   onOpenAlerts,
@@ -185,15 +192,13 @@ export function MobileShell({
             <button type="button" aria-label="Sincronizar dados da loja" title="Sincronizar dados da loja" onClick={onRefresh}><InlineIcon name="atualizar" size={24} /></button>
           </section>
 
-          {updateAvailable ? (
-            <section className="mapp-update-banner">
-              <div>
-                <strong>Nova versão disponível</strong>
-                <p>Atualize para usar a versão mais nova neste aparelho.</p>
-              </div>
-              <button type="button" onClick={onInstallUpdate}>Atualizar</button>
-            </section>
-          ) : null}
+          <PwaUpdateBanner
+            updateAvailable={updateAvailable}
+            updateLabel={updateLabel}
+            updateBusy={updateBusy}
+            updateError={updateError}
+            installUpdate={async () => onInstallUpdate()}
+          />
 
 
           {demoMode.enabled ? (
@@ -216,7 +221,6 @@ export function MobileShell({
             </section>
           ) : null}
 
-          {loading ? <div className="mapp-inline-status mapp-sync-status">Sincronizando dados da loja...</div> : null}
           {error ? <div className="mapp-error-box">{error}</div> : null}
 
           <header className="mapp-page-title-row">

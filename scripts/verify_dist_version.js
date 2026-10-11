@@ -13,6 +13,14 @@ if (!fs.existsSync(dist)) {
 } else {
   const manifestPath = path.join(dist, 'manifest.webmanifest');
   const swPath = path.join(dist, 'sw.js');
+  const versionPath = path.join(dist, 'version.json');
+  if (!fs.existsSync(versionPath)) fail('version.json não existe no build.');
+  else {
+    try {
+      const deployed = JSON.parse(read('version.json'));
+      if (deployed.version !== pkg.version) fail('version.json diverge de package.json: nova versão não poderá avisar corretamente.');
+    } catch (error) { fail('version.json inválido: ' + error.message); }
+  }
   if (!fs.existsSync(manifestPath)) fail('manifest.webmanifest não existe no build.');
   if (!fs.existsSync(swPath)) fail('sw.js não existe no build.');
   if (fs.existsSync(manifestPath) && !read('manifest.webmanifest').includes(`v${release}`)) fail(`Manifest do build não é v${release}.`);

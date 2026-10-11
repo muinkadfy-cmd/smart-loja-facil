@@ -4629,3 +4629,154 @@ html.smart-mobile-rebuild-v255 .mapp-installment-actions-slim button {
     min-height: 72px;
   }
 }
+
+
+/* v257 — aviso de versão sempre legível, inclusive no login e em PWA instalado. */
+.mapp-release-notice {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 15px 16px;
+  border: 1px solid #a8c9ef;
+  border-radius: 15px;
+  background: #f5f9ff;
+  box-shadow: 0 2px 12px rgba(29, 67, 125, .07);
+  color: #19375d;
+}
+.mapp-release-notice-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #cbddfa;
+  border-radius: 11px;
+  color: #1855af;
+  background: #e6f0ff;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+.mapp-release-notice-content { min-width: 0; }
+.mapp-release-notice-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: #22599c;
+  font-size: .74rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.mapp-release-notice-content strong {
+  display: block;
+  font-size: .94rem;
+  line-height: 1.3;
+  overflow-wrap: normal;
+}
+.mapp-release-notice-content p {
+  margin: 4px 0 0;
+  font-size: .81rem;
+  line-height: 1.4;
+  color: #4b6381;
+}
+.mapp-release-notice-content .mapp-release-notice-error {
+  color: #9e2929;
+  font-weight: 750;
+}
+.mapp-release-notice button {
+  justify-self: end;
+  min-height: 44px;
+  min-width: 126px;
+  padding: 9px 15px;
+  border: 1px solid #1c56ab;
+  border-radius: 10px;
+  background: #205dbe;
+  color: #fff;
+  font-size: .84rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mapp-release-notice button:hover:not(:disabled),
+.mapp-release-notice button:focus-visible { background: #164895; }
+.mapp-release-notice button:disabled { opacity: .6; cursor: progress; }
+.mapp-release-notice.is-floating {
+  position: fixed;
+  z-index: 1300;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: min(480px, calc(100vw - 32px));
+  margin: 0;
+  background: #f7faff;
+  box-shadow: 0 10px 28px rgba(22, 50, 90, .14);
+}
+.mapp-credit-help-card > button[aria-label="Fechar aviso do crediário"] {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.2rem;
+}
+@media (max-width: 680px) {
+  .mapp-release-notice {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 9px 11px;
+    padding: 12px;
+    border-radius: 12px;
+  }
+  .mapp-release-notice-mark { width: 36px; height: 36px; }
+  .mapp-release-notice button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+    min-height: 44px;
+    margin: 1px 0 0;
+  }
+  .mapp-release-notice.is-floating {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: calc(100vw - 20px);
+  }
+  .mapp-credit-mode-buttons button { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapp-release-notice, .mapp-release-notice * { animation: none !important; transition: none !important; }
+}
+
+/* v257 — no login, aviso compacto sem encobrir campos ou ação Entrar. */
+.master-login-single-card .mapp-release-notice.is-login {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  background: #f2f7ff;
+  box-shadow: none;
+}
+.master-login-single-card .mapp-release-notice.is-login .mapp-release-notice-mark,
+.master-login-single-card .mapp-release-notice.is-login .mapp-release-notice-content p:not(.mapp-release-notice-error) {
+  display: none;
+}
+.master-login-single-card .mapp-release-notice.is-login .mapp-release-notice-content strong {
+  font-size: .79rem;
+  line-height: 1.25;
+}
+.master-login-single-card .mapp-release-notice.is-login .mapp-release-notice-eyebrow {
+  font-size: .7rem;
+}
+.master-login-single-card .mapp-release-notice.is-login button {
+  grid-column: auto;
+  width: auto;
+  min-width: 116px;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: .78rem;
+}
+@media (max-width: 380px) {
+  .master-login-single-card .mapp-release-notice.is-login { gap: 6px; padding-inline: 8px; }
+  .master-login-single-card .mapp-release-notice.is-login button { min-width: 110px; }
+}

@@ -18,6 +18,7 @@ import { NotificationCenter, type NotificationItem } from './components/Notifica
 import { ExternalPushPanel } from './components/ExternalPushPanel';
 import { MOBILE_ACTION_TOAST_EVENT, type MobileActionToastDetail } from './components/actionToast';
 import { getWebOutboxStats, readWebDemoMode, readWebSyncSnapshot, readWebTrainingMode, type WebOutboxStats, type WebSyncSnapshot } from '../lib/webApi';
+import type { PwaUpdateState } from '../lib/pwaUpdates';
 
 class ModuleErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -41,6 +42,7 @@ interface MobileAppProps {
   onNavigate: (page: PageKey) => void;
   onRefresh: () => void;
   onLogout: () => void;
+  pwaUpdate: PwaUpdateState;
 }
 
 type MobileAlertTone = 'danger' | 'warning' | 'info' | 'success';
@@ -80,10 +82,10 @@ function emptyOutboxStats(): WebOutboxStats {
   return { total: 0, pending: 0, error: 0, lastCreatedAt: '', lastError: '' };
 }
 
-export function MobileApp({ activePage, status, settings, loading, error, refreshToken, onNavigate, onRefresh, onLogout }: MobileAppProps): JSX.Element {
+export function MobileApp({ activePage, status, settings, loading, error, refreshToken, onNavigate, onRefresh, onLogout, pwaUpdate }: MobileAppProps): JSX.Element {
+  const { updateAvailable, installUpdate, updateLabel, updateError, updateBusy } = pwaUpdate;
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [actionToasts, setActionToasts] = useState<Array<MobileActionToastDetail & { id: string }>>([]);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
   const [trainingModeActive, setTrainingModeActive] = useState(() => readWebTrainingMode().enabled);
   const [demoModeActive, setDemoModeActive] = useState(() => readWebDemoMode().enabled);
   const [networkOnline, setNetworkOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
@@ -106,12 +108,6 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     };
     window.addEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
     return () => window.removeEventListener(MOBILE_ACTION_TOAST_EVENT, handler);
-  }, []);
-
-  useEffect(() => {
-    const handler = () => setUpdateAvailable(true);
-    window.addEventListener('smart-loja:pwa-update', handler);
-    return () => window.removeEventListener('smart-loja:pwa-update', handler);
   }, []);
 
   useEffect(() => {
@@ -206,11 +202,6 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
     onNavigate(page);
   }, [onNavigate]);
 
-  const installUpdate = useCallback(() => {
-    if (navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-    window.location.reload();
-  }, []);
-
   return (
     <MobileShell
       activePage={activePage}
@@ -220,10 +211,13 @@ export function MobileApp({ activePage, status, settings, loading, error, refres
       error={error}
       alertsCount={importantAlertsCount}
       updateAvailable={updateAvailable}
+      updateLabel={updateLabel}
+      updateError={updateError}
+      updateBusy={updateBusy}
       onNavigate={navigate}
       onRefresh={onRefresh}
       onOpenAlerts={() => setAlertsOpen(true)}
-      onInstallUpdate={installUpdate}
+      onInstallUpdate={() => void installUpdate()}
       onLogout={onLogout}
     >
       <ModuleErrorBoundary key={activePage}>
